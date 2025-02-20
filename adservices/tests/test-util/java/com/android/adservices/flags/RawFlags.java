@@ -3620,6 +3620,12 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
+    public String getAdServicesCelSamplingConfig() {
+        return mBackend.getFlag(
+                KEY_AD_SERVICES_CEL_SAMPLING_CONFIG, DEFAULT_AD_SERVICES_CEL_SAMPLING_CONFIG);
+    }
+
+    @Override
     public boolean getMeasurementEnableAdIdsPerDevicePerWindow() {
         return mBackend.getFlag(
                 KEY_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW,
