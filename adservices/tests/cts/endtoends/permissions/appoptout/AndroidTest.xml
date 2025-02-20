@@ -38,6 +38,10 @@
         <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
         <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
 
+        <!-- Override consent notification to debug mode to grant user consent -->
+        <option name="run-command" value="setprop debug.adservices.consent_notification_debug_mode true" />
+        <option name="teardown-command" value="setprop debug.adservices.consent_notification_debug_mode false" />
+
         <!-- Force enable enrollment checks when testing enrollment -->
         <option name="run-command" value="setprop debug.adservices.disable_fledge_enrollment_check false" />
         <option name="run-command" value="setprop debug.adservices.disable_topics_enrollment_check false" />
