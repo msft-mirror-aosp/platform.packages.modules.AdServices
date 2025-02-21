@@ -6191,6 +6191,17 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG;
     }
 
+    /**
+     * Default value for the base64 encoded LogSamplingConfig proto for AdServices client error
+     * logging.
+     */
+    @ConfigFlag String DEFAULT_AD_SERVICES_CEL_SAMPLING_CONFIG = "";
+
+    /** Returns the base64 encoded LogSamplingConfig for AdServices client error logging. */
+    default String getAdServicesCelSamplingConfig() {
+        return DEFAULT_AD_SERVICES_CEL_SAMPLING_CONFIG;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
     ////////////////////////////////////////////////////////////////////////////////////////////////
