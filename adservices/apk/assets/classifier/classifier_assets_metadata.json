@@ -17,8 +17,8 @@
     "asset_name": "precomputed_app_list",
     "asset_version": "2",
     "path": "assets/classifier/precomputed_app_list.csv",
-    "checksum": "12a8b7da9566c800e2422543267fa63a2484849b5afeffddd9177825d2e2e157",
-    "updated_date": "2022-09-10"
+    "checksum": "865aadfca4dc177326aa380fc1eb16f6307f95f0c0b32ce25fd37784d7d74bc4",
+    "updated_date": "2025-02-21"
   },
   {
     "asset_name": "topic_id_to_name",
