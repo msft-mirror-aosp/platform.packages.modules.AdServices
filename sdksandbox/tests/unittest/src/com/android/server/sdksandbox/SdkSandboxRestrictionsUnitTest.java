@@ -181,6 +181,10 @@ public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
 
     @After
     public void tearDown() {
+        if (mSdkSandboxSettingsListener != null) {
+            mSdkSandboxSettingsListener.unregisterPropertiesListener();
+        }
+
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
