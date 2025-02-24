@@ -59,7 +59,8 @@ public final class SampledStatsdAdServicesErrorLoggerImplTest
                         .setLastObservedExceptionName(exceptionName)
                         .build();
 
-        StatsdAdServicesErrorLogger logger = SampledStatsdAdServicesErrorLoggerImpl.getInstance();
+        StatsdAdServicesErrorLogger logger =
+                new SampledStatsdAdServicesErrorLoggerImpl(Runnable::run);
         logger.logAdServicesError(stats);
 
         verify(mMockCelMetricLogger).log(stats);
