@@ -45,6 +45,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.measurement.RegistrationRequest;
@@ -72,6 +73,7 @@ import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
+import com.android.adservices.service.measurement.countunique.CountUniqueRegistrar;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -182,6 +184,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     @Mock private DebugReportApi mDebugReportApi;
     @Mock private HttpsURLConnection mUrlConnection;
     @Mock private EnrollmentDao mEnrollmentDao;
+    @Mock private CountUniqueRegistrar mCountUniqueRegistrar;
     @Mock private AdServicesLogger mLogger;
 
     @Before
@@ -197,6 +200,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 sContext,
                                 mEnrollmentDao,
                                 mMockFlags,
+                                mCountUniqueRegistrar,
                                 mDatastoreManager,
                                 mDebugReportApi));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
@@ -12306,6 +12310,213 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 .isEqualTo(asyncFetchStatus.getResponseStatus());
         assertThat(fetch.isPresent()).isTrue();
         assertThat(fetch.get().getAggregateDebugReportingString()).isNull();
+    }
+
+    @Test
+    public void fetchSource_registersCountUniqueEvent_IfCountUniqueHeaderPresent()
+            throws IOException {
+
+        when(mMockFlags.getMeasurementEnableCountUniqueService()).thenReturn(true);
+        when(mMockFlags.getMeasurementCountUniqueAppAllowlist()).thenReturn("*");
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Count-Unique-Event",
+                                List.of(
+                                        "{\n"
+                                                + "\"key\": \""
+                                                + "111"
+                                                + "\",\n"
+                                                + "\"value\": \""
+                                                + "2"
+                                                + "\"\n"
+                                                + "}\n"),
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\",\n"
+                                                + "\"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\",\n"
+                                                + "\"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\""
+                                                + "}\n")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        verify(mCountUniqueRegistrar).registerCountUniqueEvent(any(), any());
+
+        assertWithMessage("asyncFetchStatus.getResponseStatus()")
+                .that(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        Source result = fetch.get();
+        assertWithMessage("result.getEnrollmentId()")
+                .that(result.getEnrollmentId())
+                .isEqualTo(ENROLLMENT_ID);
+        assertWithMessage("result.getAppDestinations()")
+                .that(result.getAppDestinations().get(0).toString())
+                .isEqualTo(DEFAULT_DESTINATION);
+        assertWithMessage("result.getEventId()")
+                .that(result.getEventId())
+                .isEqualTo(DEFAULT_EVENT_ID);
+        assertWithMessage("result.getPriority()").that(result.getPriority()).isEqualTo(123);
+        assertWithMessage("result.getRegistrationOrigin()")
+                .that(result.getRegistrationOrigin().toString())
+                .isEqualTo(DEFAULT_REGISTRATION);
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchSource_doesNotRegistersCountUniqueEvent_IfFlagsDisabled() throws IOException {
+
+        when(mMockFlags.getMeasurementEnableCountUniqueService()).thenReturn(false);
+        when(mMockFlags.getMeasurementCountUniqueAppAllowlist()).thenReturn("*");
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Count-Unique-Event",
+                                List.of(
+                                        "{\n"
+                                                + "\"key\": \""
+                                                + "111"
+                                                + "\",\n"
+                                                + "\"value\": \""
+                                                + "2"
+                                                + "\"\n"
+                                                + "}\n"),
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\",\n"
+                                                + "\"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\",\n"
+                                                + "\"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\""
+                                                + "}\n")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        verifyZeroInteractions(mCountUniqueRegistrar);
+        assertWithMessage("asyncFetchStatus.getResponseStatus()")
+                .that(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        Source result = fetch.get();
+        assertWithMessage("result.getEnrollmentId()")
+                .that(result.getEnrollmentId())
+                .isEqualTo(ENROLLMENT_ID);
+        assertWithMessage("result.getAppDestinations()")
+                .that(result.getAppDestinations().get(0).toString())
+                .isEqualTo(DEFAULT_DESTINATION);
+        assertWithMessage("result.getEventId()")
+                .that(result.getEventId())
+                .isEqualTo(DEFAULT_EVENT_ID);
+        assertWithMessage("result.getPriority()").that(result.getPriority()).isEqualTo(123);
+        assertWithMessage("result.getRegistrationOrigin()")
+                .that(result.getRegistrationOrigin().toString())
+                .isEqualTo(DEFAULT_REGISTRATION);
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchSource_doesNotRegistersCountUniqueEvent_IfAppNotInAllowList()
+            throws IOException {
+
+        when(mMockFlags.getMeasurementEnableCountUniqueService()).thenReturn(true);
+        when(mMockFlags.getMeasurementCountUniqueAppAllowlist()).thenReturn("not-in-allowlist");
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Count-Unique-Event",
+                                List.of(
+                                        "{\n"
+                                                + "\"key\": \""
+                                                + "111"
+                                                + "\",\n"
+                                                + "\"value\": \""
+                                                + "2"
+                                                + "\"\n"
+                                                + "}\n"),
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\",\n"
+                                                + "\"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\",\n"
+                                                + "\"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\""
+                                                + "}\n")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        verifyZeroInteractions(mCountUniqueRegistrar);
+        assertWithMessage("asyncFetchStatus.getResponseStatus()")
+                .that(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        Source result = fetch.get();
+        assertWithMessage("result.getEnrollmentId()")
+                .that(result.getEnrollmentId())
+                .isEqualTo(ENROLLMENT_ID);
+        assertWithMessage("result.getAppDestinations()")
+                .that(result.getAppDestinations().get(0).toString())
+                .isEqualTo(DEFAULT_DESTINATION);
+        assertWithMessage("result.getEventId()")
+                .that(result.getEventId())
+                .isEqualTo(DEFAULT_EVENT_ID);
+        assertWithMessage("result.getPriority()").that(result.getPriority()).isEqualTo(123);
+        assertWithMessage("result.getRegistrationOrigin()")
+                .that(result.getRegistrationOrigin().toString())
+                .isEqualTo(DEFAULT_REGISTRATION);
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     private RegistrationRequest buildRequest(String registrationUri) {

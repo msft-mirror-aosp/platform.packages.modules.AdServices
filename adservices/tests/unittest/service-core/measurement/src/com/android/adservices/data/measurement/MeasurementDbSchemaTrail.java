@@ -3519,6 +3519,30 @@ public class MeasurementDbSchemaTrail {
                     + AppReportHistoryContract.APP_DESTINATION
                     + "))";
 
+    public static final String CREATE_TABLE_COUNT_UNIQUE_REPORTING_V46 =
+            "CREATE TABLE "
+                    + MeasurementTables.CountUniqueReportingContract.TABLE
+                    + " ("
+                    + MeasurementTables.CountUniqueReportingContract.REPORT_ID
+                    + " TEXT, "
+                    + MeasurementTables.CountUniqueReportingContract.PAYLOAD
+                    + " TEXT, "
+                    + MeasurementTables.CountUniqueReportingContract.REPORTING_ORIGIN
+                    + " TEXT, "
+                    + MeasurementTables.CountUniqueReportingContract.STATUS
+                    + " INTEGER, "
+                    + MeasurementTables.CountUniqueReportingContract.SCHEDULED_REPORT_TIME
+                    + " INTEGER, "
+                    + MeasurementTables.CountUniqueReportingContract.API_VERSION
+                    + " TEXT, "
+                    + MeasurementTables.CountUniqueReportingContract.DEBUG_KEY
+                    + " TEXT, "
+                    + MeasurementTables.CountUniqueReportingContract.CONTEXT_ID
+                    + " TEXT, "
+                    + "PRIMARY KEY("
+                    + MeasurementTables.CountUniqueReportingContract.REPORT_ID
+                    + "))";
+
     private static final Map<String, String> CREATE_STATEMENT_BY_TABLE_V6 =
             ImmutableMap.of(
                     SourceContract.TABLE, CREATE_TABLE_SOURCE_V6,
@@ -3808,6 +3832,21 @@ public class MeasurementDbSchemaTrail {
                             + MeasurementTables.SourceNamedBudgetContract.SOURCE_ID
                             + ")");
 
+    private static final Map<String, String> CREATE_INDEXES_V45_V46 =
+            ImmutableMap.of(
+                    INDEX_PREFIX + MeasurementTables.CountUniqueReportingContract.TABLE + "_c_u_r",
+                    "CREATE INDEX "
+                            + "idx_"
+                            + MeasurementTables.CountUniqueReportingContract.TABLE
+                            + "_c_u_r"
+                            + " ON "
+                            + MeasurementTables.CountUniqueReportingContract.TABLE
+                            + "("
+                            + MeasurementTables.CountUniqueReportingContract.REPORT_ID
+                            + ", "
+                            + MeasurementTables.CountUniqueReportingContract.REPORTING_ORIGIN
+                            + ")");
+
     private static Map<String, String> getCreateStatementByTableV7() {
         return CREATE_STATEMENT_BY_TABLE_V6;
     }
@@ -4068,6 +4107,14 @@ public class MeasurementDbSchemaTrail {
         return createStatements;
     }
 
+    private static Map<String, String> getCreateStatementByTableV46() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV45());
+        createStatements.put(
+                MeasurementTables.CountUniqueReportingContract.TABLE,
+                CREATE_TABLE_COUNT_UNIQUE_REPORTING_V46);
+        return createStatements;
+    }
+
     private static Map<String, String> getCreateIndexesV7() {
         Map<String, String> createIndexes = new HashMap<>();
         createIndexes.putAll(CREATE_INDEXES_V6);
@@ -4240,6 +4287,12 @@ public class MeasurementDbSchemaTrail {
         return createIndexes;
     }
 
+    private static Map<String, String> getCreateIndexesV46() {
+        Map<String, String> createIndexes = getCreateIndexesV45();
+        createIndexes.putAll(CREATE_INDEXES_V45_V46);
+        return createIndexes;
+    }
+
     private static final Map<Integer, Collection<String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
             new ImmutableMap.Builder<Integer, Collection<String>>()
                     .put(6, CREATE_STATEMENT_BY_TABLE_V6.values())
@@ -4282,6 +4335,7 @@ public class MeasurementDbSchemaTrail {
                     .put(43, getCreateStatementByTableV43().values())
                     .put(44, getCreateStatementByTableV44().values())
                     .put(45, getCreateStatementByTableV45().values())
+                    .put(46, getCreateStatementByTableV46().values())
                     .build();
 
     private static final Map<Integer, Collection<String>> CREATE_INDEXES_STATEMENTS_BY_VERSION =
@@ -4326,6 +4380,7 @@ public class MeasurementDbSchemaTrail {
                     .put(43, getCreateIndexesV43().values())
                     .put(44, getCreateIndexesV44().values())
                     .put(45, getCreateIndexesV45().values())
+                    .put(46, getCreateIndexesV46().values())
                     .build();
 
     /**

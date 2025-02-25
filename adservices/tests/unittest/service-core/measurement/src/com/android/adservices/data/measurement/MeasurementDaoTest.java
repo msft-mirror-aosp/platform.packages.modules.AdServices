@@ -74,6 +74,7 @@ import com.android.adservices.service.measurement.AsyncRegistrationFixture;
 import com.android.adservices.service.measurement.AsyncRegistrationFixture.ValidAsyncRegistrationParams;
 import com.android.adservices.service.measurement.AttributedTrigger;
 import com.android.adservices.service.measurement.Attribution;
+import com.android.adservices.service.measurement.CountUniqueReport;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventReportFixture;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -3356,6 +3357,66 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                 Arrays.asList(
                         "IA1", "IA2", "IA3", "IA4", "IA5", "IA6", "IA7", "IA8", "IA8", "IA10"),
                 db);
+    }
+
+    @Test
+    public void testInsertCountUniqueReport_forValidEvent_isSuccess() {
+        String reportId = "reportId";
+        String payload = "payload";
+        Uri reportingOrigin = Uri.parse("https://test.foo");
+        int status = CountUniqueReport.Status.PENDING;
+        Long scheduledReportTime = 1726874188124L;
+        String version = "0.1";
+        String debugKey = "asadsadsa=";
+        String contextId = "testContextId";
+
+        CountUniqueReport report =
+                createCountUniqueReport(
+                        reportId,
+                        payload,
+                        reportingOrigin,
+                        status,
+                        scheduledReportTime,
+                        version,
+                        debugKey,
+                        contextId);
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertCountUniqueReport(report);
+                });
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.CountUniqueReportingContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+
+            assertThat(cursor.getCount()).isEqualTo(1);
+            List<CountUniqueReport> reports = new ArrayList<>();
+
+            while (cursor.moveToNext()) {
+                CountUniqueReport reportFromDb =
+                        SqliteObjectMapper.constructCountUniqueReport(cursor);
+                reports.add(reportFromDb);
+            }
+
+            for (CountUniqueReport r : reports) {
+                assertThat(r.getReportId()).isEqualTo(reportId);
+                assertThat(r.getPayload()).isEqualTo(payload);
+                assertThat(r.getReportingOrigin()).isEqualTo(reportingOrigin);
+                assertThat(r.getStatus()).isEqualTo(status);
+                assertThat(r.getScheduledReportTime()).isEqualTo(scheduledReportTime);
+                assertThat(r.getApiVersion()).isEqualTo(version);
+                assertThat(r.getDebugKey()).isEqualTo(debugKey);
+                assertThat(r.getContextId()).isEqualTo(contextId);
+            }
+        }
     }
 
     @Test
@@ -14592,5 +14653,26 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                 .runInTransactionWithResult(
                         measurementDao -> measurementDao.getMatchingActiveSources(trigger))
                 .orElseThrow();
+    }
+
+    private CountUniqueReport createCountUniqueReport(
+            String reportId,
+            String payload,
+            Uri reportingOrigin,
+            int status,
+            Long scheduledReportTime,
+            String version,
+            String debugKey,
+            String contextId) {
+        CountUniqueReport.Builder builder = new CountUniqueReport.Builder();
+        builder.setReportId(reportId);
+        builder.setPayload(payload);
+        builder.setReportingOrigin(reportingOrigin);
+        builder.setStatus(status);
+        builder.setScheduledReportTime(scheduledReportTime);
+        builder.setApiVersion(version);
+        builder.setDebugKey(debugKey);
+        builder.setContextId(contextId);
+        return builder.build();
     }
 }

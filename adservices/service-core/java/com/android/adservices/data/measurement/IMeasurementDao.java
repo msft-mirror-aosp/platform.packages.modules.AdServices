@@ -25,6 +25,7 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.service.measurement.AggregatableNamedBudgets.BudgetAndContribution;
 import com.android.adservices.service.measurement.Attribution;
+import com.android.adservices.service.measurement.CountUniqueReport;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
@@ -888,6 +889,14 @@ public interface IMeasurementDao {
             @NonNull Uri registrationOrigin,
             long lastReportDeliveredTimestamp)
             throws DatastoreException;
+
+    /**
+     * Stores a Count Unique report into the Count Unique report table
+     *
+     * @param report report to store
+     * @throws DatastoreException when SQLite issue occurs.
+     */
+    void insertCountUniqueReport(@NonNull CountUniqueReport report) throws DatastoreException;
 
     /**
      * Insert an entry of {@link AggregateDebugReportRecord} into the {@link
