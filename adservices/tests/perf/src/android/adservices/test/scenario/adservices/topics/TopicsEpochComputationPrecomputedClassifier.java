@@ -28,7 +28,6 @@ import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
@@ -96,6 +95,9 @@ public class TopicsEpochComputationPrecomputedClassifier {
 
     private static final String EPOCH_STOP_TIMESTAMP_KEY = "end";
 
+    private static final EpochSleeper sSleeper =
+            EpochSleeper.getInstance(sContext, TEST_EPOCH_JOB_PERIOD_MS);
+
     @Rule
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forTopicsPerfTests(
@@ -106,13 +108,16 @@ public class TopicsEpochComputationPrecomputedClassifier {
 
     @Before
     public void setup() throws Exception {
+        sSleeper.triggerOriginLog();
+
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
+        sSleeper.sleepUntilNextEpoch();
     }
 
+
     @Test
-    @FlakyTest(bugId = 290122696)
     public void testEpochComputation() throws Exception {
         // The Test App has 2 SDKs: sdk1 calls the Topics API and sdk2 does not.
         // Sdk1 calls the Topics API.
@@ -134,7 +139,7 @@ public class TopicsEpochComputationPrecomputedClassifier {
 
         // Wait to the next epoch. We will not need to do this after we implement the fix in
         // go/rb-topics-epoch-scheduling
-        Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
+        sSleeper.sleepUntilNextEpoch();
 
         // calculate and log epoch computation duration after some delay so that epoch
         // computation job is finished.
