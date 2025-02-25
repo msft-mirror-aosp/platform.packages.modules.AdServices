@@ -48,4 +48,16 @@ public final class CommonFlagsConstants {
     /** Key to enable the logging for Process-Stable flags framework. */
     public static final String KEY_ENABLE_PROCESS_STABLE_FLAGS_LOGGING =
             "ProcessStable__enable_process_stable_flags_logging";
+
+    /**
+     * The default timeout to initialize flags in Process-Stable flags framework in milliseconds.
+     */
+    public static final int DEFAULT_FLAG_INITIALIZATION_TIMEOUT_MS = 150;
+
+    /**
+     * Key of the default timeout to initialize flags in Process-Stable flags framework in
+     * milliseconds.
+     */
+    public static final String KEY_FLAG_INITIALIZATION_TIMEOUT_MS =
+            "ProcessStable__flag_initialization_timeout_ms";
 }
