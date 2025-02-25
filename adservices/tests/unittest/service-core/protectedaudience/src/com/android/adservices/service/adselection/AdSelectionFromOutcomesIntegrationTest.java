@@ -105,6 +105,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
+import com.android.adservices.service.adselection.encryption.ServerAuctionCoordinatorUriStrategyFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.RetryStrategyFactory;
@@ -263,6 +264,7 @@ public final class AdSelectionFromOutcomesIntegrationTest
     @Mock private AdIdFetcher mAdIdFetcher;
     private RetryStrategyFactory mRetryStrategyFactory;
     private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
+    private ServerAuctionCoordinatorUriStrategyFactory mServerAuctionCoordinatorUriStrategyFactory;
 
     @Before
     public void setUp() throws Exception {
@@ -325,6 +327,10 @@ public final class AdSelectionFromOutcomesIntegrationTest
                 .thenReturn(DevContext.createForDevOptionsDisabled());
         when(mMockCallerMetadata.getBinderElapsedTimestamp())
                 .thenReturn(SystemClock.elapsedRealtime() - BINDER_ELAPSED_TIME_MS);
+        mServerAuctionCoordinatorUriStrategyFactory =
+                new ServerAuctionCoordinatorUriStrategyFactory(
+                        mFakeFlags.getFledgeAuctionServerCoordinatorUrlAllowlist());
+
         // Create an instance of AdSelection Service with real dependencies
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -356,7 +362,8 @@ public final class AdSelectionFromOutcomesIntegrationTest
                         false,
                         mRetryStrategyFactory,
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED,
-                        mAuctionServerDebugConfigurationGenerator);
+                        mAuctionServerDebugConfigurationGenerator,
+                        mServerAuctionCoordinatorUriStrategyFactory);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -507,7 +514,8 @@ public final class AdSelectionFromOutcomesIntegrationTest
                         false,
                         mRetryStrategyFactory,
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED,
-                        mAuctionServerDebugConfigurationGenerator);
+                        mAuctionServerDebugConfigurationGenerator,
+                        mServerAuctionCoordinatorUriStrategyFactory);
 
         AdSelectionFromOutcomesIntegrationTest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(adSelectionService, config, CALLER_PACKAGE_NAME);
@@ -590,7 +598,8 @@ public final class AdSelectionFromOutcomesIntegrationTest
                         true,
                         mRetryStrategyFactory,
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED,
-                        mAuctionServerDebugConfigurationGenerator);
+                        mAuctionServerDebugConfigurationGenerator,
+                        mServerAuctionCoordinatorUriStrategyFactory);
 
         AdSelectionFromOutcomesIntegrationTest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);

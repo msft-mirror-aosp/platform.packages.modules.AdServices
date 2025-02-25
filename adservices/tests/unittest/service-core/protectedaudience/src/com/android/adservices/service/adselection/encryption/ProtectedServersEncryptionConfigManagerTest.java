@@ -18,8 +18,11 @@ package com.android.adservices.service.adselection.encryption;
 
 import static android.adservices.adselection.AuctionEncryptionKeyFixture.AUCTION_KEY_1;
 import static android.adservices.adselection.AuctionEncryptionKeyFixture.AUCTION_KEY_2;
+import static android.adservices.adselection.AuctionEncryptionKeyFixture.AUCTION_KEY_FETCH_DEFAULT_URI;
 import static android.adservices.adselection.AuctionEncryptionKeyFixture.COORDINATOR_URL_AUCTION;
 import static android.adservices.adselection.AuctionEncryptionKeyFixture.COORDINATOR_URL_AUCTION_ORIGIN;
+import static android.adservices.adselection.AuctionEncryptionKeyFixture.COORDINATOR_URL_AUCTION_ORIGIN_URI;
+import static android.adservices.adselection.AuctionEncryptionKeyFixture.COORDINATOR_URL_AUCTION_URI;
 import static android.adservices.adselection.AuctionEncryptionKeyFixture.ENCRYPTION_KEY_AUCTION_WITH_COORDINATOR;
 
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI;
@@ -31,6 +34,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_S
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_REFRESH_EXPIRED_KEYS_DURING_AUCTION;
 import static com.android.adservices.service.adselection.encryption.JoinEncryptionKeyTestUtil.COORDINATOR_URL_JOIN;
 import static com.android.adservices.service.adselection.encryption.JoinEncryptionKeyTestUtil.ENCRYPTION_KEY_JOIN_WITH_COORDINATOR;
+import static com.android.adservices.service.adselection.encryption.JoinEncryptionKeyTestUtil.JOIN_KEY_FETCH_DEFAULT_URI;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.RESPONSE_PROPERTIES_CONTENT_TYPE;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
@@ -44,6 +48,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.AuctionEncryptionKeyFixture;
@@ -66,8 +71,11 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.ServerAuctionKeyFetchCalledStats;
 import com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerImpl;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.adservices.shared.testing.annotations.SetStringFlag;
 
 import com.google.common.collect.ImmutableList;
@@ -89,18 +97,21 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 @SetIntegerFlag(name = KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING, value = 5)
-@SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED)
 @SetStringFlag(
         name = KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST,
         value = COORDINATOR_URL_AUCTION)
+@SetFlagEnabled(KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED)
+@SetFlagFalse(KEY_FLEDGE_AUCTION_SERVER_REFRESH_EXPIRED_KEYS_DURING_AUCTION)
+@SetLongFlag(name = KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS, value = 1L)
+@SetStringFlag(
+        name = KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI,
+        value = AUCTION_KEY_FETCH_DEFAULT_URI)
+@SetStringFlag(
+        name = KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI,
+        value = JOIN_KEY_FETCH_DEFAULT_URI)
+// TODO(b/398830450): Use mocks instead of real objects.
 public final class ProtectedServersEncryptionConfigManagerTest extends AdServicesMockitoTestCase {
-
-    private static final Long EXPIRY_TTL_1SEC = 1L;
-
     private static final int TIMEOUT_MS = 500;
-
-    private static final String AUCTION_KEY_FETCH_DEFAULT_URI = "https://foo.bar/auctionkey";
-    private static final String JOIN_KEY_FETCH_DEFAULT_URI = "https://foo.bar/joinkey";
 
     @Mock private AdServicesHttpsClient mMockHttpClient;
     private AdServicesLogger mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
@@ -123,20 +134,25 @@ public final class ProtectedServersEncryptionConfigManagerTest extends AdService
             new JoinEncryptionKeyParser(mFakeFlags);
     private ProtectedServersEncryptionConfigManager mKeyManager;
     private DevContext mDevContext;
+    private ServerAuctionCoordinatorUriStrategyFactory mServerAuctionCoordinatorUriStrategyFactory;
+
+    @Mock
+    private ServerAuctionCoordinatorUriStrategyFactory
+            mServerAuctionCoordinatorUriStrategyFactoryMock;
+
+    @Mock private ServerAuctionCoordinatorUriStrategy mServerAuctionCoordinatorUriStrategyMock;
 
     @Before
     public void setUp() {
-        // NOTE: not using annotations to set flags below because these constants are not public
-        flags.setFlag(
-                KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI, AUCTION_KEY_FETCH_DEFAULT_URI);
-        flags.setFlag(KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI, JOIN_KEY_FETCH_DEFAULT_URI);
-        flags.setFlag(KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS, EXPIRY_TTL_1SEC);
-
         mLightweightExecutor = AdServicesExecutors.getLightWeightExecutor();
         mProtectedServersEncryptionConfigDao =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
                         .build()
                         .protectedServersEncryptionConfigDao();
+        mDevContext = DevContext.builder(mPackageName).setDeviceDevOptionsEnabled(true).build();
+        mServerAuctionCoordinatorUriStrategyFactory =
+                new ServerAuctionCoordinatorUriStrategyFactory(
+                        mFakeFlags.getFledgeAuctionServerCoordinatorUrlAllowlist());
         mKeyManager =
                 new ProtectedServersEncryptionConfigManager(
                         mProtectedServersEncryptionConfigDao,
@@ -146,8 +162,8 @@ public final class ProtectedServersEncryptionConfigManagerTest extends AdService
                         mJoinEncryptionKeyParser,
                         mMockHttpClient,
                         mLightweightExecutor,
-                        mAdServicesLoggerSpy);
-        mDevContext = DevContext.builder(mPackageName).setDeviceDevOptionsEnabled(true).build();
+                        mAdServicesLoggerSpy,
+                        mServerAuctionCoordinatorUriStrategyFactory);
     }
 
     @Test
@@ -560,7 +576,8 @@ public final class ProtectedServersEncryptionConfigManagerTest extends AdService
                         mJoinEncryptionKeyParser,
                         mMockHttpClient,
                         mLightweightExecutor,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mServerAuctionCoordinatorUriStrategyFactory);
 
         String expiredPublicKey = "t/dzKzHJKe7k//n2u7wDdvxRtgXy9SncfXz6g8JB/m4=";
         mProtectedServersEncryptionConfigDao.insertKeys(
@@ -699,5 +716,93 @@ public final class ProtectedServersEncryptionConfigManagerTest extends AdService
                 Base64.getDecoder()
                         .decode(AUCTION_KEY_1.publicKey().getBytes(StandardCharsets.UTF_8));
         assertThat(actualKeyConfig.getPublicKey()).isEqualTo(expectedPublicKey);
+    }
+
+    @Test
+    public void test_getKeyFetchUriOfType_withAuctionKeyType_success() {
+        mKeyManager =
+                new ProtectedServersEncryptionConfigManager(
+                        mProtectedServersEncryptionConfigDao,
+                        mFakeFlags,
+                        mClock,
+                        mAuctionEncryptionKeyParser,
+                        mJoinEncryptionKeyParser,
+                        mMockHttpClient,
+                        mLightweightExecutor,
+                        mAdServicesLoggerSpy,
+                        mServerAuctionCoordinatorUriStrategyFactoryMock);
+
+        when(mServerAuctionCoordinatorUriStrategyFactoryMock.createStrategy(mDevContext))
+                .thenReturn(mServerAuctionCoordinatorUriStrategyMock);
+
+        when(mServerAuctionCoordinatorUriStrategyMock.getAuctionEncryptionKeyFetchUri(
+                        COORDINATOR_URL_AUCTION_ORIGIN_URI))
+                .thenReturn(COORDINATOR_URL_AUCTION_URI);
+
+        Uri result =
+                mKeyManager.getKeyFetchUriOfType(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
+                        COORDINATOR_URL_AUCTION_ORIGIN_URI,
+                        mKeyFetchLogger,
+                        mDevContext);
+
+        verify(mServerAuctionCoordinatorUriStrategyFactoryMock).createStrategy(eq(mDevContext));
+        verify(mServerAuctionCoordinatorUriStrategyMock)
+                .getAuctionEncryptionKeyFetchUri(eq(COORDINATOR_URL_AUCTION_ORIGIN_URI));
+
+        assertThat(result).isEqualTo(COORDINATOR_URL_AUCTION_URI);
+    }
+
+    @Test
+    public void test_getKeyFetchUriOfType_withAuctionKeyType_coordinatorNull_success() {
+        mKeyManager =
+                new ProtectedServersEncryptionConfigManager(
+                        mProtectedServersEncryptionConfigDao,
+                        mFakeFlags,
+                        mClock,
+                        mAuctionEncryptionKeyParser,
+                        mJoinEncryptionKeyParser,
+                        mMockHttpClient,
+                        mLightweightExecutor,
+                        mAdServicesLoggerSpy,
+                        mServerAuctionCoordinatorUriStrategyFactoryMock);
+
+        Uri result =
+                mKeyManager.getKeyFetchUriOfType(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
+                        null,
+                        mKeyFetchLogger,
+                        mDevContext);
+
+        verifyNoInteractions(mServerAuctionCoordinatorUriStrategyFactoryMock);
+
+        assertThat(result.toString())
+                .isEqualTo(mFakeFlags.getFledgeAuctionServerAuctionKeyFetchUri());
+    }
+
+    @Test
+    public void test_getKeyFetchUriOfType_withJoinKeyType_success() {
+        mKeyManager =
+                new ProtectedServersEncryptionConfigManager(
+                        mProtectedServersEncryptionConfigDao,
+                        mFakeFlags,
+                        mClock,
+                        mAuctionEncryptionKeyParser,
+                        mJoinEncryptionKeyParser,
+                        mMockHttpClient,
+                        mLightweightExecutor,
+                        mAdServicesLoggerSpy,
+                        mServerAuctionCoordinatorUriStrategyFactoryMock);
+
+        Uri result =
+                mKeyManager.getKeyFetchUriOfType(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN,
+                        null,
+                        mKeyFetchLogger,
+                        mDevContext);
+
+        verifyNoInteractions(mServerAuctionCoordinatorUriStrategyFactoryMock);
+
+        assertThat(result.toString()).isEqualTo(mFakeFlags.getFledgeAuctionServerJoinKeyFetchUri());
     }
 }
