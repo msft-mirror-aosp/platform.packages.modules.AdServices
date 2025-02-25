@@ -16,11 +16,15 @@
 
 package com.android.adservices.errorlogging;
 
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.metriclogger.CelMetricLogger;
 import com.android.adservices.shared.errorlogging.AdServicesErrorStats;
 import com.android.adservices.shared.errorlogging.StatsdAdServicesErrorLogger;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Supplier;
+
+import java.util.concurrent.Executor;
 
 /**
  * Implementation of StatsdAdServicesErrorLogger that may perform sampling and then log error stats
@@ -33,7 +37,16 @@ final class SampledStatsdAdServicesErrorLoggerImpl implements StatsdAdServicesEr
     private static final Supplier<StatsdAdServicesErrorLogger> INSTANCE =
             SampledStatsdAdServicesErrorLoggerImpl::new;
 
-    private SampledStatsdAdServicesErrorLoggerImpl() {}
+    private final Executor mLoggingExecutor;
+
+    private SampledStatsdAdServicesErrorLoggerImpl() {
+        this(AdServicesExecutors.getBackgroundExecutor());
+    }
+
+    @VisibleForTesting
+    SampledStatsdAdServicesErrorLoggerImpl(Executor executor) {
+        mLoggingExecutor = executor;
+    }
 
     /** Returns an instance of {@link StatsdAdServicesErrorLogger}. */
     public static StatsdAdServicesErrorLogger getInstance() {
@@ -42,6 +55,6 @@ final class SampledStatsdAdServicesErrorLoggerImpl implements StatsdAdServicesEr
 
     @Override
     public void logAdServicesError(AdServicesErrorStats stats) {
-        CelMetricLogger.get().log(stats);
+        mLoggingExecutor.execute(() -> CelMetricLogger.get().log(stats));
     }
 }
