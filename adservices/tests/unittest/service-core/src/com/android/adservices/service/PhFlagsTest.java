@@ -219,7 +219,6 @@ import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_JOIN_KE
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED;
-import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES;
@@ -743,7 +742,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_S
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES;
@@ -5034,14 +5032,6 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED,
                 FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED,
                 Flags::getFledgeAuctionServerOmitAdsEnabled);
-    }
-
-    @Test
-    public void testGetFledgeAuctionServerMultiCloudEnabled() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
-                FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
-                Flags::getFledgeAuctionServerMultiCloudEnabled);
     }
 
     @Test

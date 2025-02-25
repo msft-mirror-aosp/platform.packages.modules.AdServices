@@ -53,7 +53,7 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
     private static final String ACONFIG_PREFIX = "com.android.adservices.flags.";
 
     private static final String HOW_TO_FIX_IT_MESSAGE =
-            "If this is expected, you might need to change ACONFIG_ONLY_ALLOW_LIST, "
+            "If this is expected, you might need to change ACONFIG_ONLY_ALLOWLIST, "
                     + "MISSING_FLAGS_ALLOWLIST, or"
                     + " NON_CANONICAL_FLAGS (on this file).";
 
@@ -73,7 +73,8 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                     FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED,
                     FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED,
                     FLAG_ENABLE_ADSERVICES_API_ENABLED,
-                    FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE);
+                    FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE,
+                    FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED);
 
     /**
      * List used by {@link #testAllAconfigFlagsAreMapped()}, it contains the name of flags that are
@@ -140,13 +141,7 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
      * will add the missing {@link com.android.adservices.service.PhFlags} / {@link
      * com.android.adservices.service.FlagsConstants} counterpart.
      */
-    private static final Map<String, String> NON_CANONICAL_FLAGS =
-            Map.of(
-                    // DeviceConfig flags for PA/FLEDGE are named "auction_server" instead of
-                    // "server_auction."  This API has already been released, and the aconfig flag
-                    // cannot be renamed, so this mismatch is intentional.
-                    FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED,
-                    FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED);
+    private static final Map<String, String> NON_CANONICAL_FLAGS = Map.of();
 
     @Test
     public void testNoFlagHasTheAConfigPrefix() throws Exception {

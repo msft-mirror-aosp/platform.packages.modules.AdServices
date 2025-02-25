@@ -207,8 +207,6 @@ public final class ReportAndRegisterEventIntegrationTest extends AdServicesExten
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
-    private MultiCloudSupportStrategy mMultiCloudSupportStrategy =
-            MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDaoMock;
     @Mock private AdIdFetcher mAdIdFetcher;
     @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
@@ -1000,7 +998,7 @@ public final class ReportAndRegisterEventIntegrationTest extends AdServicesExten
                 mAdSelectionServiceFilterMock,
                 mAdFilteringFeatureFactory,
                 mConsentManagerMock,
-                mMultiCloudSupportStrategy,
+                mObliviousHttpEncryptor,
                 mAdSelectionDebugReportDaoMock,
                 mAdIdFetcher,
                 mUnusedKAnonSignJoinFactory,
