@@ -327,6 +327,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 0,
                                 false,
                                 false,
+                                false,
                                 false)
                         .setAdTechDomain(null)
                         .build();
@@ -385,6 +386,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 false,
                                 false,
                                 0,
+                                false,
                                 false,
                                 false,
                                 false)
@@ -5165,6 +5167,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
+        assertThat(asyncFetchStatus.isTriggerContextIdConfigured()).isFalse();
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
@@ -5200,6 +5203,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
+        assertThat(asyncFetchStatus.isTriggerContextIdConfigured()).isFalse();
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
@@ -5234,6 +5238,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
+        assertThat(asyncFetchStatus.isTriggerContextIdConfigured()).isTrue();
         Trigger result = fetch.get();
         assertEquals(TRIGGER_URI, result.getRegistrationOrigin().toString());
         assertEquals(triggerContextId, result.getTriggerContextId());
@@ -6556,6 +6561,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 false,
                                 false,
                                 0,
+                                false,
                                 false,
                                 false,
                                 false)
