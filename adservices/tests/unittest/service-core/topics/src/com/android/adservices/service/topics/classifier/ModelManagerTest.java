@@ -24,6 +24,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_LABELS_FILE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_LOAD_ML_MODEL_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+import static com.android.adservices.service.topics.classifier.CommonClassifierHelper.computeClassifierAssetChecksum;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
@@ -383,6 +384,33 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testLoadedProductionAppTopics_bundled() {
+        ModelManager modelManager =
+                new ModelManager(
+                        mContext,
+                        PRODUCTION_LABELS_FILE_PATH,
+                        PRODUCTION_APPS_FILE_PATH,
+                        PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH,
+                        MODEL_FILE_PATH,
+                        mMockFileStorage,
+                        mMockDownloadedFiles);
+
+        // Verifies total number of lines
+        Map<String, List<Integer>> appTopic = modelManager.retrieveAppClassificationTopics();
+        assertThat(appTopic.size()).isEqualTo(10023);
+
+        // Verifies new package name is included.
+        assertThat(
+                        appTopic.get(
+                                "com.android.adservices.tests.rollback.topicsrollbackrollforwardtestapp"))
+                .isEqualTo(ImmutableList.of(10147, 10253, 10175, 10254, 10333));
+        assertThat(appTopic.get("com.panzerdog.tacticool"))
+                .isEqualTo(ImmutableList.of(10239, 10228));
+        assertThat(appTopic.get("com.star2.pusher")).isEqualTo(ImmutableList.of(10230, 10228));
+    }
+
+    @Test
     @ExpectErrorLogUtilCall(
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__INVALID_TOPIC_ID,
             times = 5)
@@ -484,10 +512,11 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
         assertThat(mTestClassifierAssetsMetadata.get("topic_id_to_name").get("path"))
                 .isEqualTo("assets/classifier/topic_id_to_name.csv");
 
-        // The asset "precomputed_app_list" should have attribution "checksum" and
-        // its value should be "6c4fa0e24cf67c0e830d05196f2b8e66824ca0ebf6ade3229cdd3dedf63cbb96"
+        // The asset "precomputed_test_app_list" should have attribution "checksum" andits value
+        // should match the calculated value from the real data.
         assertThat(mTestClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
-                .isEqualTo("6c4fa0e24cf67c0e830d05196f2b8e66824ca0ebf6ade3229cdd3dedf63cbb96");
+                .isEqualTo(
+                        computeClassifierAssetChecksum(mContext.getAssets(), TEST_APPS_FILE_PATH));
     }
 
     @Test
@@ -561,10 +590,12 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
         assertThat(mProductionClassifierAssetsMetadata.get("topic_id_to_name").get("path"))
                 .isEqualTo("assets/classifier/topic_id_to_name.csv");
 
-        // The asset "precomputed_app_list" should have attribution "checksum" and
-        // its value should be "12a8b7da9566c800e2422543267fa63a2484849b5afeffddd9177825d2e2e157"
+        // The asset "precomputed_app_list" should have attribution "checksum" and its value should
+        // match the calculated value from the real data.
         assertThat(mProductionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
-                .isEqualTo("12a8b7da9566c800e2422543267fa63a2484849b5afeffddd9177825d2e2e157");
+                .isEqualTo(
+                        computeClassifierAssetChecksum(
+                                mContext.getAssets(), PRODUCTION_APPS_FILE_PATH));
     }
 
     @Test
@@ -643,10 +674,12 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
         assertThat(mProductionClassifierAssetsMetadata.get("topic_id_to_name").get("path"))
                 .isEqualTo("assets/classifier/topic_id_to_name.csv");
 
-        // The asset "precomputed_app_list" should have attribution "checksum" and
-        // its value should be "12a8b7da9566c800e2422543267fa63a2484849b5afeffddd9177825d2e2e157"
+        // The asset "precomputed_app_list" should have attribution "checksum" and its value should
+        // match the calculated value from the real data.
         assertThat(mProductionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
-                .isEqualTo("12a8b7da9566c800e2422543267fa63a2484849b5afeffddd9177825d2e2e157");
+                .isEqualTo(
+                        computeClassifierAssetChecksum(
+                                mContext.getAssets(), PRODUCTION_APPS_FILE_PATH));
     }
 
     @Test
