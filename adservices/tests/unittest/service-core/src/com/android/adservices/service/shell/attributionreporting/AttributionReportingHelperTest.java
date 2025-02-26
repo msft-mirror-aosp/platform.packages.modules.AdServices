@@ -55,9 +55,9 @@ public final class AttributionReportingHelperTest extends AdServicesUnitTestCase
                         .build();
         JSONObject jsonObject = AttributionReportingHelper.sourceToJson(source, SCHEMA_PARTIAL);
 
-        expect.withMessage("ID")
-                .that(jsonObject.getString(SourceContract.ID))
-                .isEqualTo(source.getId());
+        expect.withMessage("EVENT_ID")
+                .that(jsonObject.getString(SourceContract.EVENT_ID))
+                .isEqualTo(source.getEventId().toString());
         expect.withMessage("STATUS")
                 .that(jsonObject.getString(SourceContract.STATUS))
                 .isEqualTo(AttributionReportingHelper.STATUS_MAP.get(source.getStatus()));
@@ -103,9 +103,9 @@ public final class AttributionReportingHelperTest extends AdServicesUnitTestCase
                         .build();
         JSONObject jsonObject = AttributionReportingHelper.sourceToJson(source, SCHEMA_FULL);
 
-        expect.withMessage("ID")
-                .that(jsonObject.getString(SourceContract.ID))
-                .isEqualTo(source.getId());
+        expect.withMessage("EVENT_ID")
+                .that(jsonObject.getString(SourceContract.EVENT_ID))
+                .isEqualTo(source.getEventId().toString());
         expect.withMessage("STATUS")
                 .that(jsonObject.getString(SourceContract.STATUS))
                 .isEqualTo(AttributionReportingHelper.STATUS_MAP.get(source.getStatus()));
@@ -349,9 +349,6 @@ public final class AttributionReportingHelperTest extends AdServicesUnitTestCase
                 jsonObject.getString(EventReportContract.REGISTRATION_ORIGIN)).isEqualTo(
                 eventReport.getRegistrationOrigin().toString());
 
-        expect.withMessage("ID")
-                .that(jsonObject.getString(EventReportContract.ID))
-                .isEqualTo(eventReport.getId());
         expect.withMessage("SOURCE_DEBUG_KEY")
                 .that(jsonObject.getString(EventReportContract.SOURCE_DEBUG_KEY))
                 .isEqualTo(eventReport.getSourceDebugKey().toString());
@@ -457,9 +454,6 @@ public final class AttributionReportingHelperTest extends AdServicesUnitTestCase
         expect.withMessage("API")
                 .that(jsonObject.getString(MeasurementTables.AggregateReport.API))
                 .isEqualTo(aggregatableReport.getApi());
-        expect.withMessage("ID")
-                .that(jsonObject.getString(MeasurementTables.AggregateReport.ID))
-                .isEqualTo(aggregatableReport.getId());
         expect.withMessage("DEBUG_REPORT_STATUS")
                 .that(jsonObject.getInt(MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS))
                 .isEqualTo(aggregatableReport.getDebugReportStatus());
