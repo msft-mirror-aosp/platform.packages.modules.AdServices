@@ -39,7 +39,6 @@ import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFrag
  * serving consent to the main view, and interacting with the {@link ConsentManager} that persists
  * the user consent data in a storage.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class MainViewModel extends AndroidViewModel {
     private final MutableLiveData<MainViewModelUiEvent> mEventTrigger = new MutableLiveData<>();

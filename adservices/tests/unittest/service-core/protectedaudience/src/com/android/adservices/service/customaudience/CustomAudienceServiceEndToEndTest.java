@@ -26,26 +26,42 @@ import static android.adservices.customaudience.CustomAudienceFixture.VALID_NAME
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_OWNER;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_PRIORITY_1;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS;
+import static android.adservices.customaudience.CustomAudienceFixture.getValidBuilderForBuyerFilters;
 
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponse;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponseString;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.ACTIVATION_TIME;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.DB_PARTIAL_CUSTOM_AUDIENCE_1;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.DB_PARTIAL_CUSTOM_AUDIENCE_2;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.LEAVE_CA_1;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.LEAVE_CA_2;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CA_1;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CA_2;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CA_3;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CUSTOM_AUDIENCE_1;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CUSTOM_AUDIENCE_2;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CUSTOM_AUDIENCE_3;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.ScheduleUpdateTestCallback;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.UPDATE_ID;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.VALID_BIDDING_SIGNALS;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayload;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithScheduleRequests;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createScheduleRequestWithUpdateUri;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.extractCustomAudiencesToLeaveFromScheduleRequest;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.extractPartialCustomAudiencesFromRequest;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.partialCustomAudienceListToJsonArray;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NO_MATCH_PACKAGE_NAME;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -78,6 +94,7 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
 import android.adservices.customaudience.ICustomAudienceCallback;
+import android.adservices.customaudience.PartialCustomAudience;
 import android.adservices.customaudience.ScheduleCustomAudienceUpdateInput;
 import android.adservices.http.MockWebServerRule;
 import android.net.Uri;
@@ -89,6 +106,8 @@ import androidx.room.Room;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -103,6 +122,9 @@ import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
@@ -123,8 +145,13 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateBackgroundJobStats;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedFailureStats;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedStats;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
 import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
+import com.android.adservices.testutils.DevSessionHelper;
 import com.android.adservices.testutils.FetchCustomAudienceTestSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -135,9 +162,14 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
@@ -145,26 +177,28 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 @SpyStatic(ScheduleCustomAudienceUpdateJobService.class)
 @MockStatic(BackgroundFetchJob.class)
 public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedMockitoTestCase {
+
     @Rule(order = 11)
     public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_1 =
-            CustomAudienceFixture.getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
-                    .build();
+            getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1).build();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_2 =
-            CustomAudienceFixture.getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
+            getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
                     .setActivationTime(CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
                     .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
                     .build();
@@ -184,7 +218,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                     .build();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_BEYOND_MAX_EXPIRATION_TIME =
-            CustomAudienceFixture.getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
+            getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
                     .setExpirationTime(CustomAudienceFixture.INVALID_BEYOND_MAX_EXPIRATION_TIME)
                     .build();
 
@@ -220,15 +254,21 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     private static final String NAME_2 = "NAME_2";
     private static final String UPDATE_URI_PATH = "/update";
     private static final String UPDATE_URI_PATH_2 = "/update2";
+    private static final String UPDATE_URI_PATH_3 = "/update3";
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final AdSelectionSignals TRUSTED_BIDDING_DATA =
             AdSelectionSignals.fromString("{\"trusted_bidding_data\":1}");
+    private static final AdSelectionSignals USER_BIDDING_SIGNALS_1 =
+            AdSelectionSignals.fromString("{\"ExampleBiddingSignal1\":1}");
 
     private static final FrequencyCapAdDataValidator FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP =
             new FrequencyCapAdDataValidatorNoOpImpl();
 
     private static final AdRenderIdValidator RENDER_ID_VALIDATOR_NO_OP =
             AdRenderIdValidator.AD_RENDER_ID_VALIDATOR_NO_OP;
+
+    private static final int NEGATIVE_DELAY_FOR_TEST_IN_MINUTES = -20;
+    private static final Duration NEGATIVE_DELAY_FOR_TEST = Duration.ofMinutes(-20);
 
     private CustomAudienceDao mCustomAudienceDao;
     private AppInstallDao mAppInstallDao;
@@ -253,6 +293,24 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     private Uri mFetchUri;
     private CustomAudienceQuantityChecker mCustomAudienceQuantityChecker;
     private CustomAudienceValidator mCustomAudienceValidator;
+    private DevSessionHelper mDevSessionHelper;
+    private ScheduleCustomAudienceUpdateStrategy mStrategy;
+
+    @Captor
+    private ArgumentCaptor<ScheduledCustomAudienceUpdateScheduleAttemptedStats>
+            mScheduleCAUpdateAttemptedStats;
+
+    @Captor
+    ArgumentCaptor<ScheduledCustomAudienceUpdatePerformedFailureStats>
+            mScheduleCAFailureStatsCaptor;
+
+    @Captor
+    ArgumentCaptor<ScheduledCustomAudienceUpdatePerformedStats>
+            mScheduleCAUpdatePerformedStatsCaptor;
+
+    @Captor
+    ArgumentCaptor<ScheduledCustomAudienceUpdateBackgroundJobStats>
+            mScheduleCABackgroundJobStatsCaptor;
 
     private static final Flags COMMON_FLAGS_WITH_FILTERS_ENABLED =
             new CustomAudienceServiceE2ETestFlags() {
@@ -288,6 +346,14 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                 new CustomAudienceQuantityChecker(
                         mCustomAudienceDao, COMMON_FLAGS_WITH_FILTERS_ENABLED);
 
+        ProtectedSignalsDao protectedSignalsDao =
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
+                        .build()
+                        .protectedSignalsDao();
+        mDevSessionHelper =
+                new DevSessionHelper(
+                        mCustomAudienceDao, mAppInstallDao, mFrequencyCapDao, protectedSignalsDao);
+
         mCustomAudienceValidator =
                 new CustomAudienceValidator(
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
@@ -304,6 +370,20 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 EnrollmentDao.getInstance(),
                                 mAdServicesLoggerMock));
 
+        mStrategy =
+                ScheduleCustomAudienceUpdateStrategyFactory.createStrategy(
+                        mContext,
+                        mCustomAudienceDao,
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        FledgeAuthorizationFilter.create(
+                                mContext, AdServicesLoggerImpl.getInstance()),
+                        COMMON_FLAGS_WITH_FILTERS_ENABLED
+                                .getFledgeScheduleCustomAudienceMinDelayMinsOverride(),
+                        /* additionalScheduleRequestsEnabled= */ false,
+                        COMMON_FLAGS_WITH_FILTERS_ENABLED.getDisableFledgeEnrollmentCheck(),
+                        mAdServicesLoggerMock);
+
         mService =
                 new CustomAudienceServiceImpl(
                         mContext,
@@ -312,7 +392,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                COMMON_FLAGS_WITH_FILTERS_ENABLED),
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         mFledgeAuthorizationFilterSpy,
                         mConsentManagerMock,
                         mDevContextFilter,
@@ -320,6 +402,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -361,11 +444,25 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                COMMON_FLAGS_WITH_FILTERS_ENABLED),
-                        mCustomAudienceQuantityChecker);
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
+                        mCustomAudienceQuantityChecker,
+                        mStrategy,
+                        mAdServicesLoggerMock);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        mDevSessionHelper.endDevSession();
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = IllegalStateException.class)
     public void testJoinCustomAudience_notInBinderThread_fail() {
         CustomAudienceQuantityChecker customAudienceQuantityChecker =
                 new CustomAudienceQuantityChecker(
@@ -386,7 +483,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 customAudienceQuantityChecker,
                                 customAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                COMMON_FLAGS_WITH_FILTERS_ENABLED),
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         new FledgeAuthorizationFilter(
                                 mContext.getPackageManager(),
                                 EnrollmentDao.getInstance(),
@@ -397,6 +496,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                        mMockDebugFlags,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -431,6 +531,10 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NO_MATCH_PACKAGE_NAME,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
     public void testJoinCustomAudience_callerPackageNameMismatch_fail() {
         String otherOwnerPackageName = "other_owner";
         // Bypass the permission check since it's enforced before the package name check
@@ -464,6 +568,45 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         otherOwnerPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+    }
+
+    @Test
+    public void testJoinCustomAudience_inDevSession_customAudienceClearedAfterSession() {
+        ResultCapturingCallback callback = new ResultCapturingCallback();
+        mDevSessionHelper.startDevSession();
+
+        mService.joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build(),
+                MY_APP_PACKAGE_NAME,
+                callback);
+
+        assertTrue(callback.isSuccess());
+        assertNotNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, CommonFixture.VALID_BUYER_1, VALID_NAME));
+        mDevSessionHelper.endDevSession();
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, CommonFixture.VALID_BUYER_1, VALID_NAME));
+    }
+
+    @Test
+    public void testJoinCustomAudience_beforeDevSession_customAudienceClearedEnteringSession() {
+        ResultCapturingCallback callback = new ResultCapturingCallback();
+
+        mService.joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build(),
+                MY_APP_PACKAGE_NAME,
+                callback);
+
+        assertTrue(callback.isSuccess());
+        assertNotNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, CommonFixture.VALID_BUYER_1, VALID_NAME));
+        mDevSessionHelper.startDevSession();
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, CommonFixture.VALID_BUYER_1, VALID_NAME));
     }
 
     @Test
@@ -686,7 +829,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         // Join a custom audience using the joinCustomAudience API.
         ResultCapturingCallback joinCallback = new ResultCapturingCallback();
         mService.joinCustomAudience(
-                CustomAudienceFixture.getValidBuilderForBuyerFilters(LOCALHOST_BUYER).build(),
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).build(),
                 CustomAudienceFixture.VALID_OWNER,
                 joinCallback);
         assertTrue(joinCallback.mIsSuccess);
@@ -833,7 +976,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         // Join a custom audience using the joinCustomAudience API.
         ResultCapturingCallback joinCallback = new ResultCapturingCallback();
         mService.joinCustomAudience(
-                CustomAudienceFixture.getValidBuilderForBuyerFilters(LOCALHOST_BUYER).build(),
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).build(),
                 CustomAudienceFixture.VALID_OWNER,
                 joinCallback);
         assertTrue(joinCallback.mIsSuccess);
@@ -891,7 +1034,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         // Join a custom audience using the joinCustomAudience API.
         ResultCapturingCallback joinCallback = new ResultCapturingCallback();
         mService.joinCustomAudience(
-                CustomAudienceFixture.getValidBuilderForBuyerFilters(LOCALHOST_BUYER).build(),
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).build(),
                 CustomAudienceFixture.VALID_OWNER,
                 joinCallback);
         assertTrue(joinCallback.mIsSuccess);
@@ -958,7 +1101,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         // activation time.
         ResultCapturingCallback joinCallback = new ResultCapturingCallback();
         mService.joinCustomAudience(
-                CustomAudienceFixture.getValidBuilderForBuyerFilters(LOCALHOST_BUYER).build(),
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).build(),
                 CustomAudienceFixture.VALID_OWNER,
                 joinCallback);
         assertTrue(joinCallback.mIsSuccess);
@@ -1215,6 +1358,11 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE,
+            throwable = IllegalStateException.class)
     public void testLeaveCustomAudience_notInBinderThread_fail() {
         CustomAudienceQuantityChecker customAudienceQuantityChecker =
                 new CustomAudienceQuantityChecker(
@@ -1235,7 +1383,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 customAudienceQuantityChecker,
                                 customAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                COMMON_FLAGS_WITH_FILTERS_ENABLED),
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         new FledgeAuthorizationFilter(
                                 mContext.getPackageManager(),
                                 EnrollmentDao.getInstance(),
@@ -1246,6 +1396,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                        mMockDebugFlags,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -1276,6 +1427,10 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NO_MATCH_PACKAGE_NAME,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE)
     public void testLeaveCustomAudience_callerPackageNameMismatch_fail() {
         String otherOwnerPackageName = "other_owner";
         // Bypass the permission check since it's enforced before the package name check
@@ -1515,25 +1670,22 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         // Join a custom audience using the joinCustomAudience API which would be "left" by update
         ResultCapturingCallback joinCallback = new ResultCapturingCallback();
         mService.joinCustomAudience(
-                CustomAudienceFixture.getValidBuilderForBuyerFilters(LOCALHOST_BUYER)
-                        .setName(LEAVE_CA_1)
-                        .build(),
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_1).build(),
                 CustomAudienceFixture.VALID_OWNER,
                 joinCallback);
         assertTrue(joinCallback.mIsSuccess);
 
         // Make a request to the API
-        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
         ScheduleCustomAudienceUpdateInput input =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 updateUri,
                                 VALID_OWNER,
-                                negativeDelayForTest,
+                                NEGATIVE_DELAY_FOR_TEST,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
@@ -1641,8 +1793,12 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                flagsWithAuctionServerRequestFlagsEnabled),
-                        mCustomAudienceQuantityChecker);
+                                flagsWithAuctionServerRequestFlagsEnabled,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
+                        mCustomAudienceQuantityChecker,
+                        mStrategy,
+                        mAdServicesLoggerMock);
 
         // Wire the mock web server
         String responsePayload =
@@ -1677,25 +1833,22 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         // Join a custom audience using the joinCustomAudience API which would be "left" by update
         ResultCapturingCallback joinCallback = new ResultCapturingCallback();
         mService.joinCustomAudience(
-                CustomAudienceFixture.getValidBuilderForBuyerFilters(LOCALHOST_BUYER)
-                        .setName(LEAVE_CA_1)
-                        .build(),
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_1).build(),
                 CustomAudienceFixture.VALID_OWNER,
                 joinCallback);
         assertTrue(joinCallback.mIsSuccess);
 
         // Make a request to the API
-        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
         ScheduleCustomAudienceUpdateInput input =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 updateUri,
                                 VALID_OWNER,
-                                negativeDelayForTest,
+                                NEGATIVE_DELAY_FOR_TEST,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
@@ -1809,8 +1962,12 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                flagsWithSellerConfigurationFlagEnabled),
-                        mCustomAudienceQuantityChecker);
+                                flagsWithSellerConfigurationFlagEnabled,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
+                        mCustomAudienceQuantityChecker,
+                        mStrategy,
+                        mAdServicesLoggerMock);
 
         // Wire the mock web server
         String responsePayload =
@@ -1846,25 +2003,22 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         // Join a custom audience using the joinCustomAudience API which would be "left" by update
         ResultCapturingCallback joinCallback = new ResultCapturingCallback();
         mService.joinCustomAudience(
-                CustomAudienceFixture.getValidBuilderForBuyerFilters(LOCALHOST_BUYER)
-                        .setName(LEAVE_CA_1)
-                        .build(),
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_1).build(),
                 CustomAudienceFixture.VALID_OWNER,
                 joinCallback);
         assertTrue(joinCallback.mIsSuccess);
 
         // Make a request to the API
-        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
         ScheduleCustomAudienceUpdateInput input =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 updateUri,
                                 VALID_OWNER,
-                                negativeDelayForTest,
+                                NEGATIVE_DELAY_FOR_TEST,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
@@ -1961,7 +2115,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                     caBlobs.stream()
                                             .map(b -> b.getName())
                                             .collect(Collectors.toList())
-                                            .containsAll(List.of(PARTIAL_CA_1)));
+                                            .contains(PARTIAL_CA_1));
                             return new MockResponse().setBody(responsePayload1);
                         } else if (request.getPath().equals(UPDATE_URI_PATH_2)) {
                             List<CustomAudienceBlob> caBlobs =
@@ -1970,7 +2124,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                     caBlobs.stream()
                                             .map(b -> b.getName())
                                             .collect(Collectors.toList())
-                                            .containsAll(List.of(PARTIAL_CA_2)));
+                                            .contains(PARTIAL_CA_2));
                             return new MockResponse().setBody(responsePayload2);
                         }
                         return new MockResponse();
@@ -1983,17 +2137,16 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Uri updateUri2 = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH_2).toString());
 
         // Make two requests to the API to schedule updates
-        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
         ScheduleCustomAudienceUpdateInput input1 =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 updateUri1,
                                 VALID_OWNER,
-                                negativeDelayForTest,
+                                NEGATIVE_DELAY_FOR_TEST,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch1 = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback1 = new ScheduleUpdateTestCallback(resultLatch1);
@@ -2005,12 +2158,12 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 updateUri2,
                                 VALID_OWNER,
-                                negativeDelayForTest,
+                                NEGATIVE_DELAY_FOR_TEST,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch2 = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback2 = new ScheduleUpdateTestCallback(resultLatch2);
@@ -2104,7 +2257,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                     caBlobs.stream()
                                             .map(b -> b.getName())
                                             .collect(Collectors.toList())
-                                            .containsAll(List.of(PARTIAL_CA_1)));
+                                            .contains(PARTIAL_CA_1));
                             return new MockResponse().setBody(responsePayload);
                         }
                         return new MockResponse();
@@ -2116,17 +2269,16 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Uri updateUri1 = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH).toString());
 
         // Make two requests to the API to schedule updates
-        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
         ScheduleCustomAudienceUpdateInput input1 =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 updateUri1,
                                 VALID_OWNER,
-                                negativeDelayForTest,
+                                NEGATIVE_DELAY_FOR_TEST,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch1 = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback1 = new ScheduleUpdateTestCallback(resultLatch1);
@@ -2211,9 +2363,13 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                flagsWithCAQuantityCheckerFlags),
+                                flagsWithCAQuantityCheckerFlags,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         new CustomAudienceQuantityChecker(
-                                mCustomAudienceDao, flagsWithCAQuantityCheckerFlags));
+                                mCustomAudienceDao, flagsWithCAQuantityCheckerFlags),
+                        mStrategy,
+                        mAdServicesLoggerMock);
 
         // Wire the mock web server
         String responsePayload =
@@ -2238,7 +2394,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                     caBlobs.stream()
                                             .map(b -> b.getName())
                                             .collect(Collectors.toList())
-                                            .containsAll(List.of(PARTIAL_CA_1)));
+                                            .contains(PARTIAL_CA_1));
                             return new MockResponse().setBody(responsePayload);
                         }
                         return new MockResponse();
@@ -2250,17 +2406,16 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Uri updateUri1 = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH).toString());
 
         // Make two requests to the API to schedule updates
-        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
         ScheduleCustomAudienceUpdateInput input1 =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 updateUri1,
                                 VALID_OWNER,
-                                negativeDelayForTest,
+                                NEGATIVE_DELAY_FOR_TEST,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch1 = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback1 = new ScheduleUpdateTestCallback(resultLatch1);
@@ -2344,9 +2499,13 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                flagsWithCAQuantityCheckerFlags),
+                                flagsWithCAQuantityCheckerFlags,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         new CustomAudienceQuantityChecker(
-                                mCustomAudienceDao, flagsWithCAQuantityCheckerFlags));
+                                mCustomAudienceDao, flagsWithCAQuantityCheckerFlags),
+                        mStrategy,
+                        mAdServicesLoggerMock);
 
         // Wire the mock web server
         String responsePayload =
@@ -2381,25 +2540,22 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         // Join a custom audience using the joinCustomAudience API which would be "left" by update
         ResultCapturingCallback joinCallback = new ResultCapturingCallback();
         mService.joinCustomAudience(
-                CustomAudienceFixture.getValidBuilderForBuyerFilters(LOCALHOST_BUYER)
-                        .setName(LEAVE_CA_1)
-                        .build(),
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_1).build(),
                 CustomAudienceFixture.VALID_OWNER,
                 joinCallback);
         assertTrue(joinCallback.mIsSuccess);
 
         // Make a request to the API
-        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
         ScheduleCustomAudienceUpdateInput input =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 updateUri,
                                 VALID_OWNER,
-                                negativeDelayForTest,
+                                NEGATIVE_DELAY_FOR_TEST,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
@@ -2477,7 +2633,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                     caBlobs.stream()
                                             .map(b -> b.getName())
                                             .collect(Collectors.toList())
-                                            .containsAll(List.of(PARTIAL_CA_1)));
+                                            .contains(PARTIAL_CA_1));
                             return new MockResponse().setBody(responsePayload);
                         }
                         return new MockResponse();
@@ -2489,17 +2645,16 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Uri updateUri1 = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH).toString());
 
         // Make two requests to the API to schedule updates
-        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
         ScheduleCustomAudienceUpdateInput input1 =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 updateUri1,
                                 VALID_OWNER,
-                                negativeDelayForTest,
+                                NEGATIVE_DELAY_FOR_TEST,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch1 = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback1 = new ScheduleUpdateTestCallback(resultLatch1);
@@ -2569,12 +2724,11 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Uri updateUri1 = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH).toString());
 
         // Make two requests to the API to schedule updates
-        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
         ScheduleCustomAudienceUpdateInput input1 =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 updateUri1,
                                 VALID_OWNER,
-                                negativeDelayForTest,
+                                NEGATIVE_DELAY_FOR_TEST,
                                 Collections.emptyList())
                         .build();
         CountDownLatch resultLatch1 = new CountDownLatch(1);
@@ -2637,7 +2791,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 caBlobs.stream()
                                         .map(b -> b.getName())
                                         .collect(Collectors.toList())
-                                        .containsAll(List.of(PARTIAL_CA_1)));
+                                        .contains(PARTIAL_CA_1));
                         return new MockResponse().setBody(responsePayload);
                     }
                 };
@@ -2646,15 +2800,14 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Uri updateUri = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH).toString());
 
         // Make a request to the API
-        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
         ScheduleCustomAudienceUpdateInput input =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 updateUri,
                                 VALID_OWNER,
-                                negativeDelayForTest,
+                                NEGATIVE_DELAY_FOR_TEST,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1)))
                         .build();
         CountDownLatch resultLatch = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
@@ -2740,7 +2893,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 caBlobs.stream()
                                         .map(b -> b.getName())
                                         .collect(Collectors.toList())
-                                        .containsAll(List.of(PARTIAL_CA_1)));
+                                        .contains(PARTIAL_CA_1));
                         return new MockResponse().setBody(responsePayload);
                     }
                 };
@@ -2749,15 +2902,14 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Uri updateUri = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH).toString());
 
         // Make a request to the API
-        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
         ScheduleCustomAudienceUpdateInput input =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 updateUri,
                                 VALID_OWNER,
-                                negativeDelayForTest,
+                                NEGATIVE_DELAY_FOR_TEST,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
                                                 invalidPartialCustomAudience2)))
                         .build();
@@ -2838,20 +2990,17 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         // Join a custom audience using the joinCustomAudience API which would be "left" by update
         ResultCapturingCallback joinCallback = new ResultCapturingCallback();
         mService.joinCustomAudience(
-                CustomAudienceFixture.getValidBuilderForBuyerFilters(LOCALHOST_BUYER)
-                        .setName(LEAVE_CA_1)
-                        .build(),
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_1).build(),
                 CustomAudienceFixture.VALID_OWNER,
                 joinCallback);
         assertTrue(joinCallback.mIsSuccess);
 
         // Make a request to the API with empty overrides
-        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
         ScheduleCustomAudienceUpdateInput input =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 updateUri,
                                 VALID_OWNER,
-                                negativeDelayForTest,
+                                NEGATIVE_DELAY_FOR_TEST,
                                 Collections.EMPTY_LIST)
                         .build();
         CountDownLatch resultLatch = new CountDownLatch(1);
@@ -2907,12 +3056,11 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Uri updateUri = mMockWebServerRule.uriForPath(UPDATE_URI_PATH);
 
         // Make a request to the API with empty overrides
-        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
         ScheduleCustomAudienceUpdateInput input =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 updateUri,
                                 VALID_OWNER,
-                                negativeDelayForTest,
+                                NEGATIVE_DELAY_FOR_TEST,
                                 Collections.EMPTY_LIST)
                         .build();
         CountDownLatch resultLatch = new CountDownLatch(1);
@@ -2960,6 +3108,99 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     }
 
     @Test
+    public void testScheduleCustomAudienceUpdate_withPartialCaAndNoPendingUpdates_Success()
+            throws Exception {
+        MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(Collections.EMPTY_LIST);
+        Uri updateUri = mMockWebServerRule.uriForPath(UPDATE_URI_PATH);
+        String partialCaName1 = "partial_ca_1";
+        String partialCaName2 = "partial_ca_2";
+        PartialCustomAudience partialCustomAudience1 =
+                new PartialCustomAudience.Builder(partialCaName1)
+                        .setActivationTime(CommonFixture.FIXED_NOW)
+                        .setExpirationTime(CommonFixture.FIXED_NEXT_ONE_DAY)
+                        .setUserBiddingSignals(USER_BIDDING_SIGNALS_1)
+                        .build();
+        PartialCustomAudience partialCustomAudience2 =
+                new PartialCustomAudience.Builder(partialCaName2)
+                        .setActivationTime(CommonFixture.FIXED_NOW)
+                        .setExpirationTime(CommonFixture.FIXED_NEXT_ONE_DAY)
+                        .setUserBiddingSignals(USER_BIDDING_SIGNALS_1)
+                        .build();
+        List<PartialCustomAudience> partialCustomAudienceList =
+                Arrays.asList(partialCustomAudience1, partialCustomAudience2);
+
+        // Make a request to the API with empty overrides
+        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                updateUri,
+                                VALID_OWNER,
+                                negativeDelayForTest,
+                                partialCustomAudienceList)
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
+        mService.scheduleCustomAudienceUpdate(input, callback);
+        resultLatch.await();
+
+        // Validate response of API is complete
+        assertTrue(callback.isSuccess());
+
+        verify(mAdServicesLoggerMock)
+                .logScheduledCustomAudienceUpdateScheduleAttemptedStats(
+                        mScheduleCAUpdateAttemptedStats.capture());
+        ScheduledCustomAudienceUpdateScheduleAttemptedStats actualStats =
+                mScheduleCAUpdateAttemptedStats.getValue();
+        assertWithMessage("Minimum delay in minutes")
+                .that(actualStats.getMinimumDelayInMinutes())
+                .isEqualTo(input.getMinDelay().toMinutes());
+        assertWithMessage("Number of partial custom audiences")
+                .that(actualStats.getNumberOfPartialCustomAudiences())
+                .isEqualTo(partialCustomAudienceList.size());
+        assertWithMessage("Existing update status")
+                .that(actualStats.getExistingUpdateStatus())
+                .isEqualTo(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE);
+    }
+
+    @Test
+    public void testScheduleCustomAudienceUpdate_noPendingUpdates_Success() throws Exception {
+        MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(Collections.EMPTY_LIST);
+        Uri updateUri = mMockWebServerRule.uriForPath(UPDATE_URI_PATH);
+
+        // Make a request to the API with empty overrides
+        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                updateUri,
+                                VALID_OWNER,
+                                negativeDelayForTest,
+                                Collections.EMPTY_LIST)
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
+        mService.scheduleCustomAudienceUpdate(input, callback);
+        resultLatch.await();
+
+        // Validate response of API is complete
+        assertTrue(callback.isSuccess());
+
+        verify(mAdServicesLoggerMock)
+                .logScheduledCustomAudienceUpdateScheduleAttemptedStats(
+                        mScheduleCAUpdateAttemptedStats.capture());
+        ScheduledCustomAudienceUpdateScheduleAttemptedStats actualStats =
+                mScheduleCAUpdateAttemptedStats.getValue();
+        assertWithMessage("Minimum delay in minutes")
+                .that(actualStats.getMinimumDelayInMinutes())
+                .isEqualTo(input.getMinDelay().toMinutes());
+        assertWithMessage("Number of partial custom audiences")
+                .that(actualStats.getNumberOfPartialCustomAudiences())
+                .isEqualTo(0);
+        assertWithMessage("Existing update status")
+                .that(actualStats.getExistingUpdateStatus())
+                .isEqualTo(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE);
+    }
+
+    @Test
     public void testScheduleCAUpdate_withPendingUpdatesAndRemoveUpdatesFalse_fails()
             throws Exception {
         MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(Collections.EMPTY_LIST);
@@ -2978,12 +3219,11 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(oldScheduledCA);
 
         // Make a request to the API with empty overrides
-        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
         ScheduleCustomAudienceUpdateInput input =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 updateUri,
                                 VALID_OWNER,
-                                negativeDelayForTest,
+                                NEGATIVE_DELAY_FOR_TEST,
                                 Collections.EMPTY_LIST)
                         .setShouldReplacePendingUpdates(false)
                         .build();
@@ -2997,6 +3237,21 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         assertEquals(
                 AdServicesStatusUtils.STATUS_UPDATE_ALREADY_PENDING_ERROR,
                 callback.mFledgeErrorResponse.getStatusCode());
+
+        verify(mAdServicesLoggerMock)
+                .logScheduledCustomAudienceUpdateScheduleAttemptedStats(
+                        mScheduleCAUpdateAttemptedStats.capture());
+        ScheduledCustomAudienceUpdateScheduleAttemptedStats actualStats =
+                mScheduleCAUpdateAttemptedStats.getValue();
+        assertWithMessage("Minimum delay in minutes")
+                .that(actualStats.getMinimumDelayInMinutes())
+                .isEqualTo(input.getMinDelay().toMinutes());
+        assertWithMessage("Number of partial custom audiences")
+                .that(actualStats.getNumberOfPartialCustomAudiences())
+                .isEqualTo(0);
+        assertWithMessage("Existing update status")
+                .that(actualStats.getExistingUpdateStatus())
+                .isEqualTo(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE);
     }
 
     @Test
@@ -3018,12 +3273,11 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(oldScheduledCA);
 
         // Make a request to the API with empty overrides
-        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
         ScheduleCustomAudienceUpdateInput input =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 updateUri,
                                 VALID_OWNER,
-                                negativeDelayForTest,
+                                NEGATIVE_DELAY_FOR_TEST,
                                 Collections.EMPTY_LIST)
                         .setShouldReplacePendingUpdates(true)
                         .build();
@@ -3038,6 +3292,1009 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(VALID_OWNER);
         expect.that(newScheduledCAUpdates).doesNotContain(oldScheduledCA);
         assertEquals(1, newScheduledCAUpdates.size());
+
+        verify(mAdServicesLoggerMock)
+                .logScheduledCustomAudienceUpdateScheduleAttemptedStats(
+                        mScheduleCAUpdateAttemptedStats.capture());
+        ScheduledCustomAudienceUpdateScheduleAttemptedStats actualStats =
+                mScheduleCAUpdateAttemptedStats.getValue();
+        assertWithMessage("Minimum delay in minutes")
+                .that(actualStats.getMinimumDelayInMinutes())
+                .isEqualTo(input.getMinDelay().toMinutes());
+        assertWithMessage("Number of partial custom audiences")
+                .that(actualStats.getNumberOfPartialCustomAudiences())
+                .isEqualTo(0);
+        assertWithMessage("Existing update status")
+                .that(actualStats.getExistingUpdateStatus())
+                .isEqualTo(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE);
+    }
+
+    @Test
+    public void
+            testScheduleCAUpdate_AdditionalScheduleRequests_Disabled_TwoHops_NothingGetsProcessed()
+                    throws Exception {
+        List<PartialCustomAudience> partialCustomAudienceList =
+                List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
+        List<String> customAudienceToLeaveList = List.of(LEAVE_CA_1);
+
+        /* Buyer set here is only being used for generating the json response. When
+        persisting the schedule request, buyer is being generated from the updateUri */
+        String responsePayload_SecondHop =
+                createJsonResponsePayload(
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                List.of(PARTIAL_CA_1, PARTIAL_CA_2),
+                                customAudienceToLeaveList,
+                                false,
+                                false)
+                        .toString();
+
+        String updateUriForSecondHop = mMockWebServerRule.uriForPath(UPDATE_URI_PATH_2).toString();
+
+        JSONObject scheduleRequest =
+                createScheduleRequestWithUpdateUri(
+                        updateUriForSecondHop,
+                        NEGATIVE_DELAY_FOR_TEST_IN_MINUTES,
+                        partialCustomAudienceListToJsonArray(partialCustomAudienceList),
+                        new JSONArray(customAudienceToLeaveList),
+                        true);
+
+        String responsePayload_FirstHop =
+                createJsonResponsePayloadWithScheduleRequests(
+                                new JSONArray(List.of(scheduleRequest)))
+                        .toString();
+
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+                        if (Objects.equals(request.getPath(), UPDATE_URI_PATH_2)) {
+                            assertThat(
+                                            extractPartialCustomAudiencesFromRequest(
+                                                            request.getBody())
+                                                    .stream()
+                                                    .map(b -> b.getName())
+                                                    .collect(Collectors.toList()))
+                                    .containsExactly(PARTIAL_CA_1, PARTIAL_CA_2);
+
+                            assertThat(
+                                            extractCustomAudiencesToLeaveFromScheduleRequest(
+                                                    request.getBody()))
+                                    .containsExactlyElementsIn(customAudienceToLeaveList);
+                            return new MockResponse().setBody(responsePayload_SecondHop);
+                        } else {
+                            return new MockResponse().setBody(responsePayload_FirstHop);
+                        }
+                    }
+                };
+
+        MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
+        Uri updateUri = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH).toString());
+
+        // Join a custom audience using the joinCustomAudience API which would be "left" by update
+        CustomAudienceServiceEndToEndTest.ResultCapturingCallback joinCallback =
+                new CustomAudienceServiceEndToEndTest.ResultCapturingCallback();
+        mService.joinCustomAudience(
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_1).build(),
+                VALID_OWNER,
+                joinCallback);
+        assertTrue(joinCallback.mIsSuccess);
+
+        // Make a request to the API
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                updateUri,
+                                VALID_OWNER,
+                                NEGATIVE_DELAY_FOR_TEST,
+                                Collections.emptyList())
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        ScheduleCustomAudienceUpdateTestUtils.ScheduleUpdateTestCallback callback =
+                new ScheduleCustomAudienceUpdateTestUtils.ScheduleUpdateTestCallback(resultLatch);
+        mService.scheduleCustomAudienceUpdate(input, callback);
+        resultLatch.await();
+
+        // Validate response of API is complete
+        assertTrue(callback.isSuccess());
+
+        // Ensure that job that maintains update-scheduled is itself scheduled
+        verify(
+                () ->
+                        ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                                any(), any(), eq(false)),
+                times(1));
+
+        assertThat(mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()))
+                .hasSize(1);
+
+        // Manually trigger handler as it would have been triggered by its job schedule
+        Void unused =
+                mScheduledUpdatesHandler
+                        .performScheduledUpdates(Instant.now())
+                        .get(10, TimeUnit.SECONDS);
+
+        // Check that the request for updates was made to server successfully
+        assertEquals(1, mockWebServer.getRequestCount());
+
+        // Check that the additional update hasn't been scheduled
+        assertThat(mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()))
+                .isEmpty();
+
+        // Check that updates didn't get processed since the AdditionalScheduleRequests flag is
+        // false
+        // Join
+        assertNull(
+                "The custom audience shouldn't have been joined",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_1));
+        assertNull(
+                "The custom audience shouldn't have been joined",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_2));
+        // Leave
+        assertNotNull(
+                "The custom audience shouldn't have been left",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, LEAVE_CA_1));
+    }
+
+    @Test
+    public void testScheduleCAUpdate_AdditionalScheduleRequests_Enabled_OneHop_Success()
+            throws Exception {
+        initServiceWithScheduleCAUpdateAdditionalScheduleRequestsEnabled();
+        List<String> partialCustomAudienceList = List.of(PARTIAL_CA_1, PARTIAL_CA_2);
+
+        String responsePayload =
+                createJsonResponsePayload(
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                partialCustomAudienceList,
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                /* auctionServerRequestFlagsEnabled= */ false,
+                                /* sellerConfigurationEnabled= */ false)
+                        .toString();
+
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+                        assertThat(
+                                        extractPartialCustomAudiencesFromRequest(request.getBody())
+                                                .stream()
+                                                .map(b -> b.getName())
+                                                .collect(Collectors.toList()))
+                                .containsExactlyElementsIn(partialCustomAudienceList);
+                        return new MockResponse().setBody(responsePayload);
+                    }
+                };
+
+        MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
+        Uri updateUri = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH).toString());
+
+        // Join a custom audience using the joinCustomAudience API which would be "left" by update
+        CustomAudienceServiceEndToEndTest.ResultCapturingCallback joinCallback =
+                new CustomAudienceServiceEndToEndTest.ResultCapturingCallback();
+        mService.joinCustomAudience(
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_1).build(),
+                VALID_OWNER,
+                joinCallback);
+        assertTrue(joinCallback.mIsSuccess);
+
+        // Make a request to the API
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                updateUri,
+                                VALID_OWNER,
+                                NEGATIVE_DELAY_FOR_TEST,
+                                List.of(
+                                        DBPartialCustomAudience.getPartialCustomAudience(
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
+                                        DBPartialCustomAudience.getPartialCustomAudience(
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        ScheduleCustomAudienceUpdateTestUtils.ScheduleUpdateTestCallback callback =
+                new ScheduleCustomAudienceUpdateTestUtils.ScheduleUpdateTestCallback(resultLatch);
+        mService.scheduleCustomAudienceUpdate(input, callback);
+        resultLatch.await();
+
+        // Validate response of API is complete
+        assertTrue(callback.isSuccess());
+
+        // Ensure that job that maintains update-scheduled is itself scheduled
+        verify(
+                () ->
+                        ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                                any(), any(), eq(false)),
+                times(1));
+
+        assertThat(mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()))
+                .hasSize(1);
+
+        // Manually trigger handler as it would have been triggered by its job schedule
+        Void unused =
+                mScheduledUpdatesHandler
+                        .performScheduledUpdates(Instant.now())
+                        .get(10, TimeUnit.SECONDS);
+
+        // Check that the request for updates was made to server successfully
+        assertEquals(1, mockWebServer.getRequestCount());
+
+        // Manually trigger handler
+        unused =
+                mScheduledUpdatesHandler
+                        .performScheduledUpdates(Instant.now())
+                        .get(10, TimeUnit.SECONDS);
+
+        // Check that the request for updates wasn't made to server
+        assertEquals(1, mockWebServer.getRequestCount());
+
+        // Check that updates processed successfully
+        // Join
+        assertNotNull(
+                "The custom audience should have been joined",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_1));
+        assertNotNull(
+                "The custom audience should have been joined",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_2));
+        // Leave
+        assertNull(
+                "The custom audience should have been left",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, LEAVE_CA_1));
+
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedStats(
+                        mScheduleCAUpdatePerformedStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedStats performedStats =
+                mScheduleCAUpdatePerformedStatsCaptor.getValue();
+
+        assertWithMessage("Number of custom audience joined")
+                .that(performedStats.getNumberOfCustomAudienceJoined())
+                .isEqualTo(2);
+        assertWithMessage("Number of join custom audience in response")
+                .that(performedStats.getNumberOfJoinCustomAudienceInResponse())
+                .isEqualTo(2);
+        assertWithMessage("Number of leave custom audience in response")
+                .that(performedStats.getNumberOfLeaveCustomAudienceInResponse())
+                .isEqualTo(2);
+        assertWithMessage("Number of custom audiences left")
+                .that(performedStats.getNumberOfCustomAudienceLeft())
+                .isEqualTo(2);
+        assertWithMessage("Number of partial custom audience in request")
+                .that(performedStats.getNumberOfPartialCustomAudienceInRequest())
+                .isEqualTo(2);
+        assertWithMessage("Number of schedule custom audience updates in response")
+                .that(performedStats.getNumberOfScheduleUpdatesInResponse())
+                .isEqualTo(0);
+        assertWithMessage("Number of custom audience updates scheduled")
+                .that(performedStats.getNumberOfUpdatesScheduled())
+                .isEqualTo(0);
+        assertWithMessage("Was initial hop")
+                .that(performedStats.getWasInitialHop())
+                .isEqualTo(true);
+
+        verify(mAdServicesLoggerMock, times(2))
+                .logScheduledCustomAudienceUpdateBackgroundJobStats(
+                        mScheduleCABackgroundJobStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdateBackgroundJobStats backgroundJobStatsFirstTime =
+                ScheduledCustomAudienceUpdateBackgroundJobStats.builder()
+                        .setNumberOfSuccessfulUpdates(1)
+                        .setNumberOfUpdatesFound(1)
+                        .build();
+
+        ScheduledCustomAudienceUpdateBackgroundJobStats backgroundJobStatsSecondTime =
+                ScheduledCustomAudienceUpdateBackgroundJobStats.builder()
+                        .setNumberOfSuccessfulUpdates(0)
+                        .setNumberOfUpdatesFound(0)
+                        .build();
+
+        assertWithMessage("Scheduled custom audience update background job stats")
+                .that(mScheduleCABackgroundJobStatsCaptor.getAllValues())
+                .containsExactly(backgroundJobStatsFirstTime, backgroundJobStatsSecondTime);
+    }
+
+    @Test
+    public void testScheduleCAUpdate_AdditionalScheduleRequests_Enabled_TwoHops_Success()
+            throws Exception {
+        initServiceWithScheduleCAUpdateAdditionalScheduleRequestsEnabled();
+
+        List<PartialCustomAudience> partialCustomAudienceList =
+                List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
+        List<String> customAudienceToLeaveList = List.of(LEAVE_CA_1);
+
+        /* Buyer set here is only being used for generating the json response. When
+        persisting the schedule request, buyer is being generated from the updateUri */
+        String responsePayload_SecondHop =
+                createJsonResponsePayload(
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                List.of(PARTIAL_CA_1, PARTIAL_CA_2),
+                                customAudienceToLeaveList,
+                                false,
+                                false)
+                        .toString();
+
+        String updateUriForSecondHop = mMockWebServerRule.uriForPath(UPDATE_URI_PATH_2).toString();
+
+        JSONObject scheduleRequest =
+                createScheduleRequestWithUpdateUri(
+                        updateUriForSecondHop,
+                        NEGATIVE_DELAY_FOR_TEST_IN_MINUTES,
+                        partialCustomAudienceListToJsonArray(partialCustomAudienceList),
+                        new JSONArray(customAudienceToLeaveList),
+                        true);
+
+        String responsePayload_FirstHop =
+                createJsonResponsePayloadWithScheduleRequests(
+                                new JSONArray(List.of(scheduleRequest)))
+                        .toString();
+
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+                        if (Objects.equals(request.getPath(), UPDATE_URI_PATH_2)) {
+                            assertThat(
+                                            extractPartialCustomAudiencesFromRequest(
+                                                            request.getBody())
+                                                    .stream()
+                                                    .map(b -> b.getName())
+                                                    .collect(Collectors.toList()))
+                                    .containsExactly(PARTIAL_CA_1, PARTIAL_CA_2);
+
+                            assertThat(
+                                            extractCustomAudiencesToLeaveFromScheduleRequest(
+                                                    request.getBody()))
+                                    .containsExactlyElementsIn(customAudienceToLeaveList);
+                            return new MockResponse().setBody(responsePayload_SecondHop);
+                        } else {
+                            return new MockResponse().setBody(responsePayload_FirstHop);
+                        }
+                    }
+                };
+
+        MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
+        Uri updateUri = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH).toString());
+
+        // Join a custom audience using the joinCustomAudience API which would be "left" by update
+        CustomAudienceServiceEndToEndTest.ResultCapturingCallback joinCallback =
+                new CustomAudienceServiceEndToEndTest.ResultCapturingCallback();
+        mService.joinCustomAudience(
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_1).build(),
+                VALID_OWNER,
+                joinCallback);
+        assertTrue(joinCallback.mIsSuccess);
+
+        // Make a request to the API
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                updateUri,
+                                VALID_OWNER,
+                                NEGATIVE_DELAY_FOR_TEST,
+                                Collections.emptyList())
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        ScheduleCustomAudienceUpdateTestUtils.ScheduleUpdateTestCallback callback =
+                new ScheduleCustomAudienceUpdateTestUtils.ScheduleUpdateTestCallback(resultLatch);
+        mService.scheduleCustomAudienceUpdate(input, callback);
+        resultLatch.await();
+
+        // Validate response of API is complete
+        assertTrue(callback.isSuccess());
+
+        // Ensure that job that maintains update-scheduled is itself scheduled
+        verify(
+                () ->
+                        ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                                any(), any(), eq(false)),
+                times(1));
+
+        assertThat(mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()))
+                .hasSize(1);
+
+        // Manually trigger handler as it would have been triggered by its job schedule
+        Void unused =
+                mScheduledUpdatesHandler
+                        .performScheduledUpdates(Instant.now())
+                        .get(10, TimeUnit.SECONDS);
+
+        // Check that the request for updates was made to server successfully
+        assertEquals(1, mockWebServer.getRequestCount());
+
+        // Check that the additional update has been scheduled
+        assertThat(mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()))
+                .hasSize(1);
+
+        // Manually trigger handler as it would have been triggered by its job schedule
+        unused =
+                mScheduledUpdatesHandler
+                        .performScheduledUpdates(Instant.now())
+                        .get(10, TimeUnit.SECONDS);
+
+        // Check that the request for updates was made to server successfully
+        assertEquals(2, mockWebServer.getRequestCount());
+
+        // Check that updates processed successfully
+        // Join
+        assertNotNull(
+                "The custom audience should have been joined",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_1));
+        assertNotNull(
+                "The custom audience should have been joined",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_2));
+        // Leave
+        assertNull(
+                "The custom audience should have been left",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, LEAVE_CA_1));
+
+        verify(mAdServicesLoggerMock, times(2))
+                .logScheduledCustomAudienceUpdatePerformedStats(
+                        mScheduleCAUpdatePerformedStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedStats firstHopStats =
+                ScheduledCustomAudienceUpdatePerformedStats.builder()
+                        .setNumberOfPartialCustomAudienceInRequest(0)
+                        .setNumberOfLeaveCustomAudienceInRequest(0)
+                        .setNumberOfJoinCustomAudienceInResponse(0)
+                        .setNumberOfLeaveCustomAudienceInResponse(0)
+                        .setNumberOfCustomAudienceJoined(0)
+                        .setNumberOfCustomAudienceLeft(0)
+                        .setWasInitialHop(true)
+                        .setNumberOfScheduleUpdatesInResponse(1)
+                        .setNumberOfUpdatesScheduled(1)
+                        .build();
+
+        ScheduledCustomAudienceUpdatePerformedStats secondHopStats =
+                ScheduledCustomAudienceUpdatePerformedStats.builder()
+                        .setNumberOfPartialCustomAudienceInRequest(2)
+                        .setNumberOfLeaveCustomAudienceInRequest(0)
+                        .setNumberOfLeaveCustomAudienceInResponse(1)
+                        .setNumberOfCustomAudienceLeft(1)
+                        .setNumberOfJoinCustomAudienceInResponse(2)
+                        .setNumberOfCustomAudienceJoined(2)
+                        .setWasInitialHop(false)
+                        .setNumberOfScheduleUpdatesInResponse(0)
+                        .setNumberOfUpdatesScheduled(0)
+                        .build();
+
+        assertWithMessage("Scheduled custom audience performed stats.")
+                .that(mScheduleCAUpdatePerformedStatsCaptor.getAllValues())
+                .containsExactly(firstHopStats, secondHopStats);
+
+        verify(mAdServicesLoggerMock, times(2))
+                .logScheduledCustomAudienceUpdateBackgroundJobStats(
+                        mScheduleCABackgroundJobStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdateBackgroundJobStats backgroundJobStatsFirstTime =
+                ScheduledCustomAudienceUpdateBackgroundJobStats.builder()
+                        .setNumberOfSuccessfulUpdates(1)
+                        .setNumberOfUpdatesFound(1)
+                        .build();
+
+        ScheduledCustomAudienceUpdateBackgroundJobStats backgroundJobStatsSecondTime =
+                ScheduledCustomAudienceUpdateBackgroundJobStats.builder()
+                        .setNumberOfSuccessfulUpdates(1)
+                        .setNumberOfUpdatesFound(1)
+                        .build();
+
+        assertWithMessage("Scheduled custom audience update background job stats")
+                .that(mScheduleCABackgroundJobStatsCaptor.getAllValues())
+                .containsExactly(backgroundJobStatsFirstTime, backgroundJobStatsSecondTime);
+    }
+
+    @Test
+    public void
+            testScheduleCAUpdate_AdditionalScheduleRequests_Enabled_TwoHops_WithJoinAndLeave_Success()
+                    throws Exception {
+        initServiceWithScheduleCAUpdateAdditionalScheduleRequestsEnabled();
+
+        List<PartialCustomAudience> partialCustomAudienceList = List.of(PARTIAL_CUSTOM_AUDIENCE_3);
+        List<String> customAudienceToLeaveList = List.of(LEAVE_CA_2);
+
+        /* Buyer set here is only being used for generating the json response. When
+        persisting the schedule request, buyer is being generated from the updateUri */
+        String responsePayload_SecondHop =
+                createJsonResponsePayload(
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                List.of(PARTIAL_CA_3),
+                                customAudienceToLeaveList,
+                                false,
+                                false)
+                        .toString();
+
+        String updateUriForSecondHop = mMockWebServerRule.uriForPath(UPDATE_URI_PATH_2).toString();
+
+        JSONObject scheduleRequest =
+                createScheduleRequestWithUpdateUri(
+                        updateUriForSecondHop,
+                        NEGATIVE_DELAY_FOR_TEST_IN_MINUTES,
+                        partialCustomAudienceListToJsonArray(partialCustomAudienceList),
+                        new JSONArray(customAudienceToLeaveList),
+                        true);
+
+        String responsePayload_FirstHop =
+                createJsonResponsePayloadWithScheduleRequests(
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                List.of(PARTIAL_CA_1, PARTIAL_CA_2),
+                                List.of(LEAVE_CA_1),
+                                new JSONArray(List.of(scheduleRequest)),
+                                false,
+                                false)
+                        .toString();
+
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+                        if (Objects.equals(request.getPath(), UPDATE_URI_PATH_2)) {
+                            assertThat(
+                                            extractPartialCustomAudiencesFromRequest(
+                                                            request.getBody())
+                                                    .stream()
+                                                    .map(b -> b.getName())
+                                                    .collect(Collectors.toList()))
+                                    .containsExactly(PARTIAL_CA_3);
+
+                            assertThat(
+                                            extractCustomAudiencesToLeaveFromScheduleRequest(
+                                                    request.getBody()))
+                                    .containsExactlyElementsIn(customAudienceToLeaveList);
+                            return new MockResponse().setBody(responsePayload_SecondHop);
+                        } else {
+                            List<CustomAudienceBlob> caBlobs =
+                                    extractPartialCustomAudiencesFromRequest(request.getBody());
+                            assertThat(
+                                            caBlobs.stream()
+                                                    .map(b -> b.getName())
+                                                    .collect(Collectors.toList()))
+                                    .containsExactly(PARTIAL_CA_1, PARTIAL_CA_2);
+                            return new MockResponse().setBody(responsePayload_FirstHop);
+                        }
+                    }
+                };
+
+        MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
+        Uri updateUri = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH).toString());
+
+        // Join a custom audience using the joinCustomAudience API which would be "left" by update
+        CustomAudienceServiceEndToEndTest.ResultCapturingCallback joinCallback =
+                new CustomAudienceServiceEndToEndTest.ResultCapturingCallback();
+        mService.joinCustomAudience(
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_1).build(),
+                VALID_OWNER,
+                joinCallback);
+        assertTrue(joinCallback.mIsSuccess);
+
+        CustomAudienceServiceEndToEndTest.ResultCapturingCallback joinCallback2 =
+                new CustomAudienceServiceEndToEndTest.ResultCapturingCallback();
+        mService.joinCustomAudience(
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_2).build(),
+                VALID_OWNER,
+                joinCallback2);
+        assertTrue(joinCallback2.mIsSuccess);
+
+        // Make a request to the API
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                updateUri,
+                                VALID_OWNER,
+                                NEGATIVE_DELAY_FOR_TEST,
+                                List.of(
+                                        DBPartialCustomAudience.getPartialCustomAudience(
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
+                                        DBPartialCustomAudience.getPartialCustomAudience(
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        ScheduleCustomAudienceUpdateTestUtils.ScheduleUpdateTestCallback callback =
+                new ScheduleCustomAudienceUpdateTestUtils.ScheduleUpdateTestCallback(resultLatch);
+        mService.scheduleCustomAudienceUpdate(input, callback);
+        resultLatch.await();
+
+        // Validate response of API is complete
+        assertTrue(callback.isSuccess());
+
+        // Ensure that job that maintains update-scheduled is itself scheduled
+        verify(
+                () ->
+                        ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                                any(), any(), eq(false)),
+                times(1));
+
+        assertThat(mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()))
+                .hasSize(1);
+
+        // Manually trigger handler as it would have been triggered by its job schedule
+        Void unused =
+                mScheduledUpdatesHandler
+                        .performScheduledUpdates(Instant.now())
+                        .get(10, TimeUnit.SECONDS);
+
+        // Check that the request for updates was made to server successfully
+        assertEquals(1, mockWebServer.getRequestCount());
+
+        // Check that join and leave updates processed successfully
+        // Join
+        assertNotNull(
+                "The custom audience should have been joined",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_1));
+        assertNotNull(
+                "The custom audience should have been joined",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_2));
+        // Leave
+        assertNull(
+                "The custom audience should have been left",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, LEAVE_CA_1));
+
+        // Check that the additional update has been scheduled
+        assertThat(mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()))
+                .hasSize(1);
+
+        // Manually trigger handler as it would have been triggered by its job schedule
+        unused =
+                mScheduledUpdatesHandler
+                        .performScheduledUpdates(Instant.now())
+                        .get(10, TimeUnit.SECONDS);
+
+        // Check that the request for updates was made to server successfully
+        assertEquals(2, mockWebServer.getRequestCount());
+
+        // Check that scheduled updates processed successfully
+        // Join
+        assertNotNull(
+                "The custom audience should have been joined",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_3));
+        // Leave
+        assertNull(
+                "The custom audience should have been left",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, LEAVE_CA_2));
+    }
+
+    @Test
+    public void
+            testScheduleCAUpdate_AdditionalScheduleRequests_Enabled_TwoHops_MismatchedLeaveCA_Failure()
+                    throws Exception {
+        initServiceWithScheduleCAUpdateAdditionalScheduleRequestsEnabled();
+
+        List<PartialCustomAudience> partialCustomAudienceList = List.of(PARTIAL_CUSTOM_AUDIENCE_1);
+        List<String> customAudienceToLeaveList = List.of(LEAVE_CA_1);
+
+        /* Buyer set here is only being used for generating the json response. When
+        persisting the schedule request, buyer is being generated from the updateUri */
+        String responsePayload_SecondHop =
+                createJsonResponsePayload(
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                List.of(PARTIAL_CA_1),
+                                customAudienceToLeaveList,
+                                false,
+                                false)
+                        .toString();
+
+        String updateUriForSecondHop = mMockWebServerRule.uriForPath(UPDATE_URI_PATH_2).toString();
+
+        JSONObject scheduleRequest =
+                createScheduleRequestWithUpdateUri(
+                        updateUriForSecondHop,
+                        NEGATIVE_DELAY_FOR_TEST_IN_MINUTES,
+                        partialCustomAudienceListToJsonArray(partialCustomAudienceList),
+                        new JSONArray(customAudienceToLeaveList),
+                        true);
+
+        String responsePayload_FirstHop =
+                createJsonResponsePayloadWithScheduleRequests(
+                                new JSONArray(List.of(scheduleRequest)))
+                        .toString();
+
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+                        if (Objects.equals(request.getPath(), UPDATE_URI_PATH_2)) {
+                            assertThat(
+                                            extractPartialCustomAudiencesFromRequest(
+                                                            request.getBody())
+                                                    .stream()
+                                                    .map(b -> b.getName())
+                                                    .collect(Collectors.toList()))
+                                    .containsExactly(PARTIAL_CA_1);
+
+                            assertThat(
+                                            extractCustomAudiencesToLeaveFromScheduleRequest(
+                                                    request.getBody()))
+                                    .containsExactlyElementsIn(customAudienceToLeaveList);
+                            return new MockResponse().setBody(responsePayload_SecondHop);
+                        } else {
+                            return new MockResponse().setBody(responsePayload_FirstHop);
+                        }
+                    }
+                };
+
+        MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
+        Uri updateUri = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH).toString());
+
+        // Join a custom audience using the joinCustomAudience API which would be "left" by update
+        CustomAudienceServiceEndToEndTest.ResultCapturingCallback joinCallback =
+                new CustomAudienceServiceEndToEndTest.ResultCapturingCallback();
+        mService.joinCustomAudience(
+                getValidBuilderForBuyerFilters(BUYER_1).setName(LEAVE_CA_1).build(),
+                VALID_OWNER,
+                joinCallback);
+        assertTrue(joinCallback.mIsSuccess);
+
+        // Make a request to the API
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                updateUri,
+                                VALID_OWNER,
+                                NEGATIVE_DELAY_FOR_TEST,
+                                Collections.emptyList())
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        ScheduleCustomAudienceUpdateTestUtils.ScheduleUpdateTestCallback callback =
+                new ScheduleCustomAudienceUpdateTestUtils.ScheduleUpdateTestCallback(resultLatch);
+        mService.scheduleCustomAudienceUpdate(input, callback);
+        resultLatch.await();
+
+        // Validate response of API is complete
+        assertTrue(callback.isSuccess());
+
+        // Ensure that job that maintains update-scheduled is itself scheduled
+        verify(
+                () ->
+                        ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                                any(), any(), eq(false)),
+                times(1));
+
+        assertThat(mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()))
+                .hasSize(1);
+
+        // Manually trigger handler as it would have been triggered by its job schedule
+        Void unused =
+                mScheduledUpdatesHandler
+                        .performScheduledUpdates(Instant.now())
+                        .get(10, TimeUnit.SECONDS);
+
+        // Check that the request for updates was made to server successfully
+        assertEquals(1, mockWebServer.getRequestCount());
+
+        // Check that the additional update has been scheduled
+        assertThat(mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()))
+                .hasSize(1);
+
+        // Manually trigger handler as it would have been triggered by its job schedule
+        unused =
+                mScheduledUpdatesHandler
+                        .performScheduledUpdates(Instant.now())
+                        .get(10, TimeUnit.SECONDS);
+
+        // Check that the request for updates was made to server successfully
+        assertEquals(2, mockWebServer.getRequestCount());
+
+        // Check that the join update processed successfully but leave didn't since the CA belongs
+        // to a different adtech
+        // Join
+        assertNotNull(
+                "The custom audience should have been joined",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_1));
+        // Leave
+        assertNotNull(
+                "The custom audience shouldn't have been left",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(VALID_OWNER, BUYER_1, LEAVE_CA_1));
+    }
+
+    @Test
+    public void testScheduleCAUpdate_AdditionalScheduleRequests_Enabled_ThreeHops_Failure()
+            throws Exception {
+        initServiceWithScheduleCAUpdateAdditionalScheduleRequestsEnabled();
+
+        List<PartialCustomAudience> partialCustomAudienceList = List.of(PARTIAL_CUSTOM_AUDIENCE_1);
+        List<String> customAudienceToLeaveList = List.of(LEAVE_CA_1);
+
+        List<PartialCustomAudience> partialCustomAudienceList2 = List.of(PARTIAL_CUSTOM_AUDIENCE_2);
+        List<String> customAudienceToLeaveList2 = List.of(LEAVE_CA_2);
+
+        /* Buyer set here is only being used for generating the json response. When
+        persisting the schedule request, buyer is being generated from the updateUri */
+        String responsePayload_ThirdHop =
+                createJsonResponsePayload(
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                List.of(PARTIAL_CA_2),
+                                customAudienceToLeaveList2,
+                                false,
+                                false)
+                        .toString();
+
+        String updateUriForThirdHop = mMockWebServerRule.uriForPath(UPDATE_URI_PATH_3).toString();
+
+        JSONObject scheduleRequest_SecondHop =
+                createScheduleRequestWithUpdateUri(
+                        updateUriForThirdHop,
+                        NEGATIVE_DELAY_FOR_TEST_IN_MINUTES,
+                        partialCustomAudienceListToJsonArray(partialCustomAudienceList2),
+                        new JSONArray(customAudienceToLeaveList2),
+                        true);
+
+        /* Buyer set here is only being used for generating the json response. When
+        persisting the schedule request, buyer is being generated from the updateUri */
+        String responsePayload_SecondHop =
+                createJsonResponsePayloadWithScheduleRequests(
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                List.of(PARTIAL_CA_1),
+                                customAudienceToLeaveList,
+                                new JSONArray(List.of(scheduleRequest_SecondHop)),
+                                false,
+                                false)
+                        .toString();
+
+        String updateUriForSecondHop = mMockWebServerRule.uriForPath(UPDATE_URI_PATH_2).toString();
+
+        // For the first hop
+        JSONObject scheduleRequest =
+                createScheduleRequestWithUpdateUri(
+                        updateUriForSecondHop,
+                        NEGATIVE_DELAY_FOR_TEST_IN_MINUTES,
+                        partialCustomAudienceListToJsonArray(partialCustomAudienceList),
+                        new JSONArray(customAudienceToLeaveList),
+                        true);
+
+        String responsePayload_FirstHop =
+                createJsonResponsePayloadWithScheduleRequests(
+                                new JSONArray(List.of(scheduleRequest)))
+                        .toString();
+
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+                        if (Objects.equals(request.getPath(), UPDATE_URI_PATH_3)) {
+                            assertThat(
+                                            extractPartialCustomAudiencesFromRequest(
+                                                            request.getBody())
+                                                    .stream()
+                                                    .map(b -> b.getName())
+                                                    .collect(Collectors.toList()))
+                                    .containsExactly(PARTIAL_CA_2);
+
+                            assertThat(
+                                            extractCustomAudiencesToLeaveFromScheduleRequest(
+                                                    request.getBody()))
+                                    .containsExactlyElementsIn(customAudienceToLeaveList2);
+                            return new MockResponse().setBody(responsePayload_ThirdHop);
+                        } else if (Objects.equals(request.getPath(), UPDATE_URI_PATH_2)) {
+                            assertThat(
+                                            extractPartialCustomAudiencesFromRequest(
+                                                            request.getBody())
+                                                    .stream()
+                                                    .map(b -> b.getName())
+                                                    .collect(Collectors.toList()))
+                                    .containsExactly(PARTIAL_CA_1);
+
+                            assertThat(
+                                            extractCustomAudiencesToLeaveFromScheduleRequest(
+                                                    request.getBody()))
+                                    .containsExactlyElementsIn(customAudienceToLeaveList);
+                            return new MockResponse().setBody(responsePayload_SecondHop);
+                        } else {
+                            return new MockResponse().setBody(responsePayload_FirstHop);
+                        }
+                    }
+                };
+
+        MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
+        Uri updateUri = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH).toString());
+
+        // Join a custom audience using the joinCustomAudience API which would be "left" by update
+        CustomAudienceServiceEndToEndTest.ResultCapturingCallback joinCallback =
+                new CustomAudienceServiceEndToEndTest.ResultCapturingCallback();
+        mService.joinCustomAudience(
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_1).build(),
+                VALID_OWNER,
+                joinCallback);
+        assertTrue(joinCallback.mIsSuccess);
+
+        CustomAudienceServiceEndToEndTest.ResultCapturingCallback joinCallback2 =
+                new CustomAudienceServiceEndToEndTest.ResultCapturingCallback();
+        mService.joinCustomAudience(
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_2).build(),
+                VALID_OWNER,
+                joinCallback2);
+        assertTrue(joinCallback2.mIsSuccess);
+
+        // Make a request to the API
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                updateUri,
+                                VALID_OWNER,
+                                NEGATIVE_DELAY_FOR_TEST,
+                                Collections.emptyList())
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        ScheduleCustomAudienceUpdateTestUtils.ScheduleUpdateTestCallback callback =
+                new ScheduleCustomAudienceUpdateTestUtils.ScheduleUpdateTestCallback(resultLatch);
+        mService.scheduleCustomAudienceUpdate(input, callback);
+        resultLatch.await();
+
+        // Validate response of API is complete
+        assertTrue(callback.isSuccess());
+
+        // Ensure that job that maintains update-scheduled is itself scheduled
+        verify(
+                () ->
+                        ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                                any(), any(), eq(false)),
+                times(1));
+
+        assertThat(mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()))
+                .hasSize(1);
+
+        // Manually trigger handler as it would have been triggered by its job schedule
+        Void unused =
+                mScheduledUpdatesHandler
+                        .performScheduledUpdates(Instant.now())
+                        .get(10, TimeUnit.SECONDS);
+
+        // Check that the request for updates was made to server successfully
+        assertEquals(1, mockWebServer.getRequestCount());
+
+        // Check that the additional update has been scheduled
+        assertThat(mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()))
+                .hasSize(1);
+
+        // Manually trigger handler as it would have been triggered by its job schedule
+        unused =
+                mScheduledUpdatesHandler
+                        .performScheduledUpdates(Instant.now())
+                        .get(10, TimeUnit.SECONDS);
+
+        // Check that the request for updates was made to server successfully
+        assertEquals(2, mockWebServer.getRequestCount());
+
+        // Check that updates processed successfully
+        // Join
+        assertNotNull(
+                "The custom audience should have been joined",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_1));
+        // Leave
+        assertNull(
+                "The custom audience should have been left",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, LEAVE_CA_1));
+
+        // Check that the third hop update hasn't been scheduled
+        assertThat(mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()))
+                .hasSize(0);
+
+        // Check that third hop's update has not been processed
+        // Join
+        assertNull(
+                "The custom audience shouldn't have been joined",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_2));
+        // Leave
+        assertNotNull(
+                "The custom audience shouldn't have been left",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, LEAVE_CA_2));
     }
 
     @Test
@@ -3554,7 +4811,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                         mCustomAudienceQuantityCheckerMock,
                                         mCustomAudienceValidatorMock,
                                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                        flagsWithLowRateLimit),
+                                        flagsWithLowRateLimit,
+                                        ComponentAdsStrategy.createInstance(
+                                                /* componentAdsEnabled= */ false)),
                                 new FledgeAuthorizationFilter(
                                         mContext.getPackageManager(),
                                         EnrollmentDao.getInstance(),
@@ -3565,6 +4824,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mAdServicesLoggerMock,
                                 mAppImportanceFilter,
                                 flagsWithLowRateLimit,
+                                mMockDebugFlags,
                                 CallingAppUidSupplierProcessImpl.create(),
                                 new CustomAudienceServiceFilter(
                                         mContext,
@@ -3738,7 +4998,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                flags),
+                                flags,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         mFledgeAuthorizationFilterSpy,
                         mConsentManagerMock,
                         mDevContextFilter,
@@ -3746,6 +5008,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         flags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -3882,5 +5145,90 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                 return true;
             }
         };
+    }
+
+    private Flags getFlagsWithScheduleCAUpdateAdditionalScheduleRequestsEnabled() {
+        return new CustomAudienceServiceE2ETestFlags() {
+            @Override
+            public boolean getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
+                return true;
+            }
+        };
+    }
+
+    private void initServiceWithScheduleCAUpdateAdditionalScheduleRequestsEnabled() {
+        Flags flags = getFlagsWithScheduleCAUpdateAdditionalScheduleRequestsEnabled();
+
+        mStrategy =
+                ScheduleCustomAudienceUpdateStrategyFactory.createStrategy(
+                        mContext,
+                        mCustomAudienceDao,
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        FledgeAuthorizationFilter.create(
+                                mContext, AdServicesLoggerImpl.getInstance()),
+                        flags.getFledgeScheduleCustomAudienceMinDelayMinsOverride(),
+                        /* additionalScheduleRequestsEnabled= */ true,
+                        COMMON_FLAGS_WITH_FILTERS_ENABLED.getDisableFledgeEnrollmentCheck(),
+                        mAdServicesLoggerMock);
+
+        mService =
+                new CustomAudienceServiceImpl(
+                        mContext,
+                        new CustomAudienceImpl(
+                                mCustomAudienceDao,
+                                mCustomAudienceQuantityChecker,
+                                mCustomAudienceValidator,
+                                CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
+                        mFledgeAuthorizationFilterSpy,
+                        mConsentManagerMock,
+                        mDevContextFilter,
+                        MoreExecutors.newDirectExecutorService(),
+                        mAdServicesLoggerMock,
+                        mAppImportanceFilter,
+                        flags,
+                        mMockDebugFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        new CustomAudienceServiceFilter(
+                                mContext,
+                                mFledgeConsentFilterMock,
+                                flags,
+                                mAppImportanceFilter,
+                                new FledgeAuthorizationFilter(
+                                        mContext.getPackageManager(),
+                                        EnrollmentDao.getInstance(),
+                                        mAdServicesLoggerMock),
+                                new FledgeAllowListsFilter(flags, mAdServicesLoggerMock),
+                                mFledgeApiThrottleFilterMock),
+                        new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, flags));
+
+        mScheduledUpdatesHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        new AdServicesHttpsClient(
+                                AdServicesExecutors.getBlockingExecutor(),
+                                CacheProviderFactory.createNoOpCache()),
+                        flags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
+                        RENDER_ID_VALIDATOR_NO_OP,
+                        AdDataConversionStrategyFactory.getAdDataConversionStrategy(
+                                true, true, true),
+                        new CustomAudienceImpl(
+                                mCustomAudienceDao,
+                                mCustomAudienceQuantityChecker,
+                                mCustomAudienceValidator,
+                                CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                                flags,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
+                        mCustomAudienceQuantityChecker,
+                        mStrategy,
+                        mAdServicesLoggerMock);
     }
 }

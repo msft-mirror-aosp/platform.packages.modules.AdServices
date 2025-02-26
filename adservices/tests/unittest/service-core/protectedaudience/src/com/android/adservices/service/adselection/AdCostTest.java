@@ -21,16 +21,10 @@ import static com.android.adservices.service.adselection.AdSelectionScriptEngine
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 public class AdCostTest {
     private static final AdCost AD_COST = new AdCost(1.0, NUM_BITS_STOCHASTIC_ROUNDING);
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testAdCostEquals() {

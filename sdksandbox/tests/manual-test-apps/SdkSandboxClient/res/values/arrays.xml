@@ -24,6 +24,7 @@
         <item>Webview</item>
         <item>Ad Refresh</item>
         <item>EditText</item>
+        <item>Image</item>
     </array>
     <array name="banner_on_click">
         <item>Open Chrome</item>
@@ -46,6 +47,7 @@
         <item>WEBVIEW</item>
         <item>AD_REFRESH</item>
         <item>EDITTEXT</item>
+        <item>IMAGE</item>
     </array>
     <array name="banner_on_click_values">
         <item>OPEN_CHROME</item>

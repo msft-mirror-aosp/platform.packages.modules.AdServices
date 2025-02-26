@@ -39,7 +39,6 @@ import com.android.adservices.data.kanon.KAnonMessageDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
@@ -55,7 +54,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 
-@RequiresSdkLevelAtLeastS()
 public final class KAnonSignJoinManagerTest extends AdServicesExtendedMockitoTestCase {
     private KAnonSignJoinManager mKAnonSignJoinManager;
     private KAnonMessageManager mKAnonMessageManager;

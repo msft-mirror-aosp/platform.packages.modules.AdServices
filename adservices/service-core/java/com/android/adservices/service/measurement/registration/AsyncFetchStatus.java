@@ -55,6 +55,7 @@ public class AsyncFetchStatus {
     private int mNumDeletedEntities;
     private boolean mIsEventLevelEpsilonConfigured;
     private boolean mIsTriggerAggregatableValueFiltersConfigured;
+    private boolean mIsTriggerFilteringIdConfigured;
 
     public AsyncFetchStatus() {
         mResponseStatus = ResponseStatus.UNKNOWN;
@@ -65,6 +66,7 @@ public class AsyncFetchStatus {
         mIsPARequest = false;
         mIsEventLevelEpsilonConfigured = false;
         mIsTriggerAggregatableValueFiltersConfigured = false;
+        mIsTriggerFilteringIdConfigured = false;
     }
 
     /** Get the status of a communication with an Ad Tech server. */
@@ -176,6 +178,16 @@ public class AsyncFetchStatus {
     public void setIsTriggerAggregatableValueFiltersConfigured(
             boolean isTriggerAggregatableValueFiltersConfigured) {
         mIsTriggerAggregatableValueFiltersConfigured = isTriggerAggregatableValueFiltersConfigured;
+    }
+
+    /** Returns {@code true} if Triggers can have filtering_id configured in aggregatable_values. */
+    public boolean isTriggerFilteringIdConfigured() {
+        return mIsTriggerFilteringIdConfigured;
+    }
+
+    /** Sets the aggregatable value filtering id configure status. */
+    public void setIsTriggerFilteringIdConfigured(boolean isTriggerFilteringIdConfigured) {
+        mIsTriggerFilteringIdConfigured = isTriggerFilteringIdConfigured;
     }
 
     /** Returns true if request is successful. */

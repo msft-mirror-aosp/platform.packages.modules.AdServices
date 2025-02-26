@@ -52,6 +52,8 @@ import java.util.concurrent.Future;
  * Fallback attribution job. The actual job execution logic is part of {@link
  * AttributionJobHandler}.
  */
+// TODO(b/311183933): Remove passed in Context from static method.
+@SuppressWarnings("AvoidStaticContext")
 public final class AttributionFallbackJobService extends JobService {
     private static final int MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID =
             MEASUREMENT_ATTRIBUTION_FALLBACK_JOB.getJobId();
@@ -166,6 +168,8 @@ public final class AttributionFallbackJobService extends JobService {
      * @param context the context
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
         if (!flags.getMeasurementAttributionFallbackJobEnabled()) {

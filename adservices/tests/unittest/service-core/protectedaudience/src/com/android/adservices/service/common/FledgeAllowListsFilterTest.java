@@ -35,11 +35,9 @@ import android.adservices.common.AdServicesStatusUtils;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.MockitoSession;
 
@@ -60,9 +58,6 @@ public class FledgeAllowListsFilterTest {
     private FledgeAllowListsFilter mFledgeAllowListsFilter;
 
     public MockitoSession mMockitoSession;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

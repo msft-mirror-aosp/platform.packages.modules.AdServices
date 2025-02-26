@@ -42,6 +42,10 @@ public final class PhFlags implements Flags {
     static final String KEY_CLIENT_ERROR_LOGGING__ENABLE_CEL_FOR_SYSTEM_SERVER =
             "ClientErrorLogging__enable_cel_for_system_server";
 
+    /** Key to enable AtomicFileDataStore update API for adservices system service. */
+    public static final String KEY_ENABLE_BATCH_UPDATE_API_IN_SYSTEM_SERVER =
+            "AtomicFileDatastore__enable_batch_update_api_in_system_server";
+
     @Override
     public boolean getAdServicesSystemServiceEnabled() {
         return getFlag(KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED, ADSERVICES_SYSTEM_SERVICE_ENABLED);
@@ -52,6 +56,13 @@ public final class PhFlags implements Flags {
         return getFlag(
                 KEY_CLIENT_ERROR_LOGGING__ENABLE_CEL_FOR_SYSTEM_SERVER,
                 CLIENT_ERROR_LOGGING__ENABLE_CEL_FOR_SYSTEM_SERVER);
+    }
+
+    @Override
+    public boolean getEnableAtomicFileDatastoreBatchUpdateApiInSystemServer() {
+        return getFlag(
+                KEY_ENABLE_BATCH_UPDATE_API_IN_SYSTEM_SERVER,
+                ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API_IN_SYSTEM_SERVER);
     }
 
     @SuppressWarnings("AvoidDeviceConfigUsage") // Helper / infra method

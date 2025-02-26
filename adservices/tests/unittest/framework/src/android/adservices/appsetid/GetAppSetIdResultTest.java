@@ -21,16 +21,11 @@ import static org.junit.Assert.assertThrows;
 
 import android.os.Parcel;
 
-import androidx.test.filters.SmallTest;
-
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 /** Unit tests for {@link GetAppSetIdResult} */
-@RequiresSdkLevelAtLeastS()
-@SmallTest
 public final class GetAppSetIdResultTest extends AdServicesUnitTestCase {
     private static final String TEST_APP_SET_ID = "TEST_APP_SET_ID";
 

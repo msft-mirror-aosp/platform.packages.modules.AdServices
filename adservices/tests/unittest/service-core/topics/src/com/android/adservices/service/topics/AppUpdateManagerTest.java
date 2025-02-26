@@ -25,35 +25,30 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.util.Pair;
 
-import androidx.test.core.app.ApplicationProvider;
-
 import com.android.adservices.MockRandom;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
-import com.android.adservices.service.Flags;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -66,7 +61,7 @@ import java.util.Random;
 import java.util.Set;
 
 /** Unit tests for {@link com.android.adservices.service.topics.AppUpdateManager} */
-public class AppUpdateManagerTest {
+public final class AppUpdateManagerTest extends AdServicesMockitoTestCase {
     @SuppressWarnings({"unused"})
     private static final String TAG = "AppInstallationInfoManagerTest";
 
@@ -74,24 +69,18 @@ public class AppUpdateManagerTest {
     private static final long TAXONOMY_VERSION = 1L;
     private static final long MODEL_VERSION = 1L;
 
-    private final Context mContext = spy(ApplicationProvider.getApplicationContext());
     private final DbHelper mDbHelper = spy(DbTestUtil.getDbHelperForTest());
 
     private AppUpdateManager mAppUpdateManager;
     private TopicsDao mTopicsDao;
 
-    @Mock PackageManager mMockPackageManager;
-    @Mock Flags mMockFlags;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    @Mock private PackageManager mMockPackageManager;
 
     @Before
     public void setup() {
         // In order to mock Package Manager, context also needs to be mocked to return
         // mocked Package Manager
-        MockitoAnnotations.initMocks(this);
-        when(mContext.getPackageManager()).thenReturn(mMockPackageManager);
+        doReturn(mMockPackageManager).when(mSpyContext).getPackageManager();
 
         mTopicsDao = new TopicsDao(mDbHelper);
         // Erase all existing data.
@@ -112,8 +101,8 @@ public class AppUpdateManagerTest {
         // Both app1 and app2 have usages in database. App 2 won't be current installed app list
         // that is returned by mocked Package Manager, so it'll be regarded as an unhanded installed
         // app.
-        final String app1 = "app1";
-        final String app2 = "app2";
+        String app1 = "app1";
+        String app2 = "app2";
 
         // Mock Package Manager for installed applications
         ApplicationInfo appInfo1 = new ApplicationInfo();
@@ -123,9 +112,9 @@ public class AppUpdateManagerTest {
 
         // Begin to persist data into database
         // Handle AppClassificationTopicsContract
-        final long epochId1 = 1L;
-        final int topicId1 = 1;
-        final int numberOfLookBackEpochs = 1;
+        long epochId1 = 1L;
+        int topicId1 = 1;
+        int numberOfLookBackEpochs = 1;
 
         Topic topic1 = Topic.create(topicId1, TAXONOMY_VERSION, MODEL_VERSION);
 
@@ -139,7 +128,7 @@ public class AppUpdateManagerTest {
                 .containsExactly(app1, app2);
 
         // Handle UsageHistoryContract
-        final String sdk1 = "sdk1";
+        String sdk1 = "sdk1";
 
         mTopicsDao.recordUsageHistory(epochId1, app1, EMPTY_SDK);
         mTopicsDao.recordUsageHistory(epochId1, app1, sdk1);
@@ -191,9 +180,9 @@ public class AppUpdateManagerTest {
                 .isEqualTo(expectedReturnedTopics);
 
         // Reconcile uninstalled applications
-        mAppUpdateManager.reconcileUninstalledApps(mContext, epochId1);
+        mAppUpdateManager.reconcileUninstalledApps(mSpyContext, epochId1);
 
-        verify(mContext).getPackageManager();
+        verify(mSpyContext).getPackageManager();
 
         if (SdkLevel.isAtLeastT()) {
             verify(mMockPackageManager).getInstalledApplications(Mockito.any());
@@ -239,13 +228,13 @@ public class AppUpdateManagerTest {
         //   epoch3 and app3 should have no returned topic. (verify consecutive deletion on a topic)
         // * In Epoch4, app2 is uninstalled. topic3 will be removed in Epoch1 as it has app2 as the
         //   only contributor, while topic3 will stay in Epoch2 as app2 contributes to it.
-        final String app1 = "app1";
-        final String app2 = "app2";
-        final String sdk = "sdk";
-        final long epoch1 = 1L;
-        final long epoch2 = 2L;
-        final long epoch4 = 4L;
-        final int numberOfLookBackEpochs = 3;
+        String app1 = "app1";
+        String app2 = "app2";
+        String sdk = "sdk";
+        long epoch1 = 1L;
+        long epoch2 = 2L;
+        long epoch4 = 4L;
+        int numberOfLookBackEpochs = 3;
 
         Topic topic1 = Topic.create(1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -289,7 +278,7 @@ public class AppUpdateManagerTest {
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
         // Execute reconciliation to handle app2
-        mAppUpdateManager.reconcileUninstalledApps(mContext, epoch4);
+        mAppUpdateManager.reconcileUninstalledApps(mSpyContext, epoch4);
 
         // Verify Returned Topics in [1, 3]. app2 should have no returnedTopics as it's uninstalled.
         // app1 only has returned topic at Epoch2 as topic3 is removed from Epoch1.
@@ -315,13 +304,13 @@ public class AppUpdateManagerTest {
         //   uninstalled apps.
         // * Both app2 and app3 are contributors to topic1 and return topic1. app1 is not the
         //   contributor but also returns topic1, learnt via same SDK.
-        final String app1 = "app1";
-        final String app2 = "app2";
-        final String app3 = "app3";
-        final String sdk = "sdk";
-        final long epoch1 = 1L;
-        final long epoch2 = 2L;
-        final int numberOfLookBackEpochs = 3;
+        String app1 = "app1";
+        String app2 = "app2";
+        String app3 = "app3";
+        String sdk = "sdk";
+        long epoch1 = 1L;
+        long epoch2 = 2L;
+        int numberOfLookBackEpochs = 3;
 
         Topic topic1 = Topic.create(1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -356,7 +345,7 @@ public class AppUpdateManagerTest {
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
         // Execute reconciliation to handle app2 and app3
-        mAppUpdateManager.reconcileUninstalledApps(mContext, epoch2);
+        mAppUpdateManager.reconcileUninstalledApps(mSpyContext, epoch2);
 
         // Verify Returned Topics in epoch 1. app2 and app3 are uninstalled, so they definitely
         // don't have a returned topic. As topic1 has no contributors after uninstallations of app2
@@ -368,7 +357,7 @@ public class AppUpdateManagerTest {
 
     @Test
     public void testGetUnhandledUninstalledApps() {
-        final long epochId = 1L;
+        long epochId = 1L;
         Set<String> currentInstalledApps = Set.of("app1", "app2", "app5");
 
         // Add app1 and app3 into usage table
@@ -398,7 +387,7 @@ public class AppUpdateManagerTest {
 
     @Test
     public void testGetUnhandledInstalledApps() {
-        final long epochId = 10L;
+        long epochId = 10L;
         Set<String> currentInstalledApps = Set.of("app1", "app2", "app3", "app4");
 
         // Add app1 and app5 into usage table
@@ -428,18 +417,18 @@ public class AppUpdateManagerTest {
 
     @Test
     public void testDeleteAppDataFromTableByApps() {
-        final String app1 = "app1";
-        final String app2 = "app2";
-        final String app3 = "app3";
+        String app1 = "app1";
+        String app2 = "app2";
+        String app3 = "app3";
 
         // Begin to persist data into database.
         // app1, app2 and app3 have usages in database. Derived data of app2 and app3 will be wiped.
         // Therefore, database will only contain app1's data.
 
         // Handle AppClassificationTopicsContract
-        final long epochId1 = 1L;
-        final int topicId1 = 1;
-        final int numberOfLookBackEpochs = 1;
+        long epochId1 = 1L;
+        int topicId1 = 1;
+        int numberOfLookBackEpochs = 1;
 
         Topic topic1 = Topic.create(topicId1, TAXONOMY_VERSION, MODEL_VERSION);
 
@@ -451,7 +440,7 @@ public class AppUpdateManagerTest {
                 .isEqualTo(Set.of(app1, app2, app3));
 
         // Handle UsageHistoryContract
-        final String sdk1 = "sdk1";
+        String sdk1 = "sdk1";
 
         mTopicsDao.recordUsageHistory(epochId1, app1, EMPTY_SDK);
         mTopicsDao.recordUsageHistory(epochId1, app1, sdk1);
@@ -542,11 +531,11 @@ public class AppUpdateManagerTest {
 
     @Test
     public void testDeleteAppDataFromTableByApps_encryptedTopicsTable() {
-        final String app = "app";
-        final String sdk = "sdk";
-        final long epochId = 1L;
-        final int topicId = 1;
-        final int numberOfLookBackEpochs = 1;
+        String app = "app";
+        String sdk = "sdk";
+        long epochId = 1L;
+        int topicId = 1;
+        int numberOfLookBackEpochs = 1;
 
         Topic topic1 = Topic.create(topicId, TAXONOMY_VERSION, MODEL_VERSION);
         EncryptedTopic encryptedTopic1 =
@@ -614,12 +603,12 @@ public class AppUpdateManagerTest {
 
     @Test
     public void testReconcileInstalledApps() {
-        final String app1 = "app1";
-        final String app2 = "app2";
-        final long currentEpochId = 4L;
-        final int numOfLookBackEpochs = 3;
-        final int topicsNumberOfTopTopics = 5;
-        final int topicsPercentageForRandomTopic = 5;
+        String app1 = "app1";
+        String app2 = "app2";
+        long currentEpochId = 4L;
+        int numOfLookBackEpochs = 3;
+        int topicsNumberOfTopTopics = 5;
+        int topicsPercentageForRandomTopic = 5;
 
         // As selectAssignedTopicFromTopTopics() randomly assigns a top topic, pass in a Mocked
         // Random object to make the result deterministic.
@@ -682,7 +671,7 @@ public class AppUpdateManagerTest {
         }
 
         // Assign topics to past epochs
-        appUpdateManager.reconcileInstalledApps(mContext, currentEpochId);
+        appUpdateManager.reconcileInstalledApps(mSpyContext, currentEpochId);
 
         Map<Long, Map<Pair<String, String>, Topic>> expectedReturnedTopics = new HashMap<>();
         expectedReturnedTopics.put(
@@ -702,7 +691,7 @@ public class AppUpdateManagerTest {
 
     @Test
     public void testSelectAssignedTopicFromTopTopics() {
-        final int topicsPercentageForRandomTopic = 5;
+        int topicsPercentageForRandomTopic = 5;
 
         // Test the randomness with pre-defined values
         MockRandom mockRandom =
@@ -741,7 +730,7 @@ public class AppUpdateManagerTest {
 
     @Test
     public void testSelectAssignedTopicFromTopTopics_bothListsAreEmpty() {
-        final int topicsPercentageForRandomTopic = 5;
+        int topicsPercentageForRandomTopic = 5;
 
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags);
@@ -757,7 +746,7 @@ public class AppUpdateManagerTest {
 
     @Test
     public void testSelectAssignedTopicFromTopTopics_oneListIsEmpty() {
-        final int topicsPercentageForRandomTopic = 5;
+        int topicsPercentageForRandomTopic = 5;
 
         // Test the randomness with pre-defined values. Ask it to select the second element for next
         // two random draws.
@@ -790,11 +779,11 @@ public class AppUpdateManagerTest {
 
     @Test
     public void testAssignTopicsToNewlyInstalledApps() {
-        final String appName = "app";
-        final long currentEpochId = 4L;
-        final int numOfLookBackEpochs = 3;
-        final int topicsNumberOfTopTopics = 5;
-        final int topicsPercentageForRandomTopic = 5;
+        String appName = "app";
+        long currentEpochId = 4L;
+        int numOfLookBackEpochs = 3;
+        int topicsNumberOfTopTopics = 5;
+        int topicsPercentageForRandomTopic = 5;
 
         // As selectAssignedTopicFromTopTopics() randomly assigns a top topic, pass in a Mocked
         // Random object to make the result deterministic.
@@ -865,12 +854,12 @@ public class AppUpdateManagerTest {
 
     @Test
     public void testAssignTopicsToSdkForAppInstallation() {
-        final String app = "app";
-        final String sdk = "sdk";
-        final int numberOfLookBackEpochs = 3;
-        final long currentEpochId = 5L;
-        final long taxonomyVersion = 1L;
-        final long modelVersion = 1L;
+        String app = "app";
+        String sdk = "sdk";
+        int numberOfLookBackEpochs = 3;
+        long currentEpochId = 5L;
+        long taxonomyVersion = 1L;
+        long modelVersion = 1L;
 
         Pair<String, String> appOnlyCaller = Pair.create(app, EMPTY_SDK);
         Pair<String, String> appSdkCaller = Pair.create(app, sdk);
@@ -926,10 +915,10 @@ public class AppUpdateManagerTest {
 
     @Test
     public void testAssignTopicsToSdkForAppInstallation_NonSdk() {
-        final String app = "app";
-        final String sdk = EMPTY_SDK; // App calls Topics API directly
-        final int numberOfLookBackEpochs = 3;
-        final long currentEpochId = 5L;
+        String app = "app";
+        String sdk = EMPTY_SDK; // App calls Topics API directly
+        int numberOfLookBackEpochs = 3;
+        long currentEpochId = 5L;
 
         Pair<String, String> appOnlyCaller = Pair.create(app, sdk);
 
@@ -957,9 +946,9 @@ public class AppUpdateManagerTest {
 
     @Test
     public void testAssignTopicsToSdkForAppInstallation_unsatisfiedApp() {
-        final String app = "app";
-        final String sdk = "sdk";
-        final int numberOfLookBackEpochs = 1;
+        String app = "app";
+        String sdk = "sdk";
+        int numberOfLookBackEpochs = 1;
 
         Pair<String, String> appOnlyCaller = Pair.create(app, EMPTY_SDK);
         Pair<String, String> otherAppOnlyCaller = Pair.create("otherApp", EMPTY_SDK);
@@ -1007,10 +996,10 @@ public class AppUpdateManagerTest {
 
     @Test
     public void testAssignTopicsToSdkForAppInstallation_unsatisfiedSdk() {
-        final String app = "app";
-        final String sdk = "sdk";
-        final String otherSDK = "otherSdk";
-        final int numberOfLookBackEpochs = 1;
+        String app = "app";
+        String sdk = "sdk";
+        String otherSDK = "otherSdk";
+        int numberOfLookBackEpochs = 1;
 
         Pair<String, String> appOnlyCaller = Pair.create(app, EMPTY_SDK);
         Pair<String, String> appSdkCaller = Pair.create(app, sdk);
@@ -1050,8 +1039,8 @@ public class AppUpdateManagerTest {
 
     @Test
     public void testConvertUriToAppName() {
-        final String samplePackageName = "com.example.measurement.sampleapp";
-        final String packageScheme = "package:";
+        String samplePackageName = "com.example.measurement.sampleapp";
+        String packageScheme = "package:";
 
         Uri uri = Uri.parse(packageScheme + samplePackageName);
         assertThat(mAppUpdateManager.convertUriToAppName(uri)).isEqualTo(samplePackageName);
@@ -1059,11 +1048,11 @@ public class AppUpdateManagerTest {
 
     @Test
     public void testHandleTopTopicsWithoutContributors() {
-        final long epochId1 = 1;
-        final long epochId2 = 2;
-        final String app1 = "app1";
-        final String app2 = "app2";
-        final String sdk = "sdk";
+        long epochId1 = 1;
+        long epochId2 = 2;
+        String app1 = "app1";
+        String app2 = "app2";
+        String sdk = "sdk";
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic3 = Topic.create(/* topic */ 3, TAXONOMY_VERSION, MODEL_VERSION);
@@ -1139,8 +1128,8 @@ public class AppUpdateManagerTest {
 
     @Test
     public void testFilterRegularTopicsWithoutContributors() {
-        final long epochId = 1;
-        final String app = "app";
+        long epochId = 1;
+        String app = "app";
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -1168,8 +1157,8 @@ public class AppUpdateManagerTest {
     // are tested respectively in this test class.
     @Test
     public void testHandleAppInstallationInRealTime() {
-        final String app = "app";
-        final long epochId = 1L;
+        String app = "app";
+        long epochId = 1L;
 
         AppUpdateManager appUpdateManager =
                 spy(new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags));

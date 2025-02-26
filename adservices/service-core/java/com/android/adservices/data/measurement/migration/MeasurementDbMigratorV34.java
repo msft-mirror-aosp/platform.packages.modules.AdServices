@@ -20,6 +20,9 @@ import android.annotation.NonNull;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.data.measurement.MeasurementTables.SourceAttributionScopeContract;
+import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
+import com.android.adservices.data.measurement.MeasurementTables.SourceDestination;
 
 /**
  * Migrates Measurement DB to version 34. This upgrade adds the {@link
@@ -31,6 +34,22 @@ import com.android.adservices.data.measurement.MeasurementTables;
  * MeasurementTables.SourceAttributionScopeContract#ATTRIBUTION_SCOPE} columns.
  */
 public class MeasurementDbMigratorV34 extends AbstractMeasurementDbMigrator {
+    public static final String CREATE_TABLE_SOURCE_ATTRIBUTION_SCOPE_V34 =
+            "CREATE TABLE "
+                    + SourceAttributionScopeContract.TABLE
+                    + " ("
+                    + SourceAttributionScopeContract.SOURCE_ID
+                    + " TEXT, "
+                    + SourceAttributionScopeContract.ATTRIBUTION_SCOPE
+                    + " TEXT, "
+                    + "FOREIGN KEY ("
+                    + SourceDestination.SOURCE_ID
+                    + ") REFERENCES "
+                    + SourceContract.TABLE
+                    + "("
+                    + SourceContract.ID
+                    + ") ON DELETE CASCADE "
+                    + ")";
     private static final String[] CREATE_INDEXES = {
         "CREATE INDEX "
                 + "idx_"
@@ -84,7 +103,7 @@ public class MeasurementDbMigratorV34 extends AbstractMeasurementDbMigrator {
                 MeasurementTables.TriggerContract.TABLE,
                 MeasurementTables.TriggerContract.ATTRIBUTION_SCOPES);
 
-        db.execSQL(MeasurementTables.CREATE_TABLE_SOURCE_ATTRIBUTION_SCOPE_LATEST);
+        db.execSQL(CREATE_TABLE_SOURCE_ATTRIBUTION_SCOPE_V34);
 
         for (String statement : CREATE_INDEXES) {
             db.execSQL(statement);

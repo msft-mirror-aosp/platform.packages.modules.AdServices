@@ -56,6 +56,8 @@ import java.util.concurrent.Future;
  * <p>Bug(b/342687912): This will eventually replace {@link EventReportingJobService} and {@link
  * AggregateReportingJobService}.
  */
+// TODO(b/311183933): Remove passed in Context from static method.
+@SuppressWarnings("AvoidStaticContext")
 public final class ReportingJobService extends JobService {
     private static final ListeningExecutorService sBlockingExecutor =
             AdServicesExecutors.getBlockingExecutor();

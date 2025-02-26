@@ -55,7 +55,6 @@ import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
 /** Fragment for the topics view of the AdServices Settings App. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationGaFragment extends Fragment {
     public static final String IS_TOPICS_INFO_VIEW_EXPANDED_KEY = "is_topics_info_view_expanded";
@@ -73,14 +72,14 @@ public class ConsentNotificationGaFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         setupListeners(savedInstanceState);
 
-        ConsentNotificationActivity.handleAction(LANDING_PAGE_DISPLAYED, getContext());
+        ConsentNotificationActivity.handleAction(LANDING_PAGE_DISPLAYED);
     }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
 
-        ConsentNotificationActivity.handleAction(LANDING_PAGE_DISMISSED, getContext());
+        ConsentNotificationActivity.handleAction(LANDING_PAGE_DISMISSED);
         if (mScrollToBottomController != null) {
             mScrollToBottomController.saveInstanceState(savedInstanceState);
         }
@@ -111,8 +110,7 @@ public class ConsentNotificationGaFragment extends Fragment {
         howItWorksExpander.setOnClickListener(
                 view -> {
                     setInfoViewState(!mIsInfoViewExpanded);
-                    ConsentNotificationActivity.handleAction(
-                            LANDING_PAGE_ADDITIONAL_INFO_CLICKED, getContext());
+                    ConsentNotificationActivity.handleAction(LANDING_PAGE_ADDITIONAL_INFO_CLICKED);
                 });
 
         // set up privacy policy link movement
@@ -124,8 +122,7 @@ public class ConsentNotificationGaFragment extends Fragment {
         leftControlButton.setOnClickListener(
                 view -> {
                     if (mIsEUDevice) {
-                        ConsentNotificationActivity.handleAction(
-                                LANDING_PAGE_OPT_OUT_CLICKED, getContext());
+                        ConsentNotificationActivity.handleAction(LANDING_PAGE_OPT_OUT_CLICKED);
 
                         // opt-out confirmation activity
                         ConsentManager.getInstance()
@@ -140,7 +137,7 @@ public class ConsentNotificationGaFragment extends Fragment {
                         startConfirmationFragment(args);
                     } else {
                         ConsentNotificationActivity.handleAction(
-                                LANDING_PAGE_SETTINGS_BUTTON_CLICKED, getContext());
+                                LANDING_PAGE_SETTINGS_BUTTON_CLICKED);
 
                         // go to settings activity
                         Intent intent =
@@ -256,8 +253,7 @@ public class ConsentNotificationGaFragment extends Fragment {
 
             if (mHasScrolledToBottom) {
                 if (mIsEUDevice) {
-                    ConsentNotificationActivity.handleAction(
-                            LANDING_PAGE_OPT_IN_CLICKED, getContext());
+                    ConsentNotificationActivity.handleAction(LANDING_PAGE_OPT_IN_CLICKED);
 
                     // opt-in confirmation activity
                     ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.TOPICS);
@@ -270,8 +266,7 @@ public class ConsentNotificationGaFragment extends Fragment {
                     args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, true);
                     startConfirmationFragment(args);
                 } else {
-                    ConsentNotificationActivity.handleAction(
-                            LANDING_PAGE_GOT_IT_CLICKED, getContext());
+                    ConsentNotificationActivity.handleAction(LANDING_PAGE_GOT_IT_CLICKED);
 
                     if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
                         ConsentManager.getInstance()
@@ -282,8 +277,7 @@ public class ConsentNotificationGaFragment extends Fragment {
                     requireActivity().finishAndRemoveTask();
                 }
             } else {
-                ConsentNotificationActivity.handleAction(
-                        LANDING_PAGE_MORE_BUTTON_CLICKED, getContext());
+                ConsentNotificationActivity.handleAction(LANDING_PAGE_MORE_BUTTON_CLICKED);
 
                 mScrollContainer.smoothScrollTo(
                         0,
@@ -295,14 +289,13 @@ public class ConsentNotificationGaFragment extends Fragment {
         @Override
         public void onScrollChange(
                 View view, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-            ConsentNotificationActivity.handleAction(LANDING_PAGE_SCROLLED, getContext());
+            ConsentNotificationActivity.handleAction(LANDING_PAGE_SCROLLED);
             updateButtonsIfHasScrolledToBottom();
         }
 
         void updateButtonsIfHasScrolledToBottom() {
             if (!mScrollContainer.canScrollVertically(SCROLL_DIRECTION_DOWN)) {
-                ConsentNotificationActivity.handleAction(
-                        LANDING_PAGE_SCROLLED_TO_BOTTOM, getContext());
+                ConsentNotificationActivity.handleAction(LANDING_PAGE_SCROLLED_TO_BOTTOM);
                 mHasScrolledToBottom = true;
                 updateControlButtons();
             }

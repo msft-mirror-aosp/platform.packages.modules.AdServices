@@ -23,17 +23,22 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MAN
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_DEVELOPER_SESSION_FEATURE_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FORCED_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
 
 import androidx.annotation.VisibleForTesting;
+
+import java.io.PrintWriter;
 
 /**
  * Flags that are only used for development / testing purposes.
@@ -68,6 +73,9 @@ public final class DebugFlags extends CommonDebugFlags {
     /** Default value for status of consented debugging CLI feature */
     @VisibleForTesting static final boolean DEFAULT_FLEDGE_CONSENTED_DEBUGGING_CLI_ENABLED = false;
 
+    /** Default value for status of developer mode feature. */
+    @VisibleForTesting static final boolean DEFAULT_DEVELOPER_SESSION_FEATURE_ENABLED = false;
+
     /** Default value for sending a broadcast when record topics is completed. */
     @VisibleForTesting
     static final boolean DEFAULT_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED = false;
@@ -82,6 +90,14 @@ public final class DebugFlags extends CommonDebugFlags {
     /** Default value for sending a broadcast when background key fetch is completed. */
     @VisibleForTesting
     static final boolean DEFAULT_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED = false;
+
+    /** Default value for sending a broadcast when periodic encoding is completed. */
+    @VisibleForTesting
+    static final boolean DEFAULT_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED = false;
+
+    /** Default value for sending a broadcast when forced encoding is completed. */
+    @VisibleForTesting
+    static final boolean DEFAULT_FORCED_ENCODING_COMPLETE_BROADCAST_ENABLED = false;
 
     static final boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
     static final boolean CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE = false;
@@ -103,10 +119,12 @@ public final class DebugFlags extends CommonDebugFlags {
         return getBoolean(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, CONSENT_NOTIFICATION_DEBUG_MODE);
     }
 
+    /** Returns whether to suppress consent notified state. */
     public boolean getConsentNotifiedDebugMode() {
         return getBoolean(KEY_CONSENT_NOTIFIED_DEBUG_MODE, CONSENT_NOTIFIED_DEBUG_MODE);
     }
 
+    /** Returns the consent notification activity debug mode. */
     public boolean getConsentNotificationActivityDebugMode() {
         return getBoolean(
                 KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
@@ -117,6 +135,7 @@ public final class DebugFlags extends CommonDebugFlags {
         return getBoolean(KEY_CONSENT_MANAGER_DEBUG_MODE, CONSENT_MANAGER_DEBUG_MODE);
     }
 
+    /** When enabled, the device is treated as OTA device. */
     public boolean getConsentManagerOTADebugMode() {
         return getBoolean(
                 KEY_CONSENT_MANAGER_OTA_DEBUG_MODE, DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE);
@@ -135,6 +154,12 @@ public final class DebugFlags extends CommonDebugFlags {
 
     public boolean getAdSelectionCommandsEnabled() {
         return getBoolean(KEY_AD_SELECTION_CLI_ENABLED, DEFAULT_AD_SELECTION_CLI_ENABLED);
+    }
+
+    /** Returns whether developer mode feature is enabled. */
+    public boolean getDeveloperSessionFeatureEnabled() {
+        return getBoolean(
+                KEY_DEVELOPER_SESSION_FEATURE_ENABLED, DEFAULT_DEVELOPER_SESSION_FEATURE_ENABLED);
     }
 
     /** Returns whether Consented Debugging is enabled for server auctions. */
@@ -186,6 +211,20 @@ public final class DebugFlags extends CommonDebugFlags {
                 DEFAULT_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED);
     }
 
+    /** Returns whether sending a broadcast when Periodic encoding job is completed is enabled. */
+    public boolean getPeriodicEncodingJobCompleteBroadcastEnabled() {
+        return getBoolean(
+                KEY_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED,
+                DEFAULT_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED);
+    }
+
+    /** Returns whether sending a broadcast when forced encoding job is completed is enabled. */
+    public boolean getForcedEncodingJobCompleteBroadcastEnabled() {
+        return getBoolean(
+                KEY_FORCED_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED,
+                DEFAULT_FORCED_ENCODING_COMPLETE_BROADCAST_ENABLED);
+    }
+
     /**
      * Returns a boolean to indicate if console messages from js isolate should be available in
      * logcat or not.
@@ -194,5 +233,69 @@ public final class DebugFlags extends CommonDebugFlags {
         return getBoolean(
                 KEY_AD_SERVICES_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED,
                 DEFAULT_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED);
+    }
+
+    @Override
+    public void dump(PrintWriter pw) {
+        super.dump(pw);
+
+        dump(pw, KEY_CONSENT_NOTIFICATION_DEBUG_MODE, getConsentNotificationDebugMode());
+        dump(pw, KEY_CONSENT_NOTIFIED_DEBUG_MODE, getConsentNotifiedDebugMode());
+        dump(
+                pw,
+                KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
+                getConsentNotificationActivityDebugMode());
+        dump(pw, KEY_CONSENT_MANAGER_DEBUG_MODE, getConsentManagerDebugMode());
+        dump(pw, KEY_CONSENT_MANAGER_OTA_DEBUG_MODE, getConsentManagerOTADebugMode());
+        dump(pw, KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED, getProtectedAppSignalsCommandsEnabled());
+        dump(
+                pw,
+                KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED,
+                getProtectedAppSignalsEncoderLogicRegisteredBroadcastEnabled());
+        dump(pw, KEY_AD_SELECTION_CLI_ENABLED, getAdSelectionCommandsEnabled());
+        dump(
+                pw,
+                KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED,
+                getFledgeAuctionServerConsentedDebuggingEnabled());
+        dump(
+                pw,
+                KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED,
+                getFledgeConsentedDebuggingCliEnabledStatus());
+        dump(
+                pw,
+                KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED,
+                getFledgeCustomAudienceCLIEnabledStatus());
+        dump(
+                pw,
+                KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED,
+                getRecordTopicsCompleteBroadcastEnabled());
+        dump(
+                pw,
+                KEY_FLEDGE_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED,
+                getFledgeScheduleCACompleteBroadcastEnabled());
+        dump(
+                pw,
+                KEY_AD_SERVICES_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED,
+                getAdServicesJsIsolateConsoleMessagesInLogsEnabled());
+        dump(
+                pw,
+                KEY_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED,
+                getFledgeBackgroundFetchCompleteBroadcastEnabled());
+        dump(
+                pw,
+                KEY_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED,
+                getFledgeBackgroundKeyFetchCompleteBroadcastEnabled());
+        dump(
+                pw,
+                KEY_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED,
+                getPeriodicEncodingJobCompleteBroadcastEnabled());
+        dump(
+                pw,
+                KEY_DEVELOPER_SESSION_FEATURE_ENABLED,
+                getDeveloperSessionFeatureEnabled());
+        dump(
+                pw,
+                KEY_FORCED_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED,
+                getForcedEncodingJobCompleteBroadcastEnabled());
     }
 }

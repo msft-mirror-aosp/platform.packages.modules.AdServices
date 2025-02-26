@@ -20,10 +20,11 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.common.AtomicFileDatastore;
+import com.android.adservices.data.common.LegacyAtomicFileDatastoreFactory;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -63,8 +64,10 @@ public final class AppConsentDao {
             Suppliers.memoize(
                     () -> {
                         Context context = ApplicationContextSingleton.get();
+                        @SuppressWarnings("deprecation")
                         AtomicFileDatastore datastore =
-                                new AtomicFileDatastore(context, DATASTORE_NAME, DATASTORE_VERSION);
+                                LegacyAtomicFileDatastoreFactory.createAtomicFileDatastore(
+                                        context, DATASTORE_NAME, DATASTORE_VERSION);
                         PackageManager packageManager = context.getPackageManager();
                         return new AppConsentDao(datastore, packageManager);
                     });
@@ -81,14 +84,11 @@ public final class AppConsentDao {
     /** Constructs the {@link AppConsentDao}. */
     @VisibleForTesting
     public AppConsentDao(AtomicFileDatastore datastore, PackageManager packageManager) {
-        Objects.requireNonNull(datastore);
-        Objects.requireNonNull(packageManager);
-
-        mDatastore = datastore;
-        mPackageManager = packageManager;
+        mDatastore = Objects.requireNonNull(datastore, "datastore cannot be null");
+        mPackageManager = Objects.requireNonNull(packageManager, "packageManager cannot be null");
     }
 
-    /** Get the singleton instance of the {@link AppConsentDao} */
+    /** Gets the singleton instance of the {@link AppConsentDao} */
     public static AppConsentDao getInstance() {
         if (sAppConsentDao == null) {
             synchronized (SINGLETON_LOCK) {

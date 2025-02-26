@@ -24,17 +24,12 @@ import android.adservices.common.AdDataFixture;
 import android.adservices.common.CommonFixture;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 public class DBAdSelectionHistogramInfoTest {
     private static final String SERIALIZED_AD_COUNTER_KEYS =
             FledgeRoomConverters.serializeIntegerSet(AdDataFixture.getAdCounterKeys());
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testCreateValidHistogramInfo() {

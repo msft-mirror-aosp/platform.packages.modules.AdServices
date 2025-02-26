@@ -23,17 +23,11 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 public class DBAppInstallPermissionsTest {
     public static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("example.com");
     public static final String PACKAGE_NAME = "package.name";
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildDBAppInstall() {

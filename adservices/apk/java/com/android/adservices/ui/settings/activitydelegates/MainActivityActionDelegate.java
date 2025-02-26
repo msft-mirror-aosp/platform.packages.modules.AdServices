@@ -38,7 +38,6 @@ import java.util.Map;
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class MainActivityActionDelegate extends BaseActionDelegate {
     private final MainViewModel mMainViewModel;
@@ -47,13 +46,13 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
             AdServicesSettingsMainActivity mainSettingsActivity, MainViewModel mainViewModel) {
         super(mainSettingsActivity);
         mMainViewModel = mainViewModel;
-        initWithUx(mainSettingsActivity, mainSettingsActivity.getApplicationContext());
+        initWithUx();
         listenToMainViewModelUiEvents();
     }
 
     /** Refreshes static views with data from view model that may have changed. */
     public void refreshState() {
-        initWithUx(mActivity, mActivity.getApplicationContext());
+        initWithUx();
     }
 
     @Override

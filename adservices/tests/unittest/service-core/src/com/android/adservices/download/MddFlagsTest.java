@@ -34,7 +34,6 @@ import static com.google.common.truth.Truth.assertThat;
 import android.provider.DeviceConfig;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.android.libraries.mobiledatadownload.Flags;
@@ -43,7 +42,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link MddFlags} */
-@RequiresSdkLevelAtLeastS
 public final class MddFlagsTest extends AdServicesUnitTestCase {
     @Rule(order = 11)
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =

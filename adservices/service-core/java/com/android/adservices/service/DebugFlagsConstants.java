@@ -55,6 +55,10 @@ public final class DebugFlagsConstants {
     /** Key for feature flagging adselection CLI. */
     public static final String KEY_AD_SELECTION_CLI_ENABLED = "fledge_is_ad_selection_cli_enabled";
 
+    /** Key for feature flagging developer mode feature. */
+    public static final String KEY_DEVELOPER_SESSION_FEATURE_ENABLED =
+            "developer_session_feature_enabled";
+
     /** Key for setting the debug flag to enable console messages in logcat */
     public static final String KEY_AD_SERVICES_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED =
             "ad_services_js_isolate_console_messages_in_logs_enabled";
@@ -81,4 +85,10 @@ public final class DebugFlagsConstants {
 
     public static final String KEY_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED =
             "fledge_background_key_fetch_complete_broadcast_enabled";
+
+    public static final String KEY_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED =
+            "fledge_periodic_encoding_complete_broadcast_enabled";
+
+    public static final String KEY_FORCED_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED =
+            "fledge_forced_encoding_complete_broadcast_enabled";
 }

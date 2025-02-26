@@ -16,16 +16,30 @@
 
 package com.android.adservices.service.stats.pas;
 
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
+
 public interface EncodingJobRunStatsLogger {
     /** Invokes the logger to log {@link EncodingJobRunStats}. */
     void logEncodingJobRunStats();
 
-    /** Adds one to count of signal encoding failures.  */
+    /**
+     * Adds one count to the count of signal encoding failures when catching an exception during
+     * encoding registered buyers.
+     */
     void addOneSignalEncodingFailures();
 
-    /** Adds one to count of signal encoding skips. */
+    /**
+     * Adds one count to the count of signal encoding failures when skipping the encoding registered
+     * buyers.
+     */
     void addOneSignalEncodingSkips();
 
-    /** Sets the size of filtered buyer encoding list. */
+    /**
+     * Sets the count of signal encoding successes by given size of filtered buyer encoding list.
+     */
     void setSizeOfFilteredBuyerEncodingList(int sizeOfFilteredBuyerEncodingList);
+
+    /** Resets count of signal encoding status and sets the PAS encoding source type. */
+    void resetStatsWithEncodingSourceType(
+            @AdsRelevanceStatusUtils.PasEncodingSourceType int encodingSourceType);
 }

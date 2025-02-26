@@ -29,13 +29,11 @@ import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
 import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.shared.testing.SkipLoggingUsageRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
@@ -58,7 +56,6 @@ import java.util.stream.Collectors;
 
 /** Topic Classifier Test {@link OnDeviceClassifier}. */
 @SpyStatic(FlagsFactory.class)
-@RequiresSdkLevelAtLeastS
 // TODO (b/359964245): Remove after bug is resolved.
 @SkipLoggingUsageRule(reason = "b/359964245")
 public final class OnDeviceClassifierTest extends AdServicesExtendedMockitoTestCase {
@@ -76,7 +73,6 @@ public final class OnDeviceClassifierTest extends AdServicesExtendedMockitoTestC
     private static final int DEFAULT_DESCRIPTION_MAX_LENGTH = 2500;
     private static final int DEFAULT_DESCRIPTION_MAX_WORDS = 500;
 
-    @Mock private Flags mMockFlags;
     @Mock private SynchronousFileStorage mMockFileStorage;
     @Mock private ModelManager mModelManager;
     @Mock private CacheManager mCacheManager;
@@ -236,10 +232,10 @@ public final class OnDeviceClassifierTest extends AdServicesExtendedMockitoTestC
         // TODO (after b/264446621): Check all topics once server-side tests also use TFLite model.
         // Expected top 10: 10253, 10230, 10284, 10237, 10227, 10257, 10165, 10028, 10330, 10047
         assertThat(classifications.get(appPackage1))
-                .containsAtLeastElementsIn(createRealTopics(Arrays.asList(10253)));
+                .containsAtLeastElementsIn(createRealTopics(List.of(10253)));
         // Expected top 10: 10227, 10225, 10235, 10230, 10238, 10253, 10247, 10254, 10234, 10229
         assertThat(classifications.get(appPackage2))
-                .containsAtLeastElementsIn(createRealTopics(Arrays.asList(10227)));
+                .containsAtLeastElementsIn(createRealTopics(List.of(10227)));
 
         // Verify logged atom.
         verify(mLogger, times(2)).logEpochComputationClassifierStats(argument.capture());
@@ -463,10 +459,10 @@ public final class OnDeviceClassifierTest extends AdServicesExtendedMockitoTestC
         // Check different expected scores for different descriptions.
         // Expected top 10: 10253, 10230, 10284, 10237, 10227, 10257, 10165, 10028, 10330, 10047
         assertThat(firstClassifications.get(appPackage1))
-                .containsAtLeastElementsIn(createRealTopics(Arrays.asList(10253)));
+                .containsAtLeastElementsIn(createRealTopics(List.of(10253)));
         // Expected top 10: 10227, 10225, 10235, 10230, 10238, 10253, 10247, 10254, 10234, 10229
         assertThat(secondClassifications.get(appPackage1))
-                .containsAtLeastElementsIn(createRealTopics(Arrays.asList(10227)));
+                .containsAtLeastElementsIn(createRealTopics(List.of(10227)));
     }
 
     @Test

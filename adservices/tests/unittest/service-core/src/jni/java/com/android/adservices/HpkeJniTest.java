@@ -16,14 +16,16 @@
 
 package com.android.adservices;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Base64;
 
-public class HpkeJniTest {
+public final class HpkeJniTest extends AdServicesUnitTestCase {
 
     private static final byte[] sAssociatedData = "associated_data".getBytes();
     private static final byte[] sPlaintext = "plaintext".getBytes();
@@ -34,126 +36,124 @@ public class HpkeJniTest {
 
     @Test
     public void testHpkeEncrypt_Success() {
-        final byte[] result = HpkeJni.encrypt(sPublicKey, sPlaintext, sAssociatedData);
-        Assert.assertNotNull(result);
-        Assert.assertTrue(result.length > 0);
+        byte[] result = HpkeJni.encrypt(sPublicKey, sPlaintext, sAssociatedData);
+        assertThat(result).isNotNull();
+        assertThat(result.length).isGreaterThan(0);
     }
 
     @Test
     public void testHpkeDecrypt_Success() {
-        final byte[] result = HpkeJni.decrypt(sPrivateKey, sCiphertext, sAssociatedData);
-        Assert.assertNotNull(result);
-        Assert.assertTrue(result.length > 0);
-        Assert.assertTrue(new String(sPlaintext).equals(new String(result)));
+        byte[] result = HpkeJni.decrypt(sPrivateKey, sCiphertext, sAssociatedData);
+        assertThat(result).isNotNull();
+        assertThat(result.length).isGreaterThan(0);
+        assertThat(new String(result)).isEqualTo(new String(sPlaintext));
     }
 
     @Test
     public void testHpkeEncryptDecrypt_Success() {
-        final byte[] ciphertext = HpkeJni.encrypt(sPublicKey, sPlaintext, sAssociatedData);
-        Assert.assertNotNull(ciphertext);
-        Assert.assertTrue(ciphertext.length > 0);
-        Assert.assertFalse(new String(sPlaintext).equals(new String(ciphertext)));
+        byte[] ciphertext = HpkeJni.encrypt(sPublicKey, sPlaintext, sAssociatedData);
+        assertThat(ciphertext).isNotNull();
+        assertThat(ciphertext.length).isGreaterThan(0);
+        assertThat(new String(ciphertext)).isNotEqualTo(new String(sPlaintext));
 
-        final byte[] plaintext = HpkeJni.decrypt(sPrivateKey, ciphertext, sAssociatedData);
-        Assert.assertNotNull(plaintext);
-        Assert.assertTrue(plaintext.length > 0);
-        Assert.assertTrue(new String(sPlaintext).equals(new String(plaintext)));
+        byte[] plaintext = HpkeJni.decrypt(sPrivateKey, ciphertext, sAssociatedData);
+        assertThat(plaintext).isNotNull();
+        assertThat(plaintext.length).isGreaterThan(0);
+        assertThat(new String(plaintext)).isEqualTo(new String(sPlaintext));
     }
 
     @Test
     public void testHpkeEncrypt_publicKeyNull_fail() {
-        final byte[] result = HpkeJni.encrypt(/* publicKey= */ null, sPlaintext, sAssociatedData);
-        Assert.assertNull(result);
+        byte[] result = HpkeJni.encrypt(/* publicKey= */ null, sPlaintext, sAssociatedData);
+        assertThat(result).isNull();
     }
 
     @Test
     public void testHpkeEncrypt_publicKeyShorterThan32_fail() {
-        final byte[] shortPublicKey = new byte[31];
-        final byte[] result = HpkeJni.encrypt(shortPublicKey, sPlaintext, sAssociatedData);
-        Assert.assertNull(result);
+        byte[] shortPublicKey = new byte[31];
+        byte[] result = HpkeJni.encrypt(shortPublicKey, sPlaintext, sAssociatedData);
+        assertThat(result).isNull();
     }
 
     @Test
     public void testHpkeEncrypt_publicKeyLongerThan32_fail() {
-        final byte[] longPublicKey = new byte[33];
-        final byte[] result = HpkeJni.encrypt(longPublicKey, sPlaintext, sAssociatedData);
-        Assert.assertNull(result);
+        byte[] longPublicKey = new byte[33];
+        byte[] result = HpkeJni.encrypt(longPublicKey, sPlaintext, sAssociatedData);
+        assertThat(result).isNull();
     }
 
     @Test
     public void testHpkeEncrypt_plainTextNull_fail() {
-        final byte[] result = HpkeJni.encrypt(sPublicKey, /* plainText = */ null, sAssociatedData);
-        Assert.assertNull(result);
+        byte[] result = HpkeJni.encrypt(sPublicKey, /* plainText= */ null, sAssociatedData);
+        assertThat(result).isNull();
     }
 
     @Test
     public void testHpkeEncrypt_plainTextEmpty_success() {
-        final byte[] emptyPlainText = new byte[] {};
-        final byte[] result = HpkeJni.encrypt(sPublicKey, emptyPlainText, sAssociatedData);
-        Assert.assertNotNull(result);
-        Assert.assertTrue(result.length > 0);
+        byte[] emptyPlainText = new byte[] {};
+        byte[] result = HpkeJni.encrypt(sPublicKey, emptyPlainText, sAssociatedData);
+        assertThat(result).isNotNull();
+        assertThat(result.length).isGreaterThan(0);
     }
 
     @Test
     public void testHpkeEncrypt_associatedDataNull_fail() {
-        final byte[] result = HpkeJni.encrypt(sPublicKey, sPlaintext, /* associatedData = */ null);
-        Assert.assertNull(result);
+        byte[] result = HpkeJni.encrypt(sPublicKey, sPlaintext, /* associatedData= */ null);
+        assertThat(result).isNull();
     }
 
     @Test
     public void testHpkeEncrypt_associatedDataEmpty_success() {
-        final byte[] emptyAssociatedData = new byte[] {};
-        final byte[] result = HpkeJni.encrypt(sPublicKey, sPlaintext, emptyAssociatedData);
-        Assert.assertNotNull(result);
-        Assert.assertTrue(result.length > 0);
+        byte[] emptyAssociatedData = new byte[] {};
+        byte[] result = HpkeJni.encrypt(sPublicKey, sPlaintext, emptyAssociatedData);
+        assertThat(result).isNotNull();
+        assertThat(result.length).isGreaterThan(0);
     }
 
     @Test
     public void testHpkeDecrypt_privateKeyNull_fail() {
-        final byte[] result = HpkeJni.decrypt(/* privateKey= */ null, sCiphertext, sAssociatedData);
-        Assert.assertNull(result);
+        byte[] result = HpkeJni.decrypt(/* privateKey= */ null, sCiphertext, sAssociatedData);
+        assertThat(result).isNull();
     }
 
     @Test
     public void testHpkDecrypt_privateKeyShorterThan32_fail() {
-        final byte[] shortPrivateKey = new byte[31];
-        final byte[] result = HpkeJni.decrypt(shortPrivateKey, sCiphertext, sAssociatedData);
-        Assert.assertNull(result);
+        byte[] shortPrivateKey = new byte[31];
+        byte[] result = HpkeJni.decrypt(shortPrivateKey, sCiphertext, sAssociatedData);
+        assertThat(result).isNull();
     }
 
     @Test
     public void testHpkeDecrypt_privateKeyLargerThan32_fail() {
-        final byte[] longPrivateKey = new byte[33];
-        final byte[] result = HpkeJni.decrypt(longPrivateKey, sCiphertext, sAssociatedData);
-        Assert.assertNull(result);
+        byte[] longPrivateKey = new byte[33];
+        byte[] result = HpkeJni.decrypt(longPrivateKey, sCiphertext, sAssociatedData);
+        assertThat(result).isNull();
     }
 
     @Test
     public void testHpkeDecrypt_privateKeyInvalid_fail() {
-        final byte[] privateKey = new byte[32];
-        final byte[] result = HpkeJni.decrypt(privateKey, sCiphertext, sAssociatedData);
-        Assert.assertNull(result);
+        byte[] privateKey = new byte[32];
+        byte[] result = HpkeJni.decrypt(privateKey, sCiphertext, sAssociatedData);
+        assertThat(result).isNull();
     }
 
     @Test
     public void testHpkeDecrypt_ciphertextNull_fail() {
-        final byte[] result =
-                HpkeJni.encrypt(sPrivateKey, /* ciphertext = */ null, sAssociatedData);
-        Assert.assertNull(result);
+        byte[] result = HpkeJni.encrypt(sPrivateKey, /* ciphertext= */ null, sAssociatedData);
+        assertThat(result).isNull();
     }
 
     @Test
     public void testHpkeDecrypt_ciphertextInvalid_fail() {
-        final byte[] emptyCiphertext = new byte[] {};
-        final byte[] result = HpkeJni.decrypt(sPrivateKey, emptyCiphertext, sAssociatedData);
-        Assert.assertNull(result);
+        byte[] emptyCiphertext = new byte[] {};
+        byte[] result = HpkeJni.decrypt(sPrivateKey, emptyCiphertext, sAssociatedData);
+        assertThat(result).isNull();
     }
 
     @Test
     public void testHpkeDecrypt_associatedDataNull_fail() {
-        final byte[] result =
-                HpkeJni.decrypt(sPrivateKey, sCiphertext, /* associatedData = */ null);
-        Assert.assertNull(result);
+        byte[] result = HpkeJni.decrypt(sPrivateKey, sCiphertext, /* associatedData= */ null);
+        assertThat(result).isNull();
     }
 
     private static byte[] decode(String value) {

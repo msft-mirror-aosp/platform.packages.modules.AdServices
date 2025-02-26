@@ -25,7 +25,6 @@ import android.net.Uri;
 import android.os.Parcel;
 
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.truth.Truth;
 
@@ -37,7 +36,6 @@ import org.junit.Test;
  * <p>If this class is un-ignored {@link android.adservices.signals.UpdateSignalsInputTest} should
  * be deleted.
  */
-@RequiresSdkLevelAtLeastS
 public final class UpdateSignalsInputTest extends CtsAdServicesDeviceTestCase {
 
     private static final Uri URI = Uri.parse("https://example.com/somecoolsignals");

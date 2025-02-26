@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.util.concurrent.Semaphore;
 
 /** Creates and displays dialogs for the Privacy Sandbox application. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class DialogManager {
     public static Semaphore sSemaphore = new Semaphore(1);
@@ -48,6 +47,7 @@ public class DialogManager {
      * @param context Application context.
      * @param mainViewModel {@link MainViewModel}
      */
+    @SuppressWarnings("AvoidStaticContext") // UX class
     public static void showOptOutDialog(@NonNull Context context, MainViewModel mainViewModel) {
         if (!sSemaphore.tryAcquire()) return;
         OnClickListener positiveOnClickListener =
@@ -73,6 +73,7 @@ public class DialogManager {
      * @param topicsViewModel {@link TopicsViewModel}
      * @param topic topic to block.
      */
+    @SuppressWarnings("AvoidStaticContext") // UX class
     public static void showBlockTopicDialog(
             @NonNull Context context, TopicsViewModel topicsViewModel, Topic topic) {
         if (!sSemaphore.tryAcquire()) return;
@@ -101,6 +102,7 @@ public class DialogManager {
      * @param context Application context.
      * @param topic topic to unblock.
      */
+    @SuppressWarnings("AvoidStaticContext") // UX class
     public static void showUnblockTopicDialog(@NonNull Context context, Topic topic) {
         if (!sSemaphore.tryAcquire()) return;
         String topicName = context.getString(TopicsMapper.getResourceIdByTopic(topic, context));
@@ -122,6 +124,7 @@ public class DialogManager {
      * @param context Application context.
      * @param topicsViewModel {@link TopicsViewModel}
      */
+    @SuppressWarnings("AvoidStaticContext") // UX class
     public static void showResetTopicDialog(
             @NonNull Context context, TopicsViewModel topicsViewModel) {
         if (!sSemaphore.tryAcquire()) return;
@@ -154,6 +157,7 @@ public class DialogManager {
      * @param appsViewModel {@link AppsViewModel}
      * @param app the {@link App} to block.
      */
+    @SuppressWarnings("AvoidStaticContext") // UX class
     public static void showBlockAppDialog(
             @NonNull Context context, AppsViewModel appsViewModel, App app) {
         if (!sSemaphore.tryAcquire()) return;
@@ -184,6 +188,7 @@ public class DialogManager {
      * @param context Application context.
      * @param app the {@link App} to unblock.
      */
+    @SuppressWarnings("AvoidStaticContext") // UX class
     public static void showUnblockAppDialog(@NonNull Context context, App app) {
         if (!sSemaphore.tryAcquire()) return;
         String appName = app.getAppDisplayName(context.getPackageManager());
@@ -203,6 +208,7 @@ public class DialogManager {
      * @param context Application context.
      * @param appsViewModel {@link AppsViewModel}
      */
+    @SuppressWarnings("AvoidStaticContext") // UX class
     public static void showResetAppDialog(@NonNull Context context, AppsViewModel appsViewModel) {
         if (!sSemaphore.tryAcquire()) return;
         OnClickListener positiveOnClickListener =

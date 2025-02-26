@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package com.android.adservices.shared.proto;
+option java_multiple_files = true;
+option java_package = "com.android.adservices.shared.proto";
+
+// The id for the metric, used for log sampling. Each metric should have a unique id.
+enum MetricId {
+  UNKNOWN = 0;
+  EXAMPLE_STATS = 1; // Used by the tests
+}

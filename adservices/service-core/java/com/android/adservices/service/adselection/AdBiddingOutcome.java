@@ -19,6 +19,8 @@ package com.android.adservices.service.adselection;
 import android.adservices.adselection.AdWithBid;
 import android.annotation.Nullable;
 
+import com.android.adservices.service.adselection.debug.DebugReport;
+
 import com.google.auto.value.AutoValue;
 
 /**

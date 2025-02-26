@@ -15,9 +15,10 @@
  */
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -27,14 +28,11 @@ import static org.mockito.Mockito.when;
 
 import android.app.adservices.AdServicesManager;
 import android.app.adservices.topics.TopicParcel;
-import android.content.Context;
 import android.util.Pair;
-
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
 
 import com.android.adservices.MockRandom;
 import com.android.adservices.cobalt.TopicsCobaltLogger;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.topics.CombinedTopic;
@@ -47,24 +45,16 @@ import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.GetTopicsReportedStats;
 import com.android.adservices.service.stats.TopicsEncryptionGetTopicsReportedStats;
-import com.android.adservices.service.topics.classifier.ClassifierManager;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -76,8 +66,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /** Unit tests for {@link com.android.adservices.service.topics.CacheManager} */
-@SmallTest
-public final class CacheManagerTest {
+public final class CacheManagerTest extends AdServicesMockitoTestCase {
     @SuppressWarnings({"unused"})
     private static final String TAG = "CacheManagerTest";
     private static final long TEST_RETRIEVE_RETURNED_ENCRYPTED_TOPICS_START_TIMESTAMP = 100L;
@@ -86,31 +75,19 @@ public final class CacheManagerTest {
             (int) (TEST_RETRIEVE_RETURNED_ENCRYPTED_TOPICS_END_TIMESTAMP
                     - TEST_RETRIEVE_RETURNED_ENCRYPTED_TOPICS_START_TIMESTAMP);
 
-    @SuppressWarnings({"unused"})
-    private final Context mContext = ApplicationProvider.getApplicationContext();
-
     private CacheManager mCacheManager;
     private TopicsDao mTopicsDao;
     private BlockedTopicsManager mBlockedTopicsManager;
-    private GlobalBlockedTopicsManager mGlobalBlockedTopicsManager;
 
-    @Mock Flags mMockFlags;
-    @Mock AdServicesLogger mLogger;
-    @Mock AdServicesManager mMockAdServicesManager;
-    @Mock AppSearchConsentManager mAppSearchConsentManager;
-    @Mock ClassifierManager mClassifierManager;
-    @Mock TopicsCobaltLogger mTopicsCobaltLogger;
+    @Mock private AdServicesLogger mLogger;
+    @Mock private AdServicesManager mMockAdServicesManager;
+    @Mock private AppSearchConsentManager mAppSearchConsentManager;
+    @Mock private TopicsCobaltLogger mTopicsCobaltLogger;
 
-    @Mock Random mRandom;
-    @Mock Clock mMockClock;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    @Mock private Clock mMockClock;
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-
         // Erase all existing data.
         DbTestUtil.deleteTable(TopicsTables.TaxonomyContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.AppClassificationTopicsContract.TABLE);
@@ -124,7 +101,7 @@ public final class CacheManagerTest {
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
-        mGlobalBlockedTopicsManager =
+        GlobalBlockedTopicsManager globalBlockedTopicsManager =
                 new GlobalBlockedTopicsManager(/* globalBlockedTopicIds= */ new HashSet<>());
         mBlockedTopicsManager =
                 new BlockedTopicsManager(
@@ -139,7 +116,7 @@ public final class CacheManagerTest {
                         mMockFlags,
                         mLogger,
                         mBlockedTopicsManager,
-                        mGlobalBlockedTopicsManager,
+                        globalBlockedTopicsManager,
                         mTopicsCobaltLogger,
                         mMockClock);
     }
@@ -354,7 +331,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app1",
                                 ""))
-                .containsExactlyElementsIn(Arrays.asList(topic2, topic1));
+                .containsExactly(topic2, topic1);
         assertThat(
                         getOnlyTopics(
                                 /* cacheManager */ mCacheManager,
@@ -362,7 +339,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app1",
                                 "sdk1"))
-                .containsExactlyElementsIn(Arrays.asList(topic2, topic1));
+                .containsExactly(topic2, topic1);
         assertThat(
                         getOnlyTopics(
                                 /* cacheManager */ mCacheManager,
@@ -370,7 +347,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app1",
                                 "sdk2"))
-                .containsExactlyElementsIn(Arrays.asList(topic2, topic1));
+                .containsExactly(topic2, topic1);
 
         assertThat(
                         getOnlyTopics(
@@ -379,7 +356,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app3",
                                 "sdk1"))
-                .containsExactlyElementsIn(Arrays.asList(topic4, topic3));
+                .containsExactly(topic4, topic3);
 
         assertThat(
                         getOnlyTopics(
@@ -397,7 +374,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app5",
                                 "sdk1"))
-                .containsExactlyElementsIn(Arrays.asList(topic1, topic5));
+                .containsExactly(topic1, topic5);
 
         // Verify Cobalt Logger.
         verify(mTopicsCobaltLogger, times(19)).logTopicOccurrences(cobaltArgumentCaptor.capture());
@@ -627,7 +604,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app1",
                                 ""))
-                .containsExactlyElementsIn(Arrays.asList(topic1));
+                .containsExactly(topic1);
         assertThat(
                         getOnlyTopics(
                                 /* cacheManager */ mCacheManager,
@@ -635,7 +612,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app1",
                                 "sdk1"))
-                .containsExactlyElementsIn(Arrays.asList(topic1));
+                .containsExactly(topic1);
         assertThat(
                         getOnlyTopics(
                                 /* cacheManager */ mCacheManager,
@@ -643,7 +620,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app1",
                                 "sdk2"))
-                .containsExactlyElementsIn(Arrays.asList(topic1));
+                .containsExactly(topic1);
 
         // Should return topic3 and topic4, but topic4 is blocked - so only topic3 is expected.
         assertThat(
@@ -653,7 +630,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app3",
                                 "sdk1"))
-                .containsExactlyElementsIn(Arrays.asList(topic3));
+                .containsExactly(topic3);
 
         assertThat(
                         getOnlyTopics(
@@ -671,7 +648,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app5",
                                 "sdk1"))
-                .containsExactlyElementsIn(Arrays.asList(topic1, topic5));
+                .containsExactly(topic1, topic5);
 
         // GetTopics is invoked 19 times.
         verify(mLogger, times(19)).logGetTopicsReportedStats(argument.capture());
@@ -843,7 +820,6 @@ public final class CacheManagerTest {
         when(mMockFlags.getEnableLoggedTopic()).thenReturn(true);
         when(mMockFlags.getEnableDatabaseSchemaVersion8()).thenReturn(true);
         // Always log real topics
-        when(mRandom.nextDouble()).thenReturn(1d);
 
         Topic topic1 = Topic.create(
                 /* topic */ 1,
@@ -907,7 +883,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app1",
                                 ""))
-                .containsExactlyElementsIn(Arrays.asList(topic1, topic3));
+                .containsExactly(topic1, topic3);
         // Should return topic1 and topic2, but topic2 is blocked - so only topic1 is expected.
         assertThat(
                         getOnlyTopics(
@@ -916,7 +892,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app1",
                                 "sdk1"))
-                .containsExactlyElementsIn(Arrays.asList(topic1));
+                .containsExactly(topic1);
         // Should return topic1 and topic2, but topic2 is blocked - so only topic1 is expected.
         assertThat(
                         getOnlyTopics(
@@ -925,7 +901,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app1",
                                 "sdk2"))
-                .containsExactlyElementsIn(Arrays.asList(topic1));
+                .containsExactly(topic1);
 
         // GetTopics is invoked 3 times.
         verify(mLogger, times(3)).logGetTopicsReportedStats(argument.capture());
@@ -1165,10 +1141,6 @@ public final class CacheManagerTest {
         when(mMockFlags.getTopicsPrivacyBudgetForTopicIdDistribution()).thenReturn(1f);
         when(mMockFlags.getEnableLoggedTopic()).thenReturn(true);
         when(mMockFlags.getEnableDatabaseSchemaVersion8()).thenReturn(true);
-        // Always log randomized topics
-        when(mRandom.nextDouble()).thenReturn(0d);
-        when(mClassifierManager.getTopicsTaxonomy()).thenReturn(ImmutableList.of(11, 22, 33));
-        when(mRandom.nextInt(anyInt())).thenReturn(0, 1, 2, 3);
 
         Topic topic1 = Topic.create(
                 /* topic */ 1,
@@ -1232,7 +1204,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app1",
                                 ""))
-                .containsExactlyElementsIn(Arrays.asList(topic1, topic3));
+                .containsExactly(topic1, topic3);
         // Should return topic1 and topic2, but topic2 is blocked - so only topic1 is expected.
         assertThat(
                         getOnlyTopics(
@@ -1241,7 +1213,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app1",
                                 "sdk1"))
-                .containsExactlyElementsIn(Arrays.asList(topic1));
+                .containsExactly(topic1);
         // Should return topic1 and topic2, but topic2 is blocked - so only topic1 is expected.
         assertThat(
                         getOnlyTopics(
@@ -1250,7 +1222,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app1",
                                 "sdk2"))
-                .containsExactlyElementsIn(Arrays.asList(topic1));
+                .containsExactly(topic1);
 
         // GetTopics is invoked 3 times.
         verify(mLogger, times(3)).logGetTopicsReportedStats(argument.capture());
@@ -1350,7 +1322,7 @@ public final class CacheManagerTest {
                                 "app1",
                                 "sdk1",
                                 mockRandom))
-                .isEqualTo(Arrays.asList(topic3, topic2, topic1));
+                .isEqualTo(List.of(topic3, topic2, topic1));
         assertThat(
                         getOnlyTopics(
                                 /* cacheManager */ mCacheManager,
@@ -1359,7 +1331,7 @@ public final class CacheManagerTest {
                                 "app1",
                                 "sdk2",
                                 mockRandom))
-                .isEqualTo(Arrays.asList(topic1, topic2, topic3));
+                .isEqualTo(List.of(topic1, topic2, topic3));
     }
 
     @Test
@@ -1460,7 +1432,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app1",
                                 "sdk2"))
-                .containsExactlyElementsIn(Arrays.asList(topic2, topic3));
+                .containsExactly(topic2, topic3);
 
         // Now look at epochId == [1,2,3] by setting numberOfLookBackEpochs == 3.
         // Note for (app1, ""), Epoch1, Epoch 2 and Epoch 3 have same topic(topic 1), which should
@@ -1483,7 +1455,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app1",
                                 "sdk1"))
-                .containsExactlyElementsIn(Arrays.asList(topic1, topic2));
+                .containsExactly(topic1, topic2);
         assertThat(
                         getOnlyTopics(
                                 /* cacheManager */ mCacheManager,
@@ -1491,7 +1463,7 @@ public final class CacheManagerTest {
                                 currentEpochId,
                                 "app1",
                                 "sdk2"))
-                .containsExactlyElementsIn(Arrays.asList(topic1, topic2, topic3));
+                .containsExactly(topic1, topic2, topic3);
 
         // GetTopics is invoked 9 times.
         verify(mLogger, times(9)).logGetTopicsReportedStats(argument.capture());
@@ -1534,26 +1506,9 @@ public final class CacheManagerTest {
     }
 
     @Test
-    public void testDump() {
+    public void testDump() throws Exception {
         // Trigger the dump to verify no crash
-        PrintWriter printWriter = new PrintWriter(new Writer() {
-            @Override
-            public void write(char[] cbuf, int off, int len) throws IOException {
-
-            }
-
-            @Override
-            public void flush() throws IOException {
-
-            }
-
-            @Override
-            public void close() throws IOException {
-
-            }
-        });
-        String[] args = new String[]{};
-        mCacheManager.dump(printWriter, args);
+        dump(pw -> mCacheManager.dump(pw, new String[] {}));
     }
 
     @Test
@@ -1816,12 +1771,7 @@ public final class CacheManagerTest {
                 }
             }
             mTopicsDao.persistAppClassificationTopics(
-                    epochId,
-                    Map.of(
-                            app1,
-                            Arrays.asList(topic1, topic2),
-                            app2,
-                            Arrays.asList(topic1, topic2)));
+                    epochId, Map.of(app1, List.of(topic1, topic2), app2, List.of(topic1, topic2)));
 
             mTopicsDao.persistCallerCanLearnTopics(epochId, Map.of(topic1, Set.of(app1, sdk1)));
             mTopicsDao.persistCallerCanLearnTopics(epochId, Map.of(topic2, Set.of(app2, sdk2)));

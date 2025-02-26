@@ -141,8 +141,12 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
         startActivity(DEBUGGABLE_APP_PACKAGE, DEBUGGABLE_APP_ACTIVITY);
         waitForProcessStart(DEBUGGABLE_APP_SANDBOX_NAME);
 
-        CommandResult output = getDevice().executeShellV2Command(
-                String.format("cmd sdk_sandbox stop %s", DEBUGGABLE_APP_PACKAGE));
+        CommandResult output =
+                getDevice()
+                        .executeShellV2Command(
+                                String.format(
+                                        "cmd sdk_sandbox stop --user %s %s",
+                                        getDevice().getCurrentUser(), DEBUGGABLE_APP_PACKAGE));
         assertThat(output.getStderr()).isEmpty();
         assertThat(output.getStatus()).isEqualTo(CommandStatus.SUCCESS);
 

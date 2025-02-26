@@ -33,11 +33,9 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -48,9 +46,6 @@ public class AdFilteringLoggerImplTest {
     @Captor ArgumentCaptor<AdFilteringProcessAdSelectionReportedStats> mAdFilteringLoggerCaptor;
     @Mock private Clock mMockClock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

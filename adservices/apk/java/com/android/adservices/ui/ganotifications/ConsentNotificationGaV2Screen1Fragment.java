@@ -50,7 +50,6 @@ import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActiv
  * Fragment for the confirmation view after accepting or rejecting to be part of Privacy Sandbox
  * Beta.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
     public static final String INFO_VIEW_EXPANDED =
@@ -79,7 +78,7 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         setupListeners(savedInstanceState);
 
-        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED, getContext());
+        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED);
         if (ConsentManager.getInstance().getUserManualInteractionWithConsent()
                 != MANUAL_INTERACTIONS_RECORDED) {
             ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.FLEDGE);
@@ -93,7 +92,7 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
         if (mScrollToBottomController != null) {
             mScrollToBottomController.saveInstanceState(savedInstanceState);
         }
-        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISMISSED, getContext());
+        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISMISSED);
     }
 
     private void setupListeners(Bundle savedInstanceState) {
@@ -107,7 +106,7 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
         howItWorksExpander.setOnClickListener(
                 view -> {
                     ConsentNotificationActivity.handleAction(
-                            CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED, getContext());
+                            CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED);
 
                     setInfoViewState(!mIsInfoViewExpanded);
                 });
@@ -122,7 +121,7 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
         leftControlButton.setOnClickListener(
                 view -> {
                     ConsentNotificationActivity.handleAction(
-                            CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED, getContext());
+                            CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED);
 
                     // go to settings activity
                     Intent intent =

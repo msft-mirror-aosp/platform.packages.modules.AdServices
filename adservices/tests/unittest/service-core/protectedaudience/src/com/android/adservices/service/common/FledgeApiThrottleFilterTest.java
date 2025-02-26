@@ -34,13 +34,11 @@ import android.os.LimitExceededException;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-@RequiresSdkLevelAtLeastS()
 public class FledgeApiThrottleFilterTest extends AdServicesExtendedMockitoTestCase {
     @Mock private Throttler mThrottlerMock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;

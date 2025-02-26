@@ -20,9 +20,6 @@ import static org.junit.Assert.assertEquals;
 
 import android.adservices.common.AdServicesStatusUtils;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link RunAdBiddingProcessReportedStats}. */
@@ -38,9 +35,6 @@ public class RunAdBiddingProcessReportedStatsTest {
     static final int TOTAL_AD_BIDDING_STAGE_LATENCY_IN_MILLIS = 20;
     static final int GET_BUYERS_CUSTOM_AUDIENCE_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
     static final int RUN_AD_BIDDING_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuilderCreateSuccess() {

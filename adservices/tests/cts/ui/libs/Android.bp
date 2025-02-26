@@ -39,7 +39,7 @@ android_library {
         "//vendor:__subpackages__",
     ],
     sdk_version: "module_current",
-    min_sdk_version: "30",
+    min_sdk_version: "31",
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
         baseline_filename: "lint-baseline.xml",

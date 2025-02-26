@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.mock;
 
 import android.content.Context;
-import android.platform.test.annotations.DisabledOnRavenwood;
 
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.testing.DeviceSideTestCase;
@@ -62,8 +61,6 @@ public final class ApplicationContextSingletonRuleTest extends DeviceSideTestCas
                 () -> new ApplicationContextSingletonRule(null, RESTORE_PREVIOUS));
     }
 
-    // TODO(b/335935200): RavenwoodBaseContext.getApplicationContext() is not supported
-    @DisabledOnRavenwood(blockedBy = Context.class)
     @Test
     public void testDefaultConstructorSetsNonNullContext() throws Throwable {
         ApplicationContextSingletonRule rule =

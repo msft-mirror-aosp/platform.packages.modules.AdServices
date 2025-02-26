@@ -22,11 +22,12 @@ import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT;
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID;
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT;
+import static android.adservices.common.AndroidRCommonUtil.invokeCallbackOnErrorOnRvc;
 
 import android.adservices.adid.AdId;
-import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
 import android.annotation.FlaggedApi;
+import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.annotation.SdkConstant;
@@ -46,7 +47,8 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 import com.android.adservices.flags.Flags;
 
-import java.util.List;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -71,6 +73,151 @@ public class AdServicesCommonManager {
 
     private final Context mContext;
     private final ServiceBinder<IAdServicesCommonService> mAdServicesCommonServiceBinder;
+
+    // TODO(b/378923974): refactor all usages to reference these constants directly instead of
+    //  derived ones in other classes.
+
+    /** Don't show any notification during the enrollment. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int NOTIFICATION_NONE = 0;
+
+    /** Shows ongoing notification during the enrollment, which user can not dismiss. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int NOTIFICATION_ONGOING = 1;
+
+    /** Shows regular notification during the enrollment, which user can dismiss. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int NOTIFICATION_REGULAR = 2;
+
+    /**
+     * Result codes that are common across various APIs.
+     *
+     * @hide
+     */
+    @IntDef(value = {NOTIFICATION_NONE, NOTIFICATION_ONGOING, NOTIFICATION_REGULAR})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface NotificationType {}
+
+    /** Default user choice state */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int USER_CHOICE_UNKNOWN = 0;
+
+    /** User opted in state */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int USER_CHOICE_OPTED_IN = 1;
+
+    /** User opted out state */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int USER_CHOICE_OPTED_OUT = 2;
+
+    /**
+     * Result codes that are common across various modules.
+     *
+     * @hide
+     */
+    @IntDef(
+            prefix = {""},
+            value = {USER_CHOICE_UNKNOWN, USER_CHOICE_OPTED_IN, USER_CHOICE_OPTED_OUT})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ModuleUserChoice {}
+
+    /** Default module state */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_STATE_UNKNOWN = 0;
+
+    /** Module is available on the device */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_STATE_ENABLED = 1;
+
+    /** Module is not available on the device */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_STATE_DISABLED = 2;
+
+    /**
+     * Result codes that are common across various modules.
+     *
+     * @hide
+     */
+    @IntDef(
+            prefix = {""},
+            value = {MODULE_STATE_UNKNOWN, MODULE_STATE_ENABLED, MODULE_STATE_DISABLED})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ModuleState {}
+
+    /** Measurement module. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_MEASUREMENT = 0;
+
+    /** Privacy Sandbox module. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_PROTECTED_AUDIENCE = 1;
+
+    /** Privacy Sandbox Attribution module. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_PROTECTED_APP_SIGNALS = 2;
+
+    /** Topics module. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_TOPICS = 3;
+
+    /** On-device Personalization(ODP) module. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_ON_DEVICE_PERSONALIZATION = 4;
+
+    /** ADID module. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_ADID = 5;
+
+    /**
+     * ModuleCode IntDef.
+     *
+     * @hide
+     */
+    @IntDef(
+            value = {
+                MODULE_MEASUREMENT,
+                MODULE_PROTECTED_AUDIENCE,
+                MODULE_PROTECTED_APP_SIGNALS,
+                MODULE_TOPICS,
+                MODULE_ON_DEVICE_PERSONALIZATION,
+                MODULE_ADID
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Module {}
+
+    /**
+     * Returns {@code module} or throws an {@link IllegalArgumentException} if it's invalid.
+     *
+     * @param module module to validate
+     * @hide
+     */
+    @Module
+    public static int validateModule(@Module int module) {
+        return switch (module) {
+            case MODULE_ADID,
+                            MODULE_MEASUREMENT,
+                            MODULE_ON_DEVICE_PERSONALIZATION,
+                            MODULE_PROTECTED_APP_SIGNALS,
+                            MODULE_PROTECTED_AUDIENCE,
+                            MODULE_TOPICS ->
+                    module;
+            default -> throw new IllegalArgumentException("Invalid Module:" + module);
+        };
+    }
+
+    /**
+     * Returns {@code moduleState} or throws an {@link IllegalArgumentException} if it's invalid.
+     *
+     * @param moduleState module state to validate
+     * @hide
+     */
+    @ModuleState
+    public static int validateModuleState(@ModuleState int moduleState) {
+        return switch (moduleState) {
+            case MODULE_STATE_UNKNOWN, MODULE_STATE_ENABLED, MODULE_STATE_DISABLED -> moduleState;
+            default -> throw new IllegalArgumentException("Invalid Module State:" + moduleState);
+        };
+    }
 
     /**
      * Create AdServicesCommonManager.
@@ -158,9 +305,9 @@ public class AdServicesCommonManager {
      * @hide
      */
     @SystemApi
-    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED)
     @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
     @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
     @SuppressWarnings("NewApi")
     public void isAdServicesEnabled(
             @NonNull @CallbackExecutor Executor executor,
@@ -277,10 +424,14 @@ public class AdServicesCommonManager {
 
     /**
      * Broadcast action: notify that a consent notification has been displayed to the user, and the
-     * user consent choices can be set by calling {@link #setAdServicesModuleUserChoices()}.
+     * user consent choices can be set by calling {@link #requestAdServicesModuleUserChoices()}.
+     *
+     * <p>The action must be defined as an intent-filter in AndroidManifest.xml in order to receive
+     * Intents from the platform.
      *
      * @hide
      */
+    @SystemApi
     @SdkConstant(SdkConstantType.BROADCAST_INTENT_ACTION)
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
@@ -290,7 +441,8 @@ public class AdServicesCommonManager {
     /**
      * Activity Action: Open the consent landing page activity. In the activity, user consent
      * choices can be set, depending on user action, by calling {@link
-     * #setAdServicesModuleUserChoices()}.
+     * #requestAdServicesModuleUserChoices()}. The action must be defined as an intent-filter in
+     * AndroidManifest.xml in order to receive Intents from the platform.
      *
      * <p>Input: nothing
      *
@@ -298,6 +450,7 @@ public class AdServicesCommonManager {
      *
      * @hide
      */
+    @SystemApi
     @SdkConstant(SdkConstantType.ACTIVITY_INTENT_ACTION)
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
@@ -312,11 +465,10 @@ public class AdServicesCommonManager {
      * those PPAPIs will not operate for that user.
      *
      * <p>A notification type is also required to determine what type of notification should be
-     * shown to the user to notify them of these changes. The NotificationTypeParams can be Ongoing,
+     * shown to the user to notify them of these changes. The NotificationType can be Ongoing,
      * Regular, or None.
      *
-     * @param adServicesModuleStateList parcel containing state information for modules.
-     * @param notificationType parcel containing notification type.
+     * @param updateParams object containing state information for modules and notification type.
      * @param executor the executor for the callback.
      * @param callback callback function to confirm modules overrides is set up correctly.
      * @hide
@@ -324,15 +476,13 @@ public class AdServicesCommonManager {
     @SystemApi
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
-    public void setAdServicesModuleOverrides(
-            @NonNull List<AdServicesModuleState> adServicesModuleStateList,
-            @NonNull NotificationTypeParams notificationType,
+    public void requestAdServicesModuleOverrides(
+            @NonNull UpdateAdServicesModuleStatesParams updateParams,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull AdServicesOutcomeReceiver<AdServicesCommonResponse, Exception> callback) {
-        Objects.requireNonNull(adServicesModuleStateList);
-        Objects.requireNonNull(notificationType);
-        Objects.requireNonNull(executor);
-        Objects.requireNonNull(callback);
+            @NonNull AdServicesOutcomeReceiver<Void, Exception> callback) {
+        Objects.requireNonNull(updateParams, "updateParams cannot be null");
+        Objects.requireNonNull(executor, "executor cannot be null");
+        Objects.requireNonNull(callback, "callback cannot be null");
 
         if (invokeCallbackOnErrorOnRvc(callback)) {
             return;
@@ -340,14 +490,12 @@ public class AdServicesCommonManager {
 
         final IAdServicesCommonService service = getService();
         try {
-            service.setAdServicesModuleOverrides(
-                    adServicesModuleStateList,
-                    notificationType,
-                    new ISetAdServicesModuleOverridesCallback.Stub() {
+            service.requestAdServicesModuleOverrides(
+                    updateParams,
+                    new IRequestAdServicesModuleOverridesCallback.Stub() {
                         @Override
-                        public void onResult(AdServicesCommonResponse adServicesCommonResponse)
-                                throws RemoteException {
-                            callback.onResult(adServicesCommonResponse);
+                        public void onSuccess() throws RemoteException {
+                            callback.onResult(null);
                         }
 
                         @Override
@@ -371,7 +519,7 @@ public class AdServicesCommonManager {
      * etc). The user consent controls whether the PPAPIs associated with that module can operate or
      * not.
      *
-     * @param adServicesModuleUserChoiceList parcel containing user choices for modules.
+     * @param updateParams object containing user choices for modules.
      * @param executor the executor for the callback.
      * @param callback callback function to confirm module user choice is set up correctly.
      * @hide
@@ -379,13 +527,13 @@ public class AdServicesCommonManager {
     @SystemApi
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
-    public void setAdServicesModuleUserChoices(
-            @NonNull List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList,
+    public void requestAdServicesModuleUserChoices(
+            @NonNull UpdateAdServicesUserChoicesParams updateParams,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull AdServicesOutcomeReceiver<AdServicesCommonResponse, Exception> callback) {
-        Objects.requireNonNull(adServicesModuleUserChoiceList);
-        Objects.requireNonNull(executor);
-        Objects.requireNonNull(callback);
+            @NonNull AdServicesOutcomeReceiver<Void, Exception> callback) {
+        Objects.requireNonNull(updateParams, "updateParams cannot be null");
+        Objects.requireNonNull(executor, "executor cannot be null");
+        Objects.requireNonNull(callback, "callback cannot be null");
 
         if (invokeCallbackOnErrorOnRvc(callback)) {
             return;
@@ -393,13 +541,12 @@ public class AdServicesCommonManager {
 
         final IAdServicesCommonService service = getService();
         try {
-            service.setAdServicesModuleUserChoices(
-                    adServicesModuleUserChoiceList,
-                    new ISetAdServicesModuleUserChoicesCallback.Stub() {
+            service.requestAdServicesModuleUserChoices(
+                    updateParams,
+                    new IRequestAdServicesModuleUserChoicesCallback.Stub() {
                         @Override
-                        public void onResult(AdServicesCommonResponse adServicesCommonResponse)
-                                throws RemoteException {
-                            callback.onResult(adServicesCommonResponse);
+                        public void onSuccess() throws RemoteException {
+                            callback.onResult(null);
                         }
 
                         @Override
@@ -435,9 +582,9 @@ public class AdServicesCommonManager {
      * @hide
      */
     @SystemApi
-    @FlaggedApi(Flags.FLAG_ENABLE_ADSERVICES_API_ENABLED)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
     @SuppressWarnings("NewApi")
     public void enableAdServices(
             @NonNull AdServicesStates adServicesStates,
@@ -469,9 +616,9 @@ public class AdServicesCommonManager {
      */
     // TODO(b/295205476): Move exceptions into the callback.
     @SystemApi
-    @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
     @RequiresPermission(anyOf = {UPDATE_PRIVILEGED_AD_ID, UPDATE_PRIVILEGED_AD_ID_COMPAT})
     @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
     @SuppressWarnings("NewApi")
     public void updateAdId(
             @NonNull UpdateAdIdRequest updateAdIdRequest,
@@ -500,7 +647,6 @@ public class AdServicesCommonManager {
      * @hide
      */
     @SystemApi
-    @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
     @RequiresPermission(anyOf = {UPDATE_PRIVILEGED_AD_ID, UPDATE_PRIVILEGED_AD_ID_COMPAT})
     @RequiresApi(Build.VERSION_CODES.S)
     public void updateAdId(
@@ -602,15 +748,5 @@ public class AdServicesCommonManager {
             executor.execute(
                     () -> callback.onError(new IllegalStateException("Internal Error!", e)));
         }
-    }
-
-    private <T> boolean invokeCallbackOnErrorOnRvc(
-            AdServicesOutcomeReceiver<T, Exception> callback) {
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
-            callback.onError(new AdServicesException("AdServices is not supported on Android R"));
-            return true;
-        }
-
-        return false;
     }
 }

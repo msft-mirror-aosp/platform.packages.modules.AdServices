@@ -18,15 +18,17 @@ package com.android.adservices.ohttp;
 
 import static com.android.adservices.ohttp.ObliviousHttpTestFixtures.getTestVectors;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import static org.junit.Assert.assertThrows;
+
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
 import com.android.adservices.service.FlagsFactory;
 import com.android.modules.utils.testing.ExtendedMockitoRule;
 
 import com.google.common.io.BaseEncoding;
-import com.google.common.truth.Truth;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,7 +38,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 
 @ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
-public class ObliviousHttpClientTest extends AdServicesExtendedMockitoTestCase {
+public final class ObliviousHttpClientTest extends AdServicesExtendedMockitoTestCase {
 
     @Before
     public void setExpectations() {
@@ -51,47 +53,44 @@ public class ObliviousHttpClientTest extends AdServicesExtendedMockitoTestCase {
         byte[] bytes = BaseEncoding.base16().lowerCase().decode(keyConfigHex);
         ObliviousHttpKeyConfig keyConfig = ObliviousHttpKeyConfig.fromSerializedKeyConfig(bytes);
 
-        Assert.assertThrows(
+        assertThrows(
                 UnsupportedHpkeAlgorithmException.class,
                 () -> ObliviousHttpClient.create(keyConfig));
     }
 
     @Test
     public void create_supportedAlgorithms_clientCreatedSuccessfully()
-            throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException, IOException {
+            throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException {
         ObliviousHttpTestFixtures.OhttpTestVector testVector = getTestVectors().get(0);
         ObliviousHttpClient actualClient = ObliviousHttpClient.create(testVector.keyConfig);
-        Truth.assertThat(actualClient).isNotNull();
+        assertThat(actualClient).isNotNull();
     }
 
     @Test
     public void create_supportedAlgorithms_kemIdSetCorrectly()
-            throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException, IOException {
+            throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException {
         ObliviousHttpTestFixtures.OhttpTestVector testVector = getTestVectors().get(0);
         ObliviousHttpClient actualClient = ObliviousHttpClient.create(testVector.keyConfig);
-        Assert.assertEquals(
-                actualClient.getHpkeAlgorithmSpec().kem().identifier(),
-                testVector.keyConfig.kemId());
+        assertThat(actualClient.getHpkeAlgorithmSpec().kem().identifier())
+                .isEqualTo(testVector.keyConfig.kemId());
     }
 
     @Test
     public void create_supportedAlgorithms_kdfIdSetCorrectly()
-            throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException, IOException {
+            throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException {
         ObliviousHttpTestFixtures.OhttpTestVector testVector = getTestVectors().get(0);
         ObliviousHttpClient actualClient = ObliviousHttpClient.create(testVector.keyConfig);
-        Assert.assertEquals(
-                actualClient.getHpkeAlgorithmSpec().kdf().identifier(),
-                testVector.keyConfig.kdfId());
+        assertThat(actualClient.getHpkeAlgorithmSpec().kdf().identifier())
+                .isEqualTo(testVector.keyConfig.kdfId());
     }
 
     @Test
     public void create_supportedAlgorithms_aeadIdSetCorrectly()
-            throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException, IOException {
+            throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException {
         ObliviousHttpTestFixtures.OhttpTestVector testVector = getTestVectors().get(0);
         ObliviousHttpClient actualClient = ObliviousHttpClient.create(testVector.keyConfig);
-        Assert.assertEquals(
-                actualClient.getHpkeAlgorithmSpec().aead().identifier(),
-                testVector.keyConfig.aeadId());
+        assertThat(actualClient.getHpkeAlgorithmSpec().aead().identifier())
+                .isEqualTo(testVector.keyConfig.aeadId());
     }
 
     @Test
@@ -110,17 +109,16 @@ public class ObliviousHttpClientTest extends AdServicesExtendedMockitoTestCase {
                     client.createObliviousHttpRequest(
                             plainTextBytes, seedBytes, hasMediaTypeChanged);
 
-            Assert.assertEquals(
-                    testVector.expectedEnc,
-                    BaseEncoding.base16()
-                            .lowerCase()
-                            .encode(
-                                    request.requestContext()
-                                            .encapsulatedSharedSecret()
-                                            .getBytes()));
-            Assert.assertEquals(
-                    testVector.requestCipherText,
-                    BaseEncoding.base16().lowerCase().encode(request.serialize()));
+            assertThat(
+                            BaseEncoding.base16()
+                                    .lowerCase()
+                                    .encode(
+                                            request.requestContext()
+                                                    .encapsulatedSharedSecret()
+                                                    .getBytes()))
+                    .isEqualTo(testVector.expectedEnc);
+            assertThat(BaseEncoding.base16().lowerCase().encode(request.serialize()))
+                    .isEqualTo(testVector.requestCipherText);
         }
     }
 
@@ -140,17 +138,16 @@ public class ObliviousHttpClientTest extends AdServicesExtendedMockitoTestCase {
                     client.createObliviousHttpRequest(
                             plainTextBytes, seedBytes, hasMediaTypeChanged);
 
-            Assert.assertEquals(
-                    testVector.expectedEnc,
-                    BaseEncoding.base16()
-                            .lowerCase()
-                            .encode(
-                                    request.requestContext()
-                                            .encapsulatedSharedSecret()
-                                            .getBytes()));
-            Assert.assertEquals(
-                    testVector.requestCipherText,
-                    BaseEncoding.base16().lowerCase().encode(request.serialize()));
+            assertThat(
+                            BaseEncoding.base16()
+                                    .lowerCase()
+                                    .encode(
+                                            request.requestContext()
+                                                    .encapsulatedSharedSecret()
+                                                    .getBytes()))
+                    .isEqualTo(testVector.expectedEnc);
+            assertThat(BaseEncoding.base16().lowerCase().encode(request.serialize()))
+                    .isEqualTo(testVector.requestCipherText);
         }
     }
 
@@ -174,9 +171,8 @@ public class ObliviousHttpClientTest extends AdServicesExtendedMockitoTestCase {
                             BaseEncoding.base16().lowerCase().decode(testVector.responseCipherText),
                             request.requestContext());
 
-            Assert.assertEquals(
-                    testVector.responsePlainText,
-                    new String(decryptedResponse, StandardCharsets.UTF_8));
+            assertThat(new String(decryptedResponse, StandardCharsets.UTF_8))
+                    .isEqualTo(testVector.responsePlainText);
         }
     }
 
@@ -201,9 +197,8 @@ public class ObliviousHttpClientTest extends AdServicesExtendedMockitoTestCase {
                             BaseEncoding.base16().lowerCase().decode(testVector.responseCipherText),
                             request.requestContext());
 
-            Assert.assertEquals(
-                    testVector.responsePlainText,
-                    new String(decryptedResponse, StandardCharsets.UTF_8));
+            assertThat(new String(decryptedResponse, StandardCharsets.UTF_8))
+                    .isEqualTo(testVector.responsePlainText);
         }
     }
 
@@ -246,8 +241,8 @@ public class ObliviousHttpClientTest extends AdServicesExtendedMockitoTestCase {
                         + "\"bid\":3,\"isChaff\":false,\"biddingGroups\":"
                         + "{\"https://bid1.com\":{\"index\":[0]}}}";
 
-        Assert.assertEquals(
-                expectedJsonString, new String(decryptedResponse, StandardCharsets.UTF_8));
+        assertThat(new String(decryptedResponse, StandardCharsets.UTF_8))
+                .isEqualTo(expectedJsonString);
     }
 
     @Test
@@ -291,7 +286,7 @@ public class ObliviousHttpClientTest extends AdServicesExtendedMockitoTestCase {
                         + "\"bid\":3,\"isChaff\":false,\"biddingGroups\":"
                         + "{\"https://bid1.com\":{\"index\":[0]}}}";
 
-        Assert.assertEquals(
-                expectedJsonString, new String(decryptedResponse, StandardCharsets.UTF_8));
+        assertThat(new String(decryptedResponse, StandardCharsets.UTF_8))
+                .isEqualTo(expectedJsonString);
     }
 }

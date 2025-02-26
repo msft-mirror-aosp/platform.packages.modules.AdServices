@@ -1,0 +1,81 @@
+map {
+  key: "com.example.adservices.samples.topics.sampleapp1"
+  value {
+    packageType: APP
+    apiDenyGroupsForPackageVersions {
+      packageMinVersion: 10
+      packageMaxVersion: 100
+      apiGroups {
+        apiGroup: "g11"
+        apiGroup: "g12"
+        apiGroup: "g13"
+      }
+    }
+    apiDenyGroupsForPackageVersions {
+      packageMaxVersion: 200
+      apiGroups {
+        apiGroup: "g21"
+        apiGroup: "g22"
+        apiGroup: "g23"
+      }
+    }
+    apiDenyGroupsForPackageVersions {
+      packageMinVersion: 300
+      apiGroups {
+        apiGroup: "g31"
+        apiGroup: "g32"
+        apiGroup: "g33"
+      }
+    }
+  }
+}
+map {
+  key: "com.example.adservices.samples.topics.sampleapp2"
+  value {
+    packageType: SDK
+    apiDenyGroupsForPackageVersions {
+      packageMaxVersion: 200
+      apiGroups {
+        apiGroup: "g21"
+        apiGroup: "g22"
+        apiGroup: "g23"
+      }
+    }
+    apiDenyGroupsForPackageVersions {
+      packageMinVersion: 300
+      apiGroups {
+        apiGroup: "g31"
+        apiGroup: "g32"
+        apiGroup: "g33"
+      }
+    }
+    apiDenyGroupsForPackageVersions {
+      apiGroups {
+        apiGroup: "g41"
+        apiGroup: "g42"
+        apiGroup: "g43"
+      }
+    }
+  }
+}
+map {
+  key: "com.android.server.telecom"
+  value {
+    apiDenyGroupsForPackageVersions {
+      packageMinVersion: 10
+      packageMaxVersion: 100
+      apiGroups {
+        apiGroup: "g11"
+        apiGroup: "g12"
+        apiGroup: "g13"
+      }
+    }
+    apiDenyGroupsForPackageVersions {
+      apiGroups {
+        apiGroup: "g21"
+        apiGroup: "g22"
+        apiGroup: "g23"
+      }
+    }
+  }
+}

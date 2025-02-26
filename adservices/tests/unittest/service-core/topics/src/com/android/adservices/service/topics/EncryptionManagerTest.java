@@ -46,7 +46,6 @@ import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.primitives.Bytes;
 
@@ -61,7 +60,6 @@ import java.util.List;
 import java.util.Optional;
 
 /** Unit tests for {@link EncryptionManager}. */
-@RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
@@ -186,10 +184,10 @@ public final class EncryptionManagerTest extends AdServicesExtendedMockitoTestCa
 
         // Verify EncryptedTopic is not empty.
         assertThat(optionalEncryptedTopic.isPresent()).isTrue();
-        assertThat(optionalEncryptedTopic.get().getEncryptedTopic()).isNotEmpty();
+        expect.that(optionalEncryptedTopic.get().getEncryptedTopic()).isNotEmpty();
         // Verify test key used to override has been used.
-        assertThat(optionalEncryptedTopic.get().getKeyIdentifier()).isEqualTo(overrideTestKey);
-        assertThat(optionalEncryptedTopic.get().getEncapsulatedKey()).isNotEmpty();
+        expect.that(optionalEncryptedTopic.get().getKeyIdentifier()).isEqualTo(overrideTestKey);
+        expect.that(optionalEncryptedTopic.get().getEncapsulatedKey()).isNotEmpty();
     }
 
     @Test

@@ -15,7 +15,7 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import com.android.adservices.shared.meta_testing.FakeLogger;
+import com.android.adservices.shared.meta_testing.FakeRealLogger;
 
 // Not testing a real callback, but callbacks that cannot be constructed with
 // setFailIfCalledOnMainThread(true) (like BroadcastReceiverSyncCallback)
@@ -47,7 +47,7 @@ public final class MainThreadSyncCallbackTest extends SyncCallbackTestCase<Abstr
         @SuppressWarnings("unused") // Called by superclass using reflection
         MainThreadSyncCallback() {
             this(
-                    new SyncCallbackSettings.Builder(new FakeLogger())
+                    new SyncCallbackSettings.Builder(new FakeRealLogger())
                             .setFailIfCalledOnMainThread(false)
                             .build());
         }

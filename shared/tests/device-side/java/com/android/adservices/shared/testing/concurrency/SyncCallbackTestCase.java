@@ -26,7 +26,7 @@ import static org.junit.Assume.assumeTrue;
 import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import com.android.adservices.shared.meta_testing.FakeLogger;
+import com.android.adservices.shared.meta_testing.FakeRealLogger;
 import com.android.adservices.shared.testing.DeviceSideTestCase;
 import com.android.adservices.shared.testing.DynamicLogger;
 import com.android.adservices.shared.testing.LogEntry;
@@ -64,7 +64,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
      */
     protected static final long NOT_CALLED_TIMEOUT_MS = 50;
 
-    protected final FakeLogger mFakeLogger = new FakeLogger();
+    protected final FakeRealLogger mFakeLogger = new FakeRealLogger();
 
     private final SyncCallbackSettings.Builder mFakeLoggerSettingsBuilder =
             new SyncCallbackSettings.Builder(mFakeLogger);
@@ -586,7 +586,8 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
         }
 
         public LogEntry v(String expectedMessage) {
-            return new LogEntry(LogLevel.VERBOSE, LOG_TAG, mCallback + ": " + expectedMessage);
+            return new LogEntry(
+                    LogLevel.VERBOSE, LOG_TAG, mCallback.toStringLite() + ": " + expectedMessage);
         }
     }
 }

@@ -26,56 +26,27 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 
-import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.topics.migration.TopicsDbMigratorV7;
 import com.android.adservices.data.topics.migration.TopicsDbMigratorV8;
 import com.android.adservices.data.topics.migration.TopicsDbMigratorV9;
-import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.FileCompatUtils;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.quality.Strictness;
 
 import java.util.List;
 
-@RunWith(MockitoJUnitRunner.class)
-public class DbHelperTopicsTest {
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
-
-    private MockitoSession mStaticMockSession;
-
-    @Mock private Flags mMockFlags;
-
+@SpyStatic(FlagsFactory.class)
+public final class DbHelperTopicsTest extends AdServicesExtendedMockitoTestCase {
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(ErrorLogUtil.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-    }
-
-    @After
-    public void teardown() {
-        mStaticMockSession.finishMocking();
+        mocker.mockGetFlags(mMockFlags);
     }
 
     @Test
@@ -127,12 +98,12 @@ public class DbHelperTopicsTest {
     @Test
     public void testOnUpgrade_topicsV8Migration_loggedTopicColumnExist() {
         String dbName = FileCompatUtils.getAdservicesFilename("test_db");
-        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, dbName, /* dbVersion */ 1);
+        DbHelperV1 dbHelperV1 = new DbHelperV1(mContext, dbName, /* dbVersion */ 1);
         SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
 
         assertEquals(1, db.getVersion());
 
-        DbHelper dbHelper = new DbHelper(sContext, dbName, /* dbVersion */ 7);
+        DbHelper dbHelper = new DbHelper(mContext, dbName, /* dbVersion */ 7);
         dbHelper.onUpgrade(db, /* oldDbVersion */ 7, /* newDbVersion */ 8);
 
         // ReturnTopics table should have 8 columns in version 8 database

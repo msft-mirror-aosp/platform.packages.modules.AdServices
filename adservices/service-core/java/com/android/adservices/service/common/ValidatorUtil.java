@@ -24,6 +24,7 @@ import java.util.Objects;
 public class ValidatorUtil {
     public static final String AD_TECH_ROLE_BUYER = "buyer";
     public static final String AD_TECH_ROLE_SELLER = "seller";
+    public static final String AD_TECH_ROLE_COMPONENT_SELLER = "component_seller";
 
     public static final String HTTPS_SCHEME = "https";
 
