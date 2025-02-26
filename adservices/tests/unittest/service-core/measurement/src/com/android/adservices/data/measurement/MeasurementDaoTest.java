@@ -76,6 +76,7 @@ import com.android.adservices.service.measurement.AttributedTrigger;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.CountUniqueMetadata;
 import com.android.adservices.service.measurement.CountUniqueReport;
+import com.android.adservices.service.measurement.CountUniqueReportFixture;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventReportFixture;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -14079,6 +14080,66 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
 
         assertThat(fetchedAllDebugReports.get(0)).isEqualTo(debugReport1);
         assertThat(fetchedAllDebugReports.get(1)).isEqualTo(debugReport2);
+    }
+
+    @Test
+    public void testGetPendingCountUniqueReportIds_getsPendingReports() {
+        CountUniqueReport report1 =
+                CountUniqueReportFixture.getValidCountUniqueReportBuilder()
+                        .setReportId("CU1")
+                        .setStatus(CountUniqueReport.Status.PENDING)
+                        .build();
+        CountUniqueReport report2 =
+                CountUniqueReportFixture.getValidCountUniqueReportBuilder()
+                        .setReportId("CU2")
+                        .setStatus(CountUniqueReport.Status.PENDING)
+                        .build();
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
+
+        AbstractDbIntegrationTest.insertToDb(report1, db);
+        AbstractDbIntegrationTest.insertToDb(report2, db);
+
+        Optional<List<String>> idsOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getPendingCountUniqueReportIds());
+
+        assertThat(idsOpt.isPresent()).isTrue();
+        List<String> ids = idsOpt.get();
+        assertThat(ids.size()).isEqualTo(2);
+
+        assertThat(ids.contains(report1.getReportId())).isTrue();
+        assertThat(ids.contains(report2.getReportId())).isTrue();
+    }
+
+    @Test
+    public void testGetPendingCountUniqueReportIds_ignoresDeliveredReports() {
+        CountUniqueReport report1 =
+                CountUniqueReportFixture.getValidCountUniqueReportBuilder()
+                        .setReportId("CU1")
+                        .setStatus(CountUniqueReport.Status.DELIVERED)
+                        .build();
+        CountUniqueReport report2 =
+                CountUniqueReportFixture.getValidCountUniqueReportBuilder()
+                        .setReportId("CU2")
+                        .setStatus(CountUniqueReport.Status.PENDING)
+                        .build();
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
+
+        AbstractDbIntegrationTest.insertToDb(report1, db);
+        AbstractDbIntegrationTest.insertToDb(report2, db);
+
+        Optional<List<String>> idsOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getPendingCountUniqueReportIds());
+
+        assertThat(idsOpt.isPresent()).isTrue();
+        List<String> ids = idsOpt.get();
+        assertThat(ids.size()).isEqualTo(1);
+
+        assertThat(ids.contains(report1.getReportId())).isFalse();
+        assertThat(ids.contains(report2.getReportId())).isTrue();
     }
 
     private Source getFirstSourceFromDb() {
