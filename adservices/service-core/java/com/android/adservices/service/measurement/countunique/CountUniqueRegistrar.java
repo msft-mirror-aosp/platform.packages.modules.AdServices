@@ -28,6 +28,7 @@ import com.android.adservices.service.measurement.CountUniqueMetadata;
 import com.android.adservices.service.measurement.CountUniqueReport;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -233,9 +234,8 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
         builder.setContributionValue(value);
         builder.setContributionTime(asyncRegistration.getRequestTime());
         builder.setPayload(
-                createHistogramContribution(key, value, getFilteringId(eventHeaderJson))
-                        .toJSONObject()
-                        .toString());
+                generateDebugPayload(
+                        createHistogramContribution(key, value, getFilteringId(eventHeaderJson))));
         builder.setReportId(UUID.randomUUID().toString());
         builder.setReportingOrigin(registrationUriOrigin.get());
 
@@ -310,6 +310,17 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
         builder.setValue(value);
         filteringId.ifPresent(builder::setId);
         return builder.build();
+    }
+
+    /**
+     * Format the payload into a JSON object with the format of: { "operation": "histogram", "data":
+     * [{"bucket": 1369, "value": 32768}]}
+     *
+     * <p>This format is the format AggregateCryptoConverter encrypts payloads in.
+     */
+    private String generateDebugPayload(AggregateHistogramContribution contribution)
+            throws JSONException {
+        return AggregateReport.generateDebugPayload(List.of(contribution));
     }
 
     private BigInteger getKey(IMeasurementDao dao, JSONObject eventHeader, Uri registrationOrigin)
