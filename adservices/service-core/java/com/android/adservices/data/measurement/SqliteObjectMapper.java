@@ -22,6 +22,7 @@ import android.database.Cursor;
 import android.net.Uri;
 
 import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
+import com.android.adservices.service.measurement.CountUniqueReport;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -557,6 +558,42 @@ public class SqliteObjectMapper {
                                 enumValue == null
                                         ? null
                                         : AsyncRedirect.RedirectBehavior.valueOf(enumValue)));
+        return builder.build();
+    }
+
+    /** Create {@link CountUniqueReport} object from SQLite datastore. */
+    public static CountUniqueReport constructCountUniqueReport(Cursor cursor) {
+        CountUniqueReport.Builder builder = new CountUniqueReport.Builder();
+        setTextColumn(
+                cursor,
+                MeasurementTables.CountUniqueReportingContract.REPORT_ID,
+                builder::setReportId);
+        setTextColumn(
+                cursor,
+                MeasurementTables.CountUniqueReportingContract.PAYLOAD,
+                builder::setPayload);
+        setUriColumn(
+                cursor,
+                MeasurementTables.CountUniqueReportingContract.REPORTING_ORIGIN,
+                builder::setReportingOrigin);
+        setIntColumn(
+                cursor, MeasurementTables.CountUniqueReportingContract.STATUS, builder::setStatus);
+        setLongColumn(
+                cursor,
+                MeasurementTables.CountUniqueReportingContract.SCHEDULED_REPORT_TIME,
+                builder::setScheduledReportTime);
+        setTextColumn(
+                cursor,
+                MeasurementTables.CountUniqueReportingContract.API_VERSION,
+                builder::setApiVersion);
+        setTextColumn(
+                cursor,
+                MeasurementTables.CountUniqueReportingContract.DEBUG_KEY,
+                builder::setDebugKey);
+        setTextColumn(
+                cursor,
+                MeasurementTables.CountUniqueReportingContract.CONTEXT_ID,
+                builder::setContextId);
         return builder.build();
     }
 

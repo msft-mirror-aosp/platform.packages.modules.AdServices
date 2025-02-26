@@ -51,6 +51,7 @@ public final class MeasurementTables {
         MeasurementTables.XnaIgnoredSourcesContract.TABLE,
         KeyValueDataContract.TABLE,
         AppReportHistoryContract.TABLE,
+        CountUniqueReportingContract.TABLE,
     };
 
     public static final String[] V6_TABLES = {
@@ -341,6 +342,20 @@ public final class MeasurementTables {
         String REGISTRATION_ORIGIN = "registration_origin";
         String APP_DESTINATION = "app_destination";
         String LAST_REPORT_DELIVERED_TIME = "last_report_delivered_time";
+    }
+
+    /** Contract for Count Unique API Event */
+    public interface CountUniqueReportingContract {
+        String TABLE = MSMT_TABLE_PREFIX + "count_unique_reporting";
+
+        String REPORT_ID = "report_id";
+        String PAYLOAD = "payload";
+        String REPORTING_ORIGIN = "reporting_origin";
+        String STATUS = "status";
+        String SCHEDULED_REPORT_TIME = "scheduled_report_time";
+        String API_VERSION = "api_version";
+        String DEBUG_KEY = "debug_key";
+        String CONTEXT_ID = "context_id";
     }
 
     public static final String CREATE_TABLE_ASYNC_REGISTRATION_V6 =
@@ -1402,6 +1417,17 @@ public final class MeasurementTables {
                 + ", "
                 + AppReportHistoryContract.APP_DESTINATION
                 + ")",
+        "CREATE INDEX "
+                + INDEX_PREFIX
+                + CountUniqueReportingContract.TABLE
+                + "_c_u_r "
+                + " ON "
+                + CountUniqueReportingContract.TABLE
+                + "("
+                + CountUniqueReportingContract.REPORT_ID
+                + ", "
+                + CountUniqueReportingContract.REPORTING_ORIGIN
+                + ")",
     };
 
     public static final String[] CREATE_INDEXES_V6 = {
@@ -1504,6 +1530,30 @@ public final class MeasurementTables {
                     + AppReportHistoryContract.APP_DESTINATION
                     + "))";
 
+    public static final String CREATE_TABLE_COUNT_UNIQUE_REPORTING_LATEST =
+            "CREATE TABLE "
+                    + CountUniqueReportingContract.TABLE
+                    + " ("
+                    + CountUniqueReportingContract.REPORT_ID
+                    + " TEXT, "
+                    + CountUniqueReportingContract.PAYLOAD
+                    + " TEXT, "
+                    + CountUniqueReportingContract.REPORTING_ORIGIN
+                    + " TEXT, "
+                    + CountUniqueReportingContract.STATUS
+                    + " INTEGER, "
+                    + CountUniqueReportingContract.SCHEDULED_REPORT_TIME
+                    + " INTEGER, "
+                    + CountUniqueReportingContract.API_VERSION
+                    + " TEXT, "
+                    + CountUniqueReportingContract.DEBUG_KEY
+                    + " TEXT, "
+                    + CountUniqueReportingContract.CONTEXT_ID
+                    + " TEXT, "
+                    + "PRIMARY KEY("
+                    + CountUniqueReportingContract.REPORT_ID
+                    + "))";
+
     // Consolidated list of create statements for all tables.
     public static final List<String> CREATE_STATEMENTS =
             Collections.unmodifiableList(
@@ -1522,7 +1572,8 @@ public final class MeasurementTables {
                             CREATE_TABLE_AGGREGATABLE_DEBUG_REPORT_BUDGET_TRACKER_LATEST,
                             CREATE_TABLE_XNA_IGNORED_SOURCES_LATEST,
                             CREATE_TABLE_KEY_VALUE_STORE_LATEST,
-                            CREATE_TABLE_APP_REPORT_HISTORY_LATEST));
+                            CREATE_TABLE_APP_REPORT_HISTORY_LATEST,
+                            CREATE_TABLE_COUNT_UNIQUE_REPORTING_LATEST));
 
     // Consolidated list of create statements for all tables at version 6.
     public static final List<String> CREATE_STATEMENTS_V6 =

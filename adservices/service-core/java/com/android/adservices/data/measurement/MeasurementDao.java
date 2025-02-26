@@ -23,6 +23,7 @@ import static com.android.adservices.data.measurement.MeasurementTables.Aggregat
 import static com.android.adservices.data.measurement.MeasurementTables.AppReportHistoryContract;
 import static com.android.adservices.data.measurement.MeasurementTables.AsyncRegistrationContract;
 import static com.android.adservices.data.measurement.MeasurementTables.AttributionContract;
+import static com.android.adservices.data.measurement.MeasurementTables.CountUniqueReportingContract;
 import static com.android.adservices.data.measurement.MeasurementTables.DebugReportContract;
 import static com.android.adservices.data.measurement.MeasurementTables.EventReportContract;
 import static com.android.adservices.data.measurement.MeasurementTables.KeyValueDataContract;
@@ -51,6 +52,7 @@ import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.AggregatableNamedBudgets;
 import com.android.adservices.service.measurement.AggregatableNamedBudgets.BudgetAndContribution;
 import com.android.adservices.service.measurement.Attribution;
+import com.android.adservices.service.measurement.CountUniqueReport;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
@@ -4151,6 +4153,36 @@ class MeasurementDao implements IMeasurementDao {
                 .d("MeasurementDao: insertAppReportHistory: rowId=" + rowId);
         if (rowId == -1) {
             throw new DatastoreException("App report history insertion failed.");
+        }
+    }
+
+    @Override
+    public void insertCountUniqueReport(@NonNull CountUniqueReport report)
+            throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(CountUniqueReportingContract.REPORT_ID, report.getReportId());
+        values.put(CountUniqueReportingContract.PAYLOAD, report.getPayload());
+        values.put(
+                CountUniqueReportingContract.REPORTING_ORIGIN,
+                report.getReportingOrigin().toString());
+        values.put(CountUniqueReportingContract.STATUS, report.getStatus());
+        values.put(
+                CountUniqueReportingContract.SCHEDULED_REPORT_TIME,
+                report.getScheduledReportTime());
+        values.put(CountUniqueReportingContract.API_VERSION, report.getApiVersion());
+        values.put(CountUniqueReportingContract.DEBUG_KEY, report.getDebugKey());
+        values.put(CountUniqueReportingContract.CONTEXT_ID, report.getContextId());
+        long rowId =
+                mSQLTransaction
+                        .getDatabase()
+                        .insert(
+                                CountUniqueReportingContract.TABLE,
+                                /* nullColumnHack= */ null,
+                                values);
+        LoggerFactory.getMeasurementLogger()
+                .d("MeasurementDao: insertCountUniqueReport: rowId=" + rowId);
+        if (rowId == -1) {
+            throw new DatastoreException("Count Unique Report insertion failed.");
         }
     }
 
