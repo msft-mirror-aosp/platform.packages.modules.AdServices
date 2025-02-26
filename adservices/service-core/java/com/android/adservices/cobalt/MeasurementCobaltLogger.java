@@ -95,13 +95,23 @@ public final class MeasurementCobaltLogger {
     private static final int REPORTING_SUCCESS_STATUS_CODE = 100;
     private static final int REPORTING_UNKNOWN_STATUS_CODE = 200;
 
-    private static final MeasurementCobaltLogger sInstance = new MeasurementCobaltLogger();
     private final Flags mFlags;
     @Nullable private final CobaltLogger mCobaltLogger;
 
+    // Lazy initialization holder class idiom for static fields as described in Effective Java Item
+    // 83 - this is needed because otherwise the singleton would be initialized in unit tests, even
+    // when they (correctly) call newInstance() instead of getInstance().
+    private static final class FieldHolder {
+        private static final MeasurementCobaltLogger sSingleton;
+
+        static { // static initialization
+            sSingleton = new MeasurementCobaltLogger();
+        }
+    }
+
     /** Returns the singleton of the {@code MeasurementCobaltLogger}. */
     public static MeasurementCobaltLogger getInstance() {
-        return sInstance;
+        return FieldHolder.sSingleton;
     }
 
     @VisibleForTesting
