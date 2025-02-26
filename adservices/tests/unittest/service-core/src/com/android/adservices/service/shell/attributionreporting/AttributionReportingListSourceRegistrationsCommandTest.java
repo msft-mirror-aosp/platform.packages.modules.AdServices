@@ -20,6 +20,7 @@ import static com.android.adservices.service.shell.attributionreporting.Attribut
 import static com.android.adservices.service.shell.attributionreporting.AttributionReportingHelper.replaceWithAggregatable;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_DEV_MODE_UNCONFIRMED;
+import static com.android.adservices.service.stats.ShellCommandStats.RESULT_GENERIC_ERROR;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
@@ -289,9 +290,13 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
 
         Result result = runCommandAndGetResult();
 
-        expectSuccess(result, COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS);
-
-        assertThat(result.mOut).isEqualTo("Error in retrieving sources from database");
+        String errorMessage =
+                "Failed to list source registrations: Error in retrieving sources from database";
+        expectFailure(
+                result,
+                errorMessage,
+                COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS,
+                RESULT_GENERIC_ERROR);
     }
 
     @Test
@@ -325,6 +330,21 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
         testRunListSourceRegistrationsWithSchema(sources, args);
     }
 
+    @Test
+    public void testRunListSourceRegistrations_invalidSchema() {
+        String[] args = {SCHEMA_SUB_COMMAND, "invalid_schema"};
+        Result result = runCommandAndGetResult(args);
+
+        String errorMessage =
+                "Failed to list source registrations: Invalid schema. The 'schema' parameter must"
+                        + " be either 'partial' or 'full'. Check for typos.";
+        expectFailure(
+                result,
+                errorMessage,
+                COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS,
+                RESULT_GENERIC_ERROR);
+    }
+
     private void testRunListSourceRegistrationsWithSchema(List<Source> sources, String[] schema)
             throws JSONException {
         doReturn(Optional.ofNullable(sources))
@@ -351,7 +371,7 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
         stringArray[0] = AttributionReportingShellCommandFactory.COMMAND_PREFIX;
         stringArray[1] = AttributionReportingListSourceRegistrationsCommand.CMD;
         for (int i = 0; i < args.length; i++) {
-            stringArray[i + 1] = args[i];
+            stringArray[i + 2] = args[i];
         }
         return run(
                 new AttributionReportingListSourceRegistrationsCommand(
