@@ -65,7 +65,6 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.testing.IntFailureSyncCallback;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
@@ -98,12 +97,11 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
     private static final String SDK_PACKAGE_NAME = "test_package_name";
     // See android.os.Process, that FIRST_SDK_SANDBOX_UID = 20000 and LAST_SDK_SANDBOX_UID = 29999.
     private static final int SANDBOX_UID = 25000;
-
-    private final AdServicesLogger mSpyAdServicesLogger = spy(AdServicesLoggerImpl.getInstance());
     private CallerMetadata mCallerMetadata;
     private AdIdWorker mAdIdWorker;
     private GetAdIdParam mRequest;
 
+    @Mock private AdServicesLogger mMockAdServicesLogger;
     @Mock private PackageManager mMockPackageManager;
     @Mock private Clock mMockClock;
     @Mock private Context mMockSdkContext;
@@ -339,7 +337,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
                 new AdIdServiceImpl(
                         context,
                         mAdIdWorker,
-                        mSpyAdServicesLogger,
+                        mMockAdServicesLogger,
                         mMockClock,
                         mMockFlags,
                         mMockThrottler,
@@ -357,7 +355,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
 
             ArgumentCaptor<ApiCallStats> argument = ArgumentCaptor.forClass(ApiCallStats.class);
 
-            verify(mSpyAdServicesLogger).logApiCallStats(argument.capture());
+            verify(mMockAdServicesLogger).logApiCallStats(argument.capture());
             assertThat(argument.getValue().getCode()).isEqualTo(AD_SERVICES_API_CALLED);
             assertThat(argument.getValue().getApiClass())
                     .isEqualTo(AD_SERVICES_API_CALLED__API_CLASS__ADID);
@@ -401,7 +399,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
         return new AdIdServiceImpl(
                 mSpyContext,
                 mAdIdWorker,
-                mSpyAdServicesLogger,
+                mMockAdServicesLogger,
                 mMockClock,
                 mMockFlags,
                 mMockThrottler,
@@ -413,7 +411,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
         return new AdIdServiceImpl(
                 mMockSdkContext,
                 mAdIdWorker,
-                mSpyAdServicesLogger,
+                mMockAdServicesLogger,
                 mMockClock,
                 mMockFlags,
                 mMockThrottler,
@@ -433,12 +431,10 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
         Mockito.doAnswer(
                         (Answer<Object>)
                                 invocation -> {
-                                    // The method logAPiCallStats is called.
-                                    invocation.callRealMethod();
                                     loggerCountDownLatch.countDown();
                                     return null;
                                 })
-                .when(mSpyAdServicesLogger)
+                .when(mMockAdServicesLogger)
                 .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
     }
 
