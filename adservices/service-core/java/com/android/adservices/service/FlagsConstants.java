@@ -1828,6 +1828,10 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE =
             "Measurement__debug_join_keys_noncompliant_adtechs_sample_rate";
 
+    /** Key to enable HPKE to call platform APIs instead of relying on JNI */
+    public static final String KEY_ENABLE_HPKE_WITH_PLATFORM_APIS =
+            "Hpke__enable_hpke_with_platform_apis";
+
     public static final String KEY_ENABLE_GET_BINDING_UID_IMPORTANCE =
             "CommonInfra__enable_get_binding_uid_importance";
 

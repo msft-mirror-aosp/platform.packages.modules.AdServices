@@ -6382,6 +6382,14 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY;
     }
 
+    /** Default enablement for HPKE to call platform APIs instead of relying on JNI. */
+    @FeatureFlag boolean DEFAULT_ENABLE_HPKE_WITH_PLATFORM_APIS = false;
+
+    /** Returns the default enablement of HPKE to call platform APIs instead of relying on JNI. */
+    default boolean getEnableHpkeWithPlatformApis() {
+        return DEFAULT_ENABLE_HPKE_WITH_PLATFORM_APIS;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
     ////////////////////////////////////////////////////////////////////////////////////////////////

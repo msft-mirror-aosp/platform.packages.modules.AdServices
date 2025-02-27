@@ -75,6 +75,7 @@ import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ATOMIC_FILE_DA
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_BACK_COMPAT_INIT;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB;
+import static com.android.adservices.service.Flags.DEFAULT_ENABLE_HPKE_WITH_PLATFORM_APIS;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_LOG_SAMPLING_INFRA;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_PACKAGE_DENY_BG_JOB;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD;
@@ -676,6 +677,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_9;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_GET_BINDING_UID_IMPORTANCE;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_HPKE_WITH_PLATFORM_APIS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOG_SAMPLING_INFRA;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS;
@@ -6623,6 +6625,14 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS,
                 DEFAULT_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS,
                 Flags::getUiEnableSetAdsPersonalizationStatus);
+    }
+
+    @Test
+    public void testGetEnableHpkeWithPlatformApis() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_ENABLE_HPKE_WITH_PLATFORM_APIS,
+                DEFAULT_ENABLE_HPKE_WITH_PLATFORM_APIS,
+                Flags::getEnableHpkeWithPlatformApis);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
