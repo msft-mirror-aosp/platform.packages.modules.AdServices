@@ -64,17 +64,19 @@ public final class ProcessStableFlagsLogger {
     }
 
     /**
-     * Logs the latency in milliseconds when reading all process stable flags from Device Config.
+     * Logs the latency in microseconds when reading all process stable flags from Device Config.
      *
-     * @param latencyUs the latency in microseconds.
+     * @param latencyMicroSecond the latency in microseconds.
      */
-    void logBatchReadFromDeviceConfigLatencyMicroSecond(long latencyUs) {
+    void logBatchReadFromDeviceConfigLatencyMicroSecond(long latencyMicroSecond) {
         if (!isProcessStableFlagsLoggingEnabled()) {
             return;
         }
 
         mExecutor.execute(
-                () -> mStatsdLogger.logBatchReadFromDeviceConfigLatencyMicroSecond(latencyUs));
+                () ->
+                        mStatsdLogger.logBatchReadFromDeviceConfigLatencyMicroSecond(
+                                latencyMicroSecond));
     }
 
     /**
@@ -133,7 +135,6 @@ public final class ProcessStableFlagsLogger {
                 });
     }
 
-    // Base flag framework, may get refactored later to use the DeviceConfigFlagsHelper.
     @SuppressWarnings("AvoidDeviceConfigUsage")
     @VisibleForTesting
     boolean isProcessStableFlagsLoggingEnabled() {

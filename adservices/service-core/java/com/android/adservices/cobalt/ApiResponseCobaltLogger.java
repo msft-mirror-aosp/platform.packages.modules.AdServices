@@ -43,8 +43,18 @@ public final class ApiResponseCobaltLogger {
     // for the full metric.
     private static final int API_RESPONSE_METRIC_ID = 6;
 
-    private static final ApiResponseCobaltLogger sInstance = new ApiResponseCobaltLogger();
     @Nullable private final CobaltLogger mCobaltLogger;
+
+    // Lazy initialization holder class idiom for static fields as described in Effective Java Item
+    // 83 - this is needed because otherwise the singleton would be initialized in unit tests, even
+    // when they (correctly) call newInstance() instead of getInstance().
+    private static final class FieldHolder {
+        private static final ApiResponseCobaltLogger sSingleton;
+
+        static { // static initialization
+            sSingleton = new ApiResponseCobaltLogger();
+        }
+    }
 
     @VisibleForTesting
     ApiResponseCobaltLogger(CobaltLogger cobaltLogger) {
@@ -63,7 +73,7 @@ public final class ApiResponseCobaltLogger {
 
     /** Returns the singleton of the {@code ApiResponseCobaltLogger}. */
     public static ApiResponseCobaltLogger getInstance() {
-        return sInstance;
+        return FieldHolder.sSingleton;
     }
 
     /**
