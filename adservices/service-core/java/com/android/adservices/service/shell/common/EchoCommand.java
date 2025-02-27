@@ -41,10 +41,10 @@ public final class EchoCommand extends AbstractShellCommand {
 
     @Override
     public ShellCommandResult run(PrintWriter out, PrintWriter err, String[] args) {
-        if (args.length != 2) {
+        if (args.length < 2) {
             return invalidArgsError(HELP_ECHO, err, COMMAND_ECHO, args);
         }
-        String message = args[1];
+        String message = concatenateMessages(args);
         if (TextUtils.isEmpty(message)) {
             return invalidArgsError(HELP_ECHO, err, COMMAND_ECHO, args);
         }
@@ -67,5 +67,17 @@ public final class EchoCommand extends AbstractShellCommand {
     @Override
     public String getCommandHelp() {
         return HELP_ECHO;
+    }
+
+    private String concatenateMessages(String[] args) {
+        StringBuilder sb = new StringBuilder();
+        // Start with index 1, index 0 is the command arg
+        for (int i = 1; i < args.length; i++) {
+            if (i > 1) {
+                sb.append(" ");
+            }
+            sb.append(args[i]);
+        }
+        return sb.toString();
     }
 }

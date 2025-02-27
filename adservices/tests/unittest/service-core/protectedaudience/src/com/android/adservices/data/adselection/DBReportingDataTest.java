@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.adselection;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
@@ -23,9 +25,6 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 public class DBReportingDataTest {
@@ -35,9 +34,8 @@ public class DBReportingDataTest {
             CommonFixture.getUri(AdSelectionConfigFixture.BUYER, REPORTING_FRAGMENT);
     private static final Uri SELLER_REPORTING_URI_1 =
             CommonFixture.getUri(AdSelectionConfigFixture.SELLER, REPORTING_FRAGMENT);
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    private static final Uri COMPONENT_REPORTING_URI_1 =
+            CommonFixture.getUri(AdSelectionConfigFixture.COMPONENT_SELLER_1, REPORTING_FRAGMENT);
 
     @Test
     public void testBuild_unsetAdSelectionId_throwsISE() {
@@ -52,17 +50,6 @@ public class DBReportingDataTest {
                         .setBuyerReportingUri(BUYER_REPORTING_URI_1)
                         .setSellerReportingUri(SELLER_REPORTING_URI_1)
                         .build();
-
-        assertEquals(AD_SELECTION_ID_1, reportingData.getAdSelectionId());
-        assertEquals(BUYER_REPORTING_URI_1, reportingData.getBuyerReportingUri());
-        assertEquals(SELLER_REPORTING_URI_1, reportingData.getSellerReportingUri());
-    }
-
-    @Test
-    public void testCreate_success() {
-        DBReportingData reportingData =
-                DBReportingData.create(
-                        AD_SELECTION_ID_1, SELLER_REPORTING_URI_1, BUYER_REPORTING_URI_1);
 
         assertEquals(AD_SELECTION_ID_1, reportingData.getAdSelectionId());
         assertEquals(BUYER_REPORTING_URI_1, reportingData.getBuyerReportingUri());
@@ -98,22 +85,72 @@ public class DBReportingDataTest {
     }
 
     @Test
-    public void testCreate_sellerEmptyUri_success() {
+    public void testCreate_withComponentSeller_success() {
         DBReportingData reportingData =
-                DBReportingData.create(AD_SELECTION_ID_1, Uri.EMPTY, BUYER_REPORTING_URI_1);
+                DBReportingData.create(
+                        AD_SELECTION_ID_1,
+                        SELLER_REPORTING_URI_1,
+                        BUYER_REPORTING_URI_1,
+                        COMPONENT_REPORTING_URI_1);
 
-        assertEquals(AD_SELECTION_ID_1, reportingData.getAdSelectionId());
-        assertEquals(BUYER_REPORTING_URI_1, reportingData.getBuyerReportingUri());
-        assertEquals(Uri.EMPTY, reportingData.getSellerReportingUri());
+        assertWithMessage("Ad selection id")
+                .that(reportingData.getAdSelectionId())
+                .isEqualTo(AD_SELECTION_ID_1);
+        assertWithMessage("Buyer reporting uri")
+                .that(reportingData.getBuyerReportingUri())
+                .isEqualTo(BUYER_REPORTING_URI_1);
+        assertWithMessage("Seller reporting uri")
+                .that(reportingData.getSellerReportingUri())
+                .isEqualTo(SELLER_REPORTING_URI_1);
+        assertWithMessage("Component reporting uri")
+                .that(reportingData.getComponentSellerReportingUri())
+                .isEqualTo(COMPONENT_REPORTING_URI_1);
     }
 
     @Test
-    public void testCreate_buyerEmptyUri_success() {
+    public void testBuild_withComponentSeller_success() {
         DBReportingData reportingData =
-                DBReportingData.create(AD_SELECTION_ID_1, SELLER_REPORTING_URI_1, Uri.EMPTY);
+                DBReportingData.builder()
+                        .setAdSelectionId(AD_SELECTION_ID_1)
+                        .setBuyerReportingUri(BUYER_REPORTING_URI_1)
+                        .setSellerReportingUri(SELLER_REPORTING_URI_1)
+                        .setComponentSellerReportingUri(COMPONENT_REPORTING_URI_1)
+                        .build();
 
-        assertEquals(AD_SELECTION_ID_1, reportingData.getAdSelectionId());
-        assertEquals(Uri.EMPTY, reportingData.getBuyerReportingUri());
-        assertEquals(SELLER_REPORTING_URI_1, reportingData.getSellerReportingUri());
+        assertWithMessage("Ad selection id")
+                .that(reportingData.getAdSelectionId())
+                .isEqualTo(AD_SELECTION_ID_1);
+        assertWithMessage("Buyer reporting uri")
+                .that(reportingData.getBuyerReportingUri())
+                .isEqualTo(BUYER_REPORTING_URI_1);
+        assertWithMessage("Seller reporting uri")
+                .that(reportingData.getSellerReportingUri())
+                .isEqualTo(SELLER_REPORTING_URI_1);
+        assertWithMessage("Component reporting uri")
+                .that(reportingData.getComponentSellerReportingUri())
+                .isEqualTo(COMPONENT_REPORTING_URI_1);
+    }
+
+    @Test
+    public void testBuild_emptyComponentSeller_success() {
+        DBReportingData reportingData =
+                DBReportingData.builder()
+                        .setAdSelectionId(AD_SELECTION_ID_1)
+                        .setBuyerReportingUri(BUYER_REPORTING_URI_1)
+                        .setSellerReportingUri(SELLER_REPORTING_URI_1)
+                        .build();
+
+        assertWithMessage("Ad selection id")
+                .that(reportingData.getAdSelectionId())
+                .isEqualTo(AD_SELECTION_ID_1);
+        assertWithMessage("Buyer reporting uri")
+                .that(reportingData.getBuyerReportingUri())
+                .isEqualTo(BUYER_REPORTING_URI_1);
+        assertWithMessage("Seller reporting uri")
+                .that(reportingData.getSellerReportingUri())
+                .isEqualTo(SELLER_REPORTING_URI_1);
+        assertWithMessage("Component reporting uri")
+                .that(reportingData.getComponentSellerReportingUri())
+                .isNull();
     }
 }

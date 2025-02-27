@@ -66,13 +66,16 @@ public final class AbstractLoggingUsageRuleTest extends SharedExtendedMockitoTes
     @Test
     public void testEvaluate_withSkipAnnotation_gracefullyExits() throws Throwable {
         when(mDescription.isTest()).thenReturn(true);
-        doReturn(mAnnotation).when(() -> TestHelper.getAnnotation(any(), any()));
+        doReturn(mAnnotation)
+                .when(() -> TestHelper.getAnnotationFromAnywhere(any(Description.class), any()));
         AbstractLoggingUsageRule rule =
                 new ConcreteLoggingUsageRule(ImmutableList.of(mLogVerifier1));
 
         rule.evaluate(mBaseStatement, mDescription);
 
-        mBaseStatement.assertNotEvaluated();
+        // Base should still be evaluated
+        mBaseStatement.assertEvaluated();
+        // No setup work and verification should take place
         verifyZeroInteractions(mLogVerifier1);
     }
 
@@ -83,7 +86,8 @@ public final class AbstractLoggingUsageRuleTest extends SharedExtendedMockitoTes
 
         rule.evaluate(mBaseStatement, mDescription);
 
-        mBaseStatement.assertNotEvaluated();
+        // Base should still be evaluated
+        mBaseStatement.assertEvaluated();
     }
 
     @Test

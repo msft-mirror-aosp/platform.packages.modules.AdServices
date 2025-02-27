@@ -30,7 +30,6 @@ import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActiv
 import com.android.adservices.ui.settings.delegates.MainActionDelegate;
 
 /** Fragment for the main view of the AdServices Settings App. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesSettingsMainFragment extends Fragment {
 

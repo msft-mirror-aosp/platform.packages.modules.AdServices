@@ -19,6 +19,10 @@ package com.android.adservices.ohttp;
 import static com.android.adservices.ohttp.ObliviousHttpTestFixtures.SERVER_PRIVATE_KEY;
 import static com.android.adservices.ohttp.ObliviousHttpTestFixtures.getTestVectors;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import static org.junit.Assert.assertThrows;
+
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
 import com.android.adservices.service.FlagsFactory;
@@ -26,7 +30,6 @@ import com.android.modules.utils.testing.ExtendedMockitoRule;
 
 import com.google.common.io.BaseEncoding;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,7 +39,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 
 @ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
-public class ObliviousHttpGatewayTest extends AdServicesExtendedMockitoTestCase {
+public final class ObliviousHttpGatewayTest extends AdServicesExtendedMockitoTestCase {
 
     @Before
     public void setExpectations() {
@@ -64,8 +67,8 @@ public class ObliviousHttpGatewayTest extends AdServicesExtendedMockitoTestCase 
                     ObliviousHttpGateway.decrypt(
                             OhttpGatewayPrivateKey.create(keyBytes), request.serialize());
 
-            Assert.assertEquals(
-                    testVector.plainText, new String(decrypted, StandardCharsets.UTF_8));
+            assertThat(new String(decrypted, StandardCharsets.UTF_8))
+                    .isEqualTo(testVector.plainText);
         }
     }
 
@@ -90,8 +93,8 @@ public class ObliviousHttpGatewayTest extends AdServicesExtendedMockitoTestCase 
                     ObliviousHttpGateway.decrypt(
                             OhttpGatewayPrivateKey.create(keyBytes), request.serialize());
 
-            Assert.assertEquals(
-                    testVector.plainText, new String(decrypted, StandardCharsets.UTF_8));
+            assertThat(new String(decrypted, StandardCharsets.UTF_8))
+                    .isEqualTo(testVector.plainText);
         }
     }
 
@@ -120,9 +123,8 @@ public class ObliviousHttpGatewayTest extends AdServicesExtendedMockitoTestCase 
             byte[] clientDecrypted =
                     client.decryptObliviousHttpResponse(serverEncrypted, request.requestContext());
 
-            Assert.assertEquals(
-                    testVector.responsePlainText,
-                    new String(clientDecrypted, StandardCharsets.UTF_8));
+            assertThat(new String(clientDecrypted, StandardCharsets.UTF_8))
+                    .isEqualTo(testVector.responsePlainText);
         }
     }
 
@@ -152,9 +154,8 @@ public class ObliviousHttpGatewayTest extends AdServicesExtendedMockitoTestCase 
             byte[] clientDecrypted =
                     client.decryptObliviousHttpResponse(serverEncrypted, request.requestContext());
 
-            Assert.assertEquals(
-                    testVector.responsePlainText,
-                    new String(clientDecrypted, StandardCharsets.UTF_8));
+            assertThat(new String(clientDecrypted, StandardCharsets.UTF_8))
+                    .isEqualTo(testVector.responsePlainText);
         }
     }
 
@@ -170,7 +171,7 @@ public class ObliviousHttpGatewayTest extends AdServicesExtendedMockitoTestCase 
         ObliviousHttpRequest request =
                 client.createObliviousHttpRequest(plainTextBytes, seedBytes, hasMediaTypeChanged);
 
-        Assert.assertThrows(
+        assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         ObliviousHttpGateway.encrypt(
@@ -193,7 +194,7 @@ public class ObliviousHttpGatewayTest extends AdServicesExtendedMockitoTestCase 
         ObliviousHttpRequest request =
                 client.createObliviousHttpRequest(plainTextBytes, seedBytes, hasMediaTypeChanged);
 
-        Assert.assertThrows(
+        assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         ObliviousHttpGateway.encrypt(

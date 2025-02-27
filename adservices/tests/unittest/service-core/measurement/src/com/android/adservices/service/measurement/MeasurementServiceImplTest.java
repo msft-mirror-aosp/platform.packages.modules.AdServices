@@ -2029,6 +2029,7 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
                 mMockConsentManager,
                 mMockThrottler,
                 new CachedFlags(mMockFlags),
+                mMockDebugFlags,
                 mMockAdServicesLogger,
                 mMockAppImportanceFilter,
                 mDevContextFilter,

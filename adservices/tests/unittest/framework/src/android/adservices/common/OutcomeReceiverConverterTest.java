@@ -16,58 +16,15 @@
 
 package android.adservices.common;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import android.os.OutcomeReceiver;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
-import java.util.concurrent.CountDownLatch;
-
-@RequiresSdkLevelAtLeastS
 @SuppressWarnings("NewApi")
 public class OutcomeReceiverConverterTest extends AdServicesUnitTestCase {
-    @Test
-    public void testToAdServicesOutcomeReceiverNullInput() {
-        expect.that(OutcomeReceiverConverter.toAdServicesOutcomeReceiver(null)).isNull();
-    }
-
-    @Test
-    public void testToAdServicesOutcomeReceiver() {
-        Object obj = new Object();
-        CountDownLatch resultLatch = new CountDownLatch(1);
-
-        Exception error = new Exception();
-        CountDownLatch errorLatch = new CountDownLatch(1);
-
-        OutcomeReceiver<Object, Exception> outcomeReceiver =
-                new OutcomeReceiver<>() {
-                    @Override
-                    public void onResult(Object result) {
-                        assertThat(result).isSameInstanceAs(obj);
-                        resultLatch.countDown();
-                    }
-
-                    @Override
-                    public void onError(Exception e) {
-                        assertThat(e).isSameInstanceAs(error);
-                        errorLatch.countDown();
-                    }
-                };
-
-        AdServicesOutcomeReceiver<Object, Exception> converted =
-                OutcomeReceiverConverter.toAdServicesOutcomeReceiver(outcomeReceiver);
-        converted.onResult(obj);
-        expect.withMessage("result callback").that(resultLatch.getCount()).isEqualTo(0);
-
-        converted.onError(error);
-        expect.withMessage("error callback").that(errorLatch.getCount()).isEqualTo(0);
-    }
-
     @Test
     public void testToOutcomeReceiverNullInput() {
         expect.that(OutcomeReceiverConverter.toOutcomeReceiver(null)).isNull();
@@ -78,8 +35,8 @@ public class OutcomeReceiverConverterTest extends AdServicesUnitTestCase {
         Object obj = new Object();
         AdServicesOutcomeReceiverForTests<Object> adServicesOutcomeReceiver1 =
                 new AdServicesOutcomeReceiverForTests<>();
-        OutcomeReceiver<Object, Exception> converted1 = OutcomeReceiverConverter.toOutcomeReceiver(
-                adServicesOutcomeReceiver1);
+        OutcomeReceiver<Object, Exception> converted1 =
+                OutcomeReceiverConverter.toOutcomeReceiver(adServicesOutcomeReceiver1);
 
         converted1.onResult(obj);
         expect.withMessage("result callback").that(

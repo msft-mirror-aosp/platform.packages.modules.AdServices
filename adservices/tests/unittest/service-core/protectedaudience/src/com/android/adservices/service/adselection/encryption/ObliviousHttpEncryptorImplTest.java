@@ -34,7 +34,6 @@ import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.devapi.DevContext;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.io.BaseEncoding;
@@ -49,7 +48,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.ExecutorService;
 
 @SpyStatic(FlagsFactory.class)
-@RequiresSdkLevelAtLeastS
 public class ObliviousHttpEncryptorImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String SERVER_PUBLIC_KEY =

@@ -16,14 +16,19 @@
 
 package com.android.adservices.ohttp.algorithms;
 
-import org.junit.Assert;
+import static com.google.common.truth.Truth.assertThat;
+
+import static org.junit.Assert.assertThrows;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
+
 import org.junit.Test;
 
-public class KemAlgorithmSpecTest {
+public final class KemAlgorithmSpecTest extends AdServicesUnitTestCase {
 
     @Test
     public void get_unsupportedId_throwsError() {
-        Assert.assertThrows(UnsupportedHpkeAlgorithmException.class, () -> KemAlgorithmSpec.get(1));
+        assertThrows(UnsupportedHpkeAlgorithmException.class, () -> KemAlgorithmSpec.get(1));
     }
 
     @Test
@@ -31,12 +36,11 @@ public class KemAlgorithmSpecTest {
         KemAlgorithmSpec kemAlgorithmSpec =
                 KemAlgorithmSpec.get(KemAlgorithmSpec.DHKEM_X25519_HKDF_SHA256_IDENTIFIER);
 
-        Assert.assertEquals(kemAlgorithmSpec.encapsulatedKeyLength(), 32);
-        Assert.assertEquals(kemAlgorithmSpec.privateKeyLength(), 32);
-        Assert.assertEquals(kemAlgorithmSpec.publicKeyLength(), 32);
-        Assert.assertEquals(kemAlgorithmSpec.secretLength(), 32);
-        Assert.assertEquals(
-                kemAlgorithmSpec.identifier(),
-                KemAlgorithmSpec.DHKEM_X25519_HKDF_SHA256_IDENTIFIER);
+        assertThat(kemAlgorithmSpec.encapsulatedKeyLength()).isEqualTo(32);
+        assertThat(kemAlgorithmSpec.privateKeyLength()).isEqualTo(32);
+        assertThat(kemAlgorithmSpec.publicKeyLength()).isEqualTo(32);
+        assertThat(kemAlgorithmSpec.secretLength()).isEqualTo(32);
+        assertThat(kemAlgorithmSpec.identifier())
+                .isEqualTo(KemAlgorithmSpec.DHKEM_X25519_HKDF_SHA256_IDENTIFIER);
     }
 }

@@ -77,6 +77,7 @@ import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEven
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerImpl;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
@@ -116,6 +117,8 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
     private static final IsolateSettings ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_ENABLED =
             IsolateSettings.forMaxHeapSizeEnforcementEnabled(
                     ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+    private static final int PAS_ENCODING_SOURCE_TYPE =
+            AdsRelevanceStatusUtils.PAS_ENCODING_SOURCE_TYPE_ENCODING_JOB_SERVICE;
 
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
@@ -173,6 +176,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
     private Flags mFakeFlags;
     private EnrollmentDao mEnrollmentDao;
     private Clock mClock;
+    private ForcedEncoder mForcedEncoder;
 
     @Before
     public void setup() {
@@ -206,6 +210,13 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(mBackgroundExecutorService, 2000, 2000, 10000);
         mFakeFlags = FakeFlagsFactory.getFlagsForTest();
+        mForcedEncoder =
+                new ForcedEncoderFactory(
+                                mFakeFlags.getFledgeEnableForcedEncodingAfterSignalsUpdate(),
+                                mFakeFlags
+                                        .getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds(),
+                                mSpyContext)
+                        .createInstance();
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
                         mEncoderPersistenceDao,
@@ -222,14 +233,17 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mEncoderLogicHandler,
                         mSpyContext,
                         AdServicesExecutors.getBackgroundExecutor(),
-                        /* isCompletionBroadcastEnabled= */ false);
+                        /* isCompletionBroadcastEnabled= */ false,
+                        mForcedEncoder,
+                        false);
         mSignalEvictionController = new SignalEvictionController(ImmutableList.of(), 0, 0);
         mUpdateProcessingOrchestrator =
                 new UpdateProcessingOrchestrator(
                         mSignalsDao,
                         mUpdateProcessorSelector,
                         mUpdateEncoderEventHandler,
-                        mSignalEvictionController);
+                        mSignalEvictionController,
+                        mForcedEncoder);
         mAdtechUriValidator = new AdTechUriValidator("", "", "", "");
         mFledgeAuthorizationFilter =
                 ExtendedMockito.spy(
@@ -272,6 +286,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         AdServicesExecutors.getBackgroundExecutor(),
                         mAdServicesLoggerImplMock,
                         mFlagsWithProtectedSignalsAndEncodingEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mProtectedSignalsServiceFilter,
                         mEnrollmentDao,
@@ -419,7 +434,9 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                 times(1));
 
         // Manually trigger encoding job worker to validate encoding gets done
-        mPeriodicEncodingJobWorker.encodeProtectedSignals().get(5, TimeUnit.SECONDS);
+        mPeriodicEncodingJobWorker
+                .encodeProtectedSignals(PAS_ENCODING_SOURCE_TYPE)
+                .get(5, TimeUnit.SECONDS);
 
         // Validate that the encoded results are correctly persisted
         byte[] payload = mEncodedPayloadDao.getEncodedPayload(BUYER).getEncodedPayload();
@@ -521,7 +538,9 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
         assertEquals("Latch timed out but did not countdown", 0, updateEventLatch1.getCount());
 
         // Manually trigger encoding job worker to validate encoding gets done
-        mPeriodicEncodingJobWorker.encodeProtectedSignals().get(5, TimeUnit.SECONDS);
+        mPeriodicEncodingJobWorker
+                .encodeProtectedSignals(PAS_ENCODING_SOURCE_TYPE)
+                .get(5, TimeUnit.SECONDS);
 
         // Validate that the encoded results are correctly persisted
         byte[] payload1A = mEncodedPayloadDao.getEncodedPayload(BUYER).getEncodedPayload();
@@ -531,7 +550,9 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
         callForUri(uri2);
 
         // Manually trigger encoding job worker to check the encoding logic is still the same
-        mPeriodicEncodingJobWorker.encodeProtectedSignals().get(5, TimeUnit.SECONDS);
+        mPeriodicEncodingJobWorker
+                .encodeProtectedSignals(PAS_ENCODING_SOURCE_TYPE)
+                .get(5, TimeUnit.SECONDS);
 
         // Validate that the encoded results are correctly persisted
         byte[] payload1B = mEncodedPayloadDao.getEncodedPayload(BUYER).getEncodedPayload();
@@ -553,7 +574,9 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
         assertEquals("Latch timed out but did not countdown", 0, updateEventLatch2.getCount());
 
         // Manually trigger encoding job worker to check the encoding logic is updated
-        mPeriodicEncodingJobWorker.encodeProtectedSignals().get(5, TimeUnit.SECONDS);
+        mPeriodicEncodingJobWorker
+                .encodeProtectedSignals(PAS_ENCODING_SOURCE_TYPE)
+                .get(5, TimeUnit.SECONDS);
 
         // Validate that the encoded results are correctly persisted, and we used the second encoder
         byte[] payload2 = mEncodedPayloadDao.getEncodedPayload(BUYER).getEncodedPayload();
@@ -670,7 +693,9 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mAdServicesLoggerMock);
 
         // Manually trigger encoding job worker to validate encoding gets done
-        jobWorkerWithLargeTimeWindow.encodeProtectedSignals().get(5, TimeUnit.SECONDS);
+        jobWorkerWithLargeTimeWindow
+                .encodeProtectedSignals(PAS_ENCODING_SOURCE_TYPE)
+                .get(5, TimeUnit.SECONDS);
 
         // Validate that the encoded results are correctly persisted
         DBEncodedPayload firstEncodingRun = mEncodedPayloadDao.getEncodedPayload(BUYER);
@@ -707,7 +732,9 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mAdServicesLoggerMock);
 
         // Manually trigger encoding job worker to validate encoding gets done
-        jobWorkerWithTinyTimeWindow.encodeProtectedSignals().get(5, TimeUnit.SECONDS);
+        jobWorkerWithTinyTimeWindow
+                .encodeProtectedSignals(PAS_ENCODING_SOURCE_TYPE)
+                .get(5, TimeUnit.SECONDS);
 
         // Validate that the encoded results are correctly persisted
         DBEncodedPayload secondEncodingRun = mEncodedPayloadDao.getEncodedPayload(BUYER);

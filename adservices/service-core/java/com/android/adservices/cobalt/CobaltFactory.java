@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.cobalt.CobaltLogger;
@@ -32,6 +33,7 @@ import com.android.cobalt.CobaltPipelineType;
 import com.android.cobalt.crypto.HpkeEncrypter;
 import com.android.cobalt.data.DataService;
 import com.android.cobalt.domain.Project;
+import com.android.cobalt.domain.ReportIdentifier;
 import com.android.cobalt.impl.CobaltLoggerImpl;
 import com.android.cobalt.impl.CobaltPeriodicJobImpl;
 import com.android.cobalt.observations.PrivacyGenerator;
@@ -39,6 +41,9 @@ import com.android.cobalt.system.SystemClockImpl;
 import com.android.cobalt.system.SystemData;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
 import java.security.SecureRandom;
 import java.time.Duration;
@@ -50,6 +55,7 @@ import java.util.concurrent.ScheduledExecutorService;
 /** Factory for Cobalt's logger and periodic job implementations. */
 public final class CobaltFactory {
     private static final Object SINGLETON_LOCK = new Object();
+    private static final String TAG = CobaltFactory.class.getSimpleName();
 
     private static final long APEX_VERSION_WHEN_NOT_FOUND = -1L;
 
@@ -65,6 +71,7 @@ public final class CobaltFactory {
     private static DataService sSingletonDataService;
     private static SecureRandom sSingletonSecureRandom;
     private static SystemData sSingletonSystemData;
+    private static ImmutableList<ReportIdentifier> sSingletonReportsToIgnore;
 
     @GuardedBy("SINGLETON_LOCK")
     private static CobaltLogger sSingletonCobaltLogger;
@@ -77,6 +84,8 @@ public final class CobaltFactory {
      *
      * @throws CobaltInitializationException if an unrecoverable errors occurs during initialization
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static CobaltLogger getCobaltLogger(Context context, Flags flags)
             throws CobaltInitializationException {
         Objects.requireNonNull(context);
@@ -85,15 +94,14 @@ public final class CobaltFactory {
             if (sSingletonCobaltLogger == null) {
                 sSingletonCobaltLogger =
                         new CobaltLoggerImpl(
-                                getRegistry(context),
+                                getRegistry(context, flags),
                                 CobaltReleaseStages.getReleaseStage(
                                         flags.getAdservicesReleaseStageForCobalt()),
                                 getDataService(context, flags),
                                 getSystemData(context),
                                 getExecutor(),
                                 new SystemClockImpl(),
-                                // TODO(b/343722587): Parse reportsToIgnore from flags.
-                                List.of(),
+                                getReportsToIgnore(flags),
                                 flags.getCobaltLoggingEnabled());
             }
             return sSingletonCobaltLogger;
@@ -108,6 +116,8 @@ public final class CobaltFactory {
      *
      * @throws CobaltInitializationException if an unrecoverable errors occurs during initialization
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static CobaltPeriodicJob getCobaltPeriodicJob(Context context, Flags flags)
             throws CobaltInitializationException {
         Objects.requireNonNull(context);
@@ -116,7 +126,7 @@ public final class CobaltFactory {
             if (sSingletonCobaltPeriodicJob == null) {
                 sSingletonCobaltPeriodicJob =
                         new CobaltPeriodicJobImpl(
-                                getRegistry(context),
+                                getRegistry(context, flags),
                                 CobaltReleaseStages.getReleaseStage(
                                         flags.getAdservicesReleaseStageForCobalt()),
                                 getDataService(context, flags),
@@ -134,8 +144,7 @@ public final class CobaltFactory {
                                 Duration.ofMillis(flags.getCobaltUploadServiceUnbindDelayMs()),
                                 new CobaltOperationLoggerImpl(
                                         flags.getCobaltOperationalLoggingEnabled()),
-                                // TODO(b/343722587): Parse reportsToIgnore from flags.
-                                List.of(),
+                                getReportsToIgnore(flags),
                                 flags.getCobaltLoggingEnabled());
             }
             return sSingletonCobaltPeriodicJob;
@@ -152,9 +161,10 @@ public final class CobaltFactory {
         return AdServicesExecutors.getScheduler();
     }
 
-    private static Project getRegistry(Context context) throws CobaltInitializationException {
+    private static Project getRegistry(Context context, Flags flags)
+            throws CobaltInitializationException {
         if (sSingletonCobaltRegistryProject == null) {
-            sSingletonCobaltRegistryProject = CobaltRegistryLoader.getRegistry(context);
+            sSingletonCobaltRegistryProject = CobaltRegistryLoader.getRegistry(context, flags);
         }
         return sSingletonCobaltRegistryProject;
     }
@@ -189,12 +199,57 @@ public final class CobaltFactory {
         return sSingletonSystemData;
     }
 
+    private static ImmutableList<ReportIdentifier> getReportsToIgnore(Flags flags) {
+        if (sSingletonReportsToIgnore == null) {
+            sSingletonReportsToIgnore = parseReportsToIgnore(flags);
+        }
+
+        return sSingletonReportsToIgnore;
+    }
+
+    static ImmutableList<ReportIdentifier> parseReportsToIgnore(Flags flags) {
+        ImmutableList.Builder<ReportIdentifier> reportsToIgnore = ImmutableList.builder();
+        String flag =
+                Strings.nullToEmpty(flags.getCobaltIgnoredReportIdList()).replaceAll("\\s", "");
+        for (String reportToIgnore : flag.split(",")) {
+            String[] parts = reportToIgnore.split(":");
+            if (parts.length != 4) {
+                LogUtil.e("Report to ignore '%s' skipped, contains too few parts", reportToIgnore);
+                continue;
+            }
+
+            try {
+                ReportIdentifier reportIdentifier =
+                        ReportIdentifier.create(
+                                Integer.parseInt(parts[0]),
+                                Integer.parseInt(parts[1]),
+                                Integer.parseInt(parts[2]),
+                                Integer.parseInt(parts[3]));
+                if (reportIdentifier.customerId() >= 0
+                        && reportIdentifier.projectId() >= 0
+                        && reportIdentifier.metricId() >= 0
+                        && reportIdentifier.reportId() >= 0) {
+                    reportsToIgnore.add(reportIdentifier);
+                } else {
+                    LogUtil.e(
+                            "Report to ignore '%s' skipped, contains negative integer",
+                            reportToIgnore);
+                }
+            } catch (NumberFormatException e) {
+                LogUtil.e(e, "Failed to parse int from report to ignore '%s'", reportToIgnore);
+            }
+        }
+        return reportsToIgnore.build();
+    }
+
     /**
      * Returns the {@code Adservices} APEX version in String. If {@code Adservices} is not
      * available, returns {@code Extservices} APEX version. Otherwise return {@code
      * APEX_VERSION_WHEN_NOT_FOUND} if {@code Adservices} nor {@code Extservices} are not available.
      */
     // TODO(b/323567786): Move this method to a common util class.
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     @VisibleForTesting
     public static String computeApexVersion(Context context) {
         PackageManager packageManager = context.getPackageManager();

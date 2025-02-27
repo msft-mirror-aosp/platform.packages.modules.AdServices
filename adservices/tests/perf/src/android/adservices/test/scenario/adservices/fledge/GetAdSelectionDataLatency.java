@@ -80,15 +80,17 @@ public class GetAdSelectionDataLatency {
                             // AdServices process.
                             new CleanPackageRule(
                                     AdservicesTestHelper.getAdServicesPackageName(CONTEXT),
-                                    /* clearOnStarting = */ true,
-                                    /* clearOnFinished = */ false))
+                                    /* clearOnStarting= */ true,
+                                    /* clearOnFinished= */ false))
                     .around(new SelectAdsFlagRule());
 
     @BeforeClass
     public static void setupBeforeClass() {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+                .adoptShellPermissionIdentity(
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG);
     }
 
     private static final String TAG = "SelectAds";

@@ -1,0 +1,219 @@
+{
+  "description": "app-web conversion with both side debug keys enforcement",
+  "phflags_override": {
+    "measurement_debug_key_ad_id_matching_enrollment_blocklist": "",
+    "Measurement__enable_both_side_debug_keys_in_reports": "true"
+  },
+  "input": {
+    "sources": [
+      // Source A (App): Debug permission is (true) and debug key is (present).
+      {
+        "timestamp": "1",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "source.test",
+          "platform_ad_id": "12345678-1234-1234-1234-123456789012"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "source_event_id": "1",
+                "priority": "101",
+                "web_destination": "https://example.webDestination1.test",
+                "aggregation_keys": {
+                  "a": "0x1"
+                },
+                "debug_key": "111"
+              }
+            }
+          }
+        ]
+      },
+      // Source B (App): Debug permission is (true) and debug key is (present).
+      {
+        "timestamp": "2",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "source.test",
+          "platform_ad_id": "12345678-1234-1234-1234-123456789012"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "source_event_id": "2",
+                "priority": "101",
+                "web_destination": "https://example.webDestination2.test",
+                "aggregation_keys": {
+                  "a": "0x2"
+                },
+                "debug_key": "222"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "web_triggers": [
+      // Trigger A (Web): debug permission is (true) and debug key is (present).
+      {
+        "timestamp": "1000",
+        "registration_request": {
+          "trigger_params": [
+            {
+              "attribution_src_url": "https://www.ad-tech1.test"
+            }
+          ],
+          "registrant": "destination.test",
+          "destination_origin": "https://example.webDestination1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "debug_permission":  true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_trigger_data": [
+                  {
+                    "source_keys": ["a"],
+                    "key_piece": "0x11"
+                  }
+                ],
+                "aggregatable_values": {
+                  "a": 111
+                },
+                "debug_key": "111",
+                "debug_ad_id": "9e2c3718906d618c5745ecc69971f083e9b249029c123486d949c453e55cb882"
+              }
+            }
+          }
+        ]
+      },
+      // Trigger B (Web): AR debug permission is (false) and debug key is (present).
+      {
+        "timestamp": "2000",
+        "registration_request": {
+          "trigger_params": [
+            {
+              "attribution_src_url": "https://www.ad-tech1.test"
+            }
+          ],
+          "registrant": "destination.test",
+          "destination_origin": "https://example.webDestination2.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_trigger_data": [
+                  {
+                    "source_keys": ["a"],
+                    "key_piece": "0x22"
+                  }
+                ],
+                "aggregatable_values": {
+                  "a": 222
+                },
+                "debug_key": "222",
+                "debug_ad_id": "9e2c3718906d618c5745ecc69971f083e9b249029c123486d949c453e55cb882"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "aggregatable_results": [
+      // Report (Source A + Trigger A)
+      {
+        "report_time": "3601000",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "https://webdestination1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "3601",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x11",
+              "value": 111
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ],
+          "source_debug_key": "111",
+          "trigger_debug_key": "111"
+        }
+      },
+      // Report (Source B + Trigger B)
+      {
+        "report_time": "3602000",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "https://webdestination2.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "3602",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x22",
+              "value": 222
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ]
+        }
+      }
+    ],
+    "debug_aggregatable_results": [
+      // Report (Source A + Trigger A)
+      {
+        "report_time": "1000",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "https://webdestination1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "3601",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x11",
+              "value": 111
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ],
+          "source_debug_key": "111",
+          "trigger_debug_key": "111"
+        }
+      }
+    ]
+  }
+}

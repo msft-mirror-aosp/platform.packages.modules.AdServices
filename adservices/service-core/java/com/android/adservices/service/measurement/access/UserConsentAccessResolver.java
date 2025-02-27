@@ -32,7 +32,6 @@ import com.android.adservices.service.consent.ConsentManager;
  * #getAccessInfo(Context)} will return true if consent notification was shown and opt-in occurred.
  * Opt-in can happen by default value as well based on the region.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class UserConsentAccessResolver implements IAccessResolver {
     private static final String ERROR_MESSAGE = "User has not consented.";

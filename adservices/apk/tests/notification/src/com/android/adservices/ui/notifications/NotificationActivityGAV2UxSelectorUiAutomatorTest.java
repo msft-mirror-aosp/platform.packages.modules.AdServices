@@ -16,15 +16,17 @@
 package com.android.adservices.ui.notifications;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.ui.util.ApkTestUtil.getString;
 import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.FlakyTest;
@@ -34,20 +36,17 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
-import com.android.adservices.ui.util.AdServicesUiTestCase;
+import com.android.adservices.ui.util.AdservicesNotificationUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
-public final class NotificationActivityGAV2UxSelectorUiAutomatorTest extends AdServicesUiTestCase {
+public final class NotificationActivityGAV2UxSelectorUiAutomatorTest
+        extends AdservicesNotificationUiTestCase {
 
     @Rule(order = 11)
     public final AdServicesFlagsSetterRule flags =
@@ -59,17 +58,9 @@ public final class NotificationActivityGAV2UxSelectorUiAutomatorTest extends AdS
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
                     .setFlag(KEY_U18_UX_ENABLED, true)
                     .setFlag(KEY_PAS_UX_ENABLED, false)
+                    .setFlag(KEY_ADSERVICES_ENABLED, true)
+                    .setFlag(KEY_ENABLE_BACK_COMPAT, true)
                     .setFlag(KEY_DEBUG_UX, "GA_UX");
-
-    @BeforeClass
-    public static void classSetup() throws Exception {
-        NotificationActivityTestUtil.setupBeforeTests();
-    }
-
-    @Before
-    public void setup() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-    }
 
     @Test
     public void euAcceptFlowTest() throws Exception {
@@ -80,12 +71,14 @@ public final class NotificationActivityGAV2UxSelectorUiAutomatorTest extends AdS
                 ApkTestUtil.getElement(
                         mDevice,
                         R.string.notificationUI_confirmation_left_control_button_text);
-        assertThat(leftControlButton).isNotNull();
+        ApkTestUtil.assertNotNull(
+                leftControlButton, R.string.notificationUI_confirmation_left_control_button_text);
         UiObject2 rightControlButton =
                 ApkTestUtil.getElement(
                         mDevice,
                         R.string.notificationUI_confirmation_right_control_button_text);
-        assertThat(rightControlButton).isNotNull();
+        ApkTestUtil.assertNotNull(
+                rightControlButton, R.string.notificationUI_confirmation_right_control_button_text);
 
         rightControlButton.click();
         mDevice.wait(
@@ -98,29 +91,35 @@ public final class NotificationActivityGAV2UxSelectorUiAutomatorTest extends AdS
 
         UiObject2 title2 =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_header_ga_title_eu_v2);
-        assertThat(title2).isNotNull();
+        assertWithMessage("EEA 2nd page title should not be null").that(title2).isNotNull();
 
         // Retrieve new instances to avoid android.support.test.uiautomator.StaleObjectException.
         leftControlButton =
                 ApkTestUtil.getElement(
                         mDevice, R.string.notificationUI_confirmation_left_control_button_text);
-        assertThat(leftControlButton).isNull();
+        assertWithMessage("left button should not there on page top")
+                .that(leftControlButton)
+                .isNull();
         rightControlButton =
                 ApkTestUtil.getElement(
                         mDevice, R.string.notificationUI_confirmation_right_control_button_text);
-        assertThat(rightControlButton).isNull();
+        assertWithMessage("right button should not there on page top")
+                .that(rightControlButton)
+                .isNull();
 
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         leftControlButton =
                 ApkTestUtil.getElement(
                         mDevice, R.string.notificationUI_left_control_button_text_eu);
-        assertThat(leftControlButton).isNotNull();
+        ApkTestUtil.assertNotNull(
+                leftControlButton, R.string.notificationUI_left_control_button_text_eu);
         rightControlButton =
                 ApkTestUtil.getElement(
                         mDevice,
                         R.string.notificationUI_right_control_button_ga_text_eu_v2);
-        assertThat(rightControlButton).isNotNull();
+        ApkTestUtil.assertNotNull(
+                rightControlButton, R.string.notificationUI_right_control_button_ga_text_eu_v2);
 
         rightControlButton.click();
         mDevice.wait(
@@ -133,7 +132,9 @@ public final class NotificationActivityGAV2UxSelectorUiAutomatorTest extends AdS
 
         // Retrieve a new instance to avoid android.support.test.uiautomator.StaleObjectException.
         title2 = ApkTestUtil.getElement(mDevice, R.string.notificationUI_header_ga_title_eu_v2);
-        assertThat(title2).isNull();
+        assertWithMessage("After EEA second page, there should no page exist")
+                .that(title2)
+                .isNull();
     }
 
     @Test
@@ -144,10 +145,12 @@ public final class NotificationActivityGAV2UxSelectorUiAutomatorTest extends AdS
 
         UiObject2 leftControlButton =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_left_control_button_text);
-        assertThat(leftControlButton).isNotNull();
+        ApkTestUtil.assertNotNull(
+                leftControlButton, R.string.notificationUI_left_control_button_text);
         UiObject2 rightControlButton =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_right_control_button_text);
-        assertThat(rightControlButton).isNotNull();
+        ApkTestUtil.assertNotNull(
+                rightControlButton, R.string.notificationUI_right_control_button_text);
 
         leftControlButton.click();
         mDevice.wait(
@@ -156,9 +159,17 @@ public final class NotificationActivityGAV2UxSelectorUiAutomatorTest extends AdS
         UiObject2 topicsTitle =
                 ApkTestUtil.getElement(mDevice, R.string.settingsUI_topics_ga_title);
         ApkTestUtil.scrollTo(mDevice, R.string.settingsUI_topics_ga_title);
-        assertThat(topicsTitle).isNotNull();
+        assertWithMessage(
+                        "notification enter settings should see topics title %s ",
+                        getString(R.string.settingsUI_topics_ga_title))
+                .that(topicsTitle)
+                .isNotNull();
         UiObject2 appsTitle = ApkTestUtil.getElement(mDevice, R.string.settingsUI_apps_ga_title);
         ApkTestUtil.scrollTo(mDevice, R.string.settingsUI_apps_ga_title);
-        assertThat(appsTitle).isNotNull();
+        assertWithMessage(
+                        "notification enter settings should see apps title %s ",
+                        getString(R.string.settingsUI_apps_ga_title))
+                .that(appsTitle)
+                .isNotNull();
     }
 }

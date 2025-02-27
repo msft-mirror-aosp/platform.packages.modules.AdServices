@@ -150,6 +150,9 @@
     },
     {
       "name": "SdkSandboxAuditTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "SdkSandboxRestrictionsHostTest[com.google.android.adservices.apex]"
     }
   ],
   "presubmit": [
@@ -240,6 +243,9 @@
     },
     {
       "name": "SdkSandboxAuditTests"
+    },
+    {
+      "name": "SdkSandboxRestrictionsHostTest"
     }
   ],
   "sdksandbox-postsubmit": [

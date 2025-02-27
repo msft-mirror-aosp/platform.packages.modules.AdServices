@@ -2,8 +2,10 @@
 
 albertkong@google.com
 ardroid@google.com
-bozhaobz@google.com
 chenjiahui@google.com
 tccyp@google.com
+
+# Include "canonical" owners
+per-file *Flags*.java = file:platform/packages/modules/AdServices:OWNERS
 
 per-file AdExtServicesManifest.xml = file: platform/packages/modules/AdServices:/adservices/OWNERS_AD_EXT_SERVICES

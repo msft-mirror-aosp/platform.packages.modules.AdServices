@@ -21,8 +21,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSE
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS;
-import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB;
+import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT;
 import static com.android.adservices.service.FlagsConstants.KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS;
@@ -33,31 +33,21 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_J
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_PROTO_FILE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_PROD_DEBUG_IN_SERVER_AUCTION;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_GET_TOKENS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_BATCH_SIZE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_JOB_SCHEDULING_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
-import static com.android.adservices.service.FlagsConstants.KEY_KANON_FETCH_PARAMETERS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_ENROLLMENT_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH;
@@ -87,12 +77,10 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
@@ -108,12 +96,12 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMME
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -150,12 +138,14 @@ import com.android.modules.utils.build.SdkLevel;
 import com.google.common.collect.ImmutableList;
 
 import java.io.PrintWriter;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /** Flags Implementation that delegates to DeviceConfig. */
@@ -386,6 +376,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getTopicsCleanDBWhenEpochJobSettingsChanged() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED,
+                TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED);
+    }
+
+    @Override
     public boolean getMsmtRegistrationCobaltLoggingEnabled() {
         return getCobaltLoggingEnabled()
                 && getDeviceConfigFlag(
@@ -514,6 +511,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getCobaltEnableApiCallResponseLogging() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COBALT__ENABLE_API_CALL_RESPONSE_LOGGING,
+                COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY);
+    }
+
+    @Override
     @SuppressWarnings("AvoidSystemPropertiesUsage")
     // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public long getMaintenanceJobPeriodMs() {
@@ -549,13 +553,6 @@ public final class PhFlags implements Flags {
         }
 
         return maintenanceJobFlexMs;
-    }
-
-    @Override
-    public boolean getDeveloperModeFeatureEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_DEVELOPER_MODE_FEATURE_ENABLED,
-                DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED);
     }
 
     @Override
@@ -936,13 +933,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementEnableAggregatableReportPayloadPadding() {
-        return getDeviceConfigFlag(
-                KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING,
-                MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING);
-    }
-
-    @Override
     public boolean getMeasurementEnableDestinationRateLimit() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT,
@@ -1018,6 +1008,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT,
                 FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT);
+    }
+
+    @Override
+    public long getFledgeCustomAudiencePerBuyerMaxCount() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT,
+                FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT);
     }
 
     @Override
@@ -1245,6 +1242,43 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeEnableForcedEncodingAfterSignalsUpdate() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE,
+                FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE);
+    }
+
+    @Override
+    public long getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS,
+                FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS);
+    }
+
+    @Override
+    public int getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop() {
+        return getDeviceConfigFlag(
+                FlagsConstants
+                        .KEY_PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP,
+                PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP);
+    }
+
+    @Override
+    public int getProtectedSignalsMaxSignalSizePerBuyerBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES,
+                PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES);
+    }
+
+    @Override
+    public int getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants
+                        .KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES,
+                PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES);
+    }
+
+    @Override
     public int getAdSelectionMaxConcurrentBiddingCount() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT,
@@ -1403,6 +1437,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
+        return getFledgeScheduleCustomAudienceUpdateEnabled()
+                && getDeviceConfigFlag(
+                        FlagsConstants
+                                .KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS,
+                        FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS);
+    }
+
+    @Override
     public long getFledgeScheduleCustomAudienceUpdateJobPeriodMs() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS,
@@ -1421,6 +1464,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
                 FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE);
+    }
+
+    @Override
+    public int getFledgeScheduleCustomAudienceUpdateMaxBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES,
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES);
     }
 
     @Override
@@ -2190,10 +2240,95 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public float getFledgeJoinCustomAudienceRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeFetchAndJoinCustomAudienceRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeScheduleCustomAudienceUpdateRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants
+                        .KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeLeaveCustomAudienceRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeUpdateSignalsRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeSelectAdsRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeSelectAdsWithOutcomesRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeGetAdSelectionDataRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgePersistAdSelectionResultRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeReportImpressionRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
     public float getFledgeReportInteractionRequestPermitsPerSecond() {
         return getPermitsPerSecond(
                 FlagsConstants.KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND,
                 FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeSetAppInstallAdvertisersRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeUpdateAdCounterHistogramRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND);
     }
 
     @SuppressWarnings("AvoidSystemPropertiesUsage")
@@ -2855,6 +2990,48 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnforceForegroundStatusForFetchAndJoinCustomAudience() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE,
+                ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForLeaveCustomAudience() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE,
+                ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForScheduleCustomAudience() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE,
+                ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE);
+    }
+
+    @Override
+    public boolean getEnableCustomAudienceComponentAds() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS,
+                ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS);
+    }
+
+    @Override
+    public int getMaxComponentAdsPerCustomAudience() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE,
+                MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
+    }
+
+    @Override
+    public int getComponentAdRenderIdMaxLengthBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
+                COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES);
+    }
+
+    @Override
     public boolean getFledgeRegisterAdBeaconEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED,
@@ -3037,13 +3214,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getRvcPostOtaNotifAgeCheck() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK,
-                DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK);
-    }
-
-    @Override
     public int getConsentSourceOfTruth() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, DEFAULT_CONSENT_SOURCE_OF_TRUTH);
@@ -3158,10 +3328,10 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementEnableAggregateContributionBudgetCapacity() {
+    public boolean getMeasurementEnableAggregatableNamedBudgets() {
         return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY,
-                MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY);
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS,
+                MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS);
     }
 
     @Override
@@ -3442,6 +3612,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableInstallAttributionOnS() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S,
+                MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S);
+    }
+
+    @Override
     public boolean getMeasurementEnableNavigationReportingOriginCheck() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK,
@@ -3467,6 +3644,19 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH,
                 MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH);
+    }
+
+    @Override
+    public int getMeasurementMaxLengthPerBudgetName() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME, MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME);
+    }
+
+    @Override
+    public int getMeasurementMaxNamedBudgetsPerSourceRegistration() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION,
+                MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION);
     }
 
     @Override
@@ -3541,2354 +3731,32 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
-        writer.println("\t" + FlagsConstants.KEY_PAS_UX_ENABLED + " = " + getPasUxEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED
-                        + " = "
-                        + isU18UxDetentionChannelEnabled());
-        writer.println("\t" + FlagsConstants.KEY_DEBUG_UX + " = " + getDebugUx());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API
-                        + " = "
-                        + getEnableAdServicesSystemApi());
-        writer.println("\t" + FlagsConstants.KEY_U18_UX_ENABLED + " = " + getU18UxEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK
-                        + " = "
-                        + getRvcPostOtaNotifAgeCheck());
-        writer.println(
-                "\t"
-                        + DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE
-                        + " = "
-                        + getConsentNotificationActivityDebugMode());
-        writer.println(
-                "\t"
-                        + DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE
-                        + " = "
-                        + getConsentNotifiedDebugMode());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_CONSENT_NOTIFICATION_RESET_TOKEN
-                        + " = "
-                        + getConsentNotificationResetToken());
-        writer.println("==== AdServices PH Flags Dump Enrollment ====");
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK
-                        + " = "
-                        + isDisableTopicsEnrollmentCheck());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK
-                        + " = "
-                        + getDisableFledgeEnrollmentCheck());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK
-                        + " = "
-                        + isDisableMeasurementEnrollmentCheck());
+    public void dump(PrintWriter writer, @Nullable String[] args) {
+        // First filter out non-getters...
+        Method[] allMethods = Flags.class.getMethods();
+        TreeMap<String, Method> dumpableMethods = new TreeMap<>(); // sorted by method name
+        for (var method : allMethods) {
+            // We could check if starts with is... or get... , but in reality only dump(...) is not
+            // a flag, and some take args (like isEnrollmentBlocklisted(enrollmentId))
+            if (method.getParameterCount() == 0) {
+                dumpableMethods.put(method.getName(), method);
+            }
+        }
 
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED
-                        + " = "
-                        + isEnableEnrollmentTestSeed());
+        // ...then print the count
+        int numberFlags = dumpableMethods.size();
+        writer.printf("%d flags:\n", numberFlags);
 
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED
-                        + " = "
-                        + getEnrollmentMddRecordDeletionEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING
-                        + " = "
-                        + getEnrollmentEnableLimitedLogging());
-        writer.println("==== AdServices PH Flags Dump EncryptionKeys ====");
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS
-                        + " = "
-                        + getEncryptionKeyNetworkConnectTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS
-                        + " = "
-                        + getEncryptionKeyNetworkReadTimeoutMs());
-        writer.println("==== AdServices PH Flags Dump killswitches ====");
-        writer.println(
-                "\t" + FlagsConstants.KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
-        writer.println(
-                "\t" + FlagsConstants.KEY_TOPICS_KILL_SWITCH + " = " + getTopicsKillSwitch());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH
-                        + " = "
-                        + getTopicsOnDeviceClassifierKillSwitch());
-        writer.println("\t" + FlagsConstants.KEY_ADID_KILL_SWITCH + " = " + getAdIdKillSwitch());
-        writer.println(
-                "\t" + FlagsConstants.KEY_APPSETID_KILL_SWITCH + " = " + getAppSetIdKillSwitch());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND
-                        + " = "
-                        + getSdkRequestPermitsPerSecond());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND
-                        + " = "
-                        + getMeasurementRegisterSourceRequestPermitsPerSecond());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND
-                        + " = "
-                        + getMeasurementRegisterWebSourceRequestPermitsPerSecond());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND
-                        + " = "
-                        + getMeasurementRegisterSourcesRequestPermitsPerSecond());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_REGISTER_TRIGGER_REQUEST_PERMITS_PER_SECOND
-                        + " = "
-                        + getMeasurementRegisterTriggerRequestPermitsPerSecond());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND
-                        + " = "
-                        + getMeasurementRegisterWebTriggerRequestPermitsPerSecond());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH
-                        + " = "
-                        + getMddBackgroundTaskKillSwitch());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH
-                        + " = "
-                        + getMddLoggerKillSwitch());
-
-        writer.println("==== AdServices PH Flags Dump AllowList ====");
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST
-                        + " = "
-                        + getPpapiAppSignatureAllowList());
-        writer.println(
-                "\t" + FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST + " = " + getPpapiAppAllowList());
-        writer.println("\t" + FlagsConstants.KEY_PAS_APP_ALLOW_LIST + " = " + getPasAppAllowList());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_AD_ID_API_APP_BLOCK_LIST
-                        + " = "
-                        + getAdIdApiAppBlockList());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST
-                        + " = "
-                        + getMsmtApiAppAllowList());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MSMT_API_APP_BLOCK_LIST
-                        + " = "
-                        + getMsmtApiAppBlockList());
-
-        writer.println("==== AdServices PH Flags Dump MDD related flags: ====");
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MANIFEST_FILE_URL
-                        + " = "
-                        + getMeasurementManifestFileUrl());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL
-                        + " = "
-                        + getUiOtaStringsManifestFileUrl());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL
-                        + " = "
-                        + getUiOtaStringsManifestFileUrl());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_UI_OTA_RESOURCES_FEATURE_ENABLED
-                        + " = "
-                        + getUiOtaResourcesFeatureEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS
-                        + " = "
-                        + getDownloaderConnectionTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_DOWNLOADER_READ_TIMEOUT_MS
-                        + " = "
-                        + getDownloaderReadTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS
-                        + " = "
-                        + getDownloaderMaxDownloadThreads());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL
-                        + " = "
-                        + getMddTopicsClassifierManifestFileUrl());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL
-                        + " = "
-                        + getMddEncryptionKeysManifestFileUrl());
-        writer.println("==== AdServices PH Flags Dump Encryption key related flags ====");
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH
-                        + " = "
-                        + getEncryptionKeyNewEnrollmentFetchKillSwitch());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH
-                        + " = "
-                        + getEncryptionKeyPeriodicFetchKillSwitch());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE
-                        + " = "
-                        + getEncryptionKeyJobRequiredNetworkType());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS
-                        + " = "
-                        + getEncryptionKeyJobPeriodMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS
-                        + " = "
-                        + getEnableMddEncryptionKeys());
-        writer.println("==== AdServices PH Flags Dump Topics related flags ====");
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS
-                        + " = "
-                        + getTopicsEpochJobPeriodMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS
-                        + " = "
-                        + getTopicsEpochJobFlexMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC
-                        + " = "
-                        + getTopicsPercentageForRandomTopic());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_TOPICS_NUMBER_OF_TOP_TOPICS
-                        + " = "
-                        + getTopicsNumberOfTopTopics());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS
-                        + " = "
-                        + getTopicsNumberOfRandomTopics());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS
-                        + " = "
-                        + getTopicsNumberOfLookBackEpochs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_GLOBAL_BLOCKED_TOPIC_IDS
-                        + " = "
-                        + getGlobalBlockedTopicIds());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS
-                        + " = "
-                        + getTopicsDisableDirectAppCalls());
-
-        writer.println("==== AdServices PH Flags Dump Topics Classifier related flags ====");
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS
-                        + " = "
-                        + getClassifierNumberOfTopLabels());
-        writer.println("\t" + FlagsConstants.KEY_CLASSIFIER_TYPE + " = " + getClassifierType());
-        writer.println(
-                "\t" + FlagsConstants.KEY_CLASSIFIER_THRESHOLD + " = " + getClassifierThreshold());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_CLASSIFIER_DESCRIPTION_MAX_LENGTH
-                        + " = "
-                        + getClassifierDescriptionMaxLength());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_CLASSIFIER_DESCRIPTION_MAX_WORDS
-                        + " = "
-                        + getClassifierDescriptionMaxWords());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES
-                        + " = "
-                        + getClassifierForceUseBundledFiles());
-
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS
-                        + " = "
-                        + getEnforceForegroundStatusForTopics());
-
-        writer.println("==== AdServices PH Flags Dump Measurement related flags: ====");
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_DB_SIZE_LIMIT
-                        + " = "
-                        + getMeasurementDbSizeLimit());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_REPORT_RETRY_LIMIT
-                        + " = "
-                        + getMeasurementReportingRetryLimit());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED
-                        + " = "
-                        + getMeasurementReportingRetryLimitEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS
-                        + " = "
-                        + getMeasurementEventMainReportingJobPeriodMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS
-                        + " = "
-                        + getMeasurementEventFallbackReportingJobPeriodMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED
-                        + " = "
-                        + getMeasurementAggregationCoordinatorOriginEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST
-                        + " = "
-                        + getMeasurementAggregationCoordinatorOriginList());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN
-                        + " = "
-                        + getMeasurementDefaultAggregationCoordinatorOrigin());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_AGGREGATION_COORDINATOR_PATH
-                        + " = "
-                        + getMeasurementAggregationCoordinatorPath());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS
-                        + " = "
-                        + getMeasurementAggregateMainReportingJobPeriodMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS
-                        + " = "
-                        + getMeasurementAggregateFallbackReportingJobPeriodMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED
-                        + " = "
-                        + getMeasurementNullAggregateReportEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME
-                        + " = "
-                        + getMeasurementNullAggReportRateInclSourceRegistrationTime());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS
-                        + " = "
-                        + getMeasurementNetworkConnectTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS
-                        + " = "
-                        + getMeasurementNetworkReadTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED
-                        + " = "
-                        + getMeasurementIsClickVerificationEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS
-                        + " = "
-                        + getMeasurementRegistrationInputEventValidWindowMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS
-                        + " = "
-                        + getEnforceForegroundStatusForMeasurementDeleteRegistrations());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS
-                        + " = "
-                        + getEnforceForegroundStatusForMeasurementStatus());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE
-                        + " = "
-                        + getEnforceForegroundStatusForMeasurementRegisterSource());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER
-                        + " = "
-                        + getEnforceForegroundStatusForMeasurementRegisterTrigger());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE
-                        + " = "
-                        + getEnforceForegroundStatusForMeasurementRegisterWebSource());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER
-                        + " = "
-                        + getEnforceForegroundStatusForMeasurementRegisterWebTrigger());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_XNA
-                        + " = "
-                        + getMeasurementEnableXNA());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY
-                        + " = "
-                        + getMeasurementEnableSharedSourceDebugKey());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA
-                        + " = "
-                        + getMeasurementEnableSharedFilterDataKeysXNA());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_DEBUG_REPORT
-                        + " = "
-                        + getMeasurementEnableDebugReport());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT
-                        + " = "
-                        + getMeasurementEnableSourceDebugReport());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT
-                        + " = "
-                        + getMeasurementEnableTriggerDebugReport());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION
-                        + " = "
-                        + getMeasurementEnableReinstallReattribution());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL
-                        + " = "
-                        + getMeasurementEnableMinReportLifespanForUninstall());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS
-                        + " = "
-                        + getMeasurementDataExpiryWindowMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH
-                        + " = "
-                        + getMeasurementRollbackDeletionKillSwitch());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT
-                        + " = "
-                        + getMeasurementDebugJoinKeyHashLimit());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_LIMIT
-                        + " = "
-                        + getMeasurementPlatformDebugAdIdMatchingLimit());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE
-                        + " = "
-                        + getMeasurementEnableAttributionScope());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST
-                        + " = "
-                        + getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED
-                        + " = "
-                        + getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME
-                        + " = "
-                        + getMeasurementNullAggReportRateExclSourceRegistrationTime());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID
-                        + " = "
-                        + getMeasurementEnableTriggerContextId());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID
-                        + " = "
-                        + getMeasurementMaxLengthOfTriggerContextId());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION
-                        + " = "
-                        + getMeasurementEnableOdpWebTriggerRegistration());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS
-                        + " = "
-                        + getAdIdFetcherTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS
-                        + " = "
-                        + getEnableComputeVersionFromMappings());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MAINLINE_TRAIN_VERSION
-                        + " = "
-                        + getMainlineTrainVersion());
-
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ADSERVICES_VERSION_MAPPINGS
-                        + " = "
-                        + getAdservicesVersionMappings());
-
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY
-                        + " = "
-                        + getMeasurementEnableAggregateContributionBudgetCapacity());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA
-                        + " = "
-                        + getMeasurementEnableV1SourceTriggerData());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED
-                        + " = "
-                        + getMeasurementFlexibleEventReportingApiEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING
-                        + " = "
-                        + getMeasurementEnableTriggerDataMatching());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT
-                        + " = "
-                        + getMeasurementFlexApiMaxInformationGainEvent());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION
-                        + " = "
-                        + getMeasurementFlexApiMaxInformationGainNavigation());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT
-                        + " = "
-                        + getMeasurementFlexApiMaxInformationGainDualDestinationEvent());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION
-                        + " = "
-                        + getMeasurementFlexApiMaxInformationGainDualDestinationNavigation());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION
-                        + " = "
-                        + getMeasurementMaxReportStatesPerSourceRegistration());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS
-                        + " = "
-                        + getMeasurementFlexApiMaxEventReports());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS
-                        + " = "
-                        + getMeasurementFlexApiMaxEventReportWindows());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY
-                        + " = "
-                        + getMeasurementFlexApiMaxTriggerDataCardinality());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS
-                        + " = "
-                        + getMeasurementMinimumEventReportWindowInSeconds());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS
-                        + " = "
-                        + getMeasurementMinimumAggregatableReportWindowInSeconds());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST
-                        + " = "
-                        + getWebContextClientAppAllowList());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES
-                        + " = "
-                        + getMaxResponseBasedRegistrationPayloadSizeBytes());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_REGISTRATION_REDIRECTS
-                        + " = "
-                        + getMeasurementMaxRegistrationRedirects());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION
-                        + " = "
-                        + getMeasurementMaxRegistrationsPerJobInvocation());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST
-                        + " = "
-                        + getMeasurementMaxRetriesPerRegistrationRequest());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS
-                        + " = "
-                        + getMeasurementAsyncRegistrationJobTriggerMinDelayMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS
-                        + " = "
-                        + getMeasurementAsyncRegistrationJobTriggerMaxDelayMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING
-                        + " = "
-                        + getMeasurementMaxBytesPerAttributionFilterString());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET
-                        + " = "
-                        + getMeasurementMaxFilterMapsPerFilterSet());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER
-                        + " = "
-                        + getMeasurementMaxValuesPerAttributionFilter());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_FILTERS
-                        + " = "
-                        + getMeasurementMaxAttributionFilters());
-
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID
-                        + " = "
-                        + getMeasurementMaxBytesPerAttributionAggregateKeyId());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION
-                        + " = "
-                        + getMeasurementMaxAggregateDeduplicationKeysPerRegistration());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS
-                        + " = "
-                        + getMeasurementAttributionJobTriggerDelayMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION
-                        + " = "
-                        + getMeasurementMaxAttributionsPerInvocation());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS
-                        + " = "
-                        + getMeasurementMaxEventReportUploadRetryWindowMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS
-                        + " = "
-                        + getMeasurementMaxAggregateReportUploadRetryWindowMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_DELAYED_SOURCE_REGISTRATION_WINDOW
-                        + " = "
-                        + getMeasurementMaxDelayedSourceRegistrationWindow());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION
-                        + " = "
-                        + getMeasurementMaxDistinctWebDestinationsInSourceRegistration());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS
-                        + " = "
-                        + getMeasurementMaxReportingRegisterSourceExpirationInSeconds());
-
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS
-                        + " = "
-                        + getMeasurementMinReportingRegisterSourceExpirationInSeconds());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW
-                        + " = "
-                        + getMeasurementMaxInstallAttributionWindow());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW
-                        + " = "
-                        + getMeasurementMinInstallAttributionWindow());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW
-                        + " = "
-                        + getMeasurementMaxPostInstallExclusivityWindow());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW
-                        + " = "
-                        + getMeasurementMinPostInstallExclusivityWindow());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE
-                        + " = "
-                        + getMeasurementMaxSumOfAggregateValuesPerSource());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS
-                        + " = "
-                        + getMeasurementRateLimitWindowMilliseconds());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW
-                        + " = "
-                        + getMeasurementEnableDestinationPerDayRateLimitWindow());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT
-                        + " = "
-                        + getMeasurementDestinationPerDayRateLimit());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS
-                        + " = "
-                        + getMeasurementDestinationPerDayRateLimitWindowInMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW
-                        + " = "
-                        + getMeasurementMaxReinstallReattributionWindowSeconds());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS
-                        + " = "
-                        + getMeasurementMinReportLifespanForUninstallSeconds());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW
-                        + " = "
-                        + getMeasurementMinReportingOriginUpdateWindow());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH
-                        + " = "
-                        + getAsyncRegistrationJobQueueKillSwitch());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH
-                        + " = "
-                        + getAsyncRegistrationFallbackJobKillSwitch());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH
-                        + " = !"
-                        + getMeasurementAttributionFallbackJobEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS
-                        + " = "
-                        + getMeasurementAttributionFallbackJobPeriodMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER
-                        + " = "
-                        + getMeasurementMaxSourcesPerPublisher());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION
-                        + " = "
-                        + getMeasurementMaxTriggersPerDestination());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION
-                        + " = "
-                        + getMeasurementMaxAggregateReportsPerDestination());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION
-                        + " = "
-                        + getMeasurementMaxEventReportsPerDestination());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS
-                        + " = "
-                        + getMeasurementEventReportsVtcEarlyReportingWindows());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS
-                        + " = "
-                        + getMeasurementEventReportsCtcEarlyReportingWindows());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG
-                        + " = "
-                        + getMeasurementAggregateReportDelayConfig());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW
-                        + " = "
-                        + getMeasurementMaxEventAttributionPerRateLimitWindow());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW
-                        + " = "
-                        + getMeasurementMaxAggregateAttributionPerRateLimitWindow());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION
-                        + " = "
-                        + getMeasurementMaxDistinctReportingOriginsInAttribution());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE
-                        + " = "
-                        + getMeasurementMaxDistinctDestinationsInActiveSource());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW
-                        + " = "
-                        + getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT
-                        + " = "
-                        + getMeasurementEnableDestinationRateLimit());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW
-                        + " = "
-                        + getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW
-                        + " = "
-                        + getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW
-                        + " = "
-                        + getMeasurementDestinationRateLimitWindow());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE
-                        + " = "
-                        + getMeasurementMaxDistinctRepOrigPerPublXDestInSource());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT
-                        + " = "
-                        + getMeasurementVtcConfigurableMaxEventReportsCount());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS
-                        + " = "
-                        + getMeasurementEnableCoarseEventReportDestinations());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1
-                        + " = "
-                        + getMeasurementEnableAraDeduplicationAlignmentV1());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING
-                        + " = "
-                        + getMeasurementEnableSourceDeactivationAfterFiltering());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING
-                        + " = "
-                        + getMeasurementEnableAppPackageNameLogging());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST
-                        + " = "
-                        + getMeasurementAppPackageNameLoggingAllowlist());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION
-                        + " = "
-                        + getMeasurementEnableReportingJobsThrowUnaccountedException());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION
-                        + " = "
-                        + getMeasurementEnableReportingJobsThrowJsonException());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION
-                        + " = "
-                        + getMeasurementEnableReportDeletionOnUnrecoverableException());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION
-                        + " = "
-                        + getMeasurementEnableReportingJobsThrowCryptoException());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION
-                        + " = "
-                        + getMeasurementEnableDatastoreManagerThrowDatastoreException());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH
-                        + " = "
-                        + getMeasurementJobDebugReportingKillSwitch());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH
-                        + " = "
-                        + getMeasurementJobVerboseDebugReportingKillSwitch());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH
-                        + " = "
-                        + getMeasurementJobImmediateAggregateReportingKillSwitch());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_ENABLED
-                        + " = "
-                        + getMeasurementReportingJobServiceEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON
-                        + " = "
-                        + getMeasurementPrivacyEpsilon());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE
-                        + " = "
-                        + getMeasurementEnableEventLevelEpsilonInSource());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS
-                        + " = "
-                        + getMeasurementEnableAggregateValueFilters());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS
-                        + " = "
-                        + getMeasurementEnableFifoDestinationsDeleteAggregateReports());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DESTINATION_LIMIT_PRIORITY
-                        + " = "
-                        + getMeasurementEnableSourceDestinationLimitPriority());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD
-                        + " = "
-                        + getMeasurementEnableSourceDestinationLimitAlgorithmField());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM
-                        + " = "
-                        + getMeasurementDefaultSourceDestinationLimitAlgorithm());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES
-                        + " = "
-                        + getMeasurementDefaultFilteringIdMaxBytes());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING
-                        + " = "
-                        + getMeasurementEnableFlexibleContributionFiltering());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING
-                        + " = "
-                        + getMeasurementEnableAggregateDebugReporting());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW
-                        + " = "
-                        + getMeasurementAdrBudgetOriginXPublisherXWindow());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW
-                        + " = "
-                        + getMeasurementAdrBudgetPublisherXWindow());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MS
-                        + " = "
-                        + getMeasurementAdrBudgetWindowLengthMillis());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE
-                        + " = "
-                        + getMeasurementMaxAdrCountPerSource());
-
-        writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH
-                        + " = "
-                        + getFledgeSelectAdsKillSwitch());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH
-                        + " = "
-                        + getFledgeCustomAudienceServiceKillSwitch());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH
-                        + " = "
-                        + getFledgeAuctionServerKillSwitch());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH
-                        + " = "
-                        + getFledgeOnDeviceAuctionKillSwitch());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT
-                        + " = "
-                        + getFledgeCustomAudienceMaxCount());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT
-                        + " = "
-                        + getFledgeCustomAudienceMaxOwnerCount());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT
-                        + " = "
-                        + getFledgeCustomAudiencePerAppMaxCount());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED
-                        + " = "
-                        + getFledgeAppPackageNameLoggingEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS
-                        + " = "
-                        + getFledgeCustomAudienceDefaultExpireInMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS
-                        + " = "
-                        + getFledgeCustomAudienceMaxActivationDelayInMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS
-                        + " = "
-                        + getFledgeCustomAudienceMaxExpireInMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B
-                        + " = "
-                        + getFledgeCustomAudienceMaxNameSizeB());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B
-                        + " = "
-                        + getFledgeCustomAudienceMaxDailyUpdateUriSizeB());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B
-                        + " = "
-                        + getFledgeCustomAudienceMaxBiddingLogicUriSizeB());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B
-                        + " = "
-                        + getFledgeCustomAudienceMaxUserBiddingSignalsSizeB());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B
-                        + " = "
-                        + getFledgeCustomAudienceMaxTrustedBiddingDataSizeB());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B
-                        + " = "
-                        + getFledgeCustomAudienceMaxAdsSizeB());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS
-                        + " = "
-                        + getFledgeCustomAudienceActiveTimeWindowInMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS
-                        + " = "
-                        + getFledgeCustomAudienceMaxNumAds());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B
-                        + " = "
-                        + getFledgeFetchCustomAudienceMaxUserBiddingSignalsSizeB());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_REQUEST_CUSTOM_HEADER_SIZE_B
-                        + " = "
-                        + getFledgeFetchCustomAudienceMaxRequestCustomHeaderSizeB());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B
-                        + " = "
-                        + getFledgeFetchCustomAudienceMaxCustomAudienceSizeB());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MIN_RETRY_AFTER_VALUE_MS
-                        + " = "
-                        + getFledgeFetchCustomAudienceMinRetryAfterValueMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_RETRY_AFTER_VALUE_MS
-                        + " = "
-                        + getFledgeFetchCustomAudienceMaxRetryAfterValueMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE
-                        + " = "
-                        + getFledgeHttpCachingEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING
-                        + " = "
-                        + getFledgeHttpJsCachingEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES
-                        + " = "
-                        + getFledgeHttpCacheMaxEntries());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES
-                        + " = "
-                        + getFledgeOnDeviceAuctionShouldUseUnifiedTables());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS
-                        + " = "
-                        + getFledgeHttpCacheMaxAgeSeconds());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT
-                        + " = "
-                        + getFledgeAdCounterHistogramAbsoluteMaxTotalEventCount());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT
-                        + " = "
-                        + getFledgeAdCounterHistogramLowerMaxTotalEventCount());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT
-                        + " = "
-                        + getFledgeAdCounterHistogramAbsoluteMaxPerBuyerEventCount());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_PER_BUYER_EVENT_COUNT
-                        + " = "
-                        + getFledgeAdCounterHistogramLowerMaxPerBuyerEventCount());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_ENABLED
-                        + " = "
-                        + getFledgeBackgroundFetchEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS
-                        + " = "
-                        + getFledgeBackgroundFetchJobPeriodMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS
-                        + " = "
-                        + getFledgeBackgroundFetchJobFlexMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_MAX_NUM_UPDATED
-                        + " = "
-                        + getFledgeBackgroundFetchMaxNumUpdated());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_THREAD_POOL_SIZE
-                        + " = "
-                        + getFledgeBackgroundFetchThreadPoolSize());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S
-                        + " = "
-                        + getFledgeBackgroundFetchEligibleUpdateBaseIntervalS());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS
-                        + " = "
-                        + getFledgeBackgroundFetchNetworkConnectTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS
-                        + " = "
-                        + getFledgeBackgroundFetchNetworkReadTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B
-                        + " = "
-                        + getFledgeBackgroundFetchMaxResponseSizeB());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED
-                        + " = "
-                        + getProtectedSignalsPeriodicEncodingEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS
-                        + " = "
-                        + getProtectedSignalPeriodicEncodingJobPeriodMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS
-                        + " = "
-                        + getProtectedSignalsPeriodicEncodingJobFlexMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS
-                        + " = "
-                        + getProtectedSignalsEncoderRefreshWindowSeconds());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES
-                        + " = "
-                        + getProtectedSignalsEncodedPayloadMaxSizeBytes());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES
-                        + " = "
-                        + getProtectedSignalsFetchSignalUpdatesMaxSizeBytes());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT
-                        + " = "
-                        + getAdSelectionMaxConcurrentBiddingCount());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS
-                        + " = "
-                        + getAdSelectionBiddingTimeoutPerCaMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS
-                        + " = "
-                        + getAdSelectionBiddingTimeoutPerBuyerMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS
-                        + " = "
-                        + getAdSelectionScoringTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS
-                        + " = "
-                        + getAdSelectionSelectingOutcomeTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED
-                        + " = "
-                        + getFledgeAuctionServerEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION
-                        + " = "
-                        + getFledgeAuctionServerEnabledForReportImpression());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED
-                        + " = "
-                        + getFledgeAuctionServerOmitAdsEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED
-                        + " = "
-                        + getFledgeAuctionServerRequestFlagsEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT
-                        + " = "
-                        + getFledgeAuctionServerEnabledForReportEvent());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM
-                        + " = "
-                        + getFledgeAuctionServerEnabledForUpdateHistogram());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION
-                        + " = "
-                        + getFledgeAuctionServerEnabledForSelectAdsMediation());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA
-                        + " = "
-                        + getFledgeAuctionServerEnableAdFilterInGetAdSelectionData());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED
-                        + " = "
-                        + getFledgeAuctionServerMediaTypeChangeEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI
-                        + " = "
-                        + getFledgeAuctionServerAuctionKeyFetchUri());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED
-                        + " = "
-                        + getFledgeAuctionServerMultiCloudEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI
-                        + " = "
-                        + getFledgeAuctionServerJoinKeyFetchUri());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING
-                        + " = "
-                        + getFledgeAuctionServerAuctionKeySharding());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID
-                        + " = "
-                        + getFledgeAuctionServerEncryptionAlgorithmKemId());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID
-                        + " = "
-                        + getFledgeAuctionServerEncryptionAlgorithmKdfId());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_AEAD_ID
-                        + " = "
-                        + getFledgeAuctionServerEncryptionAlgorithmAeadId());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED
-                        + " = "
-                        + getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS
-                        + " = "
-                        + getAdSelectionOverallTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS
-                        + " = "
-                        + getAdSelectionFromOutcomesOverallTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS
-                        + " = "
-                        + getAdSelectionOffDeviceOverallTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED
-                        + " = "
-                        + getFledgeAppInstallFilteringEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED
-                        + " = "
-                        + getFledgeAppInstallFilteringMetricsEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED
-                        + " = "
-                        + getFledgeFrequencyCapFilteringEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED
-                        + " = "
-                        + getFledgeFrequencyCapFilteringMetricsEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED
-                        + " = "
-                        + getFledgeAdSelectionContextualAdsEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED
-                        + " = "
-                        + getFledgeAdSelectionContextualAdsMetricsEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS
-                        + " = "
-                        + getFledgeAuctionServerAuctionKeyFetchTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS
-                        + " = "
-                        + getFledgeAuctionServerOverallTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED
-                        + " = "
-                        + getFledgeAuctionServerBackgroundKeyFetchJobEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED
-                        + " = "
-                        + getFledgeAuctionServerBackgroundAuctionKeyFetchEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_JOIN_KEY_FETCH_ENABLED
-                        + " = "
-                        + getFledgeAuctionServerBackgroundJoinKeyFetchEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS
-                        + " = "
-                        + getFledgeAuctionServerBackgroundKeyFetchNetworkConnectTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS
-                        + " = "
-                        + getFledgeAuctionServerBackgroundKeyFetchNetworkReadTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RESPONSE_SIZE_B
-                        + " = "
-                        + getFledgeAuctionServerBackgroundKeyFetchMaxResponseSizeB());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RUNTIME_MS
-                        + " = "
-                        + getFledgeAuctionServerBackgroundKeyFetchJobMaxRuntimeMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_PERIOD_MS
-                        + " = "
-                        + getFledgeAuctionServerBackgroundKeyFetchJobPeriodMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS
-                        + " = "
-                        + getFledgeAuctionServerBackgroundKeyFetchJobFlexMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED
-                        + " = "
-                        + getFledgeAuctionServerAdRenderIdEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH
-                        + " = "
-                        + getFledgeAuctionServerAdRenderIdMaxLength());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION
-                        + " = "
-                        + getFledgeAuctionServerCompressionAlgorithmVersion());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION
-                        + " = "
-                        + getFledgeAuctionServerPayloadFormatVersion());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING
-                        + " = "
-                        + getFledgeAuctionServerEnableDebugReporting());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS
-                        + " = "
-                        + getFledgeAuctionServerAdIdFetcherTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS
-                        + " = "
-                        + getFledgeAuctionServerEnableDebugReporting());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION
-                        + " = "
-                        + getFledgeAdSelectionBiddingLogicJsVersion());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS
-                        + " = "
-                        + getReportImpressionOverallTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT
-                        + " = "
-                        + getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT
-                        + " = "
-                        + getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B
-                        + " = "
-                        + getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B
-                        + " = "
-                        + getFledgeReportImpressionMaxInteractionReportingUriSizeB());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED
-                        + " = "
-                        + getFledgeScheduleCustomAudienceUpdateEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS
-                        + " = "
-                        + getFledgeScheduleCustomAudienceUpdateJobPeriodMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS
-                        + " = "
-                        + getFledgeScheduleCustomAudienceUpdateJobFlexMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE
-                        + " = "
-                        + getFledgeScheduleCustomAudienceMinDelayMinsOverride());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE
-                        + " = "
-                        + getEnforceForegroundStatusForFledgeOverrides());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION
-                        + " = "
-                        + getEnforceForegroundStatusForFledgeReportImpression());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION
-                        + " = "
-                        + getEnforceForegroundStatusForFledgeReportInteraction());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION
-                        + " = "
-                        + getEnforceForegroundStatusForFledgeRunAdSelection());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE
-                        + " = "
-                        + getEnforceForegroundStatusForFledgeCustomAudience());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FOREGROUND_STATUS_LEVEL
-                        + " = "
-                        + getForegroundStatuslLevelForValidation());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES
-                        + " = "
-                        + getFledgeAuctionServerPayloadBucketSizes());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES
-                        + " = "
-                        + getFledgeAuctionServerPayloadBucketSizes());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED
-                        + " = "
-                        + getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES
-                        + " = "
-                        + getIsolateMaxHeapSizeBytes());
-
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S
-                        + " = "
-                        + getAdSelectionExpirationWindowS());
-
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED
-                        + " = "
-                        + getFledgeEventLevelDebugReportingEnabled());
-
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY
-                        + " = "
-                        + getFledgeEventLevelDebugReportSendImmediately());
-
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS
-                        + " = "
-                        + getFledgeEventLevelDebugReportingBatchDelaySeconds());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH
-                        + " = "
-                        + getFledgeEventLevelDebugReportingMaxItemsPerBatch());
-
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS
-                        + " = "
-                        + getFledgeDebugReportSenderJobNetworkConnectionTimeoutMs());
-
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_NETWORK_READ_TIMEOUT_MS
-                        + " = "
-                        + getFledgeDebugReportSenderJobNetworkReadTimeoutMs());
-
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_MAX_TIMEOUT_MS
-                        + " = "
-                        + getFledgeDebugReportSenderJobMaxRuntimeMs());
-
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS
-                        + " = "
-                        + getFledgeDebugReportSenderJobPeriodMs());
-
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_DEBUG_REPORT_SENDER_JOB_FLEX_MS
-                        + " = "
-                        + getFledgeDebugReportSenderJobFlexMs());
-
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED
-                        + " = "
-                        + getProtectedSignalsEnabled());
-
-        writer.println("==== AdServices PH Flags Throttling Related Flags ====");
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND
-                        + " = "
-                        + getFledgeReportInteractionRequestPermitsPerSecond());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ERROR_CODE_LOGGING_DENY_LIST
-                        + " = "
-                        + getErrorCodeLoggingDenyList());
-
-        writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_UI_FEATURE_TYPE_LOGGING_ENABLED
-                        + " = "
-                        + isUiFeatureTypeLoggingEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED
-                        + " = "
-                        + getUiDialogsFeatureEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_IS_EEA_DEVICE_FEATURE_ENABLED
-                        + " = "
-                        + isEeaDeviceFeatureEnabled());
-        writer.println("\t" + FlagsConstants.KEY_IS_EEA_DEVICE + " = " + isEeaDevice());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED
-                        + " = "
-                        + isBackCompatActivityFeatureEnabled());
-        writer.println("\t" + FlagsConstants.KEY_UI_EEA_COUNTRIES + " = " + getUiEeaCountries());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK
-                        + " = "
-                        + getNotificationDismissedOnClick());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED
-                        + " = "
-                        + getUiOtaStringsFeatureEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE
-                        + " = "
-                        + getUiOtaStringsDownloadDeadline());
-        writer.println("==== AdServices New Feature Flags ====");
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED
-                        + " = "
-                        + getFledgeRegisterAdBeaconEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED
-                        + " = "
-                        + getFledgeCpcBillingEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED
-                        + " = "
-                        + getFledgeDataVersionHeaderEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED
-                        + " = "
-                        + getProtectedSignalsCleanupEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED
-                        + " = "
-                        + getTopicsCobaltLoggingEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MSMT_REGISTRATION_COBALT_LOGGING_ENABLED
-                        + " = "
-                        + getMsmtRegistrationCobaltLoggingEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED
-                        + " = "
-                        + getMsmtAttributionCobaltLoggingEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MSMT_REPORTING_COBALT_LOGGING_ENABLED
-                        + " = "
-                        + getMsmtReportingCobaltLoggingEnabled());
-        writer.println("==== AdServices PH Flags Dump STATUS ====");
-        writer.println(
-                "\t" + FlagsConstants.KEY_ADSERVICES_ENABLED + " = " + getAdServicesEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FOREGROUND_STATUS_LEVEL
-                        + " = "
-                        + getForegroundStatuslLevelForValidation());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT
-                        + " = "
-                        + getAdservicesReleaseStageForCobalt());
-        writer.println("==== AdServices Consent Dump STATUS ====");
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH
-                        + " = "
-                        + getConsentSourceOfTruth());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH
-                        + " = "
-                        + getBlockedTopicsSourceOfTruth());
-        writer.println("==== Back-Compat PH Flags Dump STATUS ====");
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_COMPAT_LOGGING_KILL_SWITCH
-                        + " = "
-                        + getCompatLoggingKillSwitch());
-        writer.println("==== Enable Back-Compat PH Flags Dump STATUS ====");
-        writer.println(
-                "\t" + FlagsConstants.KEY_ENABLE_BACK_COMPAT + " = " + getEnableBackCompat());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA
-                        + " = "
-                        + getEnableAppsearchConsentData());
-
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENABLE_U18_APPSEARCH_MIGRATION
-                        + " = "
-                        + getEnableU18AppsearchMigration());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED
-                        + " = "
-                        + getAdservicesConsentMigrationLoggingEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH
-                        + " = "
-                        + getMeasurementRollbackDeletionAppSearchKillSwitch());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE
-                        + " = "
-                        + getMeasurementMaxAggregateReportsPerSource());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION
-                        + " = "
-                        + getMeasurementMaxAggregateKeysPerSourceRegistration());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION
-                        + " = "
-                        + getMeasurementMaxAggregateKeysPerTriggerRegistration());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER
-                        + " = "
-                        + getMeasurementEnableLookbackWindowFilter());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED
-                        + " = "
-                        + getFledgeMeasurementReportAndRegisterEventApiEnabled());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED
-                        + " = "
-                        + getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED
-                        + " = "
-                        + isU18SupervisedAccountEnabled());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED
-                        + " = "
-                        + getMeasurementDeleteUninstalledJobPersisted());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS
-                        + " = "
-                        + getMeasurementDeleteUninstalledJobPeriodMs());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERSISTED
-                        + " = "
-                        + getMeasurementDeleteExpiredJobPersisted());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE
-                        + " = "
-                        + getMeasurementDeleteExpiredJobRequiresDeviceIdle());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS
-                        + " = "
-                        + getMeasurementDeleteExpiredJobPeriodMs());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW
-                        + " = "
-                        + getMeasurementEventReportingJobRequiredBatteryNotLow());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE
-                        + " = "
-                        + getMeasurementEventReportingJobRequiredNetworkType());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED
-                        + " = "
-                        + getMeasurementEventReportingJobPersisted());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ENABLE_TRIGGER_DEBUG_SIGNAL
-                        + " = "
-                        + getMeasurementEnableTriggerDebugSignal());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION
-                        + " = "
-                        + getMeasurementEnableEventTriggerDebugSignalForCoarseDestination());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS
-                        + " = "
-                        + getMeasurementTriggerDebugSignalProbabilityForFakeReports());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW
-                        + " = "
-                        + getMeasurementEventFallbackReportingJobRequiredBatteryNotLow());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE
-                        + " = "
-                        + getMeasurementEventFallbackReportingJobRequiredNetworkType());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED
-                        + " = "
-                        + getMeasurementEventFallbackReportingJobPersisted());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE
-                        + " = "
-                        + getMeasurementDebugReportingJobRequiredNetworkType());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_REQUIRED_NETWORK_TYPE
-                        + " = "
-                        + getMeasurementDebugReportingFallbackJobRequiredNetworkType());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED
-                        + " = "
-                        + getMeasurementDebugReportingFallbackJobPersisted());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE
-                        + " = "
-                        + getMeasurementVerboseDebugReportingJobRequiredNetworkType());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED
-                        + " = "
-                        + getMeasurementVerboseDebugReportingFallbackJobPersisted());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT
-                        + " = "
-                        + getMeasurementEnableHeaderErrorDebugReport());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ATTRIBUTION_JOB_PERSISTED
-                        + " = "
-                        + getMeasurementAttributionJobPersisted());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED
-                        + " = "
-                        + getMeasurementAttributionFallbackJobPersisted());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS
-                        + " = "
-                        + getMeasurementAttributionJobTriggeringDelayMs());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_REQUIRED_NETWORK_TYPE
-                        + " = "
-                        + getMeasurementAsyncRegistrationQueueJobRequiredNetworkType());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_PERSISTED
-                        + " = "
-                        + getMeasurementAsyncRegistrationQueueJobPersisted());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_BATTERY_NOT_LOW
-                        + " = "
-                        + getMeasurementAsyncRegistrationFallbackJobRequiredBatteryNotLow());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_NETWORK_TYPE
-                        + " = "
-                        + getMeasurementAsyncRegistrationFallbackJobRequiredNetworkType());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_PERSISTED
-                        + " = "
-                        + getMeasurementAsyncRegistrationFallbackJobPersisted());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW
-                        + " = "
-                        + getMeasurementAggregateReportingJobRequiredBatteryNotLow());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE
-                        + " = "
-                        + getMeasurementAggregateReportingJobRequiredNetworkType());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_PERSISTED
-                        + " = "
-                        + getMeasurementAggregateReportingJobPersisted());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW
-                        + " = "
-                        + getMeasurementAggregateFallbackReportingJobRequiredBatteryNotLow());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE
-                        + " = "
-                        + getMeasurementAggregateFallbackReportingJobRequiredNetworkType());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED
-                        + " = "
-                        + getMeasurementAggregateFallbackReportingJobPersisted());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW
-                        + " = "
-                        + getMeasurementImmediateAggregateReportingJobRequiredBatteryNotLow());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE
-                        + " = "
-                        + getMeasurementImmediateAggregateReportingJobRequiredNetworkType());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED
-                        + " = "
-                        + getMeasurementImmediateAggregateReportingJobPersisted());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW
-                        + " = "
-                        + getMeasurementReportingJobRequiredBatteryNotLow());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE
-                        + " = "
-                        + getMeasurementReportingJobRequiredNetworkType());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_REPORTING_JOB_PERSISTED
-                        + " = "
-                        + getMeasurementReportingJobPersisted());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS
-                        + " = "
-                        + getMeasurementReportingJobServiceMinExecutionWindowMillis());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS
-                        + " = "
-                        + getMeasurementReportingJobServiceBatchWindowMillis());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING
-                        + " = "
-                        + getMeasurementEnableAggregatableReportPayloadPadding());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS
-                        + " = "
-                        + getEnforceForegroundStatusForSignals());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_PREINSTALL_CHECK
-                        + " = "
-                        + getMeasurementEnablePreinstallCheck());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES
-                        + " = "
-                        + getMeasurementEnableSessionStableKillSwitches());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK
-                        + " = "
-                        + getMeasurementEnableNavigationReportingOriginCheck());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT
-                        + " = "
-                        + getMeasurementEnableSeparateDebugReportTypesForAttributionRateLimit());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH
-                        + " = "
-                        + getMeasurementMaxAttributionScopeLength());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE
-                        + " = "
-                        + getMeasurementMaxAttributionScopesPerSource());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION
-                        + " = "
-                        + getMeasurementAttributionScopeMaxInfoGainNavigation());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION
-                        + " = "
-                        + getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT
-                        + " = "
-                        + getMeasurementAttributionScopeMaxInfoGainEvent());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT
-                        + " = "
-                        + getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME
-                        + " = "
-                        + getMeasurementEnableFakeReportTriggerTime());
-        writer.println("\t" + KEY_APPSEARCH_WRITE_TIMEOUT_MS + " = " + getAppSearchWriteTimeout());
-        writer.println("\t" + KEY_APPSEARCH_READ_TIMEOUT_MS + " = " + getAppSearchReadTimeout());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED
-                        + " = "
-                        + isGetAdServicesCommonStatesApiEnabled());
-        writer.println("=== Fledge KAnon related flags ===");
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE
-                        + " = "
-                        + getFledgeKAnonSignJoinFeatureEnabled());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE
-                        + " = "
-                        + getFledgeKAnonSignJoinFeatureAuctionServerEnabled());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE
-                        + " = "
-                        + getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled());
-        writer.println(
-                "\t"
-                        + KEY_KANON_FETCH_PARAMETERS_URL
-                        + " = "
-                        + getFledgeKAnonFetchServerParamsUrl());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL
-                        + " = "
-                        + getFledgeKAnonRegisterClientParametersUrl());
-        writer.println(
-                "\t" + KEY_FLEDGE_KANON_GET_TOKENS_URL + " = " + getFledgeKAnonGetTokensUrl());
-        writer.println("\t" + KEY_FLEDGE_KANON_JOIN_URL + " = " + getFledgeKAnonGetTokensUrl());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS
-                        + " = "
-                        + getFledgeKAnonMessageTtlSeconds());
-        writer.println(
-                "\t" + KEY_FLEDGE_KANON_SIGN_BATCH_SIZE + " = " + getFledgeKAnonSignBatchSize());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS
-                        + " = "
-                        + getFledgeKAnonPercentageImmediateSignJoinCalls());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS
-                        + " = "
-                        + getFledgeKAnonBackgroundProcessTimePeriodInMs());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS
-                        + " = "
-                        + getFledgeKAnonMessagesPerBackgroundProcess());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED
-                        + " = "
-                        + getFledgeKAnonBackgroundProcessEnabled());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED
-                        + " = "
-                        + getFledgeKAnonLoggingEnabled());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED
-                        + " = "
-                        + getFledgeKAnonKeyAttestationEnabled());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN
-                        + " = "
-                        + getFledgeKAnonSetTypeToSignJoin());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY
-                        + " = "
-                        + getFledgeKAnonUrlAuthorityToJoin());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW
-                        + " = "
-                        + getFledgeKAnonBackgroundJobRequiresBatteryNotLow());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE
-                        + " = "
-                        + getFledgeKAnonBackgroundJobRequiresDeviceIdle());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION
-                        + " = "
-                        + getFledgeKanonBackgroundJobConnectionType());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT
-                        + " = "
-                        + getFledgeKanonHttpClientTimeoutInMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST
-                        + " = "
-                        + getAdServicesCommonStatesAllowList());
-        writer.println(
-                "\t"
-                        + KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED
-                        + " = "
-                        + getAdServicesRetryStrategyEnabled());
-        writer.println(
-                "\t"
-                        + KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS
-                        + " = "
-                        + getAdServicesJsScriptEngineMaxRetryAttempts());
-        writer.println(
-                "\t"
-                        + KEY_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS
-                        + " = "
-                        + getPasScriptDownloadReadTimeoutMs());
-        writer.println(
-                "\t"
-                        + KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS
-                        + " = "
-                        + getPasScriptDownloadConnectionTimeoutMs());
-        writer.println(
-                "\t"
-                        + KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS
-                        + " = "
-                        + getPasSignalsDownloadReadTimeoutMs());
-        writer.println(
-                "\t"
-                        + KEY_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS
-                        + " = "
-                        + getPasSignalsDownloadConnectionTimeoutMs());
-        writer.println(
-                "\t"
-                        + KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS
-                        + " = "
-                        + getPasScriptExecutionTimeoutMs());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_SELECT_ADS_FROM_OUTCOMES_API_METRICS_ENABLED
-                        + " = "
-                        + getFledgeSelectAdsFromOutcomesApiMetricsEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_CPC_BILLING_METRICS_ENABLED
-                        + " = "
-                        + getFledgeCpcBillingMetricsEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED
-                        + " = "
-                        + getFledgeDataVersionHeaderMetricsEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_API_METRICS_ENABLED
-                        + " = "
-                        + getFledgeReportImpressionApiMetricsEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED
-                        + " = "
-                        + getFledgeJsScriptResultCodeMetricsEnabled());
+        // ...then dump their values
+        for (var method : dumpableMethods.values()) {
+            String methodName = method.getName() + "()";
+            try {
+                Object value = method.invoke(this);
+                writer.printf("\t%s = %s\n", methodName, value);
+            } catch (Exception e) {
+                writer.printf("\tFailed to dump value of %s: %s\n", methodName, e);
+            }
+        }
     }
 
     @VisibleForTesting
@@ -6074,12 +3942,6 @@ public final class PhFlags implements Flags {
                 FlagsConstants.KEY_UI_FEATURE_TYPE_LOGGING_ENABLED,
                 isUiFeatureTypeLoggingEnabled());
         uxMap.put(FlagsConstants.KEY_ADSERVICES_ENABLED, getAdServicesEnabled());
-        uxMap.put(
-                DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
-                getConsentNotificationDebugMode());
-        uxMap.put(
-                DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
-                getConsentNotificationActivityDebugMode());
         uxMap.put(FlagsConstants.KEY_U18_UX_ENABLED, getU18UxEnabled());
         uxMap.put(
                 FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK,
@@ -6657,13 +4519,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementNullAggregateReportEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED,
-                MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED);
-    }
-
-    @Override
     public float getMeasurementNullAggReportRateInclSourceRegistrationTime() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME,
@@ -6675,21 +4530,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME,
                 MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME);
-    }
-
-    @Override
-    public boolean getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants
-                        .KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED,
-                MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED);
-    }
-
-    @Override
-    public boolean getMeasurementEnableTriggerContextId() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID,
-                MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID);
     }
 
     @Override
@@ -6750,6 +4590,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableBothSideDebugKeysInReports() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS,
+                MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS);
+    }
+
+    @Override
     public long getMeasurementReportingJobServiceBatchWindowMillis() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS,
@@ -6768,20 +4615,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS,
                 DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS);
-    }
-
-    @Override
-    public boolean getEnableAdservicesApiEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_ENABLE_ADSERVICES_API_ENABLED,
-                DEFAULT_ENABLE_ADSERVICES_API_ENABLED);
-    }
-
-    @Override
-    public boolean getAdservicesEnablementCheckEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED,
-                DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED);
     }
 
     @Override
@@ -7038,6 +4871,20 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableEnrollmentConfigV3Db() {
+        return getDeviceConfigFlag(
+                KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB,
+                DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB);
+    }
+
+    @Override
+    public boolean getUseConfigsManagerToQueryEnrollment() {
+        return getDeviceConfigFlag(
+                KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT,
+                DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT);
+    }
+
+    @Override
     public boolean getSharedDatabaseSchemaVersion4Enabled() {
         return getDeviceConfigFlag(
                 KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED,
@@ -7220,6 +5067,20 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getPackageDenyEnableInstalledPackageFilter() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER,
+                DEFAULT_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER);
+    }
+
+    @Override
+    public long getPackageDenyBackgroundJobPeriodMillis() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS,
+                DEFAULT_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS);
+    }
+
+    @Override
     public boolean getEnablePackageDenyJobOnMddDownload() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD,
@@ -7231,5 +5092,44 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL,
                 DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL);
+    }
+
+    @Override
+    public boolean getEnableAtomicFileDatastoreBatchUpdateApi() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API,
+                DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API);
+    }
+
+    @Override
+    public boolean getAdIdMigrationEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_AD_ID_MIGRATION_ENABLED, DEFAULT_AD_ID_MIGRATION_ENABLED);
+    }
+
+    @Override
+    public boolean getEnableReportEventForComponentSeller() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER,
+                DEFAULT_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER);
+    }
+
+    @Override
+    public boolean getEnableWinningSellerIdInAdSelectionOutcome() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME,
+                DEFAULT_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME);
+    }
+
+    @Override
+    public boolean getEnableProdDebugInAuctionServer() {
+        return getDeviceConfigFlag(
+                KEY_FLEDGE_ENABLE_PROD_DEBUG_IN_SERVER_AUCTION,
+                DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER);
+    }
+
+    @Override
+    public boolean getEnableRbAtrace() {
+        return getDeviceConfigFlag(FlagsConstants.KEY_ENABLE_RB_ATRACE, DEFAULT_ENABLE_RB_ATRACE);
     }
 }

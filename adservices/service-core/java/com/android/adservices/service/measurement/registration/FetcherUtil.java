@@ -62,6 +62,10 @@ public class FetcherUtil {
     static final Pattern HEX_PATTERN = Pattern.compile("\\p{XDigit}+");
     static final String DEFAULT_HEX_STRING = "0x0";
     public static final BigInteger BIG_INTEGER_LONG_MAX_VALUE = BigInteger.valueOf(Long.MAX_VALUE);
+    public static final BigDecimal BIG_DECIMAL_INT_MAX_VALUE =
+            BigDecimal.valueOf(Integer.MAX_VALUE);
+    public static final BigDecimal BIG_DECIMAL_INT_MIN_VALUE =
+            BigDecimal.valueOf(Integer.MIN_VALUE);
 
     /**
      * Determine all redirects.
@@ -181,6 +185,25 @@ public class FetcherUtil {
             }
 
             return Optional.of(bd);
+    }
+
+    /** Extract value of an int from a map. */
+    public static Optional<Integer> extractIntegralInt(JSONObject map, String id) {
+        Optional<BigDecimal> maybeBigDecimal = FetcherUtil.extractIntegralValue(map, id);
+        if (maybeBigDecimal.isEmpty()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("extractIntegralInt: value for" + " bucket %s is not an integer.", id);
+            return Optional.empty();
+        }
+        BigDecimal integralValue = maybeBigDecimal.get();
+        if (integralValue.compareTo(BIG_DECIMAL_INT_MAX_VALUE) > 0
+                || integralValue.compareTo(BIG_DECIMAL_INT_MIN_VALUE) < 0) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("extractIntegralInt: value is larger than int. %s", integralValue);
+            return Optional.empty();
+        }
+
+        return Optional.of(integralValue.intValue());
     }
 
     private static boolean isValidLookbackWindow(JSONObject obj) {
@@ -419,41 +442,55 @@ public class FetcherUtil {
 
     static Optional<String> getValidAggregateDebugReportingWithBudget(
             JSONObject aggregateDebugReporting, Flags flags) throws JSONException {
-        int budget = 0;
-        if (!aggregateDebugReporting.isNull(AggregateDebugReportingHeaderContract.BUDGET)) {
-            Optional<BigDecimal> optionalBudget =
-                    extractIntegralValue(
+        try {
+            if (aggregateDebugReporting.isNull(AggregateDebugReportingHeaderContract.BUDGET)) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("Aggregate debug reporting budget is not present.");
+                return Optional.empty();
+            }
+            Optional<Integer> optionalBudget =
+                    extractIntegralInt(
                             aggregateDebugReporting, AggregateDebugReportingHeaderContract.BUDGET);
-            // If the budget is invalid number or not in range, fallback to 0
-            int maxSumAggValuesPerSource = flags.getMeasurementMaxSumOfAggregateValuesPerSource();
-            budget =
-                    optionalBudget
-                            .filter(val -> val.compareTo(BigDecimal.ZERO) >= 0)
-                            .filter(
-                                    val ->
-                                            val.compareTo(new BigDecimal(maxSumAggValuesPerSource))
-                                                    <= 0)
-                            .map(BigDecimal::intValue)
-                            .orElse(0);
+            if (optionalBudget.isEmpty()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("Aggregate debug reporting budget is invalid.");
+                return Optional.empty();
+            }
+            int budget = optionalBudget.get();
+            if (budget <= 0 || budget > flags.getMeasurementMaxSumOfAggregateValuesPerSource()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("Aggregate debug reporting budget value is out of bounds.");
+                return Optional.empty();
+            }
+            Optional<JSONObject> validAggregateDebugReporting =
+                    getValidAggregateDebugReportingWithoutBudget(
+                            aggregateDebugReporting, flags, budget);
+            if (validAggregateDebugReporting.isPresent()) {
+                validAggregateDebugReporting
+                        .get()
+                        .put(AggregateDebugReportingHeaderContract.BUDGET, budget);
+            }
+            return validAggregateDebugReporting.map(JSONObject::toString);
+        } catch (JSONException | NumberFormatException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("getValidAggregateDebugReportingWithBudget threw an exception.");
+            return Optional.empty();
         }
-        Optional<JSONObject> validAggregateDebugReporting =
-                getValidAggregateDebugReportingWithoutBudget(
-                        aggregateDebugReporting, flags, budget);
-        if (validAggregateDebugReporting.isPresent()) {
-            validAggregateDebugReporting
-                    .get()
-                    .put(AggregateDebugReportingHeaderContract.BUDGET, budget);
-        }
-        return validAggregateDebugReporting.map(JSONObject::toString);
     }
 
     static Optional<String> getValidAggregateDebugReportingWithoutBudget(
             JSONObject aggregateDebugReporting, Flags flags) throws JSONException {
-        return getValidAggregateDebugReportingWithoutBudget(
-                        aggregateDebugReporting,
-                        flags,
-                        flags.getMeasurementMaxSumOfAggregateValuesPerSource())
-                .map(JSONObject::toString);
+        try {
+            return getValidAggregateDebugReportingWithoutBudget(
+                            aggregateDebugReporting,
+                            flags,
+                            flags.getMeasurementMaxSumOfAggregateValuesPerSource())
+                    .map(JSONObject::toString);
+        } catch (JSONException | NumberFormatException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("getValidAggregateDebugReportingWithoutBudget threw an exception.");
+            return Optional.empty();
+        }
     }
 
     private static Optional<JSONObject> getValidAggregateDebugReportingWithoutBudget(
@@ -462,9 +499,6 @@ public class FetcherUtil {
         JSONObject validAggregateDebugReporting = new JSONObject();
         String keyPiece =
                 aggregateDebugReporting.optString(AggregateDebugReportingHeaderContract.KEY_PIECE);
-        if (keyPiece.isEmpty()) {
-            keyPiece = DEFAULT_HEX_STRING;
-        }
         if (!FetcherUtil.isValidAggregateKeyPiece(keyPiece, flags)) {
             LoggerFactory.getMeasurementLogger()
                     .d("Aggregate debug reporting key-piece is invalid.");
@@ -555,14 +589,12 @@ public class FetcherUtil {
                             AggregateDebugReportDataHeaderContract.TYPES,
                             Integer.MAX_VALUE,
                             Integer.MAX_VALUE);
-            if (maybeDebugDataTypes.isEmpty()) {
-                LoggerFactory.getMeasurementLogger()
-                        .d("Aggregate debug reporting data type must not be empty.");
+            if (maybeDebugDataTypes.isEmpty() || maybeDebugDataTypes.get().isEmpty()) {
+                LoggerFactory.getMeasurementLogger().d("Aggregate debug data type is invalid.");
                 return Optional.empty();
             }
-            List<String> debugDataTypesList = maybeDebugDataTypes.get();
             List<String> validDebugDataTypes = new ArrayList<>();
-            for (String debugDataType : debugDataTypesList) {
+            for (String debugDataType : maybeDebugDataTypes.get()) {
                 Optional<DebugReportApi.Type> maybeType =
                         DebugReportApi.Type.findByValue(debugDataType);
                 // Ignore the type if not recognized
@@ -636,7 +668,8 @@ public class FetcherUtil {
                                 asyncFetchStatus.isPARequest(),
                                 asyncFetchStatus.getNumDeletedEntities(),
                                 asyncFetchStatus.isEventLevelEpsilonConfigured(),
-                                asyncFetchStatus.isTriggerAggregatableValueFiltersConfigured())
+                                asyncFetchStatus.isTriggerAggregatableValueFiltersConfigured(),
+                                asyncFetchStatus.isTriggerFilteringIdConfigured())
                         .setAdTechDomain(adTechDomain)
                         .build(),
                 enrollmentId);

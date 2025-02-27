@@ -43,12 +43,10 @@ import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -79,9 +77,6 @@ public class FrequencyCapAdFiltererImplTest {
 
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
     private FrequencyCapAdFilterer mFrequencyCapAdFilterer;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

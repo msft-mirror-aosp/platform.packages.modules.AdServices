@@ -22,38 +22,34 @@ import static com.android.adservices.service.topics.TopicsJsonMapper.KEY_TOPIC_I
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Locale;
 
 /** Unit tests for {@link TopicsJsonMapper}. */
-public class TopicsJsonMapperTest {
+public final class TopicsJsonMapperTest extends AdServicesUnitTestCase {
     private static final int TOPIC_ID = 7;
     private static final long MODEL_VERSION = 5L;
     private static final long TAXONOMY_VERSION = 2L;
     private static final Topic SAMPLE_TOPIC =
             Topic.create(TOPIC_ID, TAXONOMY_VERSION, MODEL_VERSION);
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Test
     public void getTopicJson() throws JSONException {
         JSONObject topicJson = TopicsJsonMapper.toJson(SAMPLE_TOPIC).get();
 
         // Verify individual fields
-        assertThat(topicJson.getInt(KEY_TOPIC_ID)).isEqualTo(TOPIC_ID);
-        assertThat(topicJson.getInt(KEY_MODEL_VERSION)).isEqualTo(MODEL_VERSION);
-        assertThat(topicJson.getInt(KEY_TAXONOMY_VERSION)).isEqualTo(TAXONOMY_VERSION);
+        expect.that(topicJson.getInt(KEY_TOPIC_ID)).isEqualTo(TOPIC_ID);
+        expect.that(topicJson.getInt(KEY_MODEL_VERSION)).isEqualTo(MODEL_VERSION);
+        expect.that(topicJson.getInt(KEY_TAXONOMY_VERSION)).isEqualTo(TAXONOMY_VERSION);
 
         // Validate JSON string
-        assertThat(topicJson.toString())
+        expect.that(topicJson.toString())
                 .isEqualTo(
                         String.format(
                                 Locale.US,

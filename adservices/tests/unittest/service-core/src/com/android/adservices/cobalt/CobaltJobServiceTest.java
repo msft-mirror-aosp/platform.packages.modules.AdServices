@@ -42,7 +42,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.shared.testing.BooleanSyncCallback;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.cobalt.CobaltPeriodicJob;
@@ -58,7 +57,6 @@ import org.mockito.Spy;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@RequiresSdkLevelAtLeastS(reason = "Cobalt is not launching for Android R")
 @SpyStatic(CobaltJobService.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(CobaltFactory.class)
@@ -85,7 +83,7 @@ public final class CobaltJobServiceTest extends AdServicesJobServiceTestCase {
         doReturn(JOB_SCHEDULER).when(mSpyCobaltJobService).getSystemService(JobScheduler.class);
         mockCobaltLoggingFlags();
 
-        mLogger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        mLogger = mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
     }
 
     @After

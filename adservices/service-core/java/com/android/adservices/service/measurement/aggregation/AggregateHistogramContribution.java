@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -26,10 +28,12 @@ import java.util.Objects;
  * POJO for AggregateReportPayload, the result for Aggregate API.
  */
 public class AggregateHistogramContribution {
-    static final String BUCKET = "bucket";
-    static final String VALUE = "value";
+    public static final String BUCKET = "bucket";
+    public static final String VALUE = "value";
+    public static final String ID = "id";
     private BigInteger mKey;  // Equivalent to uint128 in C++.
     private int mValue;
+    private UnsignedLong mId;
 
     private AggregateHistogramContribution() {
         mKey = BigInteger.valueOf(0L);
@@ -43,12 +47,13 @@ public class AggregateHistogramContribution {
         AggregateHistogramContribution aggregateHistogramContribution =
                 (AggregateHistogramContribution) obj;
         return Objects.equals(mKey, aggregateHistogramContribution.mKey)
-                && mValue == aggregateHistogramContribution.mValue;
+                && mValue == aggregateHistogramContribution.mValue
+                && Objects.equals(mId, aggregateHistogramContribution.mId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mKey, mValue);
+        return Objects.hash(mKey, mValue, mId);
     }
 
     /**
@@ -58,6 +63,9 @@ public class AggregateHistogramContribution {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(BUCKET, mKey.toString());
         jsonObject.put(VALUE, mValue);
+        if (mId != null) {
+            jsonObject.put(ID, mId.toString());
+        }
         return jsonObject;
     }
 
@@ -73,6 +81,11 @@ public class AggregateHistogramContribution {
      */
     public int getValue() {
         return mValue;
+    }
+
+    /** Id for the aggregate histogram contribution. */
+    public UnsignedLong getId() {
+        return mId;
     }
 
     /**
@@ -101,6 +114,12 @@ public class AggregateHistogramContribution {
             return this;
         }
 
+        /** See {@link AggregateHistogramContribution#getId()}. */
+        public Builder setId(UnsignedLong id) {
+            mAggregateHistogramContribution.mId = id;
+            return this;
+        }
+
         /**
          * Builds a {@link AggregateHistogramContribution} from the provided json object.
          *
@@ -114,6 +133,9 @@ public class AggregateHistogramContribution {
                     new AggregateHistogramContribution();
             aggregateHistogramContribution.mKey = new BigInteger(jsonObject.getString(BUCKET));
             aggregateHistogramContribution.mValue = jsonObject.getInt(VALUE);
+            if (!jsonObject.isNull(ID)) {
+                aggregateHistogramContribution.mId = new UnsignedLong(jsonObject.getString(ID));
+            }
             return aggregateHistogramContribution;
         }
 
@@ -127,6 +149,19 @@ public class AggregateHistogramContribution {
             mAggregateHistogramContribution.mKey = BigInteger.valueOf(0L);
             mAggregateHistogramContribution.mValue = 0;
 
+            return this;
+        }
+
+        /**
+         * Return a builder that builds an empty (key = 0x0, value = 0) histogram contribution. Used
+         * for padding.
+         *
+         * @return {@link AggregateHistogramContribution.Builder}
+         */
+        public Builder setPaddingContributionWithFilteringId() {
+            mAggregateHistogramContribution.mKey = BigInteger.ZERO;
+            mAggregateHistogramContribution.mValue = 0;
+            mAggregateHistogramContribution.mId = UnsignedLong.ZERO;
             return this;
         }
 

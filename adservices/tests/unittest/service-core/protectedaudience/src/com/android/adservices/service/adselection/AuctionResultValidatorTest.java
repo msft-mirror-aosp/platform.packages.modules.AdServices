@@ -16,38 +16,46 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.CommonFixture.VALID_WINNING_SELLER_2;
+
 import static com.android.adservices.service.adselection.AuctionResultValidator.BUYER_EMPTY;
 import static com.android.adservices.service.adselection.AuctionResultValidator.BUYER_ENROLLMENT;
 import static com.android.adservices.service.adselection.AuctionResultValidator.NEGATIVE_BID;
 import static com.android.adservices.service.adselection.AuctionResultValidator.NEGATIVE_SCORE;
+import static com.android.adservices.service.adselection.AuctionResultValidator.WINNING_SELLER_EMPTY;
+import static com.android.adservices.service.adselection.AuctionResultValidator.WINNING_SELLER_ENROLLMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AUCTION_RESULT_VALIDATOR_AD_TECH_NOT_ALLOWED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.ValidatorTestUtil;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.util.Collection;
+import java.util.Locale;
 
-public class AuctionResultValidatorTest {
-    @Rule public final MockitoRule mockito = MockitoJUnit.rule();
-
+@SetErrorLogUtilDefaultParams(
+        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE)
+public class AuctionResultValidatorTest extends AdServicesExtendedMockitoTestCase {
     private static final AdTechIdentifier WINNER_BUYER = CommonFixture.VALID_BUYER_1;
     private static final DBAdData VALID_AD =
             DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(WINNER_BUYER).get(0);
@@ -59,6 +67,7 @@ public class AuctionResultValidatorTest {
     @Mock FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
 
     private AuctionResultValidator mAuctionResultValidator;
+    private AuctionResultValidator mAuctionResultValidatorWithWinningSellerInAdSelectionOutcome;
 
     private static AuctionResult.Builder getValidAuctionResultBuilder() {
         return AuctionResult.newBuilder()
@@ -71,16 +80,22 @@ public class AuctionResultValidatorTest {
                 .setBid(VALID_BID);
     }
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setUp() {
         mAuctionResultValidator =
                 new AuctionResultValidator(
-                        mFledgeAuthorizationFilterMock, false
-                        /** disableFledgeEnrollmentCheck */
-                        );
+                        mFledgeAuthorizationFilterMock,
+                        /** disableFledgeEnrollmentCheck= */
+                        false,
+                        /** enableWinningSellerInAdSelectionOutcome= */
+                        false);
+        mAuctionResultValidatorWithWinningSellerInAdSelectionOutcome =
+                new AuctionResultValidator(
+                        mFledgeAuthorizationFilterMock,
+                        /** disableFledgeEnrollmentCheck= */
+                        false,
+                        /** enableWinningSellerInAdSelectionOutcome= */
+                        true);
     }
 
     @Test
@@ -95,7 +110,7 @@ public class AuctionResultValidatorTest {
                 mAuctionResultValidator.getValidationViolations(
                         getValidAuctionResultBuilder().setBid(negativeBid).build());
         ValidatorTestUtil.assertViolationContainsOnly(
-                violations, String.format(String.format(NEGATIVE_BID, negativeBid)));
+                violations, String.format(Locale.US, NEGATIVE_BID, negativeBid));
     }
 
     @Test
@@ -105,7 +120,7 @@ public class AuctionResultValidatorTest {
                 mAuctionResultValidator.getValidationViolations(
                         getValidAuctionResultBuilder().setScore(negativeScore).build());
         ValidatorTestUtil.assertViolationContainsOnly(
-                violations, String.format(String.format(NEGATIVE_SCORE, negativeScore)));
+                violations, String.format(Locale.US, NEGATIVE_SCORE, negativeScore));
     }
 
     @Test
@@ -117,10 +132,12 @@ public class AuctionResultValidatorTest {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AUCTION_RESULT_VALIDATOR_AD_TECH_NOT_ALLOWED)
     public void testValidate_buyerNotEnrolled() {
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAdTechEnrolled(any(AdTechIdentifier.class), anyInt());
+                .assertAdTechEnrolled(eq(CommonFixture.VALID_BUYER_1), anyInt());
         Collection<String> violations =
                 mAuctionResultValidator.getValidationViolations(
                         getValidAuctionResultBuilder().build());
@@ -132,8 +149,56 @@ public class AuctionResultValidatorTest {
 
     @Test
     public void testValidate_enrollmentCheckDisabled_buyerNotEnrolled_noViolations() {
+        doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
+                .when(mFledgeAuthorizationFilterMock)
+                .assertAdTechEnrolled(any(), anyInt());
         AuctionResultValidator validationWithNoEnrollmentCheck =
-                new AuctionResultValidator(mFledgeAuthorizationFilterMock, true);
+                new AuctionResultValidator(mFledgeAuthorizationFilterMock, true, false);
         validationWithNoEnrollmentCheck.validate(getValidAuctionResultBuilder().build());
+    }
+
+    @Test
+    public void testValidate_winningSellerEmpty() {
+        Collection<String> violations =
+                mAuctionResultValidatorWithWinningSellerInAdSelectionOutcome
+                        .getValidationViolations(
+                                getValidAuctionResultBuilder().setWinningSeller("").build());
+        ValidatorTestUtil.assertViolationContainsOnly(violations, WINNING_SELLER_EMPTY);
+    }
+
+    @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AUCTION_RESULT_VALIDATOR_AD_TECH_NOT_ALLOWED)
+    public void testValidate_winningSellerNotEnrolled() {
+        doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
+                .when(mFledgeAuthorizationFilterMock)
+                .assertAdTechEnrolled(eq(VALID_WINNING_SELLER_2), anyInt());
+
+        Collection<String> violations =
+                mAuctionResultValidatorWithWinningSellerInAdSelectionOutcome
+                        .getValidationViolations(
+                                getValidAuctionResultBuilder()
+                                        .setWinningSeller(VALID_WINNING_SELLER_2.toString())
+                                        .build());
+
+        ValidatorTestUtil.assertViolationContainsOnly(
+                violations,
+                String.format(String.format(WINNING_SELLER_ENROLLMENT, VALID_WINNING_SELLER_2)));
+    }
+
+    @Test
+    public void
+            testValidate_winningSellerNotEnrolled_winningSellerInAdSelectionOutcomeDisabled_noViolation() {
+        doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
+                .when(mFledgeAuthorizationFilterMock)
+                .assertAdTechEnrolled(eq(VALID_WINNING_SELLER_2), anyInt());
+
+        AuctionResultValidator validationWithWinningSellerInAdSelectionOutcomeDisabled =
+                new AuctionResultValidator(mFledgeAuthorizationFilterMock, true, false);
+        validationWithWinningSellerInAdSelectionOutcomeDisabled.validate(
+                getValidAuctionResultBuilder()
+                        .setWinningSeller(VALID_WINNING_SELLER_2.toString())
+                        .build());
     }
 }

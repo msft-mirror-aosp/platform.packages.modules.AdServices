@@ -27,7 +27,9 @@ import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
 import com.android.adservices.common.annotations.SetMsmtWebContextClientAppAllowList;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetSdkSandboxStateEnabled;
 
+@SetSdkSandboxStateEnabled
 @DisableGlobalKillSwitch
 @EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
 @EnableDebugFlag(KEY_CONSENT_NOTIFIED_DEBUG_MODE)

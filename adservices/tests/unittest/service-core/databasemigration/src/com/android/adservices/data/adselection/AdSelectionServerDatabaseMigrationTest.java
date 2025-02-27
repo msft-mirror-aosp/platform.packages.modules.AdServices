@@ -16,37 +16,30 @@
 
 package com.android.adservices.data.adselection;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
 
 import android.app.Instrumentation;
 import android.database.Cursor;
 
 import androidx.room.testing.MigrationTestHelper;
 import androidx.sqlite.db.SupportSQLiteDatabase;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.util.Objects;
 
-@RunWith(AndroidJUnit4.class)
-public class AdSelectionServerDatabaseMigrationTest {
+public final class AdSelectionServerDatabaseMigrationTest extends AdServicesUnitTestCase {
     private static final String QUERY_TABLES_FROM_SQL_MASTER =
             "SELECT * FROM sqlite_master WHERE type='table' AND name='%s';";
     private static final String COLUMN_NAME_NAME = "name";
     private static final String TEST_DB = "migration-test";
     private static final Instrumentation INSTRUMENTATION =
             InstrumentationRegistry.getInstrumentation();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Rule(order = 1)
     public MigrationTestHelper helper =
@@ -58,14 +51,14 @@ public class AdSelectionServerDatabaseMigrationTest {
 
         SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 1);
         Cursor c = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, reportingUrisTable));
-        assertEquals(0, c.getCount());
+        assertThat(c.getCount()).isEqualTo(0);
 
         // Re-open the database with version 2 and provide MIGRATION_1_2 as the migration process.
         db = helper.runMigrationsAndValidate(TEST_DB, 2, true);
         c = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, reportingUrisTable));
-        assertEquals(1, c.getCount());
+        assertThat(c.getCount()).isEqualTo(1);
         c.moveToFirst();
-        assertEquals(reportingUrisTable, c.getString(c.getColumnIndex(COLUMN_NAME_NAME)));
+        assertThat(c.getString(c.getColumnIndex(COLUMN_NAME_NAME))).isEqualTo(reportingUrisTable);
     }
 
     @Test
@@ -75,17 +68,16 @@ public class AdSelectionServerDatabaseMigrationTest {
         Cursor cursor =
                 db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, auctionServerAdSelection));
         // The table should already exist
-        assertEquals(1, cursor.getCount());
+        assertThat(cursor.getCount()).isEqualTo(1);
 
         // Re-open the database with version 3 and provide MIGRATION_2_3 as the migration process.
         db = helper.runMigrationsAndValidate(TEST_DB, 3, true);
         cursor = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, auctionServerAdSelection));
-        assertEquals(1, cursor.getCount());
+        assertThat(cursor.getCount()).isEqualTo(1);
         cursor.moveToFirst();
 
-        assertEquals(
-                auctionServerAdSelection,
-                cursor.getString(cursor.getColumnIndex(COLUMN_NAME_NAME)));
+        assertThat(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_NAME)))
+                .isEqualTo(auctionServerAdSelection);
 
         cursor = db.query("PRAGMA table_info(encryption_context)");
         boolean creationInstantColumnExists = false;
@@ -98,7 +90,7 @@ public class AdSelectionServerDatabaseMigrationTest {
             } while (cursor.moveToNext());
         }
         cursor.close();
-        assertTrue(creationInstantColumnExists);
+        assertThat(creationInstantColumnExists).isTrue();
     }
 
     @Test
@@ -111,7 +103,7 @@ public class AdSelectionServerDatabaseMigrationTest {
                         String.format(
                                 QUERY_TABLES_FROM_SQL_MASTER,
                                 protectedServersEncryptionConfigTable));
-        assertEquals(0, c.getCount());
+        assertThat(c.getCount()).isEqualTo(0);
 
         // Re-open the database with version 4 and provide MIGRATION_3_4 as the migration process.
         db = helper.runMigrationsAndValidate(TEST_DB, 4, true);
@@ -120,11 +112,10 @@ public class AdSelectionServerDatabaseMigrationTest {
                         String.format(
                                 QUERY_TABLES_FROM_SQL_MASTER,
                                 protectedServersEncryptionConfigTable));
-        assertEquals(1, c.getCount());
+        assertThat(c.getCount()).isEqualTo(1);
         c.moveToFirst();
-        assertEquals(
-                protectedServersEncryptionConfigTable,
-                c.getString(c.getColumnIndex(COLUMN_NAME_NAME)));
+        assertThat(c.getString(c.getColumnIndex(COLUMN_NAME_NAME)))
+                .isEqualTo(protectedServersEncryptionConfigTable);
     }
 
     @Test
@@ -134,17 +125,16 @@ public class AdSelectionServerDatabaseMigrationTest {
         Cursor cursor =
                 db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, auctionServerAdSelection));
         // The table should already exist
-        assertEquals(1, cursor.getCount());
+        assertThat(cursor.getCount()).isEqualTo(1);
 
         // Re-open the database with version 5 and provide MIGRATION_4_5 as the migration process.
         db = helper.runMigrationsAndValidate(TEST_DB, 5, true);
         cursor = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, auctionServerAdSelection));
-        assertEquals(1, cursor.getCount());
+        assertThat(cursor.getCount()).isEqualTo(1);
         cursor.moveToFirst();
 
-        assertEquals(
-                auctionServerAdSelection,
-                cursor.getString(cursor.getColumnIndex(COLUMN_NAME_NAME)));
+        assertThat(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_NAME)))
+                .isEqualTo(auctionServerAdSelection);
 
         cursor = db.query("PRAGMA table_info(encryption_context)");
         boolean hasMediaTypeChangedColumnExists = false;
@@ -157,6 +147,6 @@ public class AdSelectionServerDatabaseMigrationTest {
             } while (cursor.moveToNext());
         }
         cursor.close();
-        assertTrue(hasMediaTypeChangedColumnExists);
+        assertThat(hasMediaTypeChangedColumnExists).isTrue();
     }
 }

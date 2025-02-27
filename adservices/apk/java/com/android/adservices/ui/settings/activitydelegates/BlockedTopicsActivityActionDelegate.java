@@ -39,7 +39,6 @@ import java.util.function.Function;
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class BlockedTopicsActivityActionDelegate extends BaseActionDelegate {
     private final BlockedTopicsViewModel mBlockedTopicsViewModel;
@@ -49,7 +48,7 @@ public class BlockedTopicsActivityActionDelegate extends BaseActionDelegate {
             BlockedTopicsViewModel blockedTopicsViewModel) {
         super(blockedTopicsActivity);
         mBlockedTopicsViewModel = blockedTopicsViewModel;
-        initWithUx(blockedTopicsActivity, blockedTopicsActivity.getApplicationContext());
+        initWithUx();
         listenToBlockedTopicsViewModelUiEvents();
     }
 

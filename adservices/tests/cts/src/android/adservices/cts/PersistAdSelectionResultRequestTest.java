@@ -20,11 +20,8 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.PersistAdSelectionResultRequest;
 import android.adservices.common.AdTechIdentifier;
 
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class PersistAdSelectionResultRequestTest extends CtsAdServicesDeviceTestCase {
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
     private static final long AD_SELECTION_ID = 123456789L;

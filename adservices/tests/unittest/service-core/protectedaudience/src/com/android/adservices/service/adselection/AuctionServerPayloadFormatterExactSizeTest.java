@@ -32,7 +32,6 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.exceptions.UnsupportedPayloadSizeException;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -41,8 +40,6 @@ import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
-@RequiresSdkLevelAtLeastS(
-        reason = "PA APIs only target S+")
 public final class AuctionServerPayloadFormatterExactSizeTest extends AdServicesUnitTestCase {
     private static final int VALID_COMPRESSOR_VERSION = 0;
     private static final byte EXPECTED_META_INFO_BYTE = 64;

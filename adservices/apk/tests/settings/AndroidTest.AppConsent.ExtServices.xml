@@ -42,11 +42,12 @@
 
     <!-- Create place to store tests apks that will be installed/uninstalled in the test. -->
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="test-user-token" value="%TEST_USER%"/>
         <option name="run-command" value="mkdir -p /data/local/tmp/cts/install"/>
         <option name="teardown-command" value="rm -rf /data/local/tmp/cts"/>
         <!-- Uninstall the test app anyway in case failed test skips the uninstallation -->
         <option name="teardown-command"
-                value="pm uninstall --user 0 com.example.adservices.samples.ui.consenttestapp"/>
+                value="pm uninstall --user %TEST_USER% com.example.adservices.samples.ui.consenttestapp"/>
     </target_preparer>
 
     <!-- Push compiled APK file of test apps to a local place for installation -->

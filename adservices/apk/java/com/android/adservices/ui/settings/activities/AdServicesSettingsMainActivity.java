@@ -36,7 +36,6 @@ import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 /**
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     public static final String FROM_NOTIFICATION_KEY = "FROM_NOTIFICATION";
@@ -71,7 +70,7 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
         }
         UiStatsLogger.logSettingsPageDisplayed();
         super.onCreate(savedInstanceState);
-        if (!isUxStatesReady(this)) {
+        if (!isUxStatesReady()) {
             initMainFragment();
         }
         Trace.endSection();
@@ -91,7 +90,7 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (isUxStatesReady(this) && mActivityActionDelegate != null) {
+        if (isUxStatesReady() && mActivityActionDelegate != null) {
             mActivityActionDelegate.refreshState();
         }
     }

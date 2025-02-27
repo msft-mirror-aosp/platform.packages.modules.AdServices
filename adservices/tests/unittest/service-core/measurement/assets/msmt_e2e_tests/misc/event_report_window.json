@@ -47,7 +47,8 @@
               ],
               "aggregatable_values": {
                 "a": 123
-              }
+              },
+              "aggregatable_source_registration_time": "INCLUDE"
             }
           }
         }]
@@ -75,7 +76,8 @@
               ],
               "aggregatable_values": {
                 "a": 456
-              }
+              },
+              "aggregatable_source_registration_time": "INCLUDE"
             }
           }
         }]
@@ -104,7 +106,8 @@
               ],
               "aggregatable_values": {
                 "a": 789
-              }
+              },
+              "aggregatable_source_registration_time": "INCLUDE"
             }
           }
         }]
@@ -152,10 +155,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x559",
-              "value": 123
-            }
+            {"key": "0x559", "value": 123},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
@@ -172,10 +176,13 @@
             "version": "0.1"
           },
            "aggregation_coordinator_origin": "https://coordinator.test",
-           "histograms": [ {
-              "key": "0x559",
-              "value": 456
-           } ]
+           "histograms": [
+             {"key": "0x559", "value": 456},
+             {"key": "0x0", "value": 0},
+             {"key": "0x0", "value": 0},
+             {"key": "0x0", "value": 0},
+             {"key": "0x0", "value": 0}
+           ]
         },
         "report_time": "1643325572000",
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution"
@@ -191,10 +198,13 @@
             "version": "0.1"
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
-          "histograms": [ {
-            "key": "0x559",
-            "value": 789
-          } ]
+          "histograms": [
+            {"key": "0x559", "value": 789},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ]
         },
         "report_time": "1643325574000",
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution"

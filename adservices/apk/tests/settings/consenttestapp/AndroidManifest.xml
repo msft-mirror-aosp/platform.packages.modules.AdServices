@@ -32,6 +32,10 @@
     <activity
         android:name="com.example.adservices.samples.ui.consenttestapp.MainActivity"
         android:exported="true">
+      <intent-filter>
+        <action android:name="android.adservices.common.action.VIEW_ADSERVICES_CONSENT_PAGE" />
+        <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
     </activity>
   </application>
 

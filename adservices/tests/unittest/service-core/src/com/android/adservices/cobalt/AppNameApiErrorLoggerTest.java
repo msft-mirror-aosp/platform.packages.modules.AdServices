@@ -204,7 +204,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
         // See
         // //packages/modules/AdServices/adservices/service-core/resources/cobalt_registry.textpb
         // for the actual registry.
-        Project cobaltRegistry = CobaltRegistryLoader.getRegistry(sContext);
+        Project cobaltRegistry = CobaltRegistryLoader.getRegistry(sContext, mMockFlags);
         MetricDefinition appNameApiErrorMetric =
                 cobaltRegistry.getMetrics().stream()
                         .filter(m -> m.getMetricName().equals("per_package_api_errors"))

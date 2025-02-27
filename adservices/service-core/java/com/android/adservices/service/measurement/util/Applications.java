@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /** Application utilities for measurement. */
+// TODO(b/311183933): Remove passed in Context from static method.
+@SuppressWarnings("AvoidStaticContext")
 public class Applications {
     public static final String ANDROID_APP_SCHEME = "android-app";
     public static final String SCHEME_DELIMITER = "://";

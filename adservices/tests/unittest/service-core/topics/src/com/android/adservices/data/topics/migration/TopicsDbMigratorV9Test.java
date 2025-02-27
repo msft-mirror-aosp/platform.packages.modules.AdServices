@@ -18,59 +18,32 @@ package com.android.adservices.data.topics.migration;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Pair;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /** Unit tests for {@link TopicsDbMigratorV9} */
-public class TopicsDbMigratorV9Test {
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
+@SpyStatic(FlagsFactory.class)
+public final class TopicsDbMigratorV9Test extends AdServicesExtendedMockitoTestCase {
     // The database is created with V8 and will migrate to V9.
     private final TopicsDbHelperV8 mTopicsDbHelper = TopicsDbHelperV8.getInstance();
 
-    private MockitoSession mStaticMockSession;
-    @Mock private Flags mMockFlags;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-    }
-
-    @After
-    public void teardown() {
-        mStaticMockSession.finishMocking();
+        mocker.mockGetFlags(mMockFlags);
     }
 
     @Test
@@ -109,7 +82,7 @@ public class TopicsDbMigratorV9Test {
         db = mTopicsDbHelper.getWritableDatabase();
         // Insert an entry into the table and verify it.
         TopicsDao topicsDao = new TopicsDao(mTopicsDbHelper);
-        final long epochId = 1;
+        long epochId = 1;
         Map<Pair<String, String>, EncryptedTopic> appSdkEncryptedTopics =
                 Map.of(
                         Pair.create("app", "sdk"),

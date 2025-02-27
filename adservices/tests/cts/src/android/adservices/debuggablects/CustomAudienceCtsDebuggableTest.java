@@ -26,7 +26,6 @@ import android.os.Process;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -37,7 +36,6 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
-@RequiresSdkLevelAtLeastS
 public final class CustomAudienceCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     private TestAdvertisingCustomAudienceClient mTestClient;
@@ -63,10 +61,11 @@ public final class CustomAudienceCtsDebuggableTest extends ForegroundDebuggableC
                         .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
-        DevContextFilter devContextFilter = DevContextFilter.create(sContext);
-        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
+        DevContextFilter devContextFilter =
+                DevContextFilter.create(mContext, /* developerModeFeatureEnabled= */ false);
+        DevContext devContext = devContextFilter.createDevContext(Process.myUid());
         boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());
-        boolean isDeveloperMode = devContextFilter.isDeveloperMode();
+        boolean isDeveloperMode = devContextFilter.isDeviceDevOptionsEnabledOrDebuggable();
         mHasAccessToDevOverrides = devContext.getDeviceDevOptionsEnabled();
         mAccessStatus =
                 String.format("Debuggable: %b\n", isDebuggable)

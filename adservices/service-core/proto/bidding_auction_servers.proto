@@ -51,6 +51,27 @@ message ProtectedAuctionInput {
   // A boolean value which indicates whether temporary unlimited egress should
   // be enabled.
   bool enable_unlimited_egress = 6;
+
+  // Optional field (note: this will become a required field in 2025).
+  // The request timestamp represents when the SSP requests an ad auction to be run.
+  // For Android, the request timestamp will come from the system clock on the device.
+  int64 request_timestamp_ms = 7;
+
+  // Maximum number of ghost winners for K-Anonymity controlled by platform (Chrome,
+  // Android) for experimentation.
+  // By default this is set to 1 on the server side, hence client should
+  // populate the field if and only if they want to override for
+  // experimentation.
+  optional int32 num_k_anon_ghost_winners = 8;
+
+  // Clients can indicate whether K-Anonymity is enforced for the traffic.
+  // By default, this would be false, i.e. K-Anonymity is not enforced.
+  bool enforce_kanon = 9;
+
+  // Clients can indicate whether this request can be used for debug.
+  // By default, this would be false, i.e. cannot be used for debug.
+  // Currently Android request where ad-id is not zeroed out is eligible.
+  bool prod_debug = 10;
 }
 
 // Grouping of data pertaining to protected app signals.
@@ -217,6 +238,11 @@ message AuctionResult {
 
   // Type of the winning ad.
   AdType ad_type = 14;
+
+  // This is etld+1 of the seller that has won the auction. For single seller auction, this will the
+  // etld+1 of that seller. In case of multi seller, it will be etld+1 of the component seller that
+  // that won the auction.
+  string winning_seller = 27;
 }
 
 // The reporting urls registered during the execution of reportResult() and
@@ -388,6 +414,35 @@ message GetBidsRequest {
     // A boolean value which indicates whether temporary unlimited egress should
     // be enabled.
     bool enable_unlimited_egress = 14;
+
+    // A limit enforced by sellers on number of bids returned by each
+    // generateBid() execution.
+    //
+    // With K-Anonymity integration, each generateBid() can return multiple
+    // bids instead of one, this is referred to as multi-bid generation. This
+    // limit is required to enforce a limit with multi-bid generation.
+    //
+    // For Protected Audience, the limit would be enforced on generateBid()
+    // execution per Interest Group.
+    // For Protected App Signals (PAS), the limit would be enforced per buyer
+    // generateBid() execution.
+    //
+    // If the seller doesn't set the limit, a default would be set by the
+    // Bidding server.
+    int32 multi_bid_limit = 15;
+
+    // Clients can indicate whether K-Anonymity is enforced for the traffic.
+    // By default, this would be false, i.e. K-Anonymity is not enforced.
+    bool enforce_kanon = 16;
+
+    // A boolean value which indicates whether this request can be used for debugging.
+    // current eligible request: Android request with ad-id
+    bool is_debug_eligible = 17;
+
+    // Optional.
+    // Represents a serialized JSON map containing priority signal entries used to
+    // construct the priority signals vector.
+    string priority_signals = 18;
   }
 
   // Encrypted GetBidsRawRequest.

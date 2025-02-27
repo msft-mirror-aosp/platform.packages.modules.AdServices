@@ -16,9 +16,13 @@
 
 package com.android.adservices.data.signals;
 
+import static com.android.adservices.data.signals.DBEncodedPayloadFixture.assertDBEncodedPayloadsAreEqual;
+import static com.android.adservices.data.signals.DBProtectedSignalFixture.assertEqualsExceptId;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
-import static org.junit.Assert.assertArrayEquals;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -43,7 +47,8 @@ import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
-import org.junit.After;
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -68,18 +73,15 @@ public final class ProtectedSignalsDaoTest extends AdServicesExtendedMockitoTest
     @Mock private PackageManager mPackageManagerMock;
 
     private ProtectedSignalsDao mProtectedSignalsDao;
+    private EncodedPayloadDao mEncodedPayloadDao;
 
     @Before
     public void setup() {
-        mProtectedSignalsDao =
-                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
-                        .build()
-                        .protectedSignalsDao();
-    }
+        ProtectedSignalsDatabase protectedSignalsDatabase =
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class).build();
 
-    @After
-    public void teardown() {
-        mProtectedSignalsDao.deleteByBuyers(Arrays.asList(BUYER_1, BUYER_2));
+        mProtectedSignalsDao = protectedSignalsDatabase.protectedSignalsDao();
+        mEncodedPayloadDao = protectedSignalsDatabase.getEncodedPayloadDao();
     }
 
     @Test
@@ -208,7 +210,75 @@ public final class ProtectedSignalsDaoTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
-    public void testDeleteSignalsBeforeTime() {
+    public void testInsertAndDelete_deletesOrphanedEncodedPayloads() {
+        DBEncodedPayload expectedEncodedPayloadBuyer1 =
+                DBEncodedPayloadFixture.anEncodedPayloadBuilder(
+                                DBProtectedSignalFixture.SIGNAL.getBuyer())
+                        .build();
+        DBEncodedPayload expectedEncodedPayloadBuyer2 =
+                DBEncodedPayloadFixture.anEncodedPayloadBuilder(
+                                DBProtectedSignalFixture.SIGNAL_OTHER_BUYER.getBuyer())
+                        .build();
+        mProtectedSignalsDao.insertSignals(
+                ImmutableList.of(
+                        DBProtectedSignalFixture.SIGNAL,
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER));
+        mEncodedPayloadDao.persistEncodedPayload(expectedEncodedPayloadBuyer1);
+        mEncodedPayloadDao.persistEncodedPayload(expectedEncodedPayloadBuyer2);
+        List<DBProtectedSignal> initialSignalsBuyer1 =
+                mProtectedSignalsDao.getSignalsByBuyer(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Initial signals for BUYER_1").that(initialSignalsBuyer1).hasSize(1);
+        assertEqualsExceptId(DBProtectedSignalFixture.SIGNAL, initialSignalsBuyer1.get(0));
+        List<DBProtectedSignal> initialSignalsBuyer2 =
+                mProtectedSignalsDao.getSignalsByBuyer(
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER.getBuyer());
+        assertWithMessage("Initial signals for BUYER_1").that(initialSignalsBuyer2).hasSize(1);
+        assertEqualsExceptId(
+                DBProtectedSignalFixture.SIGNAL_OTHER_BUYER, initialSignalsBuyer2.get(0));
+        DBEncodedPayload initialPersistedEncodedPayloadBuyer1 =
+                mEncodedPayloadDao.getEncodedPayload(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Initial encoded payload for BUYER_1")
+                .that(initialPersistedEncodedPayloadBuyer1)
+                .isNotNull();
+        assertDBEncodedPayloadsAreEqual(
+                expectedEncodedPayloadBuyer1, initialPersistedEncodedPayloadBuyer1);
+        DBEncodedPayload initialPersistedEncodedPayloadBuyer2 =
+                mEncodedPayloadDao.getEncodedPayload(
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER.getBuyer());
+        assertWithMessage("Initial encoded payload for BUYER_2")
+                .that(initialPersistedEncodedPayloadBuyer2)
+                .isNotNull();
+        assertDBEncodedPayloadsAreEqual(
+                expectedEncodedPayloadBuyer2, initialPersistedEncodedPayloadBuyer2);
+
+        mProtectedSignalsDao.insertAndDelete(
+                DBProtectedSignalFixture.SIGNAL.getBuyer(),
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                /* signalsToInsert= */ ImmutableList.of(),
+                /* signalsToDelete= */ initialSignalsBuyer1);
+
+        List<DBProtectedSignal> postDeletionSignalsBuyer1 =
+                mProtectedSignalsDao.getSignalsByBuyer(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Signals for BUYER_1 after deletion")
+                .that(postDeletionSignalsBuyer1)
+                .isEmpty();
+        DBEncodedPayload postDeletionEncodedPayloadBuyer1 =
+                mEncodedPayloadDao.getEncodedPayload(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Encoded payload for BUYER_1 after deletion")
+                .that(postDeletionEncodedPayloadBuyer1)
+                .isNull();
+        DBEncodedPayload postDeletionEncodedPayloadBuyer2 =
+                mEncodedPayloadDao.getEncodedPayload(
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER.getBuyer());
+        assertWithMessage("Encoded payload for BUYER_2 after deletion")
+                .that(postDeletionEncodedPayloadBuyer2)
+                .isNotNull();
+        assertDBEncodedPayloadsAreEqual(
+                expectedEncodedPayloadBuyer2, postDeletionEncodedPayloadBuyer2);
+    }
+
+    @Test
+    public void testDeleteExpiredSignalsAndUpdateSignalsUpdateMetadata() {
         // Insert two signals
         mProtectedSignalsDao.insertAndDelete(
                 BUYER_1,
@@ -242,6 +312,74 @@ public final class ProtectedSignalsDaoTest extends AdServicesExtendedMockitoTest
         assertEquals(1, readResult.size());
         assertNotNull(readResult.get(0).getId());
         assertEqualsExceptId(DBProtectedSignalFixture.LATER_TIME_SIGNAL, readResult.get(0));
+    }
+
+    @Test
+    public void
+            testDeleteExpiredSignalsAndUpdateSignalsUpdateMetadata_deletesOrphanedEncodedPayloads() {
+        DBEncodedPayload expectedEncodedPayloadBuyer1 =
+                DBEncodedPayloadFixture.anEncodedPayloadBuilder(
+                                DBProtectedSignalFixture.SIGNAL.getBuyer())
+                        .build();
+        DBEncodedPayload expectedEncodedPayloadBuyer2 =
+                DBEncodedPayloadFixture.anEncodedPayloadBuilder(
+                                DBProtectedSignalFixture.LATER_TIME_SIGNAL_OTHER_BUYER.getBuyer())
+                        .build();
+        mProtectedSignalsDao.insertSignals(
+                ImmutableList.of(
+                        DBProtectedSignalFixture.SIGNAL,
+                        DBProtectedSignalFixture.LATER_TIME_SIGNAL_OTHER_BUYER));
+        mEncodedPayloadDao.persistEncodedPayload(expectedEncodedPayloadBuyer1);
+        mEncodedPayloadDao.persistEncodedPayload(expectedEncodedPayloadBuyer2);
+        List<DBProtectedSignal> initialSignalsBuyer1 =
+                mProtectedSignalsDao.getSignalsByBuyer(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Initial signals for BUYER_1").that(initialSignalsBuyer1).hasSize(1);
+        assertEqualsExceptId(DBProtectedSignalFixture.SIGNAL, initialSignalsBuyer1.get(0));
+        List<DBProtectedSignal> initialSignalsBuyer2 =
+                mProtectedSignalsDao.getSignalsByBuyer(
+                        DBProtectedSignalFixture.LATER_TIME_SIGNAL_OTHER_BUYER.getBuyer());
+        assertWithMessage("Initial signals for BUYER_1").that(initialSignalsBuyer2).hasSize(1);
+        assertEqualsExceptId(
+                DBProtectedSignalFixture.LATER_TIME_SIGNAL_OTHER_BUYER,
+                initialSignalsBuyer2.get(0));
+        DBEncodedPayload initialPersistedEncodedPayloadBuyer1 =
+                mEncodedPayloadDao.getEncodedPayload(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Initial encoded payload for BUYER_1")
+                .that(initialPersistedEncodedPayloadBuyer1)
+                .isNotNull();
+        assertDBEncodedPayloadsAreEqual(
+                expectedEncodedPayloadBuyer1, initialPersistedEncodedPayloadBuyer1);
+        DBEncodedPayload initialPersistedEncodedPayloadBuyer2 =
+                mEncodedPayloadDao.getEncodedPayload(
+                        DBProtectedSignalFixture.LATER_TIME_SIGNAL_OTHER_BUYER.getBuyer());
+        assertWithMessage("Initial encoded payload for BUYER_2")
+                .that(initialPersistedEncodedPayloadBuyer2)
+                .isNotNull();
+        assertDBEncodedPayloadsAreEqual(
+                expectedEncodedPayloadBuyer2, initialPersistedEncodedPayloadBuyer2);
+
+        mProtectedSignalsDao.deleteExpiredSignalsAndUpdateSignalsUpdateMetadata(
+                DBProtectedSignalFixture.SIGNAL.getCreationTime().plus(Duration.ofMillis(1)),
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+
+        List<DBProtectedSignal> postDeletionSignalsBuyer1 =
+                mProtectedSignalsDao.getSignalsByBuyer(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Signals for BUYER_1 after deletion")
+                .that(postDeletionSignalsBuyer1)
+                .isEmpty();
+        DBEncodedPayload postDeletionEncodedPayloadBuyer1 =
+                mEncodedPayloadDao.getEncodedPayload(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Encoded payload for BUYER_1 after deletion")
+                .that(postDeletionEncodedPayloadBuyer1)
+                .isNull();
+        DBEncodedPayload postDeletionEncodedPayloadBuyer2 =
+                mEncodedPayloadDao.getEncodedPayload(
+                        DBProtectedSignalFixture.LATER_TIME_SIGNAL_OTHER_BUYER.getBuyer());
+        assertWithMessage("Encoded payload for BUYER_2 after deletion")
+                .that(postDeletionEncodedPayloadBuyer2)
+                .isNotNull();
+        assertDBEncodedPayloadsAreEqual(
+                expectedEncodedPayloadBuyer2, postDeletionEncodedPayloadBuyer2);
     }
 
     @Test
@@ -324,6 +462,74 @@ public final class ProtectedSignalsDaoTest extends AdServicesExtendedMockitoTest
         assertEquals(1, readResult.size());
         assertNotNull(readResult.get(0).getId());
         assertEqualsExceptId(signal1, readResult.get(0));
+    }
+
+    @Test
+    public void testDeleteDisallowedBuyerSignals_deletesOrphanedEncodedPayloads() {
+        when(mEnrollmentDaoMock.getAllFledgeEnrolledAdTechs())
+                .thenReturn(
+                        Collections.singleton(
+                                DBProtectedSignalFixture.SIGNAL_OTHER_BUYER.getBuyer()));
+        DBEncodedPayload expectedEncodedPayloadBuyer1 =
+                DBEncodedPayloadFixture.anEncodedPayloadBuilder(
+                                DBProtectedSignalFixture.SIGNAL.getBuyer())
+                        .build();
+        DBEncodedPayload expectedEncodedPayloadBuyer2 =
+                DBEncodedPayloadFixture.anEncodedPayloadBuilder(
+                                DBProtectedSignalFixture.SIGNAL_OTHER_BUYER.getBuyer())
+                        .build();
+        mProtectedSignalsDao.insertSignals(
+                ImmutableList.of(
+                        DBProtectedSignalFixture.SIGNAL,
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER));
+        mEncodedPayloadDao.persistEncodedPayload(expectedEncodedPayloadBuyer1);
+        mEncodedPayloadDao.persistEncodedPayload(expectedEncodedPayloadBuyer2);
+        List<DBProtectedSignal> initialSignalsBuyer1 =
+                mProtectedSignalsDao.getSignalsByBuyer(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Initial signals for BUYER_1").that(initialSignalsBuyer1).hasSize(1);
+        assertEqualsExceptId(DBProtectedSignalFixture.SIGNAL, initialSignalsBuyer1.get(0));
+        List<DBProtectedSignal> initialSignalsBuyer2 =
+                mProtectedSignalsDao.getSignalsByBuyer(
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER.getBuyer());
+        assertWithMessage("Initial signals for BUYER_1").that(initialSignalsBuyer2).hasSize(1);
+        assertEqualsExceptId(
+                DBProtectedSignalFixture.SIGNAL_OTHER_BUYER, initialSignalsBuyer2.get(0));
+        DBEncodedPayload initialPersistedEncodedPayloadBuyer1 =
+                mEncodedPayloadDao.getEncodedPayload(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Initial encoded payload for BUYER_1")
+                .that(initialPersistedEncodedPayloadBuyer1)
+                .isNotNull();
+        assertDBEncodedPayloadsAreEqual(
+                expectedEncodedPayloadBuyer1, initialPersistedEncodedPayloadBuyer1);
+        DBEncodedPayload initialPersistedEncodedPayloadBuyer2 =
+                mEncodedPayloadDao.getEncodedPayload(
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER.getBuyer());
+        assertWithMessage("Initial encoded payload for BUYER_2")
+                .that(initialPersistedEncodedPayloadBuyer2)
+                .isNotNull();
+        assertDBEncodedPayloadsAreEqual(
+                expectedEncodedPayloadBuyer2, initialPersistedEncodedPayloadBuyer2);
+
+        mProtectedSignalsDao.deleteDisallowedBuyerSignals(mEnrollmentDaoMock);
+
+        List<DBProtectedSignal> postDeletionSignalsBuyer1 =
+                mProtectedSignalsDao.getSignalsByBuyer(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Signals for BUYER_1 after deletion")
+                .that(postDeletionSignalsBuyer1)
+                .isEmpty();
+        DBEncodedPayload postDeletionEncodedPayloadBuyer1 =
+                mEncodedPayloadDao.getEncodedPayload(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Encoded payload for BUYER_1 after deletion")
+                .that(postDeletionEncodedPayloadBuyer1)
+                .isNull();
+        DBEncodedPayload postDeletionEncodedPayloadBuyer2 =
+                mEncodedPayloadDao.getEncodedPayload(
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER.getBuyer());
+        assertWithMessage("Encoded payload for BUYER_2 after deletion")
+                .that(postDeletionEncodedPayloadBuyer2)
+                .isNotNull();
+        assertDBEncodedPayloadsAreEqual(
+                expectedEncodedPayloadBuyer2, postDeletionEncodedPayloadBuyer2);
     }
 
     @Test
@@ -493,11 +699,207 @@ public final class ProtectedSignalsDaoTest extends AdServicesExtendedMockitoTest
         assertEquals(updated.getLastSignalsUpdatedTime(), retrieved.getLastSignalsUpdatedTime());
     }
 
-    private void assertEqualsExceptId(DBProtectedSignal expected, DBProtectedSignal actual) {
-        assertEquals(expected.getBuyer(), actual.getBuyer());
-        assertArrayEquals(expected.getKey(), actual.getKey());
-        assertArrayEquals(expected.getValue(), actual.getValue());
-        assertEquals(expected.getCreationTime(), actual.getCreationTime());
-        assertEquals(expected.getPackageName(), actual.getPackageName());
+    @Test
+    public void testDeleteRawSignalsByPackage_onlyDeletesRawSignalsFromPackage() {
+        mProtectedSignalsDao.insertSignals(
+                ImmutableList.of(
+                        DBProtectedSignalFixture.SIGNAL,
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER_OTHER_PACKAGE));
+        List<DBProtectedSignal> initialSignalsBuyer1 =
+                mProtectedSignalsDao.getSignalsByBuyer(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Initial signals for BUYER_1").that(initialSignalsBuyer1).hasSize(1);
+        assertEqualsExceptId(DBProtectedSignalFixture.SIGNAL, initialSignalsBuyer1.get(0));
+        List<DBProtectedSignal> initialSignalsBuyer2 =
+                mProtectedSignalsDao.getSignalsByBuyer(
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER_OTHER_PACKAGE.getBuyer());
+        assertWithMessage("Initial signals for BUYER_2").that(initialSignalsBuyer2).hasSize(1);
+        assertEqualsExceptId(
+                DBProtectedSignalFixture.SIGNAL_OTHER_BUYER_OTHER_PACKAGE,
+                initialSignalsBuyer2.get(0));
+
+        mProtectedSignalsDao.deleteRawSignalsByPackage(
+                ImmutableList.of(DBProtectedSignalFixture.SIGNAL.getPackageName()));
+
+        List<DBProtectedSignal> postDeletionSignalsBuyer1 =
+                mProtectedSignalsDao.getSignalsByBuyer(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Signals for BUYER_1 after deletion")
+                .that(postDeletionSignalsBuyer1)
+                .isEmpty();
+        List<DBProtectedSignal> postDeletionSignalsBuyer2 =
+                mProtectedSignalsDao.getSignalsByBuyer(
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER_OTHER_PACKAGE.getBuyer());
+        assertWithMessage("Signals for BUYER_2 after deletion")
+                .that(postDeletionSignalsBuyer2)
+                .hasSize(1);
+        assertEqualsExceptId(
+                DBProtectedSignalFixture.SIGNAL_OTHER_BUYER_OTHER_PACKAGE,
+                postDeletionSignalsBuyer2.get(0));
+    }
+
+    @Test
+    public void
+            testDeleteEncodedPayloadsWithMissingRawSignals_onlyDeletesOrphanedEncodedPayloads() {
+        DBEncodedPayload expectedEncodedPayloadBuyer1 =
+                DBEncodedPayloadFixture.anEncodedPayloadBuilder(
+                                DBProtectedSignalFixture.SIGNAL.getBuyer())
+                        .build();
+        DBEncodedPayload expectedEncodedPayloadBuyer2 =
+                DBEncodedPayloadFixture.anEncodedPayloadBuilder(
+                                DBProtectedSignalFixture.SIGNAL_OTHER_BUYER.getBuyer())
+                        .build();
+        mProtectedSignalsDao.insertSignals(ImmutableList.of(DBProtectedSignalFixture.SIGNAL));
+        mEncodedPayloadDao.persistEncodedPayload(expectedEncodedPayloadBuyer1);
+        mEncodedPayloadDao.persistEncodedPayload(expectedEncodedPayloadBuyer2);
+        List<DBProtectedSignal> initialSignalsBuyer1 =
+                mProtectedSignalsDao.getSignalsByBuyer(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Initial signals for BUYER_1").that(initialSignalsBuyer1).hasSize(1);
+        assertEqualsExceptId(DBProtectedSignalFixture.SIGNAL, initialSignalsBuyer1.get(0));
+        DBEncodedPayload initialPersistedEncodedPayloadBuyer1 =
+                mEncodedPayloadDao.getEncodedPayload(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Initial encoded payload for BUYER_1")
+                .that(initialPersistedEncodedPayloadBuyer1)
+                .isNotNull();
+        assertDBEncodedPayloadsAreEqual(
+                expectedEncodedPayloadBuyer1, initialPersistedEncodedPayloadBuyer1);
+        DBEncodedPayload initialPersistedEncodedPayloadBuyer2 =
+                mEncodedPayloadDao.getEncodedPayload(
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER.getBuyer());
+        assertWithMessage("Initial encoded payload for BUYER_2")
+                .that(initialPersistedEncodedPayloadBuyer2)
+                .isNotNull();
+        assertDBEncodedPayloadsAreEqual(
+                expectedEncodedPayloadBuyer2, initialPersistedEncodedPayloadBuyer2);
+
+        mProtectedSignalsDao.deleteEncodedPayloadsWithMissingRawSignals();
+
+        DBEncodedPayload postDeletionEncodedPayloadBuyer1 =
+                mEncodedPayloadDao.getEncodedPayload(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Encoded payload for BUYER_1 after deletion")
+                .that(postDeletionEncodedPayloadBuyer1)
+                .isNotNull();
+        assertDBEncodedPayloadsAreEqual(
+                expectedEncodedPayloadBuyer1, postDeletionEncodedPayloadBuyer1);
+        DBEncodedPayload postDeletionEncodedPayloadBuyer2 =
+                mEncodedPayloadDao.getEncodedPayload(
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER.getBuyer());
+        assertWithMessage("Encoded payload for BUYER_2 after deletion")
+                .that(postDeletionEncodedPayloadBuyer2)
+                .isNull();
+    }
+
+    @Test
+    public void testDeleteSignalsByPackage_deletesRawSignalsFromPackage() {
+        mProtectedSignalsDao.insertSignals(
+                ImmutableList.of(
+                        DBProtectedSignalFixture.SIGNAL,
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER_OTHER_PACKAGE));
+        List<DBProtectedSignal> initialSignalsBuyer1 =
+                mProtectedSignalsDao.getSignalsByBuyer(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Initial signals for BUYER_1").that(initialSignalsBuyer1).hasSize(1);
+        assertEqualsExceptId(DBProtectedSignalFixture.SIGNAL, initialSignalsBuyer1.get(0));
+        List<DBProtectedSignal> initialSignalsBuyer2 =
+                mProtectedSignalsDao.getSignalsByBuyer(
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER_OTHER_PACKAGE.getBuyer());
+        assertWithMessage("Initial signals for BUYER_2").that(initialSignalsBuyer2).hasSize(1);
+        assertEqualsExceptId(
+                DBProtectedSignalFixture.SIGNAL_OTHER_BUYER_OTHER_PACKAGE,
+                initialSignalsBuyer2.get(0));
+
+        mProtectedSignalsDao.deleteSignalsByPackage(
+                ImmutableList.of(DBProtectedSignalFixture.SIGNAL.getPackageName()));
+
+        List<DBProtectedSignal> postDeletionSignalsBuyer1 =
+                mProtectedSignalsDao.getSignalsByBuyer(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Signals for BUYER_1 after deletion")
+                .that(postDeletionSignalsBuyer1)
+                .isEmpty();
+        List<DBProtectedSignal> postDeletionSignalsBuyer2 =
+                mProtectedSignalsDao.getSignalsByBuyer(
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER_OTHER_PACKAGE.getBuyer());
+        assertWithMessage("Signals for BUYER_2 after deletion")
+                .that(postDeletionSignalsBuyer2)
+                .hasSize(1);
+        assertEqualsExceptId(
+                DBProtectedSignalFixture.SIGNAL_OTHER_BUYER_OTHER_PACKAGE,
+                postDeletionSignalsBuyer2.get(0));
+    }
+
+    @Test
+    public void testDeleteSignalsByPackage_deletesOrphanedEncodedPayloads() {
+        DBEncodedPayload expectedEncodedPayloadBuyer1 =
+                DBEncodedPayloadFixture.anEncodedPayloadBuilder(
+                                DBProtectedSignalFixture.SIGNAL.getBuyer())
+                        .build();
+        DBEncodedPayload expectedEncodedPayloadBuyer2 =
+                DBEncodedPayloadFixture.anEncodedPayloadBuilder(
+                                DBProtectedSignalFixture.SIGNAL_OTHER_BUYER_OTHER_PACKAGE
+                                        .getBuyer())
+                        .build();
+        mProtectedSignalsDao.insertSignals(
+                ImmutableList.of(
+                        DBProtectedSignalFixture.SIGNAL,
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER_OTHER_PACKAGE));
+        mEncodedPayloadDao.persistEncodedPayload(expectedEncodedPayloadBuyer1);
+        mEncodedPayloadDao.persistEncodedPayload(expectedEncodedPayloadBuyer2);
+        List<DBProtectedSignal> initialSignalsBuyer1 =
+                mProtectedSignalsDao.getSignalsByBuyer(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Initial signals for BUYER_1").that(initialSignalsBuyer1).hasSize(1);
+        assertEqualsExceptId(DBProtectedSignalFixture.SIGNAL, initialSignalsBuyer1.get(0));
+        List<DBProtectedSignal> initialSignalsBuyer2 =
+                mProtectedSignalsDao.getSignalsByBuyer(
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER_OTHER_PACKAGE.getBuyer());
+        assertWithMessage("Initial signals for BUYER_1").that(initialSignalsBuyer2).hasSize(1);
+        assertEqualsExceptId(
+                DBProtectedSignalFixture.SIGNAL_OTHER_BUYER_OTHER_PACKAGE,
+                initialSignalsBuyer2.get(0));
+        DBEncodedPayload initialPersistedEncodedPayloadBuyer1 =
+                mEncodedPayloadDao.getEncodedPayload(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Initial encoded payload for BUYER_1")
+                .that(initialPersistedEncodedPayloadBuyer1)
+                .isNotNull();
+        assertDBEncodedPayloadsAreEqual(
+                expectedEncodedPayloadBuyer1, initialPersistedEncodedPayloadBuyer1);
+        DBEncodedPayload initialPersistedEncodedPayloadBuyer2 =
+                mEncodedPayloadDao.getEncodedPayload(
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER_OTHER_PACKAGE.getBuyer());
+        assertWithMessage("Initial encoded payload for BUYER_2")
+                .that(initialPersistedEncodedPayloadBuyer2)
+                .isNotNull();
+        assertDBEncodedPayloadsAreEqual(
+                expectedEncodedPayloadBuyer2, initialPersistedEncodedPayloadBuyer2);
+
+        mProtectedSignalsDao.deleteSignalsByPackage(
+                ImmutableList.of(DBProtectedSignalFixture.SIGNAL.getPackageName()));
+
+        DBEncodedPayload postDeletionEncodedPayloadBuyer1 =
+                mEncodedPayloadDao.getEncodedPayload(DBProtectedSignalFixture.SIGNAL.getBuyer());
+        assertWithMessage("Encoded payload for BUYER_1 after deletion")
+                .that(postDeletionEncodedPayloadBuyer1)
+                .isNull();
+        DBEncodedPayload postDeletionEncodedPayloadBuyer2 =
+                mEncodedPayloadDao.getEncodedPayload(
+                        DBProtectedSignalFixture.SIGNAL_OTHER_BUYER_OTHER_PACKAGE.getBuyer());
+        assertWithMessage("Encoded payload for BUYER_2 after deletion")
+                .that(postDeletionEncodedPayloadBuyer2)
+                .isNotNull();
+        assertDBEncodedPayloadsAreEqual(
+                expectedEncodedPayloadBuyer2, postDeletionEncodedPayloadBuyer2);
+    }
+
+    @Test
+    public void testHasSignalsFromBuyer() {
+        // Assert no signals are present in an empty DB.
+        boolean hasSignalsFromBuyer = mProtectedSignalsDao.hasSignalsFromBuyer(BUYER_1);
+        assertThat(hasSignalsFromBuyer).isFalse();
+
+        // Insert a signal and assert its presence in the DB.
+        mProtectedSignalsDao.insertSignals(List.of(DBProtectedSignalFixture.SIGNAL));
+        hasSignalsFromBuyer = mProtectedSignalsDao.hasSignalsFromBuyer(BUYER_1);
+        assertThat(hasSignalsFromBuyer).isTrue();
+
+        // Delete all signals from the buyer and assert absence of signals.
+        mProtectedSignalsDao.deleteByBuyers(List.of(BUYER_1));
+        hasSignalsFromBuyer = mProtectedSignalsDao.hasSignalsFromBuyer(BUYER_1);
+        assertThat(hasSignalsFromBuyer).isFalse();
     }
 }

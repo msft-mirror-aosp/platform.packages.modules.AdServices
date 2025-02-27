@@ -16,8 +16,6 @@
 
 package com.android.tests.sandbox.appsetid;
 
-import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_KILL_SWITCH;
-
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.app.sdksandbox.SdkSandboxManager;
@@ -26,9 +24,6 @@ import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.os.Bundle;
 
 import com.android.adservices.common.AdServicesCtsTestCase;
-import com.android.adservices.common.annotations.SetAllLogcatTags;
-import com.android.adservices.common.annotations.SetPpapiAppAllowList;
-import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.network.NetworkConnectionHelper;
 
 import org.junit.After;
@@ -45,10 +40,8 @@ import java.util.concurrent.TimeoutException;
 /*
  * Test AppSetId API running within the Sandbox.
  */
-@SetAllLogcatTags
-@SetFlagDisabled(KEY_APPSETID_KILL_SWITCH)
-@SetPpapiAppAllowList
-public final class SandboxedAppSetIdManagerTest extends AdServicesCtsTestCase {
+public final class SandboxedAppSetIdManagerTest extends AdServicesCtsTestCase
+        implements CtsSandboxedAppSetIdITestFlags {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SDK_NAME = "com.android.tests.providers.appsetidsdk";
 

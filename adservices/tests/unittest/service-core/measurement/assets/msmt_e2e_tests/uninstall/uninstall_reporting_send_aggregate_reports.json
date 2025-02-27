@@ -54,7 +54,8 @@
                 ],
                 "aggregatable_values": {
                   "a": 123
-                }
+                },
+                "aggregatable_source_registration_time": "INCLUDE"
               }
             }
           }
@@ -109,7 +110,11 @@
             {
               "key": "0x559",
               "value": 123
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",

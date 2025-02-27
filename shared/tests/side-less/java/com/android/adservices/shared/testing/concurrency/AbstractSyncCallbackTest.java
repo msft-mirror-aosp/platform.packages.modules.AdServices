@@ -15,7 +15,7 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import com.android.adservices.shared.meta_testing.FakeLogger;
+import com.android.adservices.shared.meta_testing.FakeRealLogger;
 
 import org.junit.Test;
 
@@ -114,7 +114,7 @@ public final class AbstractSyncCallbackTest extends SyncCallbackTestCase<Abstrac
 
         @SuppressWarnings("unused") // Called by superclass using reflection
         ConcreteSyncCallback() {
-            super(new SyncCallbackSettings.Builder(new FakeLogger()).build());
+            super(new SyncCallbackSettings.Builder(new FakeRealLogger()).build());
         }
 
         ConcreteSyncCallback(SyncCallbackSettings settings) {

@@ -23,11 +23,8 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.adselection.DecisionLogic;
 import android.os.Parcel;
 
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class DecisionLogicTest extends CtsAdServicesDeviceTestCase {
     private static final String DECISION_LOGIC = "reportWin()";
 

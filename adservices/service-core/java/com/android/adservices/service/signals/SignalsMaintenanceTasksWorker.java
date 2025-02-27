@@ -86,6 +86,8 @@ public class SignalsMaintenanceTasksWorker {
     }
 
     /** Creates a new instance of {@link SignalsMaintenanceTasksWorker}. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static SignalsMaintenanceTasksWorker create(@NonNull Context context) {
         Objects.requireNonNull(context);
         return new SignalsMaintenanceTasksWorker(context);

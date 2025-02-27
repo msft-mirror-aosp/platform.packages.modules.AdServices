@@ -58,7 +58,7 @@ public class SdkSandboxMediaTest extends SandboxKillerBeforeTest {
 
     @Before
     public void setup() {
-        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
+        assumeTrue("Test is meant for V+ devices only", SdkLevel.isAtLeastV());
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         activityScenarioRule.getScenario();
     }

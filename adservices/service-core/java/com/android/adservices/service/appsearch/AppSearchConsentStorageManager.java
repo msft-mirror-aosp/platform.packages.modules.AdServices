@@ -18,7 +18,6 @@ package com.android.adservices.service.appsearch;
 
 import static com.android.adservices.AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX;
 
-import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.app.adservices.topics.TopicParcel;
 import android.content.SharedPreferences;
@@ -27,7 +26,6 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
@@ -43,6 +41,7 @@ import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
@@ -64,7 +63,7 @@ import java.util.stream.Collectors;
  * <p>IMPORTANT: Until ConsentManagerV2 is launched, keep in sync with AppSearchConsentManager.
  */
 @RequiresApi(Build.VERSION_CODES.S)
-public class AppSearchConsentStorageManager implements IConsentStorage {
+public final class AppSearchConsentStorageManager implements IConsentStorage {
 
     private static final Object SINGLETON_LOCK = new Object();
 
@@ -74,9 +73,10 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
     private final AppSearchConsentWorker mAppSearchConsentWorker;
 
     @VisibleForTesting
-    public AppSearchConsentStorageManager(@NonNull AppSearchConsentWorker appSearchConsentWorker) {
-        Objects.requireNonNull(appSearchConsentWorker);
-        mAppSearchConsentWorker = appSearchConsentWorker;
+    public AppSearchConsentStorageManager(AppSearchConsentWorker appSearchConsentWorker) {
+        mAppSearchConsentWorker =
+                Objects.requireNonNull(
+                        appSearchConsentWorker, "appSearchConsentWorker cannot be null");
     }
 
     /** Returns an instance of AppSearchConsentStorageManager. */
@@ -113,7 +113,7 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
     }
 
     @Override
-    public void clearConsentForUninstalledApp(@NonNull String packageName) {
+    public void clearConsentForUninstalledApp(String packageName) {
         clearConsentForUninstalledApp(packageName, 0);
     }
 
@@ -128,9 +128,9 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
      * @param packageUid packageUid, unused in AppsearchConsentManager.
      */
     @Override
-    public void clearConsentForUninstalledApp(@NonNull String packageName, int packageUid) {
+    public void clearConsentForUninstalledApp(String packageName, int packageUid) {
         // For appsearch storage, we don't need the packageUid, unused in AppsearchConsentManager
-        Objects.requireNonNull(packageName);
+        Objects.requireNonNull(packageName, "packageName cannot be null");
 
         mAppSearchConsentWorker.removeAppWithConsent(
                 AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT, packageName);
@@ -176,7 +176,7 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
      */
     @Override
     public AdServicesApiConsent getConsent(AdServicesApiType apiType) {
-        Objects.requireNonNull(apiType);
+        Objects.requireNonNull(apiType, "apiType cannot be null");
         return AdServicesApiConsent.getConsent(
                 mAppSearchConsentWorker.getConsent(apiType.toAppSearchKey()));
     }
@@ -258,8 +258,8 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
      *     application
      */
     @Override
-    public boolean isConsentRevokedForApp(@NonNull String packageName) {
-        Objects.requireNonNull(packageName);
+    public boolean isConsentRevokedForApp(String packageName) {
+        Objects.requireNonNull(packageName, "packageName cannot be null");
 
         boolean isConsented =
                 mAppSearchConsentWorker
@@ -299,14 +299,14 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
      * @return whether or not we performed a migration
      */
     public boolean migrateConsentDataIfNeeded(
-            @NonNull SharedPreferences sharedPreferences,
-            @NonNull AtomicFileDatastore datastore,
+            SharedPreferences sharedPreferences,
+            AtomicFileDatastore datastore,
             @Nullable AdServicesStorageManager adServicesManager,
-            @NonNull AppConsentDao appConsentDao)
+            AppConsentDao appConsentDao)
             throws IOException {
-        Objects.requireNonNull(sharedPreferences);
-        Objects.requireNonNull(datastore);
-        Objects.requireNonNull(appConsentDao);
+        Objects.requireNonNull(sharedPreferences, "packageName cannot be null");
+        Objects.requireNonNull(datastore, "datastore cannot be null");
+        Objects.requireNonNull(appConsentDao, "appConsentDao cannot be null");
         // On R/S, this function should never be executed because AppSearch to PPAPI and
         // System Server migration is a T+ feature. On T+, this function should only execute
         // if it's within the AdServices APK and not ExtServices. So check if it's within
@@ -335,17 +335,44 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
         boolean wasU18NotificationDisplayed =
                 isU18AppSearchMigrationEnabled && wasU18NotificationDisplayed();
 
-        if (wasNotificationDisplayed) {
-            datastore.putBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
-            adServicesManager.recordNotificationDisplayed(true);
-        }
-        if (wasGaUxNotificationDisplayed) {
-            datastore.putBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
-            adServicesManager.recordGaUxNotificationDisplayed(true);
-        }
-        if (wasU18NotificationDisplayed) {
-            datastore.putBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, true);
-            adServicesManager.setU18NotificationDisplayed(true);
+        if (FlagsFactory.getFlags().getEnableAtomicFileDatastoreBatchUpdateApi()) {
+            datastore.update(
+                    updateOperation -> {
+                        if (wasNotificationDisplayed) {
+                            updateOperation.putBoolean(
+                                    ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
+                        }
+                        if (wasGaUxNotificationDisplayed) {
+                            updateOperation.putBoolean(
+                                    ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
+                        }
+                        if (wasU18NotificationDisplayed) {
+                            updateOperation.putBoolean(
+                                    ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, true);
+                        }
+                    });
+            if (wasNotificationDisplayed) {
+                adServicesManager.recordNotificationDisplayed(true);
+            }
+            if (wasGaUxNotificationDisplayed) {
+                adServicesManager.recordGaUxNotificationDisplayed(true);
+            }
+            if (wasU18NotificationDisplayed) {
+                adServicesManager.setU18NotificationDisplayed(true);
+            }
+        } else {
+            if (wasNotificationDisplayed) {
+                datastore.putBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
+                adServicesManager.recordNotificationDisplayed(true);
+            }
+            if (wasGaUxNotificationDisplayed) {
+                datastore.putBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
+                adServicesManager.recordGaUxNotificationDisplayed(true);
+            }
+            if (wasU18NotificationDisplayed) {
+                datastore.putBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, true);
+                adServicesManager.setU18NotificationDisplayed(true);
+            }
         }
         if (!wasGaUxNotificationDisplayed
                 && !wasNotificationDisplayed
@@ -375,11 +402,25 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
 
         // Migrate the current Privacy Sandbox feature type to PP API and system server.
         PrivacySandboxFeatureType currentFeatureType = getCurrentPrivacySandboxFeature();
-        for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
-            if (featureType.name().equals(currentFeatureType.name())) {
-                datastore.putBoolean(featureType.name(), true);
-            } else {
-                datastore.putBoolean(featureType.name(), false);
+        if (FlagsFactory.getFlags().getEnableAtomicFileDatastoreBatchUpdateApi()) {
+            datastore.update(
+                    updateOperation -> {
+                        for (PrivacySandboxFeatureType featureType :
+                                PrivacySandboxFeatureType.values()) {
+                            if (featureType.name().equals(currentFeatureType.name())) {
+                                updateOperation.putBoolean(featureType.name(), true);
+                            } else {
+                                updateOperation.putBoolean(featureType.name(), false);
+                            }
+                        }
+                    });
+        } else {
+            for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
+                if (featureType.name().equals(currentFeatureType.name())) {
+                    datastore.putBoolean(featureType.name(), true);
+                } else {
+                    datastore.putBoolean(featureType.name(), false);
+                }
             }
         }
 
@@ -452,14 +493,14 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
      * incorrectly think that the consent is updated.
      */
     @Override
-    public void setConsent(@NonNull AdServicesApiType apiType, boolean consented) {
-        Objects.requireNonNull(apiType);
+    public void setConsent(AdServicesApiType apiType, boolean consented) {
+        Objects.requireNonNull(apiType, "apiType cannot be null");
         mAppSearchConsentWorker.setConsent(apiType.toAppSearchKey(), consented);
     }
 
     @Override
-    public void setConsentForApp(@NonNull String packageName, boolean isConsentRevoked) {
-        Objects.requireNonNull(packageName);
+    public void setConsentForApp(String packageName, boolean isConsentRevoked) {
+        Objects.requireNonNull(packageName, "packageName cannot be null");
         if (isConsentRevoked) {
             mAppSearchConsentWorker.addAppWithConsent(
                     AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT, packageName);
@@ -503,7 +544,7 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
      *     application
      */
     @Override
-    public boolean setConsentForAppIfNew(@NonNull String packageName, boolean isConsentRevoked)
+    public boolean setConsentForAppIfNew(String packageName, boolean isConsentRevoked)
             throws IllegalArgumentException {
         if (FlagsFactory.getFlags().getEnableAppsearchConsentData()) {
             boolean isRevoked =
@@ -522,9 +563,8 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
 
     /** Sets the current privacy sandbox feature. */
     @Override
-    public void setCurrentPrivacySandboxFeature(
-            @NonNull PrivacySandboxFeatureType currentFeatureType) {
-        Objects.requireNonNull(currentFeatureType);
+    public void setCurrentPrivacySandboxFeature(PrivacySandboxFeatureType currentFeatureType) {
+        Objects.requireNonNull(currentFeatureType, "currentFeatureType cannot be null");
         mAppSearchConsentWorker.setCurrentPrivacySandboxFeature(currentFeatureType);
     }
 
@@ -694,7 +734,7 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
         if (!SdkLevel.isAtLeastT() || !FlagsFactory.getFlags().getEnableAppsearchConsentData()) {
             return false;
         }
-        Objects.requireNonNull(adServicesManager);
+        Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
 
         // Exit if migration has happened. If system server has received consent data via a
         // migration, do not attempt another migration.
@@ -746,7 +786,6 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
     }
 
     /** Returns the list of packages installed on the device of the user. */
-    @NonNull
     private Set<String> getInstalledPackages() {
         return PackageManagerCompatUtils.getInstalledApplications(
                         ApplicationContextSingleton.get().getPackageManager(), 0)

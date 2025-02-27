@@ -34,6 +34,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroI
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.anyBoolean;
 
@@ -53,6 +54,8 @@ import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
@@ -64,7 +67,6 @@ import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsWorker;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -81,6 +83,7 @@ import org.mockito.stubbing.Answer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /** Unit test for {@link com.android.adservices.service.common.PackageChangedReceiver}. */
@@ -89,6 +92,7 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(MeasurementImpl.class)
 @SpyStatic(ConsentManager.class)
+@SpyStatic(AdPackageDenyResolver.class)
 public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoTestCase {
     private static final String SAMPLE_PACKAGE = "com.example.measurement.sampleapp";
     private static final String PACKAGE_SCHEME = "package:";
@@ -101,10 +105,13 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Mock private AppUpdateManager mMockAppUpdateManager;
     @Mock private CustomAudienceDatabase mCustomAudienceDatabaseMock;
     @Mock private SharedStorageDatabase mSharedStorageDatabaseMock;
+    @Mock private ProtectedSignalsDatabase mProtectedSignalsDatabaseMock;
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
     @Mock private AppInstallDao mAppInstallDaoMock;
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
+    @Mock private ProtectedSignalsDao mProtectedSignalsDaoMock;
     @Mock private ConsentManager mConsentManager;
+    @Mock private AdPackageDenyResolver mMockAdPackageDenyResolver;
 
     private TopicsWorker mSpyTopicsWorker;
 
@@ -124,6 +131,8 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
                                 FakeFlagsFactory.getFlagsForTest()));
         doReturn(true).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
         doReturn(true).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
+        doReturn(true).when(mMockFlags).getProtectedSignalsCleanupEnabled();
+        doReturn(true).when(mMockFlags).getFledgeScheduleCustomAudienceUpdateEnabled();
         PackageChangedReceiver.enableReceiver(mContext, mMockFlags);
     }
 
@@ -132,6 +141,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         doNothingForTopics(spyReceiver);
         doNothingForFledge(spyReceiver);
         doNothingForConsent(spyReceiver);
+        doNothingForPackageDeny(spyReceiver);
         return spyReceiver;
     }
 
@@ -140,6 +150,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         doNothingForMeasurement(spyReceiver);
         doNothingForFledge(spyReceiver);
         doNothingForConsent(spyReceiver);
+        doNothingForPackageDeny(spyReceiver);
         return spyReceiver;
     }
 
@@ -148,6 +159,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         doNothingForMeasurement(spyReceiver);
         doNothingForTopics(spyReceiver);
         doNothingForConsent(spyReceiver);
+        doNothingForPackageDeny(spyReceiver);
         return spyReceiver;
     }
 
@@ -156,10 +168,21 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         doNothingForMeasurement(spyReceiver);
         doNothingForTopics(spyReceiver);
         doNothingForFledge(spyReceiver);
+        doNothingForPackageDeny(spyReceiver);
         return spyReceiver;
     }
 
     private PackageChangedReceiver createSpyPackageReceiverForExtServices() {
+        PackageChangedReceiver spyReceiver = Mockito.spy(new PackageChangedReceiver());
+        doNothingForMeasurement(spyReceiver);
+        doNothingForTopics(spyReceiver);
+        doNothingForFledge(spyReceiver);
+        doNothingForConsent(spyReceiver);
+        doNothingForPackageDeny(spyReceiver);
+        return spyReceiver;
+    }
+
+    private PackageChangedReceiver createSpyPackageReceiverForPackageDeny() {
         PackageChangedReceiver spyReceiver = Mockito.spy(new PackageChangedReceiver());
         doNothingForMeasurement(spyReceiver);
         doNothingForTopics(spyReceiver);
@@ -185,6 +208,10 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
     private void doNothingForConsent(PackageChangedReceiver receiver) {
         doNothing().when(receiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
+    }
+
+    private void doNothingForPackageDeny(PackageChangedReceiver receiver) {
+        doNothing().when(receiver).packageDenyPreProcessOnPackageAdded();
     }
 
     // This intent is sent from the AdServices system service.
@@ -267,21 +294,21 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReceivePackageFullyRemoved_fledgeKillSwitchOff() throws Exception {
-        doReturn(true).when(mMockFlags).getFledgeScheduleCustomAudienceUpdateEnabled();
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
         runPackageFullyRemovedForFledgeKillSwitchOff(
                 intent,
                 /* frequencyCapFilteringEnabled= */ true,
-                /* appInstallFilteringEnabled= */ true);
+                /* appInstallFilteringEnabled= */ true,
+                /* protectedSignalsCleanupEnabled= */ true,
+                /* scheduleCustomAudienceUpdateEnabled= */ true);
     }
 
     @Test
     public void testReceivePackageFullyRemoved_fledgeKillSwitchOffFrequencyCapFilteringDisabled()
             throws Exception {
         doReturn(false).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
-        doReturn(true).when(mMockFlags).getFledgeScheduleCustomAudienceUpdateEnabled();
         PackageChangedReceiver.enableReceiver(mContext, mMockFlags);
         Intent intent =
                 createIntentSentByAdServiceSystemService(
@@ -289,14 +316,15 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         runPackageFullyRemovedForFledgeKillSwitchOff(
                 intent,
                 /* frequencyCapFilteringEnabled= */ false,
-                /* appInstallFilteringEnabled= */ true);
+                /* appInstallFilteringEnabled= */ true,
+                /* protectedSignalsCleanupEnabled= */ true,
+                /* scheduleCustomAudienceUpdateEnabled= */ true);
     }
 
     @Test
     public void testReceivePackageFullyRemoved_fledgeKillSwitchOffAppInstallFilteringDisabled()
             throws Exception {
         doReturn(false).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
-        doReturn(true).when(mMockFlags).getFledgeScheduleCustomAudienceUpdateEnabled();
         PackageChangedReceiver.enableReceiver(mContext, mMockFlags);
         Intent intent =
                 createIntentSentByAdServiceSystemService(
@@ -304,23 +332,42 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         runPackageFullyRemovedForFledgeKillSwitchOff(
                 intent,
                 /* frequencyCapFilteringEnabled= */ true,
-                /* appInstallFilteringEnabled= */ false);
+                /* appInstallFilteringEnabled= */ false,
+                /* protectedSignalsCleanupEnabled= */ true,
+                /* scheduleCustomAudienceUpdateEnabled= */ true);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_fledgeKillSwitchOffProtectedSignalsCleanupDisabled()
+            throws Exception {
+        doReturn(false).when(mMockFlags).getProtectedSignalsCleanupEnabled();
+        PackageChangedReceiver.enableReceiver(mContext, mMockFlags);
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForFledgeKillSwitchOff(
+                intent,
+                /* frequencyCapFilteringEnabled= */ true,
+                /* appInstallFilteringEnabled= */ true,
+                /* protectedSignalsCleanupEnabled= */ false,
+                /* scheduleCustomAudienceUpdateEnabled= */ true);
     }
 
     @Test
     public void testReceivePackageFullyRemoved_fledgeKillSwitchOff_backCompat() throws Exception {
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
-        doReturn(true).when(mMockFlags).getFledgeScheduleCustomAudienceUpdateEnabled();
         runPackageFullyRemovedForFledgeKillSwitchOff(
                 intent,
                 /* frequencyCapFilteringEnabled= */ true,
-                /* appInstallFilteringEnabled= */ true);
+                /* appInstallFilteringEnabled= */ true,
+                /* protectedSignalsCleanupEnabled= */ true,
+                /* scheduleCustomAudienceUpdateEnabled= */ true);
     }
 
     @Test
-    public void testReceivePackageFullyRemoved_fledgeKillSwitchOffRemoveScheduleCAUpdateDisabled()
+    public void testReceivePackageFullyRemoved_fledgeKillSwitchOffScheduleCAUpdateDisabled()
             throws Exception {
-        doReturn(true).when(mMockFlags).getFledgeScheduleCustomAudienceUpdateEnabled();
+        doReturn(false).when(mMockFlags).getFledgeScheduleCustomAudienceUpdateEnabled();
         PackageChangedReceiver.enableReceiver(mContext, mMockFlags);
         Intent intent =
                 createIntentSentByAdServiceSystemService(
@@ -328,7 +375,9 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         runPackageFullyRemovedForFledgeKillSwitchOff(
                 intent,
                 /* frequencyCapFilteringEnabled= */ true,
-                /* appInstallFilteringEnabled= */ true);
+                /* appInstallFilteringEnabled= */ true,
+                /* protectedSignalsCleanupEnabled= */ true,
+                /* scheduleCustomAudienceUpdateEnabled= */ false);
     }
 
     @Test
@@ -346,7 +395,6 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testReceivePackageFullyRemoved_consent() throws Exception {
         Intent intent =
                 createIntentSentByAdServiceSystemService(
@@ -361,7 +409,6 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Test
     public void testReceivePackageFullyRemoved_consent_noPackageUid() throws Exception {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
@@ -379,7 +426,6 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault()
             throws Exception {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
@@ -392,7 +438,6 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Test
     public void testReceivePackageFullyRemoved_consent_noPackageUid_backCompat() throws Exception {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
         intent.removeExtra(Intent.EXTRA_UID);
 
@@ -404,7 +449,6 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault_backCompat()
             throws Exception {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
         intent.putExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
 
@@ -606,7 +650,11 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     }
 
     private void runPackageFullyRemovedForFledgeKillSwitchOff(
-            Intent intent, boolean frequencyCapFilteringEnabled, boolean appInstallFilteringEnabled)
+            Intent intent,
+            boolean frequencyCapFilteringEnabled,
+            boolean appInstallFilteringEnabled,
+            boolean protectedSignalsCleanupEnabled,
+            boolean scheduleCustomAudienceUpdateEnabled)
             throws Exception {
         // Kill switch is off; service is enabled
         doReturn(false).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
@@ -616,6 +664,9 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         doReturn(mCustomAudienceDaoMock).when(mCustomAudienceDatabaseMock).customAudienceDao();
         doReturn(mAppInstallDaoMock).when(mSharedStorageDatabaseMock).appInstallDao();
         doReturn(mFrequencyCapDaoMock).when(mSharedStorageDatabaseMock).frequencyCapDao();
+        doReturn(mProtectedSignalsDaoMock)
+                .when(mProtectedSignalsDatabaseMock)
+                .protectedSignalsDao();
 
         CountDownLatch caCompletionLatch = new CountDownLatch(1);
         Answer<Void> caAnswer =
@@ -625,7 +676,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
                 };
         doAnswer(caAnswer)
                 .when(mCustomAudienceDaoMock)
-                .deleteCustomAudienceDataByOwner(any(), anyBoolean());
+                .deleteCustomAudienceDataByOwner(any(), eq(scheduleCustomAudienceUpdateEnabled));
         CountDownLatch appInstallCompletionLatch = new CountDownLatch(1);
         Answer<Void> appInstallanswer =
                 unusedInvocation -> {
@@ -642,29 +693,54 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         doAnswer(frequencyCapAnswer)
                 .when(mFrequencyCapDaoMock)
                 .deleteHistogramDataBySourceApp(any());
+        CountDownLatch protectedSignalsCompletionLatch = new CountDownLatch(1);
+        Answer<Void> protectedSignalsAnswer =
+                unusedInvocation -> {
+                    protectedSignalsCompletionLatch.countDown();
+                    return null;
+                };
+        doAnswer(protectedSignalsAnswer)
+                .when(mProtectedSignalsDaoMock)
+                .deleteSignalsByPackage(any());
 
         // Initialize package receiver meant for FLEDGE
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
         doReturn(mCustomAudienceDatabaseMock).when(spyReceiver).getCustomAudienceDatabase(any());
         doReturn(mSharedStorageDatabaseMock).when(spyReceiver).getSharedStorageDatabase(any());
+        doReturn(mProtectedSignalsDatabaseMock)
+                .when(spyReceiver)
+                .getProtectedSignalsDatabase(any());
         spyReceiver.onReceive(mContext, intent);
 
         verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
 
         // Verify method inside background thread executes
         assertThat(caCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
-        verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any(), anyBoolean());
+        verify(mCustomAudienceDaoMock)
+                .deleteCustomAudienceDataByOwner(any(), eq(scheduleCustomAudienceUpdateEnabled));
         if (frequencyCapFilteringEnabled) {
-            assertThat(frequencyCapCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+            assertWithMessage("Frequency cap latch completed in time")
+                    .that(frequencyCapCompletionLatch.await(500, TimeUnit.MILLISECONDS))
+                    .isTrue();
             verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(any());
         } else {
             verifyZeroInteractions(mFrequencyCapDaoMock);
         }
         if (appInstallFilteringEnabled) {
-            assertThat(appInstallCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+            assertWithMessage("App install latch completed in time")
+                    .that(appInstallCompletionLatch.await(500, TimeUnit.MILLISECONDS))
+                    .isTrue();
             verify(mAppInstallDaoMock).deleteByPackageName(any());
         } else {
             verifyZeroInteractions(mAppInstallDaoMock);
+        }
+        if (protectedSignalsCleanupEnabled) {
+            assertWithMessage("Protected signals latch completed in time")
+                    .that(protectedSignalsCompletionLatch.await(500, TimeUnit.MILLISECONDS))
+                    .isTrue();
+            verify(mProtectedSignalsDaoMock).deleteSignalsByPackage(any());
+        } else {
+            verifyZeroInteractions(mProtectedSignalsDaoMock);
         }
     }
 
@@ -1044,7 +1120,6 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testPackageAdded_OnS() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_ADDED);
         doReturn(mConsentManager).when(ConsentManager::getInstance);
 
@@ -1060,5 +1135,35 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         spyReceiver.onReceive(mContext, intent);
 
         verify(spyReceiver).measurementOnPackageAdded(any(), any());
+    }
+
+    @Test
+    public void runPackageAddedForPackageDeny_flagOn() throws Exception {
+        doReturn(mMockAdPackageDenyResolver).when(AdPackageDenyResolver::getInstance);
+        when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
+        when(mMockFlags.getEnablePackageDenyJobOnPackageAdd()).thenReturn(true);
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForPackageDeny();
+        Intent intent =
+                createIntentSentByAdServiceSystemService(PackageChangedReceiver.PACKAGE_ADDED);
+
+        // Invoke the onReceive method to test the behavior
+        spyReceiver.onReceive(mContext, intent);
+        Future<AdPackageDenyResolver.PackageDenyMddProcessStatus> statusListenableFuture =
+                verify(mMockAdPackageDenyResolver).loadDenyDataFromMdd();
+    }
+
+    @Test
+    public void runPackageAddedForPackageDeny_flagOff() throws Exception {
+        doReturn(mMockAdPackageDenyResolver).when(AdPackageDenyResolver::getInstance);
+        when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
+        when(mMockFlags.getEnablePackageDenyJobOnPackageAdd()).thenReturn(false);
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForPackageDeny();
+        Intent intent =
+                createIntentSentByAdServiceSystemService(PackageChangedReceiver.PACKAGE_ADDED);
+
+        // Invoke the onReceive method to test the behavior
+        spyReceiver.onReceive(mContext, intent);
+        Future<AdPackageDenyResolver.PackageDenyMddProcessStatus> statusListenableFuture =
+                verify(mMockAdPackageDenyResolver, never()).loadDenyDataFromMdd();
     }
 }

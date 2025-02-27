@@ -19,11 +19,22 @@ package com.android.adservices.service.proto;
 option java_multiple_files = true;
 option java_package = "com.android.adservices.service.proto";
 
-// DevSession stores the current state of developer mode on the device.
-message DevSession {
-  // Expiration time for the current developer mode session.
-  // This value will be set to zero (epoch time) if reset.
-  // int64 is used instead of google.protobuf.Timestamp as it doesn't require
-  // libprotobuf.
-  optional int64 expiry_time_sec = 1;
+// DevSessionStorage stores the current state of developer mode on the device.
+message DevSessionStorage {
+  // The state of the developer session.
+  enum State {
+    // No state is know. This could be the value when first reading dev session state.
+    UNKNOWN = 0;
+    // We are in production.
+    IN_PROD = 1;
+    // We are moving from production to a dev session.
+    TRANSITIONING_PROD_TO_DEV = 2;
+    // We are in a dev session.
+    IN_DEV = 3;
+    // We are moving from a dev session back to production.
+    TRANSITIONING_DEV_TO_PROD = 4;
+  }
+  optional State state = 2;
+  // If storage was correctly initialized.
+  bool is_storage_initialized = 3;
 }

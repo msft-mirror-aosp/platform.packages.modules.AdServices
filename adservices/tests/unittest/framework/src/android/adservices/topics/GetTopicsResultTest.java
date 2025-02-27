@@ -20,14 +20,12 @@ import static org.junit.Assert.assertThrows;
 import android.os.Parcel;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 import java.util.List;
 
 /** Unit tests for {@link GetTopicsResult} */
-@RequiresSdkLevelAtLeastS
 public final class GetTopicsResultTest extends AdServicesUnitTestCase {
 
     private static final byte[] BYTE_ARRAY_1 = new byte[] {1, 2, 3};

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.spe.AdServicesJobInfo.AD_PACKAGE_DENY_PRE_PROCESS_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.COBALT_LOGGING_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.CONSENT_NOTIFICATION_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
@@ -53,7 +54,7 @@ import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
-import com.android.adservices.service.adselection.DebugReportSenderJobService;
+import com.android.adservices.service.adselection.debug.DebugReportSenderJobService;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
@@ -76,8 +77,9 @@ import com.android.adservices.service.topics.EpochJobService;
 import java.util.Objects;
 
 /** Provides functionality to schedule or unschedule all relevant background jobs. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
+// TODO(b/311183933): Remove passed in Context from static method.
+@SuppressWarnings("AvoidStaticContext")
 public class BackgroundJobsManager {
     /**
      * Tries to schedule all the relevant background jobs.
@@ -174,6 +176,7 @@ public class BackgroundJobsManager {
             scheduleMddBackgroundJobs();
             scheduleEncryptionKeyBackgroundJobs(context);
             scheduleCobaltBackgroundJob(context);
+            scheduleAdPackageDenyPreProcessBackgroundJob();
         }
     }
 
@@ -246,6 +249,7 @@ public class BackgroundJobsManager {
             scheduleMddBackgroundJobs();
             scheduleEncryptionKeyBackgroundJobs(context);
             scheduleCobaltBackgroundJob(context);
+            scheduleAdPackageDenyPreProcessBackgroundJob();
         }
     }
 
@@ -257,6 +261,13 @@ public class BackgroundJobsManager {
     public static void scheduleCobaltBackgroundJob(Context context) {
         if (FlagsFactory.getFlags().getCobaltLoggingEnabled()) {
             CobaltJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
+        }
+    }
+
+    /** Tries to schedule Package Deny related background jobs */
+    public static void scheduleAdPackageDenyPreProcessBackgroundJob() {
+        if (FlagsFactory.getFlags().getEnablePackageDenyBgJob()) {
+            AdPackageDenyPreProcessJobService.scheduleIfNeeded();
         }
     }
 
@@ -283,6 +294,8 @@ public class BackgroundJobsManager {
         jobScheduler.cancel(ENCRYPTION_KEY_PERIODIC_JOB.getJobId());
 
         unscheduleCobaltJob(jobScheduler);
+
+        unscheduleAdPackageDenyPreProcessJob(jobScheduler);
     }
 
     /**
@@ -350,5 +363,12 @@ public class BackgroundJobsManager {
         Objects.requireNonNull(jobScheduler);
 
         jobScheduler.cancel(COBALT_LOGGING_JOB.getJobId());
+    }
+
+    /** Tries to unschedule Package Deny background job. */
+    public static void unscheduleAdPackageDenyPreProcessJob(@NonNull JobScheduler jobScheduler) {
+        Objects.requireNonNull(jobScheduler);
+
+        jobScheduler.cancel(AD_PACKAGE_DENY_PRE_PROCESS_JOB.getJobId());
     }
 }

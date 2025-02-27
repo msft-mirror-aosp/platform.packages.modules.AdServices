@@ -22,10 +22,7 @@ import static com.android.adservices.data.customaudience.CustomAudienceDatabase.
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
@@ -39,7 +36,7 @@ import androidx.room.util.TableInfo;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,7 +44,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Objects;
 
-public class CustomAudienceDatabaseMigrationTest {
+public final class CustomAudienceDatabaseMigrationTest extends AdServicesUnitTestCase {
     private static final String TEST_DB = "migration-test";
     private static final Instrumentation INSTRUMENTATION =
             InstrumentationRegistry.getInstrumentation();
@@ -56,9 +53,6 @@ public class CustomAudienceDatabaseMigrationTest {
 
     private static final String QUERY_TABLES_FROM_SQL_MASTER =
             "SELECT * FROM sqlite_master WHERE type='table' AND name='%s';";
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Rule(order = 1)
     public MigrationTestHelper helper =
@@ -80,10 +74,10 @@ public class CustomAudienceDatabaseMigrationTest {
         // Re-open the database with version 3.
         try (SupportSQLiteDatabase db = helper.runMigrationsAndValidate(TEST_DB, 3, true)) {
             Cursor c = db.query("SELECT * FROM " + customAudienceOverrideTable);
-            assertEquals(1, c.getCount());
+            assertThat(c.getCount()).isEqualTo(1);
             c.moveToFirst();
             int biddingLogicVersionIndex = c.getColumnIndex("bidding_logic_version");
-            assertTrue(c.isNull(biddingLogicVersionIndex));
+            assertThat(c.isNull(biddingLogicVersionIndex)).isTrue();
 
             ContentValues contentValuesV3 = new ContentValues();
             contentValuesV3.put("owner", CustomAudienceFixture.VALID_OWNER);
@@ -101,12 +95,11 @@ public class CustomAudienceDatabaseMigrationTest {
                                     + " WHERE buyer = '"
                                     + CommonFixture.VALID_BUYER_2
                                     + "'");
-            assertEquals(1, c.getCount());
+            assertThat(c.getCount()).isEqualTo(1);
             c.moveToFirst();
-            assertEquals(2L, c.getLong(c.getColumnIndex("bidding_logic_version")));
-            assertEquals(
-                    CommonFixture.TEST_PACKAGE_NAME_2,
-                    c.getString(c.getColumnIndex("app_package_name")));
+            assertThat(c.getLong(c.getColumnIndex("bidding_logic_version"))).isEqualTo(2L);
+            assertThat(c.getString(c.getColumnIndex("app_package_name")))
+                    .isEqualTo(CommonFixture.TEST_PACKAGE_NAME_2);
         }
     }
 
@@ -120,28 +113,28 @@ public class CustomAudienceDatabaseMigrationTest {
         SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 5);
         Cursor cursor = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, customAudienceTable));
         // The table should already exist
-        assertEquals(1, cursor.getCount());
+        assertThat(cursor.getCount()).isEqualTo(1);
 
         cursor = db.query("PRAGMA table_info(custom_audience)");
         // Columns should not yet exist
-        assertFalse(checkIfColumnExists(cursor, auctionServerRequestFlagsColumnName));
+        assertThat(checkIfColumnExists(cursor, auctionServerRequestFlagsColumnName)).isFalse();
         cursor.moveToFirst();
-        assertFalse(checkIfColumnExists(cursor, debuggableColumnName));
+        assertThat(checkIfColumnExists(cursor, debuggableColumnName)).isFalse();
 
         // Re-open the database with version 6
         db = helper.runMigrationsAndValidate(TEST_DB, 6, true);
         cursor = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, customAudienceTable));
-        assertEquals(1, cursor.getCount());
+        assertThat(cursor.getCount()).isEqualTo(1);
         cursor.moveToFirst();
 
-        assertEquals(
-                customAudienceTable, cursor.getString(cursor.getColumnIndex(COLUMN_NAME_NAME)));
+        assertThat(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_NAME)))
+                .isEqualTo(customAudienceTable);
 
         cursor = db.query("PRAGMA table_info(custom_audience)");
         // Columns should now exist
-        assertTrue(checkIfColumnExists(cursor, auctionServerRequestFlagsColumnName));
+        assertThat(checkIfColumnExists(cursor, auctionServerRequestFlagsColumnName)).isTrue();
         cursor.moveToFirst();
-        assertTrue(checkIfColumnExists(cursor, debuggableColumnName));
+        assertThat(checkIfColumnExists(cursor, debuggableColumnName)).isTrue();
 
         cursor.close();
     }
@@ -157,12 +150,12 @@ public class CustomAudienceDatabaseMigrationTest {
                         String.format(
                                 QUERY_TABLES_FROM_SQL_MASTER,
                                 DBScheduledCustomAudienceUpdate.TABLE_NAME));
-        assertEquals(1, cursor.getCount());
+        assertThat(cursor.getCount()).isEqualTo(1);
         cursor.close();
 
         // Column added in v8 should not exist, yet.
         TableInfo info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
-        assertFalse(info.columns.containsKey("is_debuggable"));
+        assertThat(info.columns).doesNotContainKey("is_debuggable");
 
         // Close DB before attempting migrations.
         db.close();
@@ -170,7 +163,7 @@ public class CustomAudienceDatabaseMigrationTest {
         // Attempt to re-open the database with v8 auto migration and assert success.
         db = helper.runMigrationsAndValidate(TEST_DB, 8, true);
         info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
-        assertTrue(info.columns.containsKey("is_debuggable"));
+        assertThat(info.columns).containsKey("is_debuggable");
         db.close();
     }
 
@@ -185,12 +178,12 @@ public class CustomAudienceDatabaseMigrationTest {
                         String.format(
                                 QUERY_TABLES_FROM_SQL_MASTER,
                                 DBScheduledCustomAudienceUpdate.TABLE_NAME));
-        assertEquals(1, cursor.getCount());
+        assertThat(cursor.getCount()).isEqualTo(1);
         cursor.close();
 
         // Column added in v8 should not exist, yet.
         TableInfo info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
-        assertFalse(info.columns.containsKey("is_debuggable"));
+        assertThat(info.columns).doesNotContainKey("is_debuggable");
 
         // Close DB before attempting migrations.
         db.close();
@@ -198,7 +191,7 @@ public class CustomAudienceDatabaseMigrationTest {
         // Attempt to re-open the database with v8 manual migration and assert success.
         db = helper.runMigrationsAndValidate(TEST_DB, 8, true, MIGRATION_7_8);
         info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
-        assertTrue(info.columns.containsKey("is_debuggable"));
+        assertThat(info.columns).containsKey("is_debuggable");
         db.close();
     }
 
@@ -215,19 +208,19 @@ public class CustomAudienceDatabaseMigrationTest {
                         String.format(
                                 QUERY_TABLES_FROM_SQL_MASTER,
                                 DBScheduledCustomAudienceUpdate.TABLE_NAME));
-        assertEquals(1, cursor.getCount());
+        assertThat(cursor.getCount()).isEqualTo(1);
         cursor.close();
 
         // Column added in v8 should not exist, yet.
         TableInfo info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
-        assertFalse(info.columns.containsKey("is_debuggable"));
+        assertThat(info.columns).doesNotContainKey("is_debuggable");
 
         // Add v8 column before migration, effectively sabotaging v8 auto migration.
         db.execSQL(
                 "ALTER TABLE `scheduled_custom_audience_update` ADD COLUMN `is_debuggable` INTEGER"
                         + " NOT NULL DEFAULT false");
         info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
-        assertTrue(info.columns.containsKey("is_debuggable"));
+        assertThat(info.columns).containsKey("is_debuggable");
 
         // Close DB before attempting migrations.
         db.close();
@@ -236,15 +229,101 @@ public class CustomAudienceDatabaseMigrationTest {
         Exception thrown =
                 assertThrows(
                         SQLiteException.class,
-                        () -> {
-                            helper.runMigrationsAndValidate(TEST_DB, 8, true);
-                        });
+                        () -> helper.runMigrationsAndValidate(TEST_DB, 8, true));
         assertThat(thrown).hasMessageThat().contains("duplicate column name: is_debuggable");
 
         // Attempt to re-open the database with v8 manual migration and assert success.
         db = helper.runMigrationsAndValidate(TEST_DB, 8, true, MIGRATION_7_8);
         info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
-        assertTrue(info.columns.containsKey("is_debuggable"));
+        assertThat(info.columns).containsKey("is_debuggable");
+        db.close();
+    }
+
+    @Test
+    public void testAutoMigration9To10() throws IOException {
+        // Create DB with v9.
+        String scheduledCustomAudienceUpdateTable = "scheduled_custom_audience_update";
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 9);
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("update_id", 1L);
+        contentValues.put("owner", "");
+        contentValues.put("buyer", "");
+        contentValues.put("update_uri", "");
+        contentValues.put("creation_time", "");
+        contentValues.put("scheduled_time", "");
+        contentValues.put("is_debuggable", false);
+        db.insert(scheduledCustomAudienceUpdateTable, CONFLICT_FAIL, contentValues);
+
+        // The table added in v9 should already exist.
+        Cursor cursor =
+                db.query(
+                        String.format(
+                                QUERY_TABLES_FROM_SQL_MASTER,
+                                DBScheduledCustomAudienceUpdate.TABLE_NAME));
+        assertThat(cursor.getCount()).isEqualTo(1);
+        cursor.close();
+
+        // Column added in v10 should not exist, yet.
+        TableInfo info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
+        assertThat(info.columns).doesNotContainKey("allow_schedule_in_response");
+
+        // Table added in v10 should not exist, yet.
+        cursor =
+                db.query(
+                        String.format(
+                                QUERY_TABLES_FROM_SQL_MASTER, DBCustomAudienceToLeave.TABLE_NAME));
+        assertThat(cursor.getCount()).isEqualTo(0);
+        cursor.close();
+
+        // Close DB before attempting migrations.
+        db.close();
+
+        // Attempt to re-open the database with v10 auto migration.
+        db = helper.runMigrationsAndValidate(TEST_DB, 10, true);
+
+        // Check if the new column is created and assert success.
+        info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
+        assertThat(info.columns).containsKey("allow_schedule_in_response");
+
+        // Table added in v10 should exist.
+        cursor =
+                db.query(
+                        String.format(
+                                QUERY_TABLES_FROM_SQL_MASTER, DBCustomAudienceToLeave.TABLE_NAME));
+        assertThat(cursor.getCount()).isEqualTo(1);
+        cursor.close();
+
+        // Check if value of the new column has the default value for already existing columns and
+        // assert success.
+        cursor = db.query("SELECT * FROM " + scheduledCustomAudienceUpdateTable);
+        cursor.moveToFirst();
+        assertThat(cursor.getInt(cursor.getColumnIndex("allow_schedule_in_response"))).isEqualTo(0);
+        db.close();
+    }
+
+    @Test
+    public void testAutoMigration10To11() throws IOException {
+        // Create DB with v10.
+        String componentAdDataTable = "component_ad_data";
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 10);
+
+        // The table should not exist in v10
+        Cursor cursor = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, componentAdDataTable));
+        assertThat(cursor.getCount()).isEqualTo(0);
+        cursor.close();
+
+        // Close DB before attempting migrations.
+        db.close();
+
+        // Attempt to re-open the database with v11 auto migration.
+        db = helper.runMigrationsAndValidate(TEST_DB, 11, true);
+
+        // The table should exist in v11
+        cursor = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, componentAdDataTable));
+        assertThat(cursor.getCount()).isEqualTo(1);
+        cursor.close();
+
         db.close();
     }
 

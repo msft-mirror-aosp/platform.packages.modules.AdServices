@@ -18,14 +18,16 @@ package com.android.adservices.service.measurement.aggregation;
 
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE;
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_HISTOGRAM_VALUE_BYTE_SIZE;
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.BUCKET;
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.ID;
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.VALUE;
 
 import android.annotation.Nullable;
-
-import androidx.annotation.NonNull;
 
 import com.android.adservices.HpkeJni;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.exception.CryptoException;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -62,16 +64,18 @@ public class AggregateCryptoConverter {
      * @param payload json string of histogram data. Example: {operation: histogram, data: [bucket:
      *     1, value: 2]}
      * @param sharedInfo plain value that will be shared with receiver
+     * @param filteringIdMaxBytes int value used to allocate byte array for filtering ids
      * @throws CryptoException if any exception is encountered
      */
     public static String encrypt(
-            @NonNull String publicKeyBase64Encoded,
-            @NonNull String payload,
-            @Nullable String sharedInfo)
+            String publicKeyBase64Encoded,
+            String payload,
+            @Nullable String sharedInfo,
+            @Nullable Integer filteringIdMaxBytes)
             throws CryptoException {
         try {
-            Objects.requireNonNull(payload);
-            Objects.requireNonNull(publicKeyBase64Encoded);
+            Objects.requireNonNull(payload, "payload cannot be null");
+            Objects.requireNonNull(publicKeyBase64Encoded, "publicKeyBase64Encoded cannot be null");
 
             // Extract Histogram
             final List<AggregateHistogramContribution> contributions = convert(payload);
@@ -80,7 +84,7 @@ public class AggregateCryptoConverter {
             }
 
             // Encode with Cbor
-            final byte[] payloadCborEncoded = encodeWithCbor(contributions);
+            final byte[] payloadCborEncoded = encodeWithCbor(contributions, filteringIdMaxBytes);
 
             // Get public key
             final byte[] publicKey = sBase64Decoder.decode(publicKeyBase64Encoded);
@@ -108,12 +112,15 @@ public class AggregateCryptoConverter {
     }
 
     /**
-     * Same as {@link AggregateCryptoConverter#encrypt(String, String, String)}, but without hpke
-     * encryption
+     * Same as {@link AggregateCryptoConverter#encrypt(String, String, String, Integer)}, but
+     * without hpke encryption.
+     *
+     * @param payload json string of histogram data
+     * @param filteringIdMaxBytes int value used to allocate byte array for filtering ids
      */
-    public static String encode(@NonNull String payload) {
+    public static String encode(String payload, @Nullable Integer filteringIdMaxBytes) {
         try {
-            Objects.requireNonNull(payload);
+            Objects.requireNonNull(payload, "payload cannot be null");
 
             // Extract Histogram
             final List<AggregateHistogramContribution> contributions = convert(payload);
@@ -122,7 +129,7 @@ public class AggregateCryptoConverter {
             }
 
             // Encode with Cbor
-            final byte[] payloadCborEncoded = encodeWithCbor(contributions);
+            final byte[] payloadCborEncoded = encodeWithCbor(contributions, filteringIdMaxBytes);
 
             // Encode with Base 64
             return encodeWithBase64(payloadCborEncoded);
@@ -145,13 +152,17 @@ public class AggregateCryptoConverter {
 
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject dataObject = jsonArray.getJSONObject(i);
-                String bucket = dataObject.getString("bucket");
-                String value = dataObject.getString("value");
-                contributions.add(
+                String bucket = dataObject.getString(BUCKET);
+                String value = dataObject.getString(VALUE);
+                AggregateHistogramContribution.Builder contributionBuilder =
                         new AggregateHistogramContribution.Builder()
                                 .setKey(new BigInteger(bucket))
-                                .setValue(Integer.parseInt(value))
-                                .build());
+                                .setValue(Integer.parseInt(value));
+                // TODO(b/374823995) Remove flag dependencies
+                if (dataObject.has(ID)) {
+                    contributionBuilder.setId(new UnsignedLong(dataObject.getString(ID)));
+                }
+                contributions.add(contributionBuilder.build());
             }
             return contributions;
         } catch (NumberFormatException | JSONException e) {
@@ -160,8 +171,27 @@ public class AggregateCryptoConverter {
         }
     }
 
+    /**
+     * Returns the unsigned value of BigInteger in a byte array.
+     *
+     * @param byteSize Bytes to for array
+     * @param value BigInteger value to copy from
+     */
+    private static byte[] getByteArrayForBigInteger(int byteSize, BigInteger value) {
+        final byte[] byteArray = new byte[byteSize];
+        final byte[] sourceByteArray = value.toByteArray();
+        final int bytesExcludingSignId = (int) Math.ceil(value.bitLength() / 8d);
+        final int length = Math.min(bytesExcludingSignId, byteSize);
+        final int position = byteArray.length - length;
+        final int srcPosExcludingSign = sourceByteArray[0] == 0 ? 1 : 0;
+        System.arraycopy(sourceByteArray, srcPosExcludingSign, byteArray, position, length);
+        return byteArray;
+    }
+
     @VisibleForTesting
-    static byte[] encodeWithCbor(List<AggregateHistogramContribution> contributions)
+    static byte[] encodeWithCbor(
+            List<AggregateHistogramContribution> contributions,
+            @Nullable Integer filteringIdMaxBytes)
             throws CborException {
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         final CborBuilder cborBuilder = new CborBuilder();
@@ -174,18 +204,18 @@ public class AggregateCryptoConverter {
                     ByteBuffer.allocate(AGGREGATE_HISTOGRAM_VALUE_BYTE_SIZE)
                             .putInt(contribution.getValue())
                             .array();
-            final byte[] bucket = new byte[AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE];
-            final byte[] src = contribution.getKey().toByteArray();
-            final int bytesExcludingSign = (int) Math.ceil(contribution.getKey().bitLength() / 8d);
-            final int length = Math.min(bytesExcludingSign, AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE);
-            final int position = bucket.length - length;
-            // Excluding sign bit that BigInteger#toByteArray adds to the first element of the array
-            final int srcPosExcludingSign = src[0] == 0 ? 1 : 0;
-            System.arraycopy(src, srcPosExcludingSign, bucket, position, length);
+            final byte[] bucketByteArray =
+                    getByteArrayForBigInteger(
+                            AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE, contribution.getKey());
 
             final Map dataMap = new Map();
-            dataMap.put(new UnicodeString("bucket"), new ByteString(bucket));
-            dataMap.put(new UnicodeString("value"), new ByteString(value));
+            dataMap.put(new UnicodeString(BUCKET), new ByteString(bucketByteArray));
+            dataMap.put(new UnicodeString(VALUE), new ByteString(value));
+            if (filteringIdMaxBytes != null && contribution.getId() != null) {
+                BigInteger id = new BigInteger(contribution.getId().toString());
+                final byte[] idByteArray = getByteArrayForBigInteger(filteringIdMaxBytes, id);
+                dataMap.put(new UnicodeString(ID), new ByteString(idByteArray));
+            }
             dataArray.add(dataMap);
         }
         payloadMap.put(new UnicodeString("operation"), new UnicodeString("histogram"));

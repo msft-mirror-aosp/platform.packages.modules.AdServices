@@ -43,6 +43,8 @@ public class EncodingJobRunStatsLoggerNoLoggingImplTest {
         encodingJobRunStatsLoggerNoLogging.addOneSignalEncodingFailures();
         encodingJobRunStatsLoggerNoLogging.addOneSignalEncodingSkips();
         encodingJobRunStatsLoggerNoLogging.setSizeOfFilteredBuyerEncodingList(5);
+        encodingJobRunStatsLoggerNoLogging.resetStatsWithEncodingSourceType(
+                AdsRelevanceStatusUtils.PAS_ENCODING_SOURCE_TYPE_ENCODING_JOB_SERVICE);
         encodingJobRunStatsLoggerNoLogging.logEncodingJobRunStats();
 
         verifyZeroInteractions(mAdServicesLoggerMock);

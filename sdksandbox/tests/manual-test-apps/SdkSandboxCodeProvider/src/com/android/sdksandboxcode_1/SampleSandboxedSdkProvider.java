@@ -23,10 +23,13 @@ import android.app.sdksandbox.interfaces.IMediateeSdkApi;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -39,12 +42,15 @@ import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Random;
+import java.net.URL;
 
 public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
@@ -57,6 +63,8 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
     private static final String VIEW_TYPE_AD_REFRESH = "view-type-ad-refresh";
     private static final String VIEW_TYPE_EDITTEXT = "view-type-edittext";
     private static final String VIDEO_URL_KEY = "video-url";
+    private static final String IMAGE_VIEW_VALUE = "image-view";
+    private static final String IMAGE_URL_KEY = "image-url";
     private static final String EXTRA_SDK_SDK_ENABLED_KEY = "sdkSdkCommEnabled";
     private static final String APP_OWNED_SDK_NAME = "app-sdk-1";
     private static final String ON_CLICK_BEHAVIOUR_TYPE_KEY = "on-click-behavior";
@@ -135,6 +143,41 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             editText.setTextColor(Color.WHITE);
             editText.setText("Enter text: ");
             return editText;
+        } else if (IMAGE_VIEW_VALUE.equals(type)) {
+            ImageView imageView = new ImageView(windowContext);
+            imageView.setBackgroundColor(Color.BLACK);
+            imageView.setMaxWidth(width);
+            imageView.setMaxHeight(height);
+            new AsyncTask<Void, Void, Bitmap>() {
+                long startTime;
+
+                @Override
+                protected Bitmap doInBackground(Void... taskParams) {
+                    startTime = System.currentTimeMillis();
+                    try {
+                        InputStream b =
+                                (InputStream)
+                                        new URL(params.getString(IMAGE_URL_KEY, "")).getContent();
+                        return BitmapFactory.decodeStream(b);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error loading image: " + e.getMessage(), e.getCause());
+                        return null;
+                    }
+                }
+
+                @Override
+                protected void onPostExecute(Bitmap bitmap) {
+                    if (bitmap != null) {
+                        Log.i(
+                                TAG,
+                                "Image loaded in "
+                                        + (System.currentTimeMillis() - startTime)
+                                        + " ms");
+                        imageView.setImageBitmap(bitmap);
+                    }
+                }
+            }.execute();
+            return imageView;
         }
         mSdkSdkCommEnabled = params.getString(EXTRA_SDK_SDK_ENABLED_KEY, null);
 

@@ -29,7 +29,6 @@ import android.os.Process;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -42,7 +41,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-@RequiresSdkLevelAtLeastS
 @SetFlagEnabled(KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED) // Enabled retry for java script engine
 public final class AdSelectionManagerDebuggableTest extends ForegroundDebuggableCtsTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
@@ -74,10 +72,11 @@ public final class AdSelectionManagerDebuggableTest extends ForegroundDebuggable
                         .setContext(sContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
-        DevContextFilter devContextFilter = DevContextFilter.create(sContext);
-        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
+        DevContextFilter devContextFilter =
+                DevContextFilter.create(mContext, /* developerModeFeatureEnabled= */ false);
+        DevContext devContext = devContextFilter.createDevContext(Process.myUid());
         boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());
-        boolean isDeveloperMode = devContextFilter.isDeveloperMode();
+        boolean isDeveloperMode = devContextFilter.isDeviceDevOptionsEnabledOrDebuggable();
         mHasAccessToDevOverrides = devContext.getDeviceDevOptionsEnabled();
         mAccessStatus =
                 String.format("Debuggable: %b\n", isDebuggable)

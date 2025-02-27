@@ -27,7 +27,7 @@ import org.junit.Test;
 public class GaUxEnrollmentChannelCollectionTest {
     @Test
     public void gaUxEnrollmentChannelCollectionTest_cardinalityCheck() {
-        assertEquals(9, GaUxEnrollmentChannelCollection.values().length);
+        assertEquals(8, GaUxEnrollmentChannelCollection.values().length);
     }
 
     @Test
@@ -59,9 +59,6 @@ public class GaUxEnrollmentChannelCollectionTest {
         assertEquals(
                 GaUxEnrollmentChannelCollection.GA_GRADUATION_CHANNEL,
                 enrollmentChannelCollection[7]);
-        assertEquals(
-                GaUxEnrollmentChannelCollection.RVC_POST_OTA_CHANNEL,
-                enrollmentChannelCollection[8]);
     }
 
     @Test
@@ -94,11 +91,6 @@ public class GaUxEnrollmentChannelCollectionTest {
                                 < GaUxEnrollmentChannelCollection.GA_GRADUATION_CHANNEL
                                         .getPriority())
                 .isTrue();
-        assertThat(
-                        GaUxEnrollmentChannelCollection.GA_GRADUATION_CHANNEL.getPriority()
-                                < GaUxEnrollmentChannelCollection.RVC_POST_OTA_CHANNEL
-                                        .getPriority())
-                .isTrue();
     }
 
     @Test
@@ -122,8 +114,6 @@ public class GaUxEnrollmentChannelCollectionTest {
                                 .getEnrollmentChannel())
                 .isNotNull();
         assertThat(GaUxEnrollmentChannelCollection.GA_GRADUATION_CHANNEL.getEnrollmentChannel())
-                .isNotNull();
-        assertThat(GaUxEnrollmentChannelCollection.RVC_POST_OTA_CHANNEL.getEnrollmentChannel())
                 .isNotNull();
     }
 }

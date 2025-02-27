@@ -43,7 +43,6 @@ import com.android.modules.utils.build.SdkLevel;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /** Handles the Back Compat initialization for AdExtServices APK. */
 public final class AdServicesBackCompatInit {
@@ -187,13 +186,7 @@ public final class AdServicesBackCompatInit {
      */
     private void updateAdExtServicesServices(boolean shouldEnable) {
         try {
-            int currentSdkInt = getSdkLevelInt();
-            List<String> servicesToUpdate =
-                    PackageManagerCompatUtils.SERVICE_CLASSES_AND_MIN_SDK_SUPPORT_PAIRS.stream()
-                            .filter(p -> p.second <= currentSdkInt)
-                            .map(p -> p.first)
-                            .collect(Collectors.toList());
-            updateComponents(servicesToUpdate, shouldEnable);
+            updateComponents(PackageManagerCompatUtils.SERVICE_CLASSES, shouldEnable);
             LogUtil.d("Updated state of AdExtServices services: [enable=%s]", shouldEnable);
         } catch (IllegalArgumentException e) {
             LogUtil.e("Error when updating services: %s", e.getMessage());

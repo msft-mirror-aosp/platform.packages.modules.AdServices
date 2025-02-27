@@ -27,7 +27,6 @@ import android.adservices.common.KeyedFrequencyCapFixture;
 import android.os.Parcel;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableList;
 
@@ -35,7 +34,6 @@ import org.junit.Test;
 
 import java.time.Instant;
 
-@RequiresSdkLevelAtLeastS
 public final class SetAdCounterHistogramOverrideInputTest extends AdServicesUnitTestCase {
     private static final ImmutableList<Instant> HISTOGRAM_TIMESTAMPS =
             ImmutableList.of(

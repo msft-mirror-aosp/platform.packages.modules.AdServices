@@ -62,7 +62,6 @@ import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
@@ -83,7 +82,6 @@ import java.util.concurrent.TimeoutException;
 
 @DisableGlobalKillSwitch
 @EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
-@RequiresSdkLevelAtLeastS
 @SetAllLogcatTags
 @SetFlagDisabled(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH)
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
@@ -120,13 +118,25 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                         .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
-        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
+        DevContext devContext =
+                DevContextFilter.create(sContext, /* developerModeFeatureEnabled= */ false)
+                        .createDevContext(Process.myUid());
         mIsDebugMode = devContext.getDeviceDevOptionsEnabled();
 
         // Needed to test different custom audience limits
+        String[] deviceConfigPermissions;
+        if (sdkLevel.isAtLeastU()) {
+            deviceConfigPermissions =
+                    new String[] {
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG
+                    };
+        } else {
+            deviceConfigPermissions = new String[] {Manifest.permission.WRITE_DEVICE_CONFIG};
+        }
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+                .adoptShellPermissionIdentity(deviceConfigPermissions);
 
         // Kill AdServices process
         AdservicesTestHelper.killAdservicesProcess(sContext);

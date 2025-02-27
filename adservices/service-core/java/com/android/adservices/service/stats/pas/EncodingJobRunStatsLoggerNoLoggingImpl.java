@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.stats.pas;
 
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
+
 /** Replacement for {@link EncodingJobRunStatsLoggerImpl} if Pas extended metrics is disabled. */
 public class EncodingJobRunStatsLoggerNoLoggingImpl implements EncodingJobRunStatsLogger{
     @Override
@@ -29,4 +31,8 @@ public class EncodingJobRunStatsLoggerNoLoggingImpl implements EncodingJobRunSta
 
     @Override
     public void setSizeOfFilteredBuyerEncodingList(int sizeOfFilteredBuyerEncodingList) {}
+
+    @Override
+    public void resetStatsWithEncodingSourceType(
+            @AdsRelevanceStatusUtils.PasEncodingSourceType int encodingSourceType) {}
 }

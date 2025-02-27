@@ -34,11 +34,8 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
 import com.google.common.collect.ImmutableList;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -49,9 +46,6 @@ public class CustomAudienceDailyUpdateUriValidatorTest {
             CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceMaxDailyUpdateUriSizeB();
     private final CustomAudienceDailyUpdateUriValidator mValidator =
             new CustomAudienceDailyUpdateUriValidator(CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B);
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testGetValidationViolation_nullDailyUpdateUri_throws() {

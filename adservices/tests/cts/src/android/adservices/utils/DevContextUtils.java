@@ -27,6 +27,8 @@ import com.android.adservices.shared.testing.SupportedByConditionRule;
 /** Class to manage all utilities required for DevContext in CTS */
 public class DevContextUtils {
 
+    private static final boolean DEVELOPER_MODE_FEATURE_ENABLED = false;
+
     /** Method to create DevOptions Enabled rule.. */
     public static SupportedByConditionRule createDevOptionsAvailableRule(
             Context context, String logTag) {
@@ -37,11 +39,12 @@ public class DevContextUtils {
 
     /** Method to check if Dev Options are enabled based on DevContext. */
     public static boolean isDevOptionsEnabled(Context context, String logTag) {
-        DevContextFilter devContextFilter = DevContextFilter.create(context);
-        DevContext mDevContext = DevContextFilter.create(context).createDevContext(Process.myUid());
+        DevContextFilter devContextFilter =
+                DevContextFilter.create(context, DEVELOPER_MODE_FEATURE_ENABLED);
+        DevContext mDevContext = devContextFilter.createDevContext(Process.myUid());
         boolean isDebuggable =
                 devContextFilter.isDebuggable(mDevContext.getCallingAppPackageName());
-        boolean isDeveloperMode = devContextFilter.isDeveloperMode();
+        boolean isDeveloperMode = devContextFilter.isDeviceDevOptionsEnabledOrDebuggable();
         Log.d(
                 logTag,
                 String.format("Debuggable: %b\n", isDebuggable)

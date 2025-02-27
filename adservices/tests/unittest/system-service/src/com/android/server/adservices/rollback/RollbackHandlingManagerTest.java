@@ -18,6 +18,7 @@ package com.android.server.adservices.rollback;
 
 import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+import static com.android.adservices.shared.testing.common.FileHelper.deleteDirectory;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.server.adservices.rollback.RollbackHandlingManager.DUMP_PREFIX;
 import static com.android.server.adservices.rollback.RollbackHandlingManager.STORAGE_XML_IDENTIFIER;
@@ -29,9 +30,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertThrows;
 
 import android.app.adservices.AdServicesManager;
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
@@ -39,18 +37,18 @@ import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
 public final class RollbackHandlingManagerTest extends AdServicesExtendedMockitoTestCase {
 
-    private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final String BASE_DIR = PPAPI_CONTEXT.getFilesDir().getAbsolutePath();
+    private static final File TEST_DIR = sContext.getFilesDir();
+    private static final String BASE_DIR = TEST_DIR.getAbsolutePath();
 
     private static final int DATASTORE_VERSION = 339900900;
 
@@ -59,19 +57,15 @@ public final class RollbackHandlingManagerTest extends AdServicesExtendedMockito
     private AtomicFileDatastore mDatastore;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
+        deleteDirectory(TEST_DIR);
+
         mDatastore =
                 new AtomicFileDatastore(
-                        PPAPI_CONTEXT.getFilesDir().getAbsolutePath(),
-                        STORAGE_XML_IDENTIFIER,
+                        new File(TEST_DIR, STORAGE_XML_IDENTIFIER),
                         DATASTORE_VERSION,
                         VERSION_KEY,
                         mMockAdServicesErrorLogger);
-    }
-
-    @After
-    public void tearDown() {
-        mDatastore.tearDownForTesting();
     }
 
     @Test
@@ -169,7 +163,12 @@ public final class RollbackHandlingManagerTest extends AdServicesExtendedMockito
         assertWithMessage("content of dump() (# datastores)").that(dump).contains("1 datastores");
 
         String datastoreDump =
-                dump(pw -> datastore.dump(pw, prefix + DUMP_PREFIX + DUMP_PREFIX + DUMP_PREFIX));
+                dump(
+                        pw ->
+                                datastore.dump(
+                                        pw,
+                                        prefix + DUMP_PREFIX + DUMP_PREFIX + DUMP_PREFIX,
+                                        AtomicFileDatastore.DUMP_ARGS_INCLUDE_CONTENTS_ONLY));
         assertWithMessage("content of dump() (datastore)").that(dump).contains(datastoreDump);
     }
 }

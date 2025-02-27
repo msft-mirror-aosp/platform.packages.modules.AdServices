@@ -88,6 +88,8 @@ public class SignalsShellCommandFactory implements ShellCommandFactory {
     }
 
     /** Gets a new {@link SignalsShellCommandFactory} instance. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static ShellCommandFactory newInstance(
             DebugFlags debugFlags,
             ProtectedSignalsDao protectedSignalsDao,
@@ -119,7 +121,9 @@ public class SignalsShellCommandFactory implements ShellCommandFactory {
                         Clock.getInstance(),
                         EnrollmentDao.getInstance()),
                 new EncodingJobRunStatsLoggerImpl(
-                        AdServicesLoggerImpl.getInstance(), EncodingJobRunStats.builder()),
+                        AdServicesLoggerImpl.getInstance(),
+                        EncodingJobRunStats.builder(),
+                        flags.getFledgeEnableForcedEncodingAfterSignalsUpdate()),
                 ProtectedSignalsDatabase.getInstance().getEncoderLogicMetadataDao());
     }
 

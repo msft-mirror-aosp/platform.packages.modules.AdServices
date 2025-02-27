@@ -109,6 +109,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         assertNull(source.getAttributedTriggers());
         assertNull(source.getAggregateDebugReportingString());
         assertEquals(0, source.getAggregateDebugReportContributions());
+        assertNull(source.getAggregatableNamedBudgets());
     }
 
     @Test
@@ -136,6 +137,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         String aggregateDebugReportingString =
                 SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT;
         int aggregateDebugReportContributions = 1024;
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -196,6 +198,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setEventLevelEpsilon(event_level_epsilon)
                         .setAggregateDebugReportingString(aggregateDebugReportingString)
                         .setAggregateDebugReportContributions(aggregateDebugReportContributions)
+                        .setAggregatableNamedBudgets(aggregatableNamedBudgets)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -256,6 +259,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setEventLevelEpsilon(event_level_epsilon)
                         .setAggregateDebugReportingString(aggregateDebugReportingString)
                         .setAggregateDebugReportContributions(aggregateDebugReportContributions)
+                        .setAggregatableNamedBudgets(aggregatableNamedBudgets)
                         .build());
     }
 
@@ -2465,5 +2469,84 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         assertWithMessage("getInformationGainThreshold() single destination nav")
                 .that(thresholdRetrieved)
                 .isEqualTo(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION);
+    }
+
+    @Test
+    public void testGetNamedBudgets() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregatableNamedBudgets(new AggregatableNamedBudgets())
+                        .build();
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 50);
+        aggregatableNamedBudgets.createContributionBudget("name2", 40);
+        aggregatableNamedBudgets.setContribution("name1", 5);
+
+        source.getAggregatableNamedBudgets().createContributionBudget("name1", 50);
+        source.getAggregatableNamedBudgets().createContributionBudget("name2", 40);
+        source.getAggregatableNamedBudgets().setContribution("name1", 5);
+
+        assertThat(source.getAggregatableNamedBudgets()).isEqualTo(aggregatableNamedBudgets);
+    }
+
+    @Test
+    public void testCreateAndMaybeGetBudget() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 10);
+        aggregatableNamedBudgets.createContributionBudget("name2", 20);
+        aggregatableNamedBudgets.createContributionBudget("name3", 5);
+
+        assertThat(aggregatableNamedBudgets.maybeGetBudget("name1").get()).isEqualTo(10);
+        assertThat(aggregatableNamedBudgets.maybeGetBudget("name2").get()).isEqualTo(20);
+        assertThat(aggregatableNamedBudgets.maybeGetBudget("name3").get()).isEqualTo(5);
+    }
+
+    @Test
+    public void testMaybeGetBudget_namedBudgetDoesNotExist() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+
+        assertThat(aggregatableNamedBudgets.maybeGetBudget("name1")).isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void testSetContribution_success() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 100);
+
+        assertThat(aggregatableNamedBudgets.setContribution("name1", 90)).isTrue();
+    }
+
+    @Test
+    public void testSetContribution_contributionOverCapacity_fail() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 100);
+        aggregatableNamedBudgets.setContribution("name1", 65);
+
+        assertThat(aggregatableNamedBudgets.setContribution("name1", 105)).isFalse();
+    }
+
+    @Test
+    public void testMaybeGetContributions() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 100);
+
+        aggregatableNamedBudgets.setContribution("name1", 60);
+        assertThat(aggregatableNamedBudgets.maybeGetContribution("name1").get()).isEqualTo(60);
+    }
+
+    @Test
+    public void testMaybeGetContributions_bucketDoesNotExist() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+
+        assertThat(aggregatableNamedBudgets.maybeGetContribution("name1"))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void testMaybeGetContributions_bucketHasNoContributions() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 100);
+
+        assertThat(aggregatableNamedBudgets.maybeGetContribution("name1").get()).isEqualTo(0);
     }
 }

@@ -22,15 +22,12 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.shared.meta_testing.FakeLogger;
+import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 import com.android.adservices.shared.testing.Logger;
-import com.android.adservices.shared.testing.SharedSidelessTestCase;
 
 import org.junit.Test;
 
 public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
-
-    private final FakeLogger mFakeLogger = new FakeLogger();
 
     @Test
     public void testBuilderWithInvalidArgs() {
@@ -43,7 +40,7 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
                 NullPointerException.class,
                 () ->
                         new SyncCallbackSettings.Builder(
-                                mFakeLogger, /* isMainThreadSupplier= */ null));
+                                mFakeRealLogger, /* isMainThreadSupplier= */ null));
     }
 
     @Test
@@ -167,6 +164,6 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
     }
 
     private SyncCallbackSettings.Builder newDefaultBuilder() {
-        return new SyncCallbackSettings.Builder(mFakeLogger, () -> Boolean.FALSE);
+        return new SyncCallbackSettings.Builder(mFakeRealLogger, () -> Boolean.FALSE);
     }
 }

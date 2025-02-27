@@ -114,11 +114,9 @@ import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdBiddingOutcome;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -214,9 +212,6 @@ public class AdSelectionExecutionLoggerTest {
     @Mock private Clock mMockClock;
     @Mock private DBAdSelection mMockDBAdSelection;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     private final Flags mFlags = new AdSelectionExecutionLoggerTestFlags();
 

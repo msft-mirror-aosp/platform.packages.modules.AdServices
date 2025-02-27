@@ -36,10 +36,8 @@ import com.android.adservices.service.common.FrequencyCapAdDataValidatorNoOpImpl
 import com.android.adservices.service.common.JsonValidator;
 import com.android.adservices.service.common.ValidatorTestUtil;
 import com.android.adservices.service.common.ValidatorUtil;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -55,9 +53,6 @@ public class CustomAudienceValidatorTest {
                     FakeFlagsFactory.getFlagsForTest(),
                     new FrequencyCapAdDataValidatorNoOpImpl(),
                     AdRenderIdValidator.AD_RENDER_ID_VALIDATOR_NO_OP);
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testValidCustomAudience() {

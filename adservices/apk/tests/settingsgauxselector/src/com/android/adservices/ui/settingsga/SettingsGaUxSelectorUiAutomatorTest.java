@@ -110,6 +110,7 @@ public final class SettingsGaUxSelectorUiAutomatorTest extends AdServicesUiTestC
     }
 
     @Test
+    @FlakyTest(bugId = 375981099)
     public void fledgeViewTextPasEnabledTest() throws Exception {
         SettingsTestUtil.fledgeViewTextPasEnabledTest(mDevice, flags);
     }

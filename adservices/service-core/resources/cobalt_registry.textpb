@@ -2773,6 +2773,313 @@ customers {
       }
       metric_semantics: USAGE_COUNTING
     }
+    metrics {
+      metric_name: "per_package_api_response"
+      customer_id: 200004
+      project_id: 2
+      id: 6
+      metric_type: STRING
+      meta_data {
+        expiration_date: "2025/06/01"
+        max_release_stage: GA
+      }
+      reports {
+        report_name: "response_counts_1m"
+        id: 1
+        report_type: STRING_COUNTS
+        reporting_threshold: 1000000
+        event_vector_buffer_max: 250
+        string_buffer_max: 200
+        reporting_interval: DAYS_1
+        system_profile_field: APP_VERSION
+        system_profile_selection: REPORT_ALL
+        privacy_mechanism: DE_IDENTIFICATION
+      }
+      reports {
+        report_name: "response_counts_internal_beta"
+        id: 2
+        report_type: STRING_COUNTS
+        reporting_threshold: 1
+        event_vector_buffer_max: 250
+        string_buffer_max: 200
+        reporting_interval: DAYS_1
+        system_profile_field: APP_VERSION
+        system_profile_selection: REPORT_ALL
+        max_release_stage: DOGFOOD
+        privacy_mechanism: DE_IDENTIFICATION
+      }
+      metric_dimensions {
+        dimension: "api"
+        event_codes {
+          key: 0
+          value: "UNKNOWN"
+        }
+        event_codes {
+          key: 1
+          value: "GET_TOPICS"
+        }
+        event_codes {
+          key: 2
+          value: "JOIN_CUSTOM_AUDIENCE"
+        }
+        event_codes {
+          key: 3
+          value: "LEAVE_CUSTOM_AUDIENCE"
+        }
+        event_codes {
+          key: 4
+          value: "SELECT_ADS"
+        }
+        event_codes {
+          key: 5
+          value: "REGISTER_SOURCE"
+        }
+        event_codes {
+          key: 6
+          value: "DELETE_REGISTRATIONS"
+        }
+        event_codes {
+          key: 7
+          value: "REPORT_IMPRESSION"
+        }
+        event_codes {
+          key: 8
+          value: "OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO"
+        }
+        event_codes {
+          key: 9
+          value: "REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE"
+        }
+        event_codes {
+          key: 10
+          value: "RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES"
+        }
+        event_codes {
+          key: 11
+          value: "OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO"
+        }
+        event_codes {
+          key: 12
+          value: "REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE"
+        }
+        event_codes {
+          key: 13
+          value: "RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES"
+        }
+        event_codes {
+          key: 14
+          value: "GET_ADID"
+        }
+        event_codes {
+          key: 15
+          value: "GET_APPSETID"
+        }
+        event_codes {
+          key: 16
+          value: "REGISTER_TRIGGER"
+        }
+        event_codes {
+          key: 17
+          value: "REGISTER_WEB_SOURCE"
+        }
+        event_codes {
+          key: 18
+          value: "REGISTER_WEB_TRIGGER"
+        }
+        event_codes {
+          key: 19
+          value: "GET_MEASUREMENT_API_STATUS"
+        }
+        event_codes {
+          key: 20
+          value: "GET_TOPICS_PREVIEW_API"
+        }
+        event_codes {
+          key: 21
+          value: "SELECT_ADS_FROM_OUTCOMES"
+        }
+        event_codes {
+          key: 22
+          value: "SET_APP_INSTALL_ADVERTISERS"
+        }
+        event_codes {
+          key: 23
+          value: "REPORT_INTERACTION"
+        }
+        event_codes {
+          key: 24
+          value: "UPDATE_AD_COUNTER_HISTOGRAM"
+        }
+        event_codes {
+          key: 25
+          value: "FETCH_AND_JOIN_CUSTOM_AUDIENCE"
+        }
+        event_codes {
+          key: 26
+          value: "REGISTER_SOURCES"
+        }
+        event_codes {
+          key: 27
+          value: "GET_AD_SERVICES_EXT_DATA"
+        }
+        event_codes {
+          key: 28
+          value: "PUT_AD_SERVICES_EXT_DATA"
+        }
+        event_codes {
+          key: 29
+          value: "GET_ADSERVICES_COMMON_STATES"
+        }
+        event_codes {
+          key: 30
+          value: "GET_AD_SELECTION_DATA"
+        }
+        event_codes {
+          key: 31
+          value: "PERSIST_AD_SELECTION_RESULT"
+        }
+        event_codes {
+          key: 32
+          value: "UPDATE_SIGNALS"
+        }
+        event_codes {
+          key: 33
+          value: "SCHEDULE_CUSTOM_AUDIENCE_UPDATE"
+        }
+      }
+      metric_dimensions {
+        dimension: "response"
+        event_codes {
+          key: 0
+          value: "UNKNOWN"
+        }
+        event_codes {
+          key: 1
+          value: "INTERNAL_ERROR"
+        }
+        event_codes {
+          key: 2
+          value: "INVALID_ARGUMENT"
+        }
+        event_codes {
+          key: 3
+          value: "UNKNOWN_ERROR"
+        }
+        event_codes {
+          key: 4
+          value: "IO_ERROR"
+        }
+        event_codes {
+          key: 5
+          value: "RATE_LIMIT_REACHED"
+        }
+        event_codes {
+          key: 6
+          value: "KILLSWITCH_ENABLED"
+        }
+        event_codes {
+          key: 7
+          value: "USER_CONSENT_REVOKED"
+        }
+        event_codes {
+          key: 8
+          value: "ADSERVICES_DISABLED"
+        }
+        event_codes {
+          key: 9
+          value: "PERMISSION_NOT_REQUESTED"
+        }
+        event_codes {
+          key: 10
+          value: "CALLER_NOT_ALLOWED"
+        }
+        event_codes {
+          key: 11
+          value: "BACKGROUND_CALLER"
+        }
+        event_codes {
+          key: 12
+          value: "UNAUTHORIZED"
+        }
+        event_codes {
+          key: 13
+          value: "TIMEOUT"
+        }
+        event_codes {
+          key: 14
+          value: "JS_SANDBOX_UNAVAILABLE"
+        }
+        event_codes {
+          key: 15
+          value: "INVALID_OBJECT"
+        }
+        event_codes {
+          key: 16
+          value: "CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES"
+        }
+        event_codes {
+          key: 17
+          value: "SERVER_RATE_LIMIT_REACHED"
+        }
+        event_codes {
+          key: 18
+          value: "USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET"
+        }
+        event_codes {
+          key: 19
+          value: "ENCRYPTION_FAILURE"
+        }
+        event_codes {
+          key: 20
+          value: "CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST"
+        }
+        event_codes {
+          key: 21
+          value: "CALLER_NOT_ALLOWED_PACKAGE_BLOCKLISTED"
+        }
+        event_codes {
+          key: 22
+          value: "CALLER_NOT_ALLOWED_ENROLLMENT_MATCH_NOT_FOUND"
+        }
+        event_codes {
+          key: 23
+          value: "CALLER_NOT_ALLOWED_ENROLLMENT_INVALID_ID"
+        }
+        event_codes {
+          key: 24
+          value: "CALLER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED"
+        }
+        event_codes {
+          key: 25
+          value: "CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION"
+        }
+        event_codes {
+          key: 26
+          value: "ADSERVICES_ACTIVITY_DISABLED"
+        }
+        event_codes {
+          key: 27
+          value: "CALLBACK_SHUTDOWN"
+        }
+        event_codes {
+          key: 28
+          value: "PROVIDER_SERVICE_INTERNAL_ERROR"
+        }
+        event_codes {
+          key: 29
+          value: "UPDATE_ALREADY_PENDING_ERROR"
+        }
+        event_codes {
+          key: 30
+          value: "CONSENT_REVOKED_ALL_APIS"
+        }
+        event_codes {
+          key: 100
+          value: "SUCCESS"
+        }
+      }
+      metric_semantics: USAGE_COUNTING
+    }
   }
 }
 

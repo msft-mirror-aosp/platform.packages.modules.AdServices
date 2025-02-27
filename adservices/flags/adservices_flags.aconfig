@@ -1,7 +1,87 @@
 package: "com.android.adservices.flags"
 container: "com.android.adservices"
 
-# NOTE: add new flags using alphabetical order to minimize merge conflicts
+####################################################################################################
+# NOTES:                                                                                           #
+#   - Add new flags using alphabetical order to minimize merge conflicts                           #
+#   - Do NOT add flags using the 'adservices' namespace, just 'adservices_aconfig'                 #
+####################################################################################################
+
+flag {
+    name: "adservices_enable_per_module_overrides_api"
+    namespace: "adservices_aconfig"
+    bug: "346669688"
+    description: "Enables apis for adservices allow caller to enable individual module(PA/TOPIC/MSMT). This api only make the module available on the device, each module can still have own flag/logic to turn on off themself."
+    is_exported: true
+}
+
+flag {
+    name: "adservices_outcomereceiver_r_api_deprecated"
+    namespace: "adservices_aconfig"
+    bug: "365586922"
+    description: "AdServices is no longer supported on Android R. Deprecating the R-specific APIs"
+    is_exported: true
+}
+
+flag {
+    name: "fledge_enable_custom_audience_component_ads"
+    namespace: "adservices_aconfig"
+    bug: "377051742"
+    description: "Enables component ads feature for custom audiences."
+    is_exported: true
+}
+
+flag {
+    name: "fledge_enable_report_event_for_component_seller"
+    namespace: "adservices_aconfig"
+    bug: "377279411"
+    description: "Enables component seller as one of the destination for reporting event."
+}
+
+flag {
+    name: "fledge_enable_winning_seller_id_in_ad_selection_outcome"
+    namespace: "adservices_aconfig"
+    bug: "377279411"
+    description: "Enables winning seller id in AdSelectionOutcome in persistAdSelectionResult/selectAds API."
+}
+
+flag {
+    name: "fledge_enable_schedule_custom_audience_default_partial_custom_audiences_constructor"
+    namespace: "adservices_aconfig"
+    bug: "377383709"
+    description: "Enables the new constructor that does not require partial custom audiences in the request."
+    is_exported: true
+}
+
+flag {
+    name: "sdksandbox_dump_effective_target_sdk_version"
+    namespace: "adservices_aconfig"
+    description: "Adds the effective target SDK version to the dump method"
+    bug: "321202443"
+    is_fixed_read_only: true
+}
+
+flag {
+    name: "sdksandbox_invalidate_effective_target_sdk_version_cache"
+    namespace: "adservices_aconfig"
+    description: "Invalidate the effective target SDK version cache"
+    bug: "328202544"
+    is_fixed_read_only: true
+}
+
+flag {
+    name: "sdksandbox_use_effective_target_sdk_version_for_restrictions"
+    namespace: "adservices_aconfig"
+    description: "Use the effective target SDK version for getting the allowlist for restrictions"
+    bug: "288873117"
+    is_fixed_read_only: true
+}
+
+####################################################################################################
+### Do NOT add any more flags beyond this point - it only contains the "legacy" flags that uses the #
+### 'adservices' namespace (instead of 'adservices_aconfig')                                       #
+####################################################################################################
+
 
 flag {
     name: "ad_id_cache_enabled"
@@ -17,6 +97,7 @@ flag {
     bug: "303511619"
     # TODO(b/320156647): Add proper description below
     description: "Add AIDL and system APIs for AdServicesExtDataService"
+    is_exported: true
 }
 
 flag {
@@ -36,13 +117,6 @@ flag {
 }
 
 flag {
-    name: "adservices_enable_per_module_overrides_api"
-    namespace: "adservices_aconfig"
-    bug: "346669688"
-    description: "Enables apis for adservices allow caller to enable individual module(PA/TOPIC/MSMT). This api only make the module available on the device, each module can still have own flag/logic to turn on off themself."
-}
-
-flag {
     name: "enable_adservices_api_enabled"
     namespace: "adservices"
     # TODO(b/320156647): Add bug number and description
@@ -55,6 +129,7 @@ flag {
     namespace: "adservices"
     bug: "267712947"
     description: "Enabled negative filtering feature with signed contextual ads"
+    is_exported: true
 }
 
 flag {
@@ -62,6 +137,7 @@ flag {
     namespace: "adservices"
     bug: "323397060"
     description: "Enables the getAdSelectionDataId feature of the getAdSelectionData API"
+    is_exported: true
 }
 
 flag {
@@ -69,6 +145,7 @@ flag {
     namespace: "adservices"
     bug: "320786372"
     description: "Enables server auction request flags feature for custom audiences."
+    is_exported: true
 }
 
 flag {
@@ -76,6 +153,7 @@ flag {
     namespace: "adservices"
     bug: "323297322"
     description: "Enables Schedule Custom Audience Update API"
+    is_exported: true
 }
 
 flag {
@@ -83,6 +161,7 @@ flag {
     namespace: "adservices"
     bug: "323888604"
     description: "Enable multi cloud support for unified flow APIs "
+    is_exported: true
 }
 
 flag {
@@ -90,6 +169,7 @@ flag {
     namespace: "adservices"
     bug: "342332791"
     description: "Enable the seller configuration feature for the getAdSelectionData API"
+    is_exported: true
 }
 
 flag {
@@ -97,6 +177,7 @@ flag {
     namespace: "adservices"
     bug: "322635374"
     description: "Enables Get Adservices common states API."
+    is_exported: true
 }
 
 flag {
@@ -104,14 +185,7 @@ flag {
     namespace: "adservices"
     bug: "299946888"
     description: "Enables Protected Signals API"
-}
-
-flag {
-    name: "sdksandbox_invalidate_effective_target_sdk_version_cache"
-    namespace: "adservices_aconfig"
-    description: "Invalidate the effective target SDK version cache"
-    bug: "328202544"
-    is_fixed_read_only: true
+    is_exported: true
 }
 
 flag {
@@ -119,6 +193,9 @@ flag {
     namespace: "adservices"
     bug: "303727027"
     description: "Enables encrypted Topics feature for Topics API."
+    is_exported: true
 }
 
-# NOTE: add new flags using alphabetical order to minimize merge conflicts
+####################################################################################################
+### Do NOT add any new flags at the bottom of this file                                             #
+####################################################################################################

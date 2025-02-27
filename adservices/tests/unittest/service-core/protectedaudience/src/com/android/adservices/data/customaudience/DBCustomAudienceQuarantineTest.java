@@ -22,18 +22,12 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Instant;
 
 public class DBCustomAudienceQuarantineTest {
     private static final Instant QUARANTINE_EXPIRATION = Instant.now();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildDBFetchCustomAudienceQuarantineSucceeds() {
