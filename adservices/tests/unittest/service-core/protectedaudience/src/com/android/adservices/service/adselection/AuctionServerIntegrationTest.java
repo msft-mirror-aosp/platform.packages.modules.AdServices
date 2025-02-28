@@ -2013,8 +2013,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                         adSelectionId, ENCRYPTION_KEY_TYPE_AUCTION));
 
         ProtectedAuctionInput protectedAuctionInput =
-                mServerAuctionTestHelper.decryptGetAdSelectionDataResponse(
-                        callback.mGetAdSelectionDataResponse);
+                mServerAuctionTestHelper.decryptAdSelectionData(
+                        callback.mGetAdSelectionDataResponse.getAdSelectionData());
 
         Map<String, BuyerInput> buyerInputs =
                 mServerAuctionTestHelper.getDecompressedBuyerInputs(protectedAuctionInput);
@@ -3104,8 +3104,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                         adSelectionId, ENCRYPTION_KEY_TYPE_AUCTION));
 
         ProtectedAuctionInput protectedAuctionInput =
-                mServerAuctionTestHelper.decryptGetAdSelectionDataResponse(
-                        callback.mGetAdSelectionDataResponse);
+                mServerAuctionTestHelper.decryptAdSelectionData(
+                        callback.mGetAdSelectionDataResponse.getAdSelectionData());
 
         Map<String, BuyerInput> buyerInputs =
                 mServerAuctionTestHelper.getDecompressedBuyerInputs(protectedAuctionInput);
@@ -3607,8 +3607,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                 .isNotNull();
 
         ProtectedAuctionInput protectedAuctionInput =
-                mServerAuctionTestHelper.decryptGetAdSelectionDataResponse(
-                        callback.mGetAdSelectionDataResponse);
+                mServerAuctionTestHelper.decryptAdSelectionData(
+                        callback.mGetAdSelectionDataResponse.getAdSelectionData());
 
         Map<String, BuyerInput> buyerInputs =
                 mServerAuctionTestHelper.getDecompressedBuyerInputs(protectedAuctionInput);

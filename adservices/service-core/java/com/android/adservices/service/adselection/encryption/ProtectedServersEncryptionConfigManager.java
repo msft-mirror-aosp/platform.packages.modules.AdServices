@@ -369,15 +369,15 @@ public class ProtectedServersEncryptionConfigManager
             DevContext devContext) {
         switch (adSelectionEncryptionKeyType) {
             case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION: {
-                    if (coordinatorUrl != null) {
-                        keyFetchLogger.setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_API);
-                        return mServerAuctionCoordinatorUriStrategyFactory
-                                .createStrategy(devContext)
-                                .getAuctionEncryptionKeyFetchUri(coordinatorUrl);
-                    }
+                if (coordinatorUrl != null) {
+                    keyFetchLogger.setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_API);
+                    return mServerAuctionCoordinatorUriStrategyFactory
+                            .createStrategy(devContext)
+                            .getAuctionEncryptionKeyFetchUri(coordinatorUrl);
+                }
 
-                    sLogger.v("The passed coordinatorUrl was null. Fetching default coordinator");
-                    keyFetchLogger.setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
+                sLogger.v("The passed coordinatorUrl was null. Fetching default coordinator");
+                keyFetchLogger.setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
                 return Uri.parse(mFlags.getFledgeAuctionServerAuctionKeyFetchUri());
             }
             case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN: {
