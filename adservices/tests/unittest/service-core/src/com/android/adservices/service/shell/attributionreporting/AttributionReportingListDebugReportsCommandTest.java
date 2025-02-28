@@ -19,6 +19,7 @@ package com.android.adservices.service.shell.attributionreporting;
 import static com.android.adservices.service.measurement.reporting.DebugReportFixture.ValidDebugReportParams;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_ATTRIBUTION_REPORTING_LIST_DEBUG_REPORTS;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_DEV_MODE_UNCONFIRMED;
+import static com.android.adservices.service.stats.ShellCommandStats.RESULT_GENERIC_ERROR;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
@@ -166,10 +167,14 @@ public class AttributionReportingListDebugReportsCommandTest
 
         Result result = runCommandAndGetResult();
 
-        expectSuccess(result, COMMAND_ATTRIBUTION_REPORTING_LIST_DEBUG_REPORTS);
-
-        assertThat(result.mOut)
-                .isEqualTo("Error in retrieving verbose debug reports from database");
+        String errorMessage =
+                "Failed to list verbose debug reports: Error in retrieving verbose debug reports"
+                        + " from database";
+        expectFailure(
+                result,
+                errorMessage,
+                COMMAND_ATTRIBUTION_REPORTING_LIST_DEBUG_REPORTS,
+                RESULT_GENERIC_ERROR);
     }
 
     @Test
@@ -201,6 +206,21 @@ public class AttributionReportingListDebugReportsCommandTest
         testRunListDebugReportsWithSchema(debugReports, args);
     }
 
+    @Test
+    public void testRunListDebugReports_invalidSchema() {
+        String[] args = {SCHEMA_SUB_COMMAND, "invalid_schema"};
+        Result result = runCommandAndGetResult(args);
+
+        String errorMessage =
+                "Failed to list verbose debug reports: Invalid schema. The 'schema' parameter must"
+                        + " be either 'partial' or 'full'. Check for typos.";
+        expectFailure(
+                result,
+                errorMessage,
+                COMMAND_ATTRIBUTION_REPORTING_LIST_DEBUG_REPORTS,
+                RESULT_GENERIC_ERROR);
+    }
+
     private void testRunListDebugReportsWithSchema(List<DebugReport> debugReports, String[] schema)
             throws JSONException {
         doReturn(Optional.ofNullable(debugReports))
@@ -229,7 +249,7 @@ public class AttributionReportingListDebugReportsCommandTest
         stringArray[0] = AttributionReportingShellCommandFactory.COMMAND_PREFIX;
         stringArray[1] = AttributionReportingListDebugReportsCommand.CMD;
         for (int i = 0; i < args.length; i++) {
-            stringArray[i + 1] = args[i];
+            stringArray[i + 2] = args[i];
         }
         return run(
                 new AttributionReportingListDebugReportsCommand(

@@ -48,7 +48,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-public class AttributionReportingListDebugReportsCommand extends AbstractShellCommand {
+public final class AttributionReportingListDebugReportsCommand extends AbstractShellCommand {
     public static final int TIMEOUT_SEC = 5;
     public static final String CMD = "list-verbose-debug-reports";
     public static final String HELP =
@@ -82,20 +82,10 @@ public class AttributionReportingListDebugReportsCommand extends AbstractShellCo
                     RESULT_DEV_MODE_UNCONFIRMED, COMMAND_ATTRIBUTION_REPORTING_LIST_DEBUG_REPORTS);
         }
 
-        String schema;
         String output;
-        try {
-            schema = AttributionReportingArgParserHelper.parseAttributionReportingSchema(args);
-        } catch (IllegalArgumentException exception) {
-            output = "IllegalArgumentException while running list-verbose-debug-reports command";
-            Log.e(TAG, output, exception);
-            out.print(output);
-            out.flush();
-            return invalidArgsError(
-                    HELP, err, COMMAND_ATTRIBUTION_REPORTING_LIST_DEBUG_REPORTS, args);
-        }
 
         try {
+            String schema = AttributionReportingUtil.parseAttributionReportingSchema(args, 2, out);
             ListenableFuture<Optional<List<DebugReport>>> futureResult =
                     queryForListDebugReportsCommand();
             Optional<List<DebugReport>> result = futureResult.get(TIMEOUT_SEC, SECONDS);
@@ -103,16 +93,16 @@ public class AttributionReportingListDebugReportsCommand extends AbstractShellCo
                 output = createOutputJson(result, schema).toString();
             } else {
                 output = "Error in retrieving verbose debug reports from database";
+                throw new IllegalStateException(output);
             }
             out.print(output);
             out.flush();
             return toShellCommandResult(
                     RESULT_SUCCESS, COMMAND_ATTRIBUTION_REPORTING_LIST_DEBUG_REPORTS);
         } catch (Exception e) {
-            output = "Failed to generate JSON: " + e.getMessage();
-            Log.e(TAG, String.format(output));
-            out.print(output);
-            out.flush();
+            String errorMessage = "Failed to list verbose debug reports: " + e.getMessage();
+            err.print(errorMessage);
+            err.flush();
             return toShellCommandResult(
                     ShellCommandStats.RESULT_GENERIC_ERROR,
                     COMMAND_ATTRIBUTION_REPORTING_LIST_DEBUG_REPORTS);
