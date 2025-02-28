@@ -74,6 +74,7 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -101,6 +102,8 @@ import java.util.stream.Collectors;
 @SetLongFlag(
         name = KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS,
         value = EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS)
+// TODO (b/384952360): refine CEL related verifications later
+@SkipLoggingUsageRule(reason = "b/384952360")
 public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLER_UID = Process.myUid();
     private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
