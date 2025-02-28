@@ -26,6 +26,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Class which evaluates a particular test method for a particular journey on a new thread for a
@@ -37,13 +38,41 @@ public class ConcurrentScenariosStatement extends Statement {
     private static final int WAIT_TIME_SECONDS = 240;
     private static final String TAG = ConcurrentScenariosStatement.class.getSimpleName();
     private static final Executor sExecutor = Executors.newCachedThreadPool();
+    private static final AtomicInteger sJourneysToFinish = new AtomicInteger(0);
 
+    private final Class mStressClass;
     private final List<Object> mJourneys;
     private final List<FrameworkMethod> mMethods;
 
     public ConcurrentScenariosStatement(List<Object> journeys, List<FrameworkMethod> methods) {
         mJourneys = journeys;
         mMethods = methods;
+
+        if (sJourneysToFinish.get() > 0) {
+            throw new IllegalArgumentException(
+                    "There shouldn't any running journeys on creating a new statement!");
+        }
+
+        sJourneysToFinish.set(0);
+
+        mStressClass = android.adservices.test.longevity.concurrent.StressScenarioTestAction.class;
+
+        for (Object object : journeys) {
+            if (!isAssignableFromStressClass(object)) {
+                sJourneysToFinish.incrementAndGet();
+            }
+        }
+    }
+
+    /**
+     * Indicates if all CUJs for this scenario have been finished and stress tests can be cancelled.
+     */
+    public static boolean needToCancelStressTests() {
+        return sJourneysToFinish.get() == 0;
+    }
+
+    private boolean isAssignableFromStressClass(Object object) {
+        return mStressClass.isAssignableFrom(object.getClass());
     }
 
     @Override
@@ -76,6 +105,10 @@ public class ConcurrentScenariosStatement extends Statement {
                                             testClass.getClass().getSimpleName(),
                                             testMethod.getName()));
                             latch.countDown();
+
+                            if (!isAssignableFromStressClass(testClass)) {
+                                sJourneysToFinish.decrementAndGet();
+                            }
                         }
                     };
             sExecutor.execute(runnable);

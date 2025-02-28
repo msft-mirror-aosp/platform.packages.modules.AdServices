@@ -18,14 +18,9 @@ package android.adservices.test.scenario.adservices.measurement.load.scenarios;
 
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 import android.net.Uri;
 import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
-import android.view.InputDevice;
-import android.view.MotionEvent;
-
-import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.google.common.base.Stopwatch;
 
@@ -39,51 +34,51 @@ import java.util.concurrent.TimeUnit;
 @RunWith(JUnit4.class)
 public class CallRegisterTrigger extends AbstractTestAction {
 
-  @Test
-  public void registerTrigger() {
-    runRegisterTrigger();
-  }
-
-  @Test
-  public void repeatedlyRegisterTrigger() {
-    for (int i = 0; i < repeatCountOption.get(); i++) {
-      delayPre();
-      runRegisterTrigger();
+    @Test
+    public void registerTrigger() {
+        runRegisterTrigger();
     }
-  }
 
-  private void runRegisterTrigger() {
-    final String path = SERVER_BASE_URI + ":" + DEFAULT_PORT + TRIGGER_PATH;
+    @Test
+    public void repeatedlyRegisterTrigger() {
+        for (int i = 0; i < repeatCountOption.get(); i++) {
+            delayPre();
+            runRegisterTrigger();
+        }
+    }
 
-    Stopwatch timer = Stopwatch.createStarted();
-    MEASUREMENT_MANAGER.registerTrigger(
-        Uri.parse(path),
-        CALLBACK_EXECUTOR,
-        new AdServicesOutcomeReceiver<>() {
-          @Override
-          public void onResult(@NonNull Object ignoredResult) {
-            timer.stop();
-            Log.i(
-                TAG,
-                generateLog(
-                    "Latency=%dms, SDK=%s"
-                        .formatted(
-                            timer.elapsed(TimeUnit.MILLISECONDS),
-                            sdkOption.get())));
-          }
+    private void runRegisterTrigger() {
+        final String path = SERVER_BASE_URI + ":" + DEFAULT_PORT + TRIGGER_PATH;
 
-          @Override
-          public void onError(@NonNull Exception error) {
-            timer.stop();
-            Log.i(
-                TAG,
-                generateLog(
-                    "Latency=%dms, SDK=%s Error:%s"
-                        .formatted(
-                            timer.elapsed(TimeUnit.MILLISECONDS),
-                            sdkOption.get(),
-                            error.getMessage())));
-          }
-        });
-  }
+        Stopwatch timer = Stopwatch.createStarted();
+        MEASUREMENT_MANAGER.registerTrigger(
+                Uri.parse(path),
+                CALLBACK_EXECUTOR,
+                new AdServicesOutcomeReceiver<>() {
+                    @Override
+                    public void onResult(@NonNull Object ignoredResult) {
+                        timer.stop();
+                        Log.i(
+                                TAG,
+                                generateLog(
+                                        "Latency=%dms, SDK=%s"
+                                                .formatted(
+                                                        timer.elapsed(TimeUnit.MILLISECONDS),
+                                                        sdkOption.get())));
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception error) {
+                        timer.stop();
+                        Log.i(
+                                TAG,
+                                generateLog(
+                                        "Latency=%dms, SDK=%s Error:%s"
+                                                .formatted(
+                                                        timer.elapsed(TimeUnit.MILLISECONDS),
+                                                        sdkOption.get(),
+                                                        error.getMessage())));
+                    }
+                });
+    }
 }
