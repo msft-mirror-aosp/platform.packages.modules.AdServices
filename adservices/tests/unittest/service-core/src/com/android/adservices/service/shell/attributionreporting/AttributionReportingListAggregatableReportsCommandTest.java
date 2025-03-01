@@ -63,20 +63,24 @@ public class AttributionReportingListAggregatableReportsCommandTest
     private DevSessionDataStore mDevSessionDataStore;
 
     AggregateReport aggregatableReport1 =
-            AggregateReportFixture.getValidAggregateReportBuilder().setId("report1").build();
+            AggregateReportFixture.getValidAggregateReportBuilder()
+                    .setTriggerContextId("aggregatableTriggerContext1")
+                    .build();
 
     AggregateReport aggregatableReport2 =
-            AggregateReportFixture.getValidAggregateReportBuilder().setId("report2").build();
+            AggregateReportFixture.getValidAggregateReportBuilder()
+                    .setTriggerContextId("aggregatableTriggerContext2")
+                    .build();
 
     AggregateReport aggregatableReport3 =
             AggregateReportFixture.getValidAggregateReportBuilder()
-                    .setId("report1")
+                    .setTriggerContextId("aggregatableTriggerContext3")
                     .setApiVersion(AggregateReportFixture.ValidAggregateReportParams.API_VERSION)
                     .build();
 
     AggregateReport aggregatableReport4 =
             AggregateReportFixture.getValidAggregateReportBuilder()
-                    .setId("report1")
+                    .setTriggerContextId("aggregatableTriggerContext4")
                     .setApiVersion(AggregateReportFixture.ValidAggregateReportParams.API_VERSION)
                     .build();
 
@@ -135,10 +139,9 @@ public class AttributionReportingListAggregatableReportsCommandTest
                 List.of(aggregatableReport1, aggregatableReport2);
 
         for (int i = 0; i < registrationsArray.length(); i++) {
-            String id = "report" + (i + 1);
             JSONObject registrationsObject = registrationsArray.getJSONObject(i);
             AggregateReport outputAggregatableReport =
-                    getAggregatableReportFromJson(registrationsObject, id, SCHEMA_PARTIAL).build();
+                    getAggregatableReportFromJson(registrationsObject, SCHEMA_PARTIAL).build();
             assertThat(outputAggregatableReport).isEqualTo(expectedAggregatableReports.get(i));
             assertAggregatableReportJson(
                     registrationsObject, outputAggregatableReport, SCHEMA_PARTIAL);
@@ -241,9 +244,8 @@ public class AttributionReportingListAggregatableReportsCommandTest
 
         for (int i = 0; i < registrationsArray.length(); i++) {
             JSONObject registrationsObject = registrationsArray.getJSONObject(i);
-            String id = "report" + (i + 3);
             AggregateReport aggregatableReport =
-                    getAggregatableReportFromJson(registrationsObject, id, schema[1]).build();
+                    getAggregatableReportFromJson(registrationsObject, schema[1]).build();
             assertThat(aggregatableReport).isEqualTo(aggregatableReports.get(i));
             assertAggregatableReportJson(registrationsObject, aggregatableReport, schema[1]);
         }
@@ -275,10 +277,9 @@ public class AttributionReportingListAggregatableReportsCommandTest
      * values.
      */
     private static AggregateReport.Builder getAggregatableReportFromJson(
-            JSONObject jsonObject, String id, String schema) throws JSONException {
+            JSONObject jsonObject, String schema) throws JSONException {
         AggregateReport.Builder builder =
                 new AggregateReport.Builder()
-                        .setId(id)
                         .setPublisher(AggregateReportFixture.ValidAggregateReportParams.PUBLISHER)
                         .setAttributionDestination(
                                 Uri.parse(
@@ -324,7 +325,6 @@ public class AttributionReportingListAggregatableReportsCommandTest
 
         if (schema.equals(SCHEMA_FULL)) {
             builder.setApi(jsonObject.getString(MeasurementTables.AggregateReport.API))
-                    .setId(jsonObject.getString(MeasurementTables.AggregateReport.ID))
                     .setDebugReportStatus(
                             jsonObject.getInt(
                                     MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS))
@@ -370,8 +370,6 @@ public class AttributionReportingListAggregatableReportsCommandTest
         if (schema.equals(SCHEMA_FULL)) {
             assertThat(reportJson.getString(MeasurementTables.AggregateReport.API))
                     .isEqualTo(report.getApi());
-            assertThat(reportJson.getString(MeasurementTables.AggregateReport.ID))
-                    .isEqualTo(report.getId());
             assertThat(reportJson.getInt(MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS))
                     .isEqualTo(report.getDebugReportStatus());
             assertThat(reportJson.getString(MeasurementTables.AggregateReport.PUBLISHER))
@@ -384,7 +382,6 @@ public class AttributionReportingListAggregatableReportsCommandTest
                     .isEqualTo(report.getTriggerDebugKey().toString());
         } else if (schema.equals(SCHEMA_PARTIAL)) {
             assertThat(reportJson.has(MeasurementTables.AggregateReport.API)).isFalse();
-            assertThat(reportJson.has(MeasurementTables.AggregateReport.ID)).isFalse();
             assertThat(reportJson.has(MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS))
                     .isFalse();
             assertThat(reportJson.has(MeasurementTables.AggregateReport.PUBLISHER)).isFalse();
