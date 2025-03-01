@@ -42,13 +42,22 @@ import java.util.Objects;
  */
 public final class AppNameApiErrorLogger {
 
-    private static final AppNameApiErrorLogger sInstance = new AppNameApiErrorLogger();
-
     @Nullable private final CobaltLogger mCobaltLogger;
+
+    // Lazy initialization holder class idiom for static fields as described in Effective Java Item
+    // 83 - this is needed because otherwise the singleton would be initialized in unit tests, even
+    // when they (correctly) call newInstance() instead of getInstance().
+    private static final class FieldHolder {
+        private static final AppNameApiErrorLogger sSingleton;
+
+        static { // static initialization
+            sSingleton = new AppNameApiErrorLogger();
+        }
+    }
 
     /** Returns the singleton of the {@code AppNameApiErrorLogger}. */
     public static AppNameApiErrorLogger getInstance() {
-        return sInstance;
+        return FieldHolder.sSingleton;
     }
 
     @VisibleForTesting

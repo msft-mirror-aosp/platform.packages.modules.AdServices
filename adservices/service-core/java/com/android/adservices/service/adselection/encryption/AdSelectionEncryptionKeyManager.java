@@ -299,7 +299,7 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
             @Nullable Uri unusedCoordinatorUrl,
             DevContext devContext,
             FetchProcessLogger keyFetchLogger) {
-        Uri fetchUri = getKeyFetchUriOfType(adSelectionKeyType, null, null, keyFetchLogger);
+        Uri fetchUri = getKeyFetchUriOfType(adSelectionKeyType, keyFetchLogger);
         if (fetchUri == null) {
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_ENCRYPTION_KEY_MANAGER_NULL_FETCH_URI,
@@ -348,5 +348,21 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
     private AdSelectionEncryptionKey selectRandomDbKeyAndParse(List<DBEncryptionKey> keys) {
         Random random = new Random();
         return parseDbEncryptionKey(keys.get(random.nextInt(keys.size())));
+    }
+
+    private Uri getKeyFetchUriOfType(
+            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
+            FetchProcessLogger keyFetchLogger) {
+        keyFetchLogger.setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
+
+        switch (adSelectionEncryptionKeyType) {
+            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION:
+                return Uri.parse(mFlags.getFledgeAuctionServerAuctionKeyFetchUri());
+            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN:
+                return Uri.parse(mFlags.getFledgeAuctionServerJoinKeyFetchUri());
+            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.UNASSIGNED:
+            default:
+                return null;
+        }
     }
 }

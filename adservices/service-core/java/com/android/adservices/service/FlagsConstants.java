@@ -810,9 +810,6 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED =
             "fledge_auction_server_request_flags_enabled";
 
-    public static final String KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED =
-            "fledge_auction_server_multi_cloud_enabled";
-
     public static final String KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST =
             "fledge_auction_server_coordinator_url_allowlist";
 
@@ -1776,4 +1773,8 @@ public final class FlagsConstants {
     /** Key for AdServices' Job Scheduling Sampling Config. */
     public static final String KEY_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG =
             "Spe__ad_services_job_scheduling_sampling_config";
+
+    /** Key for AdServices' Client error logging sampling config. */
+    public static final String KEY_AD_SERVICES_CEL_SAMPLING_CONFIG =
+            "ClientErrorLogging__ad_services_cel_sampling_config";
 }

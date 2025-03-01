@@ -68,7 +68,7 @@ public final class AttributionReportingHelper {
     static JSONObject sourceToJson(Source source, String schema) throws JSONException {
         JSONObject jsonObject =
                 new JSONObject()
-                        .put(SourceContract.ID, source.getId())
+                        .put(SourceContract.EVENT_ID, source.getEventId())
                         .put(SourceContract.STATUS, STATUS_MAP.get(source.getStatus()))
                         .put(SourceContract.REGISTRATION_ORIGIN, source.getRegistrationOrigin())
                         .put(SourceContract.REGISTRANT, source.getRegistrant())
@@ -179,7 +179,6 @@ public final class AttributionReportingHelper {
 
         if (schema.equals(SCHEMA_FULL)) {
             jsonObject
-                    .put(EventReportContract.ID, eventReport.getId())
                     .put(EventReportContract.SOURCE_DEBUG_KEY, eventReport.getSourceDebugKey())
                     .put(EventReportContract.SOURCE_EVENT_ID, eventReport.getSourceEventId())
                     .put(EventReportContract.SOURCE_TYPE, eventReport.getSourceType().getValue())
@@ -220,7 +219,6 @@ public final class AttributionReportingHelper {
         if (schema.equals(SCHEMA_FULL)) {
             jsonObject
                     .put(MeasurementTables.AggregateReport.API, aggregateReport.getApi())
-                    .put(MeasurementTables.AggregateReport.ID, aggregateReport.getId())
                     .put(
                             MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS,
                             aggregateReport.getDebugReportStatus())

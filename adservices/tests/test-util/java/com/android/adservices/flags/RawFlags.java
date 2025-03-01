@@ -1610,13 +1610,6 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
-    public final boolean getFledgeAuctionServerMultiCloudEnabled() {
-        return mBackend.getFlag(
-                KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
-                FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED);
-    }
-
-    @Override
     public final boolean isEnableEnrollmentTestSeed() {
         return mBackend.getFlag(KEY_ENABLE_ENROLLMENT_TEST_SEED, ENABLE_ENROLLMENT_TEST_SEED);
     }
@@ -3617,6 +3610,12 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
         return mBackend.getFlag(
                 KEY_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG,
                 DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG);
+    }
+
+    @Override
+    public String getAdServicesCelSamplingConfig() {
+        return mBackend.getFlag(
+                KEY_AD_SERVICES_CEL_SAMPLING_CONFIG, DEFAULT_AD_SERVICES_CEL_SAMPLING_CONFIG);
     }
 
     @Override

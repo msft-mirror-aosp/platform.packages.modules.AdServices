@@ -21,6 +21,7 @@ import android.annotation.Nullable;
 import android.net.Uri;
 import android.util.Pair;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
@@ -79,5 +80,64 @@ public class ReportUtil {
         result.put(summaryBucket.first);
         result.put(summaryBucket.second);
         return result;
+    }
+
+    /**
+     * Log failures from the reporting job handlers to Logcat for ad-tech debugging.
+     *
+     * @param filename the filename to log
+     * @param failureMessage the reason for failure
+     */
+    public static void logReportingFailure(String filename, String failureMessage) {
+        LoggerFactory.getMeasurementLogger().d("%s (FAILURE): %s.", filename, failureMessage);
+    }
+
+    /**
+     * Log failures from the reporting job handlers to Logcat for ad-tech debugging.
+     *
+     * @param filename the filename to log
+     * @param failureMessage the reason for failure
+     * @param reportId the datastore id of the report
+     * @param enrollmentId Ad Tech enrollment ID
+     * @param reportType the report type
+     */
+    public static void logReportingFailure(
+            String filename,
+            String failureMessage,
+            String reportId,
+            String enrollmentId,
+            String reportType) {
+        LoggerFactory.getMeasurementLogger()
+                .d(
+                        "%s (FAILURE): %s. Report ID: %s, Enrollment ID: %s," + " Type: %s",
+                        filename, failureMessage, reportId, enrollmentId, reportType);
+    }
+
+    /**
+     * Log failures from the reporting job handlers to Logcat for ad-tech debugging.
+     *
+     * @param filename the filename to log
+     * @param failureMessage the reason for failure
+     * @param e the throwable caught
+     * @param reportId the datastore id of the report
+     * @param enrollmentId Ad Tech enrollment ID
+     * @param reportType the report type
+     */
+    public static void logReportingFailure(
+            String filename,
+            String failureMessage,
+            Throwable e,
+            String reportId,
+            String enrollmentId,
+            String reportType) {
+        LoggerFactory.getMeasurementLogger()
+                .d(
+                        e,
+                        "%s (FAILURE): %s. Report ID: %s, Enrollment ID: %s," + " Type: %s",
+                        filename,
+                        failureMessage,
+                        reportId,
+                        enrollmentId,
+                        reportType);
     }
 }

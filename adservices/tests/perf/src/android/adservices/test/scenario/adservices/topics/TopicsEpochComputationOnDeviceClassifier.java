@@ -30,7 +30,6 @@ import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
@@ -121,7 +120,6 @@ public class TopicsEpochComputationOnDeviceClassifier {
     }
 
     @Test
-    @FlakyTest(bugId = 290122696)
     @Ignore("b/353956086")
     public void testEpochComputation() throws Exception {
         // The Test App has 1 SDK: sdk3

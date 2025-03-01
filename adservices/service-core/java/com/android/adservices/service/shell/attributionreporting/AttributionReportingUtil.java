@@ -16,7 +16,13 @@
 
 package com.android.adservices.service.shell.attributionreporting;
 
-public class AttributionReportingArgParserHelper {
+import com.android.adservices.service.shell.ShellCommandArgParserHelper;
+
+import com.google.common.collect.ImmutableMap;
+
+import java.io.PrintWriter;
+
+public class AttributionReportingUtil {
     private static final String SCHEMA_PARTIAL = "partial";
     private static final String SCHEMA_FULL = "full";
 
@@ -27,21 +33,15 @@ public class AttributionReportingArgParserHelper {
      * @return The schema value, defaulting to "partial" if not specified.
      * @throws IllegalArgumentException If the schema value is missing or invalid.
      */
-    public static String parseAttributionReportingSchema(String[] args) {
-        String schema = SCHEMA_PARTIAL;
-
-        for (int i = 0; i < args.length; i++) {
-            if ("--schema".equals(args[i])) {
-                if (i + 1 < args.length) {
-                    schema = args[i + 1];
-                    if (!schema.equals(SCHEMA_PARTIAL) && !schema.equals(SCHEMA_FULL)) {
-                        throw new IllegalArgumentException("Invalid schema value: " + schema);
-                    }
-                } else {
-                    throw new IllegalArgumentException("Missing value for --schema argument");
-                }
-                break;
-            }
+    public static String parseAttributionReportingSchema(
+            String[] args, int startIndex, PrintWriter out) throws IllegalArgumentException {
+        ImmutableMap<String, String> parsedArgs =
+                ShellCommandArgParserHelper.parseCliArguments(args, startIndex);
+        String schema = parsedArgs.getOrDefault("--schema", SCHEMA_PARTIAL);
+        if (!schema.equals(SCHEMA_PARTIAL) && !schema.equals(SCHEMA_FULL)) {
+            throw new IllegalArgumentException(
+                    "Invalid schema. The 'schema' parameter must be either 'partial' or 'full'."
+                            + " Check for typos.");
         }
         return schema;
     }

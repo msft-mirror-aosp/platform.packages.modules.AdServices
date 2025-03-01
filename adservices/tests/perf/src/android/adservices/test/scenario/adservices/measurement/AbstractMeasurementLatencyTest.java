@@ -157,6 +157,7 @@ public class AbstractMeasurementLatencyTest {
 
     protected void warmupAdServices() {
         final String path = SERVER_BASE_URI + SOURCE_PATH;
+        CountDownLatch countDownLatch = new CountDownLatch(1);
 
         MEASUREMENT_MANAGER.registerSource(
                 Uri.parse(path),
@@ -164,11 +165,14 @@ public class AbstractMeasurementLatencyTest {
                 CALLBACK_EXECUTOR,
                 new OutcomeReceiver<>() {
                     @Override
-                    public void onResult(@NonNull Object ignoredResult) {}
+                    public void onResult(@NonNull Object ignoredResult) {
+                        countDownLatch.countDown();
+                    }
 
                     @Override
                     public void onError(@NonNull Exception error) {
                         Assert.fail();
+                        countDownLatch.countDown();
                     }
                 });
     }

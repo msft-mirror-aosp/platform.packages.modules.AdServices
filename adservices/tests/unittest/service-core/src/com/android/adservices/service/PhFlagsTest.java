@@ -53,6 +53,7 @@ import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MI
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_VERSION_MAPPINGS;
 import static com.android.adservices.service.Flags.DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_AD_ID_MIGRATION_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_CEL_SAMPLING_CONFIG;
 import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG;
 import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG;
 import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
@@ -218,7 +219,6 @@ import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_JOIN_KE
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED;
-import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES;
@@ -599,6 +599,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_API_APP_BL
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_CACHE_TTL_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_MIGRATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_CEL_SAMPLING_CONFIG;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
@@ -741,7 +742,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_S
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES;
@@ -5035,14 +5035,6 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetFledgeAuctionServerMultiCloudEnabled() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
-                FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
-                Flags::getFledgeAuctionServerMultiCloudEnabled);
-    }
-
-    @Test
     public void testGetFledgeAuctionServerCoordinatorUrlAllowlist() {
         mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST,
@@ -6376,7 +6368,7 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testAdServicesJobExecutionSamplingConfig() {
+    public void testGetAdServicesJobExecutionSamplingConfig() {
         mFlagsTestHelper.testConfigFlag(
                 KEY_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG,
                 DEFAULT_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG,
@@ -6384,11 +6376,19 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testAdServicesJobSchedulingSamplingConfig() {
+    public void testGetAdServicesJobSchedulingSamplingConfig() {
         mFlagsTestHelper.testConfigFlag(
                 KEY_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG,
                 DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG,
                 Flags::getAdServicesJobSchedulingSamplingConfig);
+    }
+
+    @Test
+    public void testGetAdServicesCelSamplingConfig() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_AD_SERVICES_CEL_SAMPLING_CONFIG,
+                DEFAULT_AD_SERVICES_CEL_SAMPLING_CONFIG,
+                Flags::getAdServicesCelSamplingConfig);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

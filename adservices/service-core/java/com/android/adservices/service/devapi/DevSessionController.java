@@ -28,7 +28,8 @@ public interface DevSessionController {
      *     enum for more info on each result code's meaning.
      * @throws IllegalStateException If the current {@link DevSession} could not be retrieved.
      */
-    ListenableFuture<DevSessionControllerResult> startDevSession();
+    ListenableFuture<DevSessionControllerResult> startDevSession(
+            boolean setServerAuctionTestKeysEnabled);
 
     /**
      * Ends a developer session and returns to {@link DevSessionState#IN_PROD}. Clears the

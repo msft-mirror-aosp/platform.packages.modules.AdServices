@@ -19,6 +19,7 @@ package com.android.adservices.service.shell.adservicesapi;
 import static com.android.adservices.service.devapi.DevSessionControllerResult.FAILURE;
 import static com.android.adservices.service.devapi.DevSessionControllerResult.SUCCESS;
 import static com.android.adservices.service.shell.adservicesapi.AdServicesApiShellCommandFactory.COMMAND_PREFIX;
+import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.ARG_ENABLE_SERVER_AUCTION_TEST_KEYS;
 import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.ARG_ERASE_DB;
 import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.CMD;
 import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.ERROR_ALREADY_IN_DEV_MODE;
@@ -139,7 +140,8 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
                                 new DevSessionController() {
                                     @Override
                                     public ListenableFuture<DevSessionControllerResult>
-                                            startDevSession() throws IllegalStateException {
+                                            startDevSession(boolean setServerAuctionTestKeysEnabled)
+                                                    throws IllegalStateException {
                                         sleep(
                                                 DevSessionCommand.TIMEOUT_SEC,
                                                 "sleeping to allow timeout");
@@ -218,16 +220,89 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
         assertThat(mFakeDevSessionController.mDevModeState).isEqualTo(false);
     }
 
+    @Test
+    public void testRun_startDevSessionWithoutAcknowledgement_withServerTestKeysEnabled() {
+        Result result =
+                run(
+                        new DevSessionCommand(mFakeDevSessionController),
+                        COMMAND_PREFIX,
+                        CMD,
+                        SUB_CMD_START,
+                        ARG_ENABLE_SERVER_AUCTION_TEST_KEYS);
+
+        assertThat(result.mErr).startsWith(ERROR_NEED_ACKNOWLEDGEMENT);
+        assertThat(result.mOut).isEmpty();
+        assertThat(mFakeDevSessionController.mNumCalls).isEqualTo(0);
+    }
+
+    @Test
+    public void testRun_endDevSessionWithoutAcknowledgement_withServerTestKeysEnabled() {
+        Result result =
+                run(
+                        new DevSessionCommand(mFakeDevSessionController),
+                        COMMAND_PREFIX,
+                        CMD,
+                        SUB_CMD_END,
+                        ARG_ENABLE_SERVER_AUCTION_TEST_KEYS);
+
+        assertThat(result.mErr).startsWith(ERROR_NEED_ACKNOWLEDGEMENT);
+        assertThat(result.mOut).isEmpty();
+        assertThat(mFakeDevSessionController.mNumCalls).isEqualTo(0);
+    }
+
+    @Test
+    public void testRun_startDevSession_resetIsCalled_withServerTestKeysEnabled() {
+        mFakeDevSessionController.mReturnValue = SUCCESS;
+
+        Result result =
+                run(
+                        new DevSessionCommand(mFakeDevSessionController),
+                        COMMAND_PREFIX,
+                        CMD,
+                        SUB_CMD_START,
+                        ARG_ERASE_DB,
+                        ARG_ENABLE_SERVER_AUCTION_TEST_KEYS);
+
+        assertThat(result.mOut).isEqualTo(String.format(OUTPUT_SUCCESS_FORMAT, true));
+        assertThat(result.mErr).isEmpty();
+        assertThat(mFakeDevSessionController.mNumCalls).isEqualTo(1);
+        assertThat(mFakeDevSessionController.mDevModeState).isEqualTo(true);
+        assertThat(mFakeDevSessionController.mServerAuctionTestKeysEnabled).isEqualTo(true);
+    }
+
+    @Test
+    public void testRun_endDevSession_resetIsCalled_withServerTestKeysEnabled() {
+        mFakeDevSessionController.mReturnValue = SUCCESS;
+
+        Result result =
+                run(
+                        new DevSessionCommand(mFakeDevSessionController),
+                        COMMAND_PREFIX,
+                        CMD,
+                        SUB_CMD_END,
+                        ARG_ERASE_DB,
+                        ARG_ENABLE_SERVER_AUCTION_TEST_KEYS);
+
+        assertThat(result.mOut).isEqualTo(String.format(OUTPUT_SUCCESS_FORMAT, false));
+        assertThat(result.mErr).isEmpty();
+        assertThat(mFakeDevSessionController.mNumCalls).isEqualTo(1);
+        assertThat(mFakeDevSessionController.mDevModeState).isEqualTo(false);
+        assertThat(mFakeDevSessionController.mServerAuctionTestKeysEnabled).isEqualTo(false);
+    }
+
     private static class FakeDevSessionController implements DevSessionController {
 
         Boolean mDevModeState = null;
+        Boolean mServerAuctionTestKeysEnabled = null;
         DevSessionControllerResult mReturnValue = DevSessionControllerResult.UNKNOWN;
         int mNumCalls = 0;
 
         @Override
-        public ListenableFuture<DevSessionControllerResult> startDevSession() {
+        public ListenableFuture<DevSessionControllerResult> startDevSession(
+                boolean setServerAuctionTestKeysEnabled) {
             mDevModeState = true;
             mNumCalls += 1;
+            mServerAuctionTestKeysEnabled = setServerAuctionTestKeysEnabled;
             return Futures.immediateFuture(mReturnValue);
         }
 
@@ -236,6 +311,7 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
                 throws IllegalStateException {
             mDevModeState = false;
             mNumCalls += 1;
+            mServerAuctionTestKeysEnabled = false;
             return Futures.immediateFuture(mReturnValue);
         }
     }

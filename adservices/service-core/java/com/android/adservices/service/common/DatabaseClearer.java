@@ -18,6 +18,7 @@ package com.android.adservices.service.common;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.ProtectedServersEncryptionConfigDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.signals.EncodedPayloadDao;
@@ -42,6 +43,7 @@ public final class DatabaseClearer {
     private final EncodedPayloadDao mEncodedPayloadDao;
     private final DatastoreManager mDatastoreManager;
     private final ListeningExecutorService mBackgroundExecutor;
+    private final ProtectedServersEncryptionConfigDao mProtectedServersEncryptionConfigDao;
 
     public DatabaseClearer(
             CustomAudienceDao customAudienceDao,
@@ -50,10 +52,12 @@ public final class DatabaseClearer {
             ProtectedSignalsDao protectedSignalsDao,
             EncodedPayloadDao encodedPayloadDao,
             DatastoreManager datastoreManager,
+            ProtectedServersEncryptionConfigDao protectedServersEncryptionConfigDao,
             ListeningExecutorService backgroundExecutor) {
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(appInstallDao);
         Objects.requireNonNull(protectedSignalsDao);
+        Objects.requireNonNull(protectedServersEncryptionConfigDao);
         Objects.requireNonNull(backgroundExecutor);
 
         mCustomAudienceDao = customAudienceDao;
@@ -62,6 +66,7 @@ public final class DatabaseClearer {
         mFrequencyCapDataClearer = frequencyCapDataClearer;
         mEncodedPayloadDao = encodedPayloadDao;
         mDatastoreManager = datastoreManager;
+        mProtectedServersEncryptionConfigDao = protectedServersEncryptionConfigDao;
         mBackgroundExecutor = backgroundExecutor;
     }
 
@@ -73,18 +78,20 @@ public final class DatabaseClearer {
      * @param deleteCustomAudienceUpdate If true, erase custom audience data.
      * @param deleteAppInstallFiltering If true, erase app install data.
      * @param deleteProtectedSignals If true, erase protected signals data.
+     * @param deleteEncryptionConfigData If true, erase protected servers encryption config data.
      * @return A future indicating completion of all DAO operations. If any of the DAO operations
      *     fail, the future will fail with the exception from the first failing DAO operation.
      */
-    public ListenableFuture<Boolean> deleteProtectedAudienceAndAppSignalsData(
+    public ListenableFuture<Void> deleteProtectedAudienceAppSignalsAndEncryptionConfigData(
             boolean deleteCustomAudienceUpdate,
             boolean deleteAppInstallFiltering,
-            boolean deleteProtectedSignals) {
+            boolean deleteProtectedSignals,
+            boolean deleteEncryptionConfigData) {
         return mBackgroundExecutor.submit(
                 () -> {
                     sLogger.v(
-                            "DatabaseClearer: Beginning Protected Audience and App Signals"
-                                    + " database clearing");
+                            "DatabaseClearer: Beginning Protected Audience, App Signals and"
+                                    + " Encryption Config database clearing");
                     mCustomAudienceDao.deleteAllCustomAudienceData(deleteCustomAudienceUpdate);
                     int numClearedEvents = mFrequencyCapDataClearer.clear();
                     sLogger.v("DatabaseClearer: Cleared %d frequency cap events", numClearedEvents);
@@ -95,10 +102,13 @@ public final class DatabaseClearer {
                         mProtectedSignalsDao.deleteAllSignals();
                         mEncodedPayloadDao.deleteAllEncodedPayloads();
                     }
+                    if (deleteEncryptionConfigData) {
+                        mProtectedServersEncryptionConfigDao.deleteAllEncryptionKeys();
+                    }
                     sLogger.v(
-                            "DatabaseClearer: Completed Protected Audience and App Signals"
-                                    + " DB clear operation");
-                    return true;
+                            "DatabaseClearer: Completed Protected Audience, App Signals and"
+                                    + " Encryption Config DB clear operation");
+                    return null;
                 });
     }
 

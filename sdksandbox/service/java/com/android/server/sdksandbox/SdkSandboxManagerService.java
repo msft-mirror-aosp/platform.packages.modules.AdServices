@@ -27,10 +27,8 @@ import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_S
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
-import static com.android.adservices.flags.Flags.sdksandboxDumpEffectiveTargetSdkVersion;
 import static com.android.adservices.flags.Flags.sdksandboxInvalidateEffectiveTargetSdkVersionCache;
 import static com.android.adservices.flags.Flags.sdksandboxUseEffectiveTargetSdkVersionForRestrictions;
-import static com.android.sdksandbox.flags.Flags.serviceRestrictionPackageNameLogicUpdated;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION;
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
@@ -1238,10 +1236,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mServiceProvider.dump(writer);
         writer.println();
 
-        if (sdksandboxDumpEffectiveTargetSdkVersion()) {
-            mSdkSandboxRestrictionManager.dump(writer);
-            writer.println();
-        }
+        mSdkSandboxRestrictionManager.dump(writer);
+        writer.println();
 
         dumpAdServices(fd, writer, args, /* quiet= */ true);
     }
@@ -1820,20 +1816,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
         // TODO(b/348144532): Make the error message more informative
-        if (serviceRestrictionPackageNameLogicUpdated()) {
-            if (isIntentAllowedPerAllowList(intent)) {
-                return;
-            }
-        } else {
-            if (requestAllowedPerAllowlist(
-                    intent.getAction(),
-                    intent.getPackage(),
-                    /* componentClassName= */ (component == null) ? null : component.getClassName(),
-                    /* componentPackageName= */ (component == null)
-                            ? null
-                            : component.getPackageName())) {
-                return;
-            }
+        if (isIntentAllowedPerAllowList(intent)) {
+            return;
         }
 
         // Default disallow.
@@ -2347,43 +2331,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     ? DEFAULT_ACTIVITY_ALLOWED_ACTIONS
                     : activityAllowlistPerTargetSdkVersion;
         }
-    }
-
-    private boolean requestAllowedPerAllowlist(
-            String action,
-            String packageName,
-            String componentClassName,
-            String componentPackageName) {
-        // TODO(b/288873117): Use effective targetSdkVersion of the sandbox for the client app.
-        AllowedServices allowedServices =
-                mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
-                        ? mSdkSandboxSettingsListener.getNextServiceAllowlist()
-                        : mSdkSandboxSettingsListener.getServiceAllowlistForTargetSdkVersion(
-                                /* targetSdkVersion= */ 34);
-
-        if (Objects.isNull(allowedServices)) {
-            return false;
-        }
-        for (int i = 0; i < allowedServices.getAllowedServicesCount(); i++) {
-            AllowedService allowedService = allowedServices.getAllowedServices(i);
-            if (StringHelper.doesInputMatchWildcardPattern(
-                            allowedService.getAction(), action, /* matchOnNullInput= */ true)
-                    && StringHelper.doesInputMatchWildcardPattern(
-                            allowedService.getPackageName(),
-                            packageName,
-                            /* matchOnNullInput= */ true)
-                    && StringHelper.doesInputMatchWildcardPattern(
-                            allowedService.getComponentClassName(),
-                            componentClassName,
-                            /* matchOnNullInput= */ true)
-                    && StringHelper.doesInputMatchWildcardPattern(
-                            allowedService.getComponentPackageName(),
-                            componentPackageName,
-                            /* matchOnNullInput= */ true)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private boolean isIntentAllowedPerAllowList(Intent intent) {

@@ -23,7 +23,7 @@ option java_package = "com.android.adservices.service.proto";
 message DevSessionStorage {
   // The state of the developer session.
   enum State {
-    // No state is know. This could be the value when first reading dev session state.
+    // No state is known. This could be the value when first reading dev session state.
     UNKNOWN = 0;
     // We are in production.
     IN_PROD = 1;
@@ -37,4 +37,6 @@ message DevSessionStorage {
   optional State state = 2;
   // If storage was correctly initialized.
   bool is_storage_initialized = 3;
+  // If server auction test keys are enabled.
+  bool server_auction_test_keys_enabled = 4;
 }

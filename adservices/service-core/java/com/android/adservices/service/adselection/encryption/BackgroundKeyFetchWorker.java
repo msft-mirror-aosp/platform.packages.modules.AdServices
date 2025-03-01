@@ -23,15 +23,14 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVE
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_KEY_FETCH_SOURCE_BACKGROUND_FETCH;
 
 import android.annotation.NonNull;
-import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.adselection.MultiCloudSupportStrategyFactory;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.SingletonRunner;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -42,7 +41,6 @@ import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.ServerAuctionBackgroundKeyFetchScheduledStats;
 import com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerFactory;
-import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Strings;
@@ -72,7 +70,7 @@ public final class BackgroundKeyFetchWorker {
     @GuardedBy("SINGLETON_LOCK")
     private static volatile BackgroundKeyFetchWorker sBackgroundKeyFetchWorker;
 
-    private final ProtectedServersEncryptionConfigManagerBase mKeyConfigManager;
+    private final ProtectedServersEncryptionConfigManager mKeyConfigManager;
     private final DevContext mDevContext;
     private final Flags mFlags;
     private final Clock mClock;
@@ -82,7 +80,7 @@ public final class BackgroundKeyFetchWorker {
 
     @VisibleForTesting
     protected BackgroundKeyFetchWorker(
-            @NonNull ProtectedServersEncryptionConfigManagerBase keyConfigManager,
+            @NonNull ProtectedServersEncryptionConfigManager keyConfigManager,
             @NonNull DevContext devContext,
             @NonNull Flags flags,
             @NonNull Clock clock,
@@ -108,7 +106,6 @@ public final class BackgroundKeyFetchWorker {
         if (sBackgroundKeyFetchWorker == null) {
             synchronized (SINGLETON_LOCK) {
                 if (sBackgroundKeyFetchWorker == null) {
-                    Context context = ApplicationContextSingleton.get();
                     Flags flags = FlagsFactory.getFlags();
                     AdServicesHttpsClient adServicesHttpsClient =
                             new AdServicesHttpsClient(
@@ -118,12 +115,14 @@ public final class BackgroundKeyFetchWorker {
                                     flags
                                             .getFledgeAuctionServerBackgroundKeyFetchNetworkReadTimeoutMs(),
                                     flags.getFledgeAuctionServerBackgroundKeyFetchMaxResponseSizeB());
-                    ProtectedServersEncryptionConfigManagerBase configManager =
-                            MultiCloudSupportStrategyFactory.getStrategy(
-                                            flags.getFledgeAuctionServerMultiCloudEnabled(),
-                                            flags.getFledgeAuctionServerCoordinatorUrlAllowlist())
-                                    .getEncryptionConfigManager(
-                                            context, flags, adServicesHttpsClient);
+                    ProtectedServersEncryptionConfigManager configManager =
+                            new ProtectedServersEncryptionConfigManager(
+                                    AdSelectionServerDatabase.getInstance()
+                                            .protectedServersEncryptionConfigDao(),
+                                    flags,
+                                    adServicesHttpsClient,
+                                    AdServicesExecutors.getLightWeightExecutor(),
+                                    AdServicesLoggerImpl.getInstance());
                     // TODO (b/344636522): Derive DevContext from calling environment.
                     sBackgroundKeyFetchWorker =
                             new BackgroundKeyFetchWorker(
@@ -203,10 +202,9 @@ public final class BackgroundKeyFetchWorker {
                         AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION)
                 && !shouldStop.get()) {
 
-            boolean multicloudEnabled = mFlags.getFledgeAuctionServerMultiCloudEnabled();
             String allowlist = mFlags.getFledgeAuctionServerCoordinatorUrlAllowlist();
 
-            if (multicloudEnabled && !Strings.isNullOrEmpty(allowlist)) {
+            if (!Strings.isNullOrEmpty(allowlist)) {
                 List<String> allowedUrls = AllowLists.splitAllowList(allowlist);
                 countAuctionUrls = allowedUrls.size();
                 keyFetchLogger.setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_API);

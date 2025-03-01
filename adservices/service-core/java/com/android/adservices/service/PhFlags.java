@@ -18,6 +18,7 @@ package com.android.adservices.service;
 
 import static com.android.adservices.service.DeviceConfigFlagsHelper.getDeviceConfigFlag;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_CEL_SAMPLING_CONFIG;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
@@ -2808,13 +2809,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getFledgeAuctionServerMultiCloudEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
-                FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED);
-    }
-
-    @Override
     @SuppressWarnings("AvoidSystemPropertiesUsage")
     // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean isDisableTopicsEnrollmentCheck() {
@@ -5237,5 +5231,11 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG,
                 DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG);
+    }
+
+    @Override
+    public String getAdServicesCelSamplingConfig() {
+        return getDeviceConfigFlag(
+                KEY_AD_SERVICES_CEL_SAMPLING_CONFIG, DEFAULT_AD_SERVICES_CEL_SAMPLING_CONFIG);
     }
 }

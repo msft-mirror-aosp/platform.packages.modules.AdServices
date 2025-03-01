@@ -21,6 +21,7 @@ import static com.android.adservices.service.Flags.APPSEARCH_ONLY;
 import static com.android.adservices.service.Flags.COBALT__IGNORED_REPORT_ID_LIST;
 import static com.android.adservices.service.Flags.COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES;
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_TTL_MS;
+import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_CEL_SAMPLING_CONFIG;
 import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG;
 import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
@@ -1457,6 +1458,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getAdServicesJobSchedulingSamplingConfig",
                 DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG,
                 Flags::getAdServicesJobSchedulingSamplingConfig);
+    }
+
+    @Test
+    public void testGetAdServicesCelSamplingConfig() {
+        testFlag(
+                "getAdServicesCelSamplingConfig",
+                DEFAULT_AD_SERVICES_CEL_SAMPLING_CONFIG,
+                Flags::getAdServicesCelSamplingConfig);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {

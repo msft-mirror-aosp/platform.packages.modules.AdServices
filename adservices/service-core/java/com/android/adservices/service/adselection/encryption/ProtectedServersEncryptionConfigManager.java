@@ -17,6 +17,8 @@
 package com.android.adservices.service.adselection.encryption;
 
 import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.VALID_AD_SELECTION_ENCRYPTION_KEY_TYPES;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_DATABASE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION;
 
@@ -34,6 +36,7 @@ import com.android.adservices.data.adselection.EncryptionKeyConstants;
 import com.android.adservices.data.adselection.ProtectedServersEncryptionConfigDao;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.profiling.Tracing;
@@ -123,7 +126,6 @@ public class ProtectedServersEncryptionConfigManager
                 getKeyFetchUriOfType(
                         adSelectionEncryptionKeyType,
                         coordinatorUrl,
-                        mFlags.getFledgeAuctionServerCoordinatorUrlAllowlist(),
                         keyFetchLogger);
         if (fetchUri == null) {
             sLogger.e(
@@ -347,5 +349,46 @@ public class ProtectedServersEncryptionConfigManager
         Random random = new Random();
         DBEncryptionKey randomKey = keys.get(random.nextInt(keys.size()));
         return parseDbEncryptionKey(randomKey);
+    }
+
+    // TODO this will be refactored again with b/395596233
+    private Uri getKeyFetchUriOfType(
+            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
+            @Nullable Uri coordinatorUrl,
+            FetchProcessLogger keyFetchLogger) {
+
+        if (coordinatorUrl != null
+                && adSelectionEncryptionKeyType
+                        == AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION) {
+            keyFetchLogger.setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_API);
+            return getUriFromAllowlist(coordinatorUrl);
+        }
+
+        sLogger.v("The passed coordinatorUrl was null. Fetching default coordinator");
+        keyFetchLogger.setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
+
+        switch (adSelectionEncryptionKeyType) {
+            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION:
+                return Uri.parse(mFlags.getFledgeAuctionServerAuctionKeyFetchUri());
+            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN:
+                return Uri.parse(mFlags.getFledgeAuctionServerJoinKeyFetchUri());
+            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.UNASSIGNED:
+            default:
+                return null;
+        }
+    }
+
+    private Uri getUriFromAllowlist(@Nullable Uri coordinatorUrl) {
+        String allowList = mFlags.getFledgeAuctionServerCoordinatorUrlAllowlist();
+        List<String> allowedUrls = AllowLists.splitAllowList(allowList);
+
+        for (String url : allowedUrls) {
+            Uri allowedUri = Uri.parse(url);
+            if (coordinatorUrl.getHost().equals(allowedUri.getHost())) {
+                return allowedUri;
+            }
+        }
+
+        return null;
     }
 }
