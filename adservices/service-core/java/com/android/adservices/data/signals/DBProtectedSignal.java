@@ -24,6 +24,8 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import com.android.adservices.service.signals.evict.EvictionPriority;
+
 import com.google.auto.value.AutoValue;
 
 import java.time.Instant;
@@ -72,12 +74,19 @@ public abstract class DBProtectedSignal {
     @NonNull
     public abstract String getPackageName();
 
+    /** The eviction priority of the signal. */
+    @AutoValue.CopyAnnotations
+    @ColumnInfo(name = "evictionPriority", defaultValue = "0")
+    public abstract EvictionPriority getEvictionPriority();
+
     /**
      * @return The builder for this object.
      */
     @NonNull
     public static DBProtectedSignal.Builder builder() {
-        return new AutoValue_DBProtectedSignal.Builder().setId(null);
+        return new AutoValue_DBProtectedSignal.Builder()
+                .setId(null)
+                .setEvictionPriority(EvictionPriority.DEFAULT);
     }
 
     /** Creates a DBProtectedSignal. Required by Room for AutoValue classes. */
@@ -88,7 +97,8 @@ public abstract class DBProtectedSignal {
             @NonNull byte[] key,
             @NonNull byte[] value,
             @NonNull Instant creationTime,
-            @NonNull String packageName) {
+            @NonNull String packageName,
+            EvictionPriority evictionPriority) {
         return builder()
                 .setId(id)
                 .setBuyer(buyer)
@@ -96,6 +106,7 @@ public abstract class DBProtectedSignal {
                 .setValue(value)
                 .setCreationTime(creationTime)
                 .setPackageName(packageName)
+                .setEvictionPriority(evictionPriority)
                 .build();
     }
 
@@ -122,6 +133,10 @@ public abstract class DBProtectedSignal {
         /** For more details see {@link #getPackageName()} */
         @NonNull
         public abstract Builder setPackageName(@NonNull String packageName);
+
+        /** For more details see {@link #getEvictionPriority()} */
+        @NonNull
+        public abstract Builder setEvictionPriority(@NonNull EvictionPriority evictionPriority);
 
         /**
          * @return an instance of {@link DBProtectedSignal}

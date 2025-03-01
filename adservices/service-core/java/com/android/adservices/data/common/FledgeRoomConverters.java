@@ -20,11 +20,13 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.TypeConverter;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.profiling.Tracing;
+import com.android.adservices.service.signals.evict.EvictionPriority;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -231,7 +233,7 @@ public class FledgeRoomConverters {
                     sLogger.d(
                             exception,
                             "Error deserializing set string #%d from DB; skipping any other"
-                                + " elements",
+                                    + " elements",
                             arrayIndex);
                     break;
                 }
@@ -298,6 +300,29 @@ public class FledgeRoomConverters {
             return outputSet;
         } finally {
             Tracing.endAsyncSection(Tracing.ROOM_CONVERT_INTEGER_SET_FROM_JSON, traceCookie);
+        }
+    }
+
+    /** Serialize an {@link EvictionPriority} to an int. */
+    @TypeConverter
+    public static int serializeEvictionPriority(@NonNull EvictionPriority evictionPriority) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.ROOM_CONVERT_EVICTIONPRIORITY_TO_INT);
+        try {
+            return evictionPriority.getValue();
+        } finally {
+            Tracing.endAsyncSection(Tracing.ROOM_CONVERT_EVICTIONPRIORITY_TO_INT, traceCookie);
+        }
+    }
+
+    /** Deserialize an {@link EvictionPriority} from an int. */
+    @TypeConverter
+    @NonNull
+    public static EvictionPriority deserializeEvictionPriority(int evictionPriority) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.ROOM_CONVERT_EVICTIONPRIORITY_FROM_INT);
+        try {
+            return EvictionPriority.valueOf(evictionPriority);
+        } finally {
+            Tracing.endAsyncSection(Tracing.ROOM_CONVERT_EVICTIONPRIORITY_FROM_INT, traceCookie);
         }
     }
 }

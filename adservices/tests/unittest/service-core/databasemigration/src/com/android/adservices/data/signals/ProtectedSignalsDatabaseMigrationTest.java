@@ -20,16 +20,20 @@ import static android.database.sqlite.SQLiteDatabase.CONFLICT_FAIL;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
+
 import android.adservices.common.CommonFixture;
 import android.app.Instrumentation;
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteException;
 
 import androidx.room.testing.MigrationTestHelper;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.service.signals.evict.EvictionPriority;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import com.google.common.collect.ImmutableList;
@@ -148,6 +152,54 @@ public final class ProtectedSignalsDatabaseMigrationTest extends AdServicesUnitT
                             DBEncodedPayload.TABLE_NAME,
                             DBEncoderEndpoint.TABLE_NAME,
                             DBSignalsUpdateMetadata.TABLE_NAME);
+        }
+    }
+
+    @Test
+    public void testMigration4To5() throws Exception {
+        final String protectedSignalsTable = "protected_signals";
+        final byte[] key = {(byte) 1, (byte) 2, (byte) 3, (byte) 4};
+        final byte[] value = {(byte) 42};
+
+        ContentValues contentValues = new ContentValues();
+
+        try (SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 4)) {
+            contentValues.put("buyer", CommonFixture.VALID_BUYER_1.toString());
+            contentValues.put("key", key);
+            contentValues.put("value", value);
+            contentValues.put("creationTime", CommonFixture.FIXED_NOW.toString());
+            contentValues.put("packageName", CommonFixture.TEST_PACKAGE_NAME_1);
+            // Insert succeeds without eviction priority set.
+            db.insert(protectedSignalsTable, CONFLICT_FAIL, contentValues);
+
+            contentValues.put("evictionPriority", EvictionPriority.DEFAULT.getValue());
+            // Insert fails with eviction priority set.
+            assertThrows(
+                    SQLiteException.class,
+                    () -> db.insert(protectedSignalsTable, CONFLICT_FAIL, contentValues));
+        }
+
+        // Re-open the database with version 5.
+        try (SupportSQLiteDatabase db = helper.runMigrationsAndValidate(TEST_DB, 5, true)) {
+            Cursor c = db.query("SELECT * FROM " + protectedSignalsTable);
+            assertThat(c.getCount()).isEqualTo(1);
+            c.moveToFirst();
+
+            // Migration added eviction priority column with default value for existing entries.
+            assertThat(c.getInt(c.getColumnIndex("evictionPriority")))
+                    .isEqualTo(EvictionPriority.DEFAULT.getValue());
+
+            contentValues.put("evictionPriority", EvictionPriority.EVICT_SOONER.getValue());
+            // Insert now succeeds with eviction priority set.
+            db.insert(protectedSignalsTable, CONFLICT_FAIL, contentValues);
+
+            c = db.query("SELECT * FROM " + protectedSignalsTable);
+            assertThat(c.getCount()).isEqualTo(2);
+            c.moveToLast();
+
+            // New entry inserted with correct eviction priority value.
+            assertThat(c.getInt(c.getColumnIndex("evictionPriority")))
+                    .isEqualTo(EvictionPriority.EVICT_SOONER.getValue());
         }
     }
 }

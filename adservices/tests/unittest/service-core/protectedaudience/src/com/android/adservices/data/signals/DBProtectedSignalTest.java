@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNull;
 
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.service.signals.evict.EvictionPriority;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
@@ -42,13 +43,15 @@ public class DBProtectedSignalTest {
                         DBProtectedSignalFixture.KEY,
                         DBProtectedSignalFixture.VALUE,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                        CommonFixture.TEST_PACKAGE_NAME_1);
+                        CommonFixture.TEST_PACKAGE_NAME_1,
+                        EvictionPriority.DEFAULT);
         assertNull(signal.getId());
         assertEquals(CommonFixture.VALID_BUYER_1, signal.getBuyer());
         assertArrayEquals(DBProtectedSignalFixture.KEY, signal.getKey());
         assertArrayEquals(DBProtectedSignalFixture.VALUE, signal.getValue());
         assertEquals(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI, signal.getCreationTime());
         assertEquals(CommonFixture.TEST_PACKAGE_NAME_1, signal.getPackageName());
+        assertEquals(EvictionPriority.DEFAULT, signal.getEvictionPriority());
     }
 
     @Test
@@ -61,6 +64,7 @@ public class DBProtectedSignalTest {
                         .setValue(DBProtectedSignalFixture.VALUE)
                         .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .setEvictionPriority(EvictionPriority.EVICT_SOONER)
                         .build();
         assertNull(signal.getId());
         assertEquals(CommonFixture.VALID_BUYER_1, signal.getBuyer());
@@ -68,6 +72,7 @@ public class DBProtectedSignalTest {
         assertArrayEquals(DBProtectedSignalFixture.VALUE, signal.getValue());
         assertEquals(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI, signal.getCreationTime());
         assertEquals(CommonFixture.TEST_PACKAGE_NAME_1, signal.getPackageName());
+        assertEquals(EvictionPriority.EVICT_SOONER, signal.getEvictionPriority());
     }
 
     @Test
@@ -80,6 +85,7 @@ public class DBProtectedSignalTest {
                         .setValue(DBProtectedSignalFixture.VALUE)
                         .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .setEvictionPriority(EvictionPriority.DEFAULT)
                         .build();
         DBProtectedSignal signal2 =
                 DBProtectedSignal.builder()
@@ -89,6 +95,7 @@ public class DBProtectedSignalTest {
                         .setValue(DBProtectedSignalFixture.VALUE)
                         .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .setEvictionPriority(EvictionPriority.DEFAULT)
                         .build();
         assertEquals(signal1, signal2);
     }
@@ -103,6 +110,7 @@ public class DBProtectedSignalTest {
                         .setValue(DBProtectedSignalFixture.VALUE)
                         .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .setEvictionPriority(EvictionPriority.DEFAULT)
                         .build();
         DBProtectedSignal signal2 =
                 DBProtectedSignal.builder()
@@ -112,6 +120,7 @@ public class DBProtectedSignalTest {
                         .setValue(DBProtectedSignalFixture.VALUE)
                         .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .setEvictionPriority(EvictionPriority.DEFAULT)
                         .build();
         assertNotEquals(signal1, signal2);
     }
@@ -126,6 +135,7 @@ public class DBProtectedSignalTest {
                         .setValue(DBProtectedSignalFixture.VALUE)
                         .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .setEvictionPriority(EvictionPriority.DEFAULT)
                         .build();
         DBProtectedSignal signal2 =
                 DBProtectedSignal.builder()
@@ -135,6 +145,7 @@ public class DBProtectedSignalTest {
                         .setValue(DBProtectedSignalFixture.VALUE)
                         .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .setEvictionPriority(EvictionPriority.DEFAULT)
                         .build();
         assertEquals(signal1.hashCode(), signal2.hashCode());
     }
