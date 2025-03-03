@@ -482,13 +482,6 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
-    public final long getMeasurementAttributionJobTriggerDelayMs() {
-        return mBackend.getFlag(
-                KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS,
-                DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS);
-    }
-
-    @Override
     public final int getMeasurementMaxAttributionsPerInvocation() {
         return mBackend.getFlag(
                 KEY_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION,
@@ -2877,6 +2870,13 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
         return mBackend.getFlag(
                 KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS,
                 MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS);
+    }
+
+    @Override
+    public final long getMeasurementAttributionJobTriggeringMaxDelayMs() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS,
+                MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS);
     }
 
     @Override

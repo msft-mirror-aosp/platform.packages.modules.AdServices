@@ -244,6 +244,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS =
             "measurement_attribution_job_triggering_delay_ms";
 
+    public static final String KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS =
+            "Measurement__attribution_job_triggering_max_delay_ms";
+
     public static final String KEY_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION =
             "measurement_max_attributions_per_invocation";
 

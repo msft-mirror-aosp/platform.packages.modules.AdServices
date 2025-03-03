@@ -641,13 +641,6 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
     }
 
-    long DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
-
-    /** Delay from trigger registration to attribution job triggering */
-    default long getMeasurementAttributionJobTriggerDelayMs() {
-        return DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
-    }
-
     int DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION = 100;
 
     /** Max number of {@link Trigger} to process per job for {@link AttributionJobService} */
@@ -4439,9 +4432,17 @@ public interface Flags extends ModuleSharedFlags {
 
     long MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
 
-    /** Delay for attribution job triggering. */
+    /** Minimum delay for attribution job triggering. */
     default long getMeasurementAttributionJobTriggeringDelayMs() {
         return MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
+    }
+
+    @ConfigFlag
+    long MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
+
+    /** Maximum delay for attribution job triggering. */
+    default long getMeasurementAttributionJobTriggeringMaxDelayMs() {
+        return MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS;
     }
 
     boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED = true;

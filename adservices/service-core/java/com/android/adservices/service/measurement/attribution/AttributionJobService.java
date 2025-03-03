@@ -189,6 +189,7 @@ public final class AttributionJobService extends JobService {
                                 TriggerContentProvider.getTriggerUri(),
                                 JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS))
                 .setTriggerContentUpdateDelay(flags.getMeasurementAttributionJobTriggeringDelayMs())
+                .setTriggerContentMaxDelay(flags.getMeasurementAttributionJobTriggeringMaxDelayMs())
                 // Can't call addTriggerContentUri() on a persisted job
                 .setPersisted(flags.getMeasurementAttributionJobPersisted())
                 .build();
