@@ -48,7 +48,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-public class AttributionReportingListAggregatableReportsCommand extends AbstractShellCommand {
+public final class AttributionReportingListAggregatableReportsCommand extends AbstractShellCommand {
     public static final int TIMEOUT_SEC = 5;
     public static final String CMD = "list-aggregatable-reports";
     public static final String HELP =
@@ -83,20 +83,10 @@ public class AttributionReportingListAggregatableReportsCommand extends Abstract
                     COMMAND_ATTRIBUTION_REPORTING_LIST_AGGREGATABLE_REPORTS);
         }
 
-        String schema;
         String output;
-        try {
-            schema = AttributionReportingArgParserHelper.parseAttributionReportingSchema(args);
-        } catch (IllegalArgumentException exception) {
-            output = "IllegalArgumentException while running list-aggregatable-reports command";
-            Log.e(TAG, output, exception);
-            out.print(output);
-            out.flush();
-            return invalidArgsError(
-                    HELP, err, COMMAND_ATTRIBUTION_REPORTING_LIST_AGGREGATABLE_REPORTS, args);
-        }
 
         try {
+            String schema = AttributionReportingUtil.parseAttributionReportingSchema(args, 2, out);
             ListenableFuture<Optional<List<AggregateReport>>> futureResult =
                     queryForListAggregatableReportsCommand();
             Optional<List<AggregateReport>> result = futureResult.get(TIMEOUT_SEC, SECONDS);
@@ -104,16 +94,16 @@ public class AttributionReportingListAggregatableReportsCommand extends Abstract
                 output = createOutputJson(result, schema).toString();
             } else {
                 output = "Error in retrieving aggregatable reports from database";
+                throw new IllegalStateException(output);
             }
             out.print(output);
             out.flush();
             return toShellCommandResult(
                     RESULT_SUCCESS, COMMAND_ATTRIBUTION_REPORTING_LIST_AGGREGATABLE_REPORTS);
         } catch (Exception e) {
-            output = "Failed to generate JSON: " + e.getMessage();
-            Log.e(TAG, String.format(output));
-            out.print(output);
-            out.flush();
+            String errorMessage = "Failed to list aggregatable reports: " + e.getMessage();
+            err.print(errorMessage);
+            err.flush();
             return toShellCommandResult(
                     ShellCommandStats.RESULT_GENERIC_ERROR,
                     COMMAND_ATTRIBUTION_REPORTING_LIST_AGGREGATABLE_REPORTS);

@@ -279,6 +279,15 @@ public final class AsyncRegistrationQueueRunner {
                         (dao) -> {
                             if (asyncFetchStatus.isRequestSuccess()) {
                                 if (resultSource.isPresent()) {
+                                    LoggerFactory.getMeasurementLogger()
+                                            .d(
+                                                    "AsyncRegistrationQueueRunner: Source fetched"
+                                                            + " and parsed. Attempting to store it."
+                                                            + " Enrollment ID: %s, Source ID: %s,"
+                                                            + " Source Event ID: %s",
+                                                    resultSource.get().getEnrollmentId(),
+                                                    resultSource.get().getId(),
+                                                    resultSource.get().getEventId());
                                     storeSource(
                                             resultSource.get(),
                                             asyncRegistration,

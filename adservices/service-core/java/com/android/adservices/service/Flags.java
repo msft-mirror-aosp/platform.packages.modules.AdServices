@@ -2032,16 +2032,11 @@ public interface Flags extends ModuleSharedFlags {
         return FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED;
     }
 
-    boolean FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED = false;
-
-    default boolean getFledgeAuctionServerMultiCloudEnabled() {
-        return FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
-    }
-
     String FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST =
-            "https://publickeyservice-v150"
-                    + ".coordinator-a.bas-gcp.pstest.dev/"
-                    + ".well-known/protected-auction/v1/public-keys";
+            "https://publickeyservice.pa.gcp.privacysandboxservices.com/.well-known/"
+                    + "protected-auction/v1/public-keys,"
+                    + "https://publickeyservice.pa.aws.privacysandboxservices.com/.well-known/"
+                    + "protected-auction/v1/public-keys";
 
     default String getFledgeAuctionServerCoordinatorUrlAllowlist() {
         return FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST;
@@ -6189,6 +6184,17 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the base64 encoded LogSamplingConfig for AdServices job scheduling. */
     default String getAdServicesJobSchedulingSamplingConfig() {
         return DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG;
+    }
+
+    /**
+     * Default value for the base64 encoded LogSamplingConfig proto for AdServices client error
+     * logging.
+     */
+    @ConfigFlag String DEFAULT_AD_SERVICES_CEL_SAMPLING_CONFIG = "";
+
+    /** Returns the base64 encoded LogSamplingConfig for AdServices client error logging. */
+    default String getAdServicesCelSamplingConfig() {
+        return DEFAULT_AD_SERVICES_CEL_SAMPLING_CONFIG;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

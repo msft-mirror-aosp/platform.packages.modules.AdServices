@@ -69,6 +69,11 @@ public class ReportingStatus {
         public int getValue() {
             return mValue;
         }
+
+        @Override
+        public String toString() {
+            return name();
+        }
     }
 
     public enum UploadStatus {

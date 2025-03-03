@@ -86,6 +86,7 @@ import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.TriggerSpecsUtil;
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
+import com.android.adservices.service.measurement.countunique.CountUniqueRegistrar;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.ProcessingResult;
 import com.android.adservices.service.measurement.reporting.AggregateDebugReportApi;
@@ -208,6 +209,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     @Mock private Trigger mMockedTrigger;
     @Mock private ITransaction mTransaction;
     @Mock private EnrollmentDao mEnrollmentDao;
+    @Mock private CountUniqueRegistrar mCountUnique;
     @Mock private ContentResolver mContentResolver;
     @Mock private ContentProviderClient mMockContentProviderClient;
     @Mock private DebugReportApi mDebugReportApi;
@@ -3747,6 +3749,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 sContext,
                                 mEnrollmentDao,
                                 mMockFlags,
+                                mCountUnique,
                                 mDatastoreManager,
                                 mDebugReportApi));
         WebSourceRegistrationRequest request =

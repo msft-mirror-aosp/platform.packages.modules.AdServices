@@ -9,4 +9,5 @@ enum MetricId {
   UNKNOWN = 0;
   EXAMPLE_STATS = 1; // Used by the tests
   BACKGROUND_JOBS_EXECUTION_REPORTED_STATS = 2;
+  CLIENT_ERROR_LOGGING_STATS = 3;
 }

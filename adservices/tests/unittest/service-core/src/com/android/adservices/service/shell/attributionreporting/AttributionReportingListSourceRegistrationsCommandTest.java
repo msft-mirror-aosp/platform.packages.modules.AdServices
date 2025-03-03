@@ -20,6 +20,7 @@ import static com.android.adservices.service.shell.attributionreporting.Attribut
 import static com.android.adservices.service.shell.attributionreporting.AttributionReportingHelper.replaceWithAggregatable;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_DEV_MODE_UNCONFIRMED;
+import static com.android.adservices.service.stats.ShellCommandStats.RESULT_GENERIC_ERROR;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
@@ -57,7 +58,7 @@ import java.util.Optional;
 
 public final class AttributionReportingListSourceRegistrationsCommandTest
         extends ShellCommandTestCase<AttributionReportingListSourceRegistrationsCommand> {
-    private static final String ID = "_id";
+    private static final String EVENT_ID = "event_id";
     private static final String STATUS = "status";
     private static final String REGISTRATION_ORIGIN = "registration_origin";
     private static final String REGISTRANT = "registrant";
@@ -82,7 +83,7 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
 
     private static Source source1 =
             SourceFixture.getMinimalValidSourceBuilder()
-                    .setId("reg1")
+                    .setEventId(new UnsignedLong(1L))
                     .setStatus(SourceFixture.ValidSourceParams.STATUS)
                     .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                     .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
@@ -92,7 +93,7 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
 
     private static Source source2 =
             SourceFixture.getMinimalValidSourceBuilder()
-                    .setId("reg2")
+                    .setEventId(new UnsignedLong(2L))
                     .setStatus(SourceFixture.ValidSourceParams.STATUS)
                     .setWebDestinations(multipleWebDestinations)
                     .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
@@ -102,7 +103,7 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
 
     private static Source source3 =
             SourceFixture.getMinimalValidSourceBuilder()
-                    .setId("reg3")
+                    .setEventId(new UnsignedLong(3L))
                     .setStatus(SourceFixture.ValidSourceParams.STATUS)
                     .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
                     .setExpiryTime(SourceFixture.ValidSourceParams.EXPIRY_TIME)
@@ -115,7 +116,7 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
                     .setEnrollmentId(SourceFixture.ValidSourceParams.ENROLLMENT_ID)
                     .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
                     .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN)
-                    .setId("reg4")
+                    .setEventId(new UnsignedLong(4L))
                     .setStatus(SourceFixture.ValidSourceParams.STATUS)
                     .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                     .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
@@ -123,8 +124,10 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
                     .setDebugKey(SourceFixture.ValidSourceParams.DEBUG_KEY)
                     .build();
 
-    private static Source source5 = getValidSourceWithFullSchema().setId("reg5").build();
-    private static Source source6 = getValidSourceWithFullSchema().setId("reg6").build();
+    private static Source source5 =
+            getValidSourceWithFullSchema().setEventId(new UnsignedLong(5L)).build();
+    private static Source source6 =
+            getValidSourceWithFullSchema().setEventId(new UnsignedLong(6L)).build();
 
     @Before
     public void setUp() {
@@ -289,9 +292,13 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
 
         Result result = runCommandAndGetResult();
 
-        expectSuccess(result, COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS);
-
-        assertThat(result.mOut).isEqualTo("Error in retrieving sources from database");
+        String errorMessage =
+                "Failed to list source registrations: Error in retrieving sources from database";
+        expectFailure(
+                result,
+                errorMessage,
+                COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS,
+                RESULT_GENERIC_ERROR);
     }
 
     @Test
@@ -325,6 +332,21 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
         testRunListSourceRegistrationsWithSchema(sources, args);
     }
 
+    @Test
+    public void testRunListSourceRegistrations_invalidSchema() {
+        String[] args = {SCHEMA_SUB_COMMAND, "invalid_schema"};
+        Result result = runCommandAndGetResult(args);
+
+        String errorMessage =
+                "Failed to list source registrations: Invalid schema. The 'schema' parameter must"
+                        + " be either 'partial' or 'full'. Check for typos.";
+        expectFailure(
+                result,
+                errorMessage,
+                COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS,
+                RESULT_GENERIC_ERROR);
+    }
+
     private void testRunListSourceRegistrationsWithSchema(List<Source> sources, String[] schema)
             throws JSONException {
         doReturn(Optional.ofNullable(sources))
@@ -351,7 +373,7 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
         stringArray[0] = AttributionReportingShellCommandFactory.COMMAND_PREFIX;
         stringArray[1] = AttributionReportingListSourceRegistrationsCommand.CMD;
         for (int i = 0; i < args.length; i++) {
-            stringArray[i + 1] = args[i];
+            stringArray[i + 2] = args[i];
         }
         return run(
                 new AttributionReportingListSourceRegistrationsCommand(
@@ -371,7 +393,7 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
             throws JSONException {
         Source.Builder builder =
                 new Source.Builder()
-                        .setId(jsonObject.getString(ID))
+                        .setEventId(new UnsignedLong(jsonObject.getLong(EVENT_ID)))
                         .setStatus(getStatusFromString(jsonObject.getString(STATUS)))
                         .setRegistrationOrigin(
                                 Uri.parse(jsonObject.getString((REGISTRATION_ORIGIN))))
@@ -479,7 +501,7 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
                 .setEnrollmentId(SourceFixture.ValidSourceParams.ENROLLMENT_ID)
                 .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
                 .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN)
-                .setId("reg")
+                .setEventId(SourceFixture.ValidSourceParams.SOURCE_EVENT_ID)
                 .setStatus(SourceFixture.ValidSourceParams.STATUS)
                 .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN)
                 .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
@@ -504,7 +526,7 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
 
     private void assertSourceJson(JSONObject sourceJson, Source source, String schema)
             throws JSONException {
-        assertThat(sourceJson.getString(ID)).isEqualTo(source.getId());
+        assertThat(sourceJson.getString(EVENT_ID)).isEqualTo(source.getEventId().toString());
         assertThat(sourceJson.getString(STATUS)).isEqualTo(STATUS_MAP.get(source.getStatus()));
         assertThat(sourceJson.getString(REGISTRATION_ORIGIN))
                 .isEqualTo(source.getRegistrationOrigin().toString());

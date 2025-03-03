@@ -31,6 +31,11 @@ public final class DevSessionFixture {
             create(DevSessionState.TRANSITIONING_DEV_TO_PROD);
     public static final DevSession TRANSITIONING_PROD_TO_DEV =
             create(DevSessionState.TRANSITIONING_PROD_TO_DEV);
+    public static final DevSession IN_DEV_WITH_TEST_KEYS_ENABLED =
+            DevSession.builder()
+                    .setState(DevSessionState.IN_DEV)
+                    .setServerAuctionTestKeysEnabled(true)
+                    .build();
 
     private DevSessionFixture() {}
 

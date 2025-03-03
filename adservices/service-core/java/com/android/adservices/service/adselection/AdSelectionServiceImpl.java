@@ -77,6 +77,7 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionDebugReportingDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
@@ -94,6 +95,9 @@ import com.android.adservices.service.adselection.debug.AuctionServerDebugConfig
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.debug.DebugReporting;
 import com.android.adservices.service.adselection.debug.DebugReportingDisabled;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptorImpl;
+import com.android.adservices.service.adselection.encryption.ProtectedServersEncryptionConfigManager;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -188,7 +192,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final AdRenderIdValidator mAdRenderIdValidator;
     @NonNull private final AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @NonNull private final AdIdFetcher mAdIdFetcher;
-    @NonNull private final MultiCloudSupportStrategy mMultiCloudSupportStrategy;
+    @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @NonNull KAnonSignJoinFactory mKAnonSignJoinFactory;
     private final boolean mShouldUseUnifiedTables;
     private static final String API_NOT_AUTHORIZED_MSG =
@@ -225,7 +229,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull AdFilteringFeatureFactory adFilteringFeatureFactory,
             @NonNull ConsentManager consentManager,
-            @NonNull MultiCloudSupportStrategy multiCloudSupportStrategy,
+            @NonNull ObliviousHttpEncryptor obliviousHttpEncryptor,
             @NonNull AdSelectionDebugReportDao adSelectionDebugReportDao,
             @NonNull AdIdFetcher adIdFetcher,
             @NonNull KAnonSignJoinFactory kAnonSignJoinFactory,
@@ -253,7 +257,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(adFilteringFeatureFactory);
         Objects.requireNonNull(consentManager);
-        Objects.requireNonNull(multiCloudSupportStrategy);
+        Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(adSelectionDebugReportDao);
         Objects.requireNonNull(adIdFetcher);
         Objects.requireNonNull(kAnonSignJoinFactory);
@@ -283,7 +287,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mConsentManager = consentManager;
         // No support for renderId on device
         mAdRenderIdValidator = AdRenderIdValidator.AD_RENDER_ID_VALIDATOR_NO_OP;
-        mMultiCloudSupportStrategy = multiCloudSupportStrategy;
+        mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mAdSelectionDebugReportDao = adSelectionDebugReportDao;
         mAdIdFetcher = adIdFetcher;
         mShouldUseUnifiedTables = shouldUseUnifiedTables;
@@ -348,9 +352,19 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         SharedStorageDatabase.getInstance().frequencyCapDao(),
                         FlagsFactory.getFlags()),
                 ConsentManager.getInstance(),
-                MultiCloudSupportStrategyFactory.getStrategy(
-                        FlagsFactory.getFlags().getFledgeAuctionServerMultiCloudEnabled(),
-                        FlagsFactory.getFlags().getFledgeAuctionServerCoordinatorUrlAllowlist()),
+                new ObliviousHttpEncryptorImpl(
+                        new ProtectedServersEncryptionConfigManager(
+                                AdSelectionServerDatabase.getInstance()
+                                        .protectedServersEncryptionConfigDao(),
+                                FlagsFactory.getFlags(),
+                                new AdServicesHttpsClient(
+                                        AdServicesExecutors.getBlockingExecutor(),
+                                        CacheProviderFactory.create(
+                                                context, FlagsFactory.getFlags())),
+                                AdServicesExecutors.getLightWeightExecutor(),
+                                AdServicesLoggerImpl.getInstance()),
+                        AdSelectionServerDatabase.getInstance().encryptionContextDao(),
+                        AdServicesExecutors.getLightWeightExecutor()),
                 AdSelectionDebugReportingDatabase.getInstance().getAdSelectionDebugReportDao(),
                 new AdIdFetcher(
                         context,
@@ -577,8 +591,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 () -> {
                     PersistAdSelectionResultRunner runner =
                             new PersistAdSelectionResultRunner(
-                                    mMultiCloudSupportStrategy.getObliviousHttpEncryptor(
-                                            mContext, mFlags),
+                                    mObliviousHttpEncryptor,
                                     mAdSelectionEntryDao,
                                     mCustomAudienceDao,
                                     mAdSelectionServiceFilter,
@@ -678,9 +691,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_DATA_OFF_BINDER_THREAD);
         GetAdSelectionDataRunner runner =
                 new GetAdSelectionDataRunner(
-                        mContext,
                         e2eTraceCookie,
-                        mMultiCloudSupportStrategy,
+                        mObliviousHttpEncryptor,
                         mAdSelectionEntryDao,
                         mCustomAudienceDao,
                         mEncodedPayloadDao,

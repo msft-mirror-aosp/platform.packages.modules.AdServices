@@ -24,29 +24,34 @@ import com.android.adservices.common.AdServicesMockitoTestCase;
 
 import org.junit.Test;
 
-public class AttributionReportingArgParserHelperTest extends AdServicesMockitoTestCase {
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
+public class AttributionReportingUtilTest extends AdServicesMockitoTestCase {
     private static final String SCHEMA_FULL = "full";
     private static final String SCHEMA_PARTIAL = "partial";
     private static final String SCHEMA_SUB_COMMAND = "--schema";
+    private static final StringWriter stringWriter = new StringWriter();
+    private static final PrintWriter out = new PrintWriter(stringWriter);
 
     @Test
     public void testParseAttributionReportingSchema_defaultSchema() {
         String[] args = {};
-        String schema = AttributionReportingArgParserHelper.parseAttributionReportingSchema(args);
+        String schema = AttributionReportingUtil.parseAttributionReportingSchema(args, 0, out);
         assertThat(schema).isEqualTo(SCHEMA_PARTIAL);
     }
 
     @Test
     public void testParseAttributionReportingSchema_partialSchema() {
         String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_PARTIAL};
-        String schema = AttributionReportingArgParserHelper.parseAttributionReportingSchema(args);
+        String schema = AttributionReportingUtil.parseAttributionReportingSchema(args, 0, out);
         assertThat(schema).isEqualTo(SCHEMA_PARTIAL);
     }
 
     @Test
     public void testParseAttributionReportingSchema_fullSchema() {
         String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_FULL};
-        String schema = AttributionReportingArgParserHelper.parseAttributionReportingSchema(args);
+        String schema = AttributionReportingUtil.parseAttributionReportingSchema(args, 0, out);
         assertThat(schema).isEqualTo(SCHEMA_FULL);
     }
 
@@ -55,21 +60,16 @@ public class AttributionReportingArgParserHelperTest extends AdServicesMockitoTe
         String[] args = {SCHEMA_SUB_COMMAND, "invalid"};
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AttributionReportingArgParserHelper.parseAttributionReportingSchema(args));
-    }
-
-    @Test
-    public void testParseAttributionReportingSchema_missingValueSchema() {
-        String[] args = {SCHEMA_SUB_COMMAND};
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> AttributionReportingArgParserHelper.parseAttributionReportingSchema(args));
+                () -> AttributionReportingUtil.parseAttributionReportingSchema(args, 0, out));
     }
 
     @Test
     public void testParseAttributionReportingSchema_multipleSchemaArgs() {
         String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_PARTIAL, SCHEMA_SUB_COMMAND, SCHEMA_FULL};
-        String schema = AttributionReportingArgParserHelper.parseAttributionReportingSchema(args);
-        assertThat(schema).isEqualTo(SCHEMA_PARTIAL);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    AttributionReportingUtil.parseAttributionReportingSchema(args, 0, out);
+                });
     }
 }

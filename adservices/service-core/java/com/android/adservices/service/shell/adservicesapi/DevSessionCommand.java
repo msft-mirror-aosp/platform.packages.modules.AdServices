@@ -29,13 +29,14 @@ import com.android.adservices.service.stats.ShellCommandStats;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public final class DevSessionCommand extends AbstractShellCommand {
-
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
 
     private static final String ERROR_RESET_WARNING =
@@ -46,6 +47,8 @@ public final class DevSessionCommand extends AbstractShellCommand {
     public static final String SUB_CMD_START = "start";
     public static final String SUB_CMD_END = "end";
     public static final String ARG_ERASE_DB = "--erase-db";
+    public static final String ARG_ENABLE_SERVER_AUCTION_TEST_KEYS =
+            "--enable-server-auction-test-keys";
 
     @VisibleForTesting
     public static final String HELP =
@@ -105,17 +108,22 @@ public final class DevSessionCommand extends AbstractShellCommand {
         boolean shouldSetDevSessionEnabled = SUB_CMD_START.equals(args[2]);
         sLogger.v("shouldSetDevSessionEnabled: %b", shouldSetDevSessionEnabled);
 
-        if (args.length < 4 || !ARG_ERASE_DB.equals(args[3])) {
+        List<String> argList = Arrays.asList(args);
+
+        if (!argList.contains(ARG_ERASE_DB)) {
             sLogger.v("Could not enter or exit dev mode:" + ERROR_NEED_ACKNOWLEDGEMENT);
             err.write(ERROR_NEED_ACKNOWLEDGEMENT);
             return invalidArgsError(getCommandHelp(), err, getMetricsLoggerCommand(), args);
         }
 
+        boolean setServerAuctionTestKeysEnabled =
+                argList.contains(ARG_ENABLE_SERVER_AUCTION_TEST_KEYS);
+
         DevSessionControllerResult result;
         try {
             Future<DevSessionControllerResult> future =
                     shouldSetDevSessionEnabled
-                            ? mDevSessionController.startDevSession()
+                            ? mDevSessionController.startDevSession(setServerAuctionTestKeysEnabled)
                             : mDevSessionController.endDevSession();
             result = future.get(TIMEOUT_SEC, TimeUnit.SECONDS);
         } catch (ExecutionException | InterruptedException | TimeoutException e) {

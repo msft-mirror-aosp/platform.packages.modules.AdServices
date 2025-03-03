@@ -26,7 +26,6 @@ import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AUCTION_SERVER_GET_
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_DEFAULT_PARTIAL_CUSTOM_AUDIENCES_CONSTRUCTOR;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED;
-import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_DUMP_EFFECTIVE_TARGET_SDK_VERSION;
 import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE;
 import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS;
 import static com.android.adservices.shared.meta_testing.FlagsTestLittleHelper.getAllFlagNameConstants;
@@ -54,7 +53,7 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
     private static final String ACONFIG_PREFIX = "com.android.adservices.flags.";
 
     private static final String HOW_TO_FIX_IT_MESSAGE =
-            "If this is expected, you might need to change ACONFIG_ONLY_ALLOW_LIST, "
+            "If this is expected, you might need to change ACONFIG_ONLY_ALLOWLIST, "
                     + "MISSING_FLAGS_ALLOWLIST, or"
                     + " NON_CANONICAL_FLAGS (on this file).";
 
@@ -75,7 +74,7 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                     FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED,
                     FLAG_ENABLE_ADSERVICES_API_ENABLED,
                     FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE,
-                    FLAG_SDKSANDBOX_DUMP_EFFECTIVE_TARGET_SDK_VERSION);
+                    FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED);
 
     /**
      * List used by {@link #testAllAconfigFlagsAreMapped()}, it contains the name of flags that are
@@ -113,11 +112,6 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                     FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE,
 
                     // This flag is to guard a feature for trunk stable purpose. The flag guards the
-                    // dump function to include the effective target SDK version cache. If any
-                    // regression is observed, this feature can be rolled back
-                    FLAG_SDKSANDBOX_DUMP_EFFECTIVE_TARGET_SDK_VERSION,
-
-                    // This flag is to guard a feature for trunk stable purpose. The flag guards the
                     // using the effective target SDK version when deciding which allowlist should
                     // be used to apply the restrictions. If any regression is observed, this
                     // feature can be rolled back
@@ -147,13 +141,7 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
      * will add the missing {@link com.android.adservices.service.PhFlags} / {@link
      * com.android.adservices.service.FlagsConstants} counterpart.
      */
-    private static final Map<String, String> NON_CANONICAL_FLAGS =
-            Map.of(
-                    // DeviceConfig flags for PA/FLEDGE are named "auction_server" instead of
-                    // "server_auction."  This API has already been released, and the aconfig flag
-                    // cannot be renamed, so this mismatch is intentional.
-                    FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED,
-                    FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED);
+    private static final Map<String, String> NON_CANONICAL_FLAGS = Map.of();
 
     @Test
     public void testNoFlagHasTheAConfigPrefix() throws Exception {
