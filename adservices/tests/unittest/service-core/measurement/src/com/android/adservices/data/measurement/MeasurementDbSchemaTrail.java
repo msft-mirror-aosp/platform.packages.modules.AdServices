@@ -3543,6 +3543,38 @@ public class MeasurementDbSchemaTrail {
                     + MeasurementTables.CountUniqueReportingContract.REPORT_ID
                     + "))";
 
+    public static final String CREATE_TABLE_COUNT_UNIQUE_REPORTING_V48 =
+            "CREATE TABLE "
+                    + MeasurementTables.CountUniqueReportingContract.TABLE
+                    + " ("
+                    + MeasurementTables.CountUniqueReportingContract.REPORT_ID
+                    + " TEXT, "
+                    + MeasurementTables.CountUniqueReportingContract.PAYLOAD
+                    + " TEXT, "
+                    + MeasurementTables.CountUniqueReportingContract.REPORTING_ORIGIN
+                    + " TEXT, "
+                    + MeasurementTables.CountUniqueReportingContract.STATUS
+                    + " INTEGER, "
+                    + MeasurementTables.CountUniqueReportingContract.SCHEDULED_REPORT_TIME
+                    + " INTEGER, "
+                    + MeasurementTables.CountUniqueReportingContract.API_VERSION
+                    + " TEXT, "
+                    + MeasurementTables.CountUniqueReportingContract.DEBUG_KEY
+                    + " TEXT, "
+                    + MeasurementTables.CountUniqueReportingContract.CONTEXT_ID
+                    + " TEXT, "
+                    + MeasurementTables.CountUniqueReportingContract.DEBUG_REPORT_STATUS
+                    + " INTEGER, "
+                    + MeasurementTables.CountUniqueReportingContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + MeasurementTables.CountUniqueReportingContract.CONTRIBUTION_VALUE
+                    + " INTEGER, "
+                    + MeasurementTables.CountUniqueReportingContract.CONTRIBUTION_TIME
+                    + " INTEGER, "
+                    + "PRIMARY KEY("
+                    + MeasurementTables.CountUniqueReportingContract.REPORT_ID
+                    + "))";
+
     public static final String CREATE_TABLE_COUNT_UNIQUE_METADATA_V47 =
             "CREATE TABLE "
                     + MeasurementTables.CountUniqueMetadataContract.TABLE
@@ -4142,6 +4174,14 @@ public class MeasurementDbSchemaTrail {
         return createStatements;
     }
 
+    private static Map<String, String> getCreateStatementByTableV48() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV47());
+        createStatements.put(
+                MeasurementTables.CountUniqueReportingContract.TABLE,
+                CREATE_TABLE_COUNT_UNIQUE_REPORTING_V48);
+        return createStatements;
+    }
+
     private static Map<String, String> getCreateIndexesV7() {
         Map<String, String> createIndexes = new HashMap<>();
         createIndexes.putAll(CREATE_INDEXES_V6);
@@ -4324,6 +4364,10 @@ public class MeasurementDbSchemaTrail {
         return getCreateIndexesV46();
     }
 
+    private static Map<String, String> getCreateIndexesV48() {
+        return getCreateIndexesV47();
+    }
+
     private static final Map<Integer, Collection<String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
             new ImmutableMap.Builder<Integer, Collection<String>>()
                     .put(6, CREATE_STATEMENT_BY_TABLE_V6.values())
@@ -4368,6 +4412,7 @@ public class MeasurementDbSchemaTrail {
                     .put(45, getCreateStatementByTableV45().values())
                     .put(46, getCreateStatementByTableV46().values())
                     .put(47, getCreateStatementByTableV47().values())
+                    .put(48, getCreateStatementByTableV48().values())
                     .build();
 
     private static final Map<Integer, Collection<String>> CREATE_INDEXES_STATEMENTS_BY_VERSION =
@@ -4414,6 +4459,7 @@ public class MeasurementDbSchemaTrail {
                     .put(45, getCreateIndexesV45().values())
                     .put(46, getCreateIndexesV46().values())
                     .put(47, getCreateIndexesV47().values())
+                    .put(48, getCreateIndexesV48().values())
                     .build();
 
     /**
