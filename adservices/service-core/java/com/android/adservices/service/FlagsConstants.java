@@ -1482,6 +1482,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST =
             "MeasurementCountUnique__app_allowlist";
 
+    public static final String KEY_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST =
+            "MeasurementCountUnique__app_signature_allowlist";
+
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";

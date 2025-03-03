@@ -3880,6 +3880,14 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST;
     }
 
+    /** Default allow list for app signatures to allow count unique registrations. */
+    @ConfigFlag String DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST = "";
+
+    /** Returns the allowlist of app signatures that allow count unique registrations. */
+    default String getMeasurementCountUniqueAppSignatureAllowlist() {
+        return DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST;
+    }
+
     /** Kill switch to guard backward-compatible logging. See go/rbc-ww-logging */
     @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean COMPAT_LOGGING_KILL_SWITCH = false;

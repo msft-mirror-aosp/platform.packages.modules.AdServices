@@ -918,6 +918,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTR
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DB_SIZE_LIMIT;
@@ -1986,6 +1987,14 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST,
                 Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST,
                 Flags::getMeasurementCountUniqueAppAllowlist);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueAppSignatureAllowlist() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST,
+                Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST,
+                Flags::getMeasurementCountUniqueAppSignatureAllowlist);
     }
 
     @Test

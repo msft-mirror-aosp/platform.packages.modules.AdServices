@@ -3952,6 +3952,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public String getMeasurementCountUniqueAppSignatureAllowlist() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST,
+                DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST);
+    }
+
+    @Override
     public boolean getNotificationDismissedOnClick() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK,

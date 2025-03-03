@@ -1372,6 +1372,10 @@ public class AsyncSourceFetcher {
                 && asyncRegistration.isAppRequest()
                 && AllowLists.isPackageAllowListed(
                         mFlags.getMeasurementCountUniqueAppAllowlist(),
+                        asyncRegistration.getRegistrant().toString())
+                && AllowLists.isSignatureAllowListed(
+                        mContext,
+                        mFlags.getMeasurementCountUniqueAppSignatureAllowlist(),
                         asyncRegistration.getRegistrant().toString());
     }
 
