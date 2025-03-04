@@ -1078,6 +1078,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     private void onAppDeath(CallingInfo callingInfo) {
+        boolean isStopSandboxDeadlockFixed =
+                mSdkSandboxSettingsListener.getStopSandboxDeadlockFix();
         synchronized (mLock) {
             Log.d(TAG, "App " + callingInfo + " has died, cleaning up associated sandbox info");
             mSandboxLifecycleCallbacks.remove(callingInfo);
@@ -1089,6 +1091,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             mSyncDataCallbacks.remove(callingInfo);
             mLoadSdkSessions.remove(callingInfo);
             mHeldInterfaces.remove(callingInfo);
+            if (!isStopSandboxDeadlockFixed) {
+                stopSdkSandboxService(callingInfo, "Caller " + callingInfo + " has died");
+                mServiceProvider.onAppDeath(callingInfo);
+            }
+        }
+        if (isStopSandboxDeadlockFixed) {
             stopSdkSandboxService(callingInfo, "Caller " + callingInfo + " has died");
             mServiceProvider.onAppDeath(callingInfo);
         }
@@ -1664,8 +1672,20 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     void stopAllSandboxes() {
-        synchronized (mLock) {
-            stopAllSandboxesLocked();
+        boolean isStopSandboxDeadlockFixed =
+                mSdkSandboxSettingsListener.getStopSandboxDeadlockFix();
+        if (isStopSandboxDeadlockFixed) {
+            synchronized (mLock) {
+                stopAllSandboxesLocked();
+            }
+        } else {
+            Set<CallingInfo> callingInfos;
+            synchronized (mLock) {
+                callingInfos = mLoadSdkSessions.keySet();
+            }
+            for (CallingInfo callingInfo : callingInfos) {
+                stopSdkSandboxService(callingInfo, "SDK sandbox killswitch enabled");
+            }
         }
     }
 
