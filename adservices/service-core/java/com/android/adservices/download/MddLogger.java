@@ -23,6 +23,7 @@ import com.google.android.libraries.mobiledatadownload.internal.logging.LogUtil;
 import com.google.mobiledatadownload.LogEnumsProto.MddClientEvent.Code;
 import com.google.mobiledatadownload.LogProto;
 import com.google.mobiledatadownload.LogProto.DataDownloadFileGroupStats;
+import com.google.mobiledatadownload.LogProto.MddDownloadLatency;
 import com.google.mobiledatadownload.LogProto.MddDownloadResultLog;
 import com.google.mobiledatadownload.LogProto.MddFileGroupStatus;
 import com.google.mobiledatadownload.LogProto.MddLogData;
@@ -47,6 +48,9 @@ public class MddLogger implements Logger {
                 break;
             case DATA_DOWNLOAD_STORAGE_STATS:
                 logStorageStats(log);
+                break;
+            case DATA_DOWNLOAD_LATENCY_LOG:
+                logDownloadLatency(log);
                 break;
             default:
                 LogUtil.d("%s: Received unsupported event code %d, skipping log", TAG, eventCode);
@@ -111,6 +115,20 @@ public class MddLogger implements Logger {
                 storageStats.build().toByteArray(),
                 mddStorageStats.getTotalMddBytesUsed(),
                 mddStorageStats.getTotalMddDirectoryBytesUsed());
+    }
+
+    private void logDownloadLatency(MessageLite log) {
+        MddLogData logData = (MddLogData) log;
+        MddDownloadLatency downloadLatency = logData.getMddDownloadLatency();
+        AdServicesStatsLog.write(
+                AdServicesStatsLog.MOBILE_DATA_DOWNLOAD_LATENCY_REPORTED,
+                /* download_attempt_count= */ downloadLatency.getDownloadAttemptCount(),
+                /* download_latency_ms= */ downloadLatency.getDownloadLatencyMs(),
+                /* total_latency_ms= */ downloadLatency.getTotalLatencyMs(),
+                /* file_group_stats= */ buildGroupStats(
+                                (int) logData.getSamplingInterval(),
+                                logData.getDataDownloadFileGroupStats())
+                        .toByteArray());
     }
 
     private static MobileDataDownloadFileGroupStats buildGroupStats(
