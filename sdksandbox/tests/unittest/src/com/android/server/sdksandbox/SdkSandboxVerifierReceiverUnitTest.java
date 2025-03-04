@@ -16,8 +16,6 @@
 
 package com.android.server.sdksandbox;
 
-import static com.android.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_VERIFY_SDK_DEX_FILES;
-
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
@@ -26,7 +24,6 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
-import android.platform.test.annotations.RequiresFlagsEnabled;
 import android.platform.test.flag.junit.CheckFlagsRule;
 import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 import android.provider.DeviceConfig;
@@ -35,10 +32,10 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
-import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.sdksandbox.verifier.SdkDexVerifier;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -91,8 +88,8 @@ public class SdkSandboxVerifierReceiverUnitTest extends DeviceSupportedBaseTest 
                 .thenReturn(FAKE_PACKAGE_INFO);
     }
 
+    @Ignore("TODO(b/231441674): This test relies on a flag which is planned to be rolledback")
     @Test
-    @RequiresFlagsEnabled(FLAG_SDK_SANDBOX_VERIFY_SDK_DEX_FILES)
     public void verifierBroadcastReceived_startsDexParsing() {
         MockitoSession staticMockSession = null;
         try {
@@ -113,8 +110,8 @@ public class SdkSandboxVerifierReceiverUnitTest extends DeviceSupportedBaseTest 
         }
     }
 
+    @Ignore("TODO(b/231441674): This test relies on a flag which is planned to be rolledback")
     @Test
-    @RequiresFlagsEnabled(FLAG_SDK_SANDBOX_VERIFY_SDK_DEX_FILES)
     public void verifierBroadcastReceived_doesNotStartDexParsing() {
         MockitoSession staticMockSession = null;
         try {

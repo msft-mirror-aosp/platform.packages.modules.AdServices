@@ -28,4 +28,13 @@ public interface ICountUniqueRegistrar {
      * @param eventHeader event header in the response
      */
     void registerCountUniqueEvent(AsyncRegistration asyncRegistration, List<String> eventHeader);
+
+    /**
+     * Register count unique metadata.
+     *
+     * @param asyncRegistration async registration for the request
+     * @param metadataHeader metadata header in the response
+     */
+    void registerCountUniqueMetadata(
+            AsyncRegistration asyncRegistration, List<String> metadataHeader);
 }

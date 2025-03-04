@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.measurement;
 
+import static android.database.sqlite.SQLiteDatabase.CONFLICT_IGNORE;
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE;
 
 import static com.android.adservices.data.measurement.MeasurementTables.ALL_MSMT_TABLES;
@@ -52,6 +53,7 @@ import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.AggregatableNamedBudgets;
 import com.android.adservices.service.measurement.AggregatableNamedBudgets.BudgetAndContribution;
 import com.android.adservices.service.measurement.Attribution;
+import com.android.adservices.service.measurement.CountUniqueMetadata;
 import com.android.adservices.service.measurement.CountUniqueReport;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -4184,6 +4186,79 @@ class MeasurementDao implements IMeasurementDao {
         if (rowId == -1) {
             throw new DatastoreException("Count Unique Report insertion failed.");
         }
+    }
+
+    @Override
+    public void insertCountUniqueMetadata(
+            @NonNull CountUniqueMetadata metadata, boolean ignoreIfPresent)
+            throws DatastoreException {
+        int strategy = ignoreIfPresent ? CONFLICT_IGNORE : CONFLICT_REPLACE;
+        ContentValues values = new ContentValues();
+        values.put(
+                MeasurementTables.CountUniqueMetadataContract.REPORTING_ORIGIN,
+                metadata.getReportingOrigin().toString());
+        values.put(MeasurementTables.CountUniqueMetadataContract.KEY, metadata.getKey());
+        values.put(MeasurementTables.CountUniqueMetadataContract.VALUE, metadata.getValue());
+        values.put(
+                MeasurementTables.CountUniqueMetadataContract.EXPIRATION_TIME,
+                metadata.getExpirationTime());
+        mSQLTransaction
+                .getDatabase()
+                .insertWithOnConflict(
+                        MeasurementTables.CountUniqueMetadataContract.TABLE,
+                        /* nullColumnHack= */ null,
+                        values,
+                        strategy);
+    }
+
+    @Override
+    public CountUniqueMetadata getCountUniqueMetadata(@NonNull String key, Uri reportingOrigin)
+            throws DatastoreException {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.CountUniqueMetadataContract.TABLE,
+                                null,
+                                MeasurementTables.CountUniqueMetadataContract.KEY
+                                        + " = ? AND "
+                                        + MeasurementTables.CountUniqueMetadataContract
+                                                .REPORTING_ORIGIN
+                                        + " = ?",
+                                new String[] {key, reportingOrigin.toString()},
+                                /* groupBy= */ null,
+                                /* having= */ null,
+                                /* orderBy= */ null,
+                                /* limit= */ null)) {
+            if (cursor.getCount() == 0) {
+                throw new DatastoreException("Count Unique Metadata retrieval failed. Key: " + key);
+            }
+            cursor.moveToNext();
+            return SqliteObjectMapper.constructCountUniqueMetadata(cursor);
+        }
+    }
+
+    @Override
+    public void deleteCountUniqueMetadata(String key, Uri reportingOrigin)
+            throws DatastoreException {
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .delete(
+                                MeasurementTables.CountUniqueMetadataContract.TABLE,
+                                MeasurementTables.CountUniqueMetadataContract.KEY
+                                        + " = ? "
+                                        + "AND "
+                                        + MeasurementTables.CountUniqueMetadataContract
+                                                .REPORTING_ORIGIN
+                                        + " = ? ",
+                                new String[] {key, reportingOrigin.toString()});
+        if (rows != 1) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("MeasurementDao: CountUniqueMetadata deletion failed");
+        }
+        LoggerFactory.getMeasurementLogger()
+                .d("MeasurementDao: CountUniqueMetadata: row deleted: " + rows);
     }
 
     @Override

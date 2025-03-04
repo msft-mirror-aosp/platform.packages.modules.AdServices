@@ -15,6 +15,8 @@
  */
 package com.android.server.adservices;
 
+import static com.android.server.adservices.BinderFlagReader.readFlag;
+
 import android.annotation.NonNull;
 import android.provider.DeviceConfig;
 
@@ -67,6 +69,9 @@ public final class PhFlags implements Flags {
 
     @SuppressWarnings("AvoidDeviceConfigUsage") // Helper / infra method
     private boolean getFlag(String name, boolean defaultValue) {
-        return DeviceConfig.getBoolean(DeviceConfig.NAMESPACE_ADSERVICES, name, defaultValue);
+        return readFlag(
+                () ->
+                        DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES, name, defaultValue));
     }
 }

@@ -52,6 +52,7 @@ public final class MeasurementTables {
         KeyValueDataContract.TABLE,
         AppReportHistoryContract.TABLE,
         CountUniqueReportingContract.TABLE,
+        CountUniqueMetadataContract.TABLE,
     };
 
     public static final String[] V6_TABLES = {
@@ -356,6 +357,16 @@ public final class MeasurementTables {
         String API_VERSION = "api_version";
         String DEBUG_KEY = "debug_key";
         String CONTEXT_ID = "context_id";
+    }
+
+    /** Contract for Count Unique API Metadata */
+    public interface CountUniqueMetadataContract {
+        String TABLE = MSMT_TABLE_PREFIX + "count_unique_metadata";
+
+        String REPORTING_ORIGIN = "reporting_origin";
+        String KEY = "key";
+        String VALUE = "value";
+        String EXPIRATION_TIME = "expiration_time";
     }
 
     public static final String CREATE_TABLE_ASYNC_REGISTRATION_V6 =
@@ -1554,6 +1565,26 @@ public final class MeasurementTables {
                     + CountUniqueReportingContract.REPORT_ID
                     + "))";
 
+    public static final String CREATE_TABLE_COUNT_UNIQUE_METADATA_LATEST =
+            "CREATE TABLE "
+                    + MeasurementTables.CountUniqueMetadataContract.TABLE
+                    + " ("
+                    + MeasurementTables.CountUniqueMetadataContract.REPORTING_ORIGIN
+                    + " TEXT, "
+                    + MeasurementTables.CountUniqueMetadataContract.KEY
+                    + " TEXT, "
+                    + MeasurementTables.CountUniqueMetadataContract.VALUE
+                    + " INTEGER, "
+                    + MeasurementTables.CountUniqueMetadataContract.EXPIRATION_TIME
+                    + " INTEGER, "
+                    + "PRIMARY KEY ("
+                    + MeasurementTables.CountUniqueMetadataContract.KEY
+                    + ", "
+                    + MeasurementTables.CountUniqueMetadataContract.REPORTING_ORIGIN
+                    + " )"
+                    + " )";
+
+    // endepmic ads
     // Consolidated list of create statements for all tables.
     public static final List<String> CREATE_STATEMENTS =
             Collections.unmodifiableList(
@@ -1573,7 +1604,8 @@ public final class MeasurementTables {
                             CREATE_TABLE_XNA_IGNORED_SOURCES_LATEST,
                             CREATE_TABLE_KEY_VALUE_STORE_LATEST,
                             CREATE_TABLE_APP_REPORT_HISTORY_LATEST,
-                            CREATE_TABLE_COUNT_UNIQUE_REPORTING_LATEST));
+                            CREATE_TABLE_COUNT_UNIQUE_REPORTING_LATEST,
+                            CREATE_TABLE_COUNT_UNIQUE_METADATA_LATEST));
 
     // Consolidated list of create statements for all tables at version 6.
     public static final List<String> CREATE_STATEMENTS_V6 =
