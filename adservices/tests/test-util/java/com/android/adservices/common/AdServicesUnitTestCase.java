@@ -17,8 +17,11 @@ package com.android.adservices.common;
 
 import static org.mockito.Mockito.mock;
 
+import android.Manifest;
 import android.annotation.CallSuper;
 import android.content.Context;
+
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.flags.AdServicesFakeDebugFlagsSetterRule;
 import com.android.adservices.flags.AdServicesFakeFlagsSetterRule;
@@ -26,6 +29,7 @@ import com.android.adservices.flags.AdServicesFlagsSetterRuleForUnitTests;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
+import com.android.compatibility.common.util.AdoptShellPermissionsRule;
 
 import org.junit.Rule;
 
@@ -61,6 +65,12 @@ public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
     @Rule(order = 7)
     public final AdServicesFakeDebugFlagsSetterRule debugFlags =
             new AdServicesFakeDebugFlagsSetterRule();
+
+    @Rule(order = 8)
+    public final AdoptShellPermissionsRule mAdoptShellPermissionsRule =
+            new AdoptShellPermissionsRule(
+                    InstrumentationRegistry.getInstrumentation().getUiAutomation(),
+                    Manifest.permission.READ_DEVICE_CONFIG);
 
     /**
      * Reference to the application context of this test's instrumentation package (as defined by
