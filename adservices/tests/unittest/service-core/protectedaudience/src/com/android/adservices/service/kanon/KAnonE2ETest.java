@@ -135,6 +135,7 @@ import com.android.adservices.service.adselection.encryption.AdSelectionEncrypti
 import com.android.adservices.service.adselection.encryption.KAnonObliviousHttpEncryptorImpl;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptorFactory;
+import com.android.adservices.service.adselection.encryption.ServerAuctionCoordinatorUriStrategyFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -373,6 +374,7 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
     private Instant FIXED_INSTANT = Instant.now();
     private RetryStrategyFactory mRetryStrategyFactory;
     private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
+    private ServerAuctionCoordinatorUriStrategyFactory mServerAuctionCoordinatorUriStrategyFactory;
 
     @Before
     public void setUp() throws Exception {
@@ -479,6 +481,9 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
                         mAdIdFetcher,
                         consentedDebugConfigurationGeneratorFactory.create(),
                         mLightweightExecutorService);
+        mServerAuctionCoordinatorUriStrategyFactory =
+                new ServerAuctionCoordinatorUriStrategyFactory(
+                        mFakeFlags.getFledgeAuctionServerCoordinatorUrlAllowlist());
     }
 
     @After
@@ -1755,7 +1760,8 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
                 false,
                 mRetryStrategyFactory,
                 CONSOLE_MESSAGE_IN_LOGS_ENABLED,
-                mAuctionServerDebugConfigurationGenerator);
+                mAuctionServerDebugConfigurationGenerator,
+                mServerAuctionCoordinatorUriStrategyFactory);
     }
 
     public PersistAdSelectionResultTestCallback invokePersistAdSelectionResult(

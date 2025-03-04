@@ -94,6 +94,7 @@ import com.android.adservices.service.adid.AdIdCacheManager;
 import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
+import com.android.adservices.service.adselection.encryption.ServerAuctionCoordinatorUriStrategyFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.RetryStrategyFactory;
@@ -244,6 +245,7 @@ public final class OnDeviceAdSelectionFailureIntegrationTest
     private RetryStrategyFactory mRetryStrategyFactory;
     private AdTechIdentifier mBuyer;
     private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
+    private ServerAuctionCoordinatorUriStrategyFactory mServerAuctionCoordinatorUriStrategyFactory;
 
     @Before
     public void setUp() throws Exception {
@@ -415,6 +417,10 @@ public final class OnDeviceAdSelectionFailureIntegrationTest
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
                         DevContext.createForDevOptionsDisabled());
         mockAdIdWorker.setResult(AdId.ZERO_OUT, true);
+
+        mServerAuctionCoordinatorUriStrategyFactory =
+                new ServerAuctionCoordinatorUriStrategyFactory(
+                        mFakeFlags.getFledgeAuctionServerCoordinatorUrlAllowlist());
     }
 
     @Test
@@ -451,7 +457,8 @@ public final class OnDeviceAdSelectionFailureIntegrationTest
                         false,
                         mRetryStrategyFactory,
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED,
-                        mAuctionServerDebugConfigurationGenerator);
+                        mAuctionServerDebugConfigurationGenerator,
+                        mServerAuctionCoordinatorUriStrategyFactory);
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
@@ -543,7 +550,8 @@ public final class OnDeviceAdSelectionFailureIntegrationTest
                         false,
                         mRetryStrategyFactory,
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED,
-                        mAuctionServerDebugConfigurationGenerator);
+                        mAuctionServerDebugConfigurationGenerator,
+                        mServerAuctionCoordinatorUriStrategyFactory);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
