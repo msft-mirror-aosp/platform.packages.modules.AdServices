@@ -76,7 +76,6 @@ public class HpkeEncrypterTest {
             "cobalt-1.0-shuffler".getBytes(StandardCharsets.UTF_8);
     private static final byte[] ANALYZER_CONTEXT_INFO_BYTES =
             "cobalt-1.0-analyzer".getBytes(StandardCharsets.UTF_8);
-    private static final byte[] EMPTY_KEY = new byte[] {};
     private static final int SHUFFLER_KEY_INDEX_PROD = 11;
     private static final int SHUFFLER_KEY_INDEX_DEV = 9;
     private static final int ANALYZER_KEY_INDEX_PROD = 12;
