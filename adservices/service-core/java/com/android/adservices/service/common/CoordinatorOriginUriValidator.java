@@ -49,7 +49,7 @@ public interface CoordinatorOriginUriValidator extends Validator<Uri> {
     }
 
     /** Creates an instance of an enabled validator */
-    static CoordinatorOriginUriValidator createEnabledInstance(String allowlist) {
+    static CoordinatorOriginUriValidator createEnabledInstance(List<Uri> allowlist) {
         return (uri, violations) -> {
             if (!Objects.isNull(uri)) {
                 if (ValidatorUtil.isStringNullOrEmpty(uri.getHost())) {
@@ -65,11 +65,8 @@ public interface CoordinatorOriginUriValidator extends Validator<Uri> {
         };
     }
 
-    private static boolean isUrlAllowListed(String allowlist, Uri uri) {
-        List<String> allowedUrls = AllowLists.splitAllowList(allowlist);
-
-        for (String url : allowedUrls) {
-            Uri allowedUri = Uri.parse(url);
+    private static boolean isUrlAllowListed(List<Uri> allowlist, Uri uri) {
+        for (Uri allowedUri : allowlist) {
             if (uri.getHost().equals(allowedUri.getHost())) {
                 return true;
             }

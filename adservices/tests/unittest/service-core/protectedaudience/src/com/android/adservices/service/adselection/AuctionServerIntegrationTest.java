@@ -181,6 +181,7 @@ import com.android.adservices.service.adselection.encryption.AdSelectionEncrypti
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptorImpl;
 import com.android.adservices.service.adselection.encryption.ProtectedServersEncryptionConfigManager;
+import com.android.adservices.service.adselection.encryption.ServerAuctionCoordinatorUriStrategyFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -192,6 +193,8 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.devapi.DevSession;
+import com.android.adservices.service.devapi.DevSessionState;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
@@ -408,6 +411,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
     private RetryStrategyFactory mRetryStrategyFactory;
     private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
     @Mock private DatastoreManager mDatastoreManager;
+    private ServerAuctionCoordinatorUriStrategyFactory mServerAuctionCoordinatorUriStrategyFactory;
+    @Mock DevContext mDevContextMock;
 
     @Before
     public void setUp() {
@@ -495,6 +500,11 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                         mAdIdFetcher,
                         consentedDebugConfigurationGeneratorFactory.create(),
                         mLightweightExecutorService);
+
+        mServerAuctionCoordinatorUriStrategyFactory =
+                new ServerAuctionCoordinatorUriStrategyFactory(
+                        mFakeFlags.getFledgeAuctionServerCoordinatorUrlAllowlist());
+
         mAdSelectionService = createAdSelectionService();
 
         mPayloadFormatter =
@@ -2254,7 +2264,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                         /* shouldUseUnifiedTables= */ false,
                         mRetryStrategyFactory,
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED,
-                        mAuctionServerDebugConfigurationGenerator);
+                        mAuctionServerDebugConfigurationGenerator,
+                        mServerAuctionCoordinatorUriStrategyFactory);
 
         Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         mocker.mockGetFlags(new LegacyAuctionServerE2ETestFlags());
@@ -2436,7 +2447,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED,
-                        mAuctionServerDebugConfigurationGenerator);
+                        mAuctionServerDebugConfigurationGenerator,
+                        mServerAuctionCoordinatorUriStrategyFactory);
 
         Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         mocker.mockGetFlags(new LegacyAuctionServerE2ETestFlags());
@@ -3535,6 +3547,82 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                 SELLER_REPORTING_URI, reportingData.getSellerWinReportingUri().toString());
     }
 
+    @Test
+    public void testGetAdSelectionData_withTestCoordinatorUriStrategy_uriNotInAllowlist_success()
+            throws Exception {
+        Uri invalidCoordinator = Uri.parse("ex.com/testKeys");
+
+        AdServicesHttpClientResponse httpClientResponse =
+                mServerAuctionTestHelper.getPublicAuctionKeyHttpResponse();
+
+        when(mMockHttpClient.fetchPayloadWithLogging(
+                        eq(invalidCoordinator), eq(mDevContextMock), any(FetchProcessLogger.class)))
+                .thenReturn(Futures.immediateFuture(httpClientResponse));
+
+        mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
+                                WINNER_BUYER,
+                                WINNING_CUSTOM_AUDIENCE_NAME,
+                                WINNING_CUSTOM_AUDIENCE_OWNER)
+                        .setAds(
+                                DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(
+                                        WINNER_BUYER))
+                        .build(),
+                Uri.EMPTY,
+                false,
+                List.of());
+
+        DevSession devSession =
+                DevSession.builder()
+                        .setState(DevSessionState.IN_DEV)
+                        .setServerAuctionTestKeysEnabled(true)
+                        .build();
+
+        when(mDevContextFilterMock.createDevContext()).thenReturn(mDevContextMock);
+        when(mDevContextMock.getDevSession()).thenReturn(devSession);
+
+        AdSelectionService service = createServiceWithMockHttpClient();
+
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .setCoordinatorOriginUri(invalidCoordinator)
+                        .build();
+
+        GetAdSelectionDataTestCallback callback = invokeGetAdSelectionData(service, input);
+
+        verify(mMockHttpClient)
+                .fetchPayloadWithLogging(
+                        eq(invalidCoordinator), eq(mDevContextMock), any(FetchProcessLogger.class));
+
+        assertThat(callback.mIsSuccess).isTrue();
+        assertThat(callback.mGetAdSelectionDataResponse).isNotNull();
+        assertThat(callback.mGetAdSelectionDataResponse.getAdSelectionData()).isNotNull();
+
+        long adSelectionId = callback.mGetAdSelectionDataResponse.getAdSelectionId();
+        assertThat(
+                        mEncryptionContextDao.getEncryptionContext(
+                                adSelectionId, ENCRYPTION_KEY_TYPE_AUCTION))
+                .isNotNull();
+
+        ProtectedAuctionInput protectedAuctionInput =
+                mServerAuctionTestHelper.decryptGetAdSelectionDataResponse(
+                        callback.mGetAdSelectionDataResponse);
+
+        Map<String, BuyerInput> buyerInputs =
+                mServerAuctionTestHelper.getDecompressedBuyerInputs(protectedAuctionInput);
+
+        Assert.assertEquals(CALLER_PACKAGE_NAME, protectedAuctionInput.getPublisherName());
+        Assert.assertEquals(1, buyerInputs.size());
+        assertTrue(buyerInputs.containsKey(WINNER_BUYER.toString()));
+        Assert.assertEquals(
+                1, buyerInputs.get(WINNER_BUYER.toString()).getCustomAudiencesList().size());
+        Assert.assertEquals(
+                WINNING_CUSTOM_AUDIENCE_NAME,
+                buyerInputs.get(WINNER_BUYER.toString()).getCustomAudiences(0).getName());
+    }
+
     private AdSelectionServiceImpl createServiceWithMockHttpClient() {
         return new AdSelectionServiceImpl(
                 mAdSelectionEntryDao,
@@ -3564,7 +3652,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                                 mFakeFlags,
                                 mMockHttpClient,
                                 mLightweightExecutorService,
-                                mAdServicesLoggerMock),
+                                mAdServicesLoggerMock,
+                                mServerAuctionCoordinatorUriStrategyFactory),
                         mEncryptionContextDao,
                         mLightweightExecutorService),
                 mAdSelectionDebugReportDaoSpy,
@@ -3573,7 +3662,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                 false,
                 mRetryStrategyFactory,
                 CONSOLE_MESSAGE_IN_LOGS_ENABLED,
-                mAuctionServerDebugConfigurationGenerator);
+                mAuctionServerDebugConfigurationGenerator,
+                mServerAuctionCoordinatorUriStrategyFactory);
     }
 
     private void setAppInstallAdvertisers(
@@ -3695,7 +3785,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                 false,
                 mRetryStrategyFactory,
                 CONSOLE_MESSAGE_IN_LOGS_ENABLED,
-                mAuctionServerDebugConfigurationGenerator);
+                mAuctionServerDebugConfigurationGenerator,
+                mServerAuctionCoordinatorUriStrategyFactory);
     }
 
     private Map<AdTechIdentifier, BuyerInput> getBuyerInputMapFromDecryptedBytes(

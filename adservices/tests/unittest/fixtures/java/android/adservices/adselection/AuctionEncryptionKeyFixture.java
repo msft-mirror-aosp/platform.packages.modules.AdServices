@@ -18,8 +18,12 @@ package android.adservices.adselection;
 
 import static com.android.adservices.data.adselection.EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION;
 
+import android.net.Uri;
+
 import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.data.adselection.DBProtectedServersEncryptionConfig;
+import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
+import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 
 import com.google.auto.value.AutoValue;
@@ -41,8 +45,16 @@ public class AuctionEncryptionKeyFixture {
 
     private static final String KEY_ID_LABEL = "id";
     private static final String PUBLIC_KEY_LABEL = "key";
+    public static final String AUCTION_KEY_FETCH_DEFAULT_URI = "https://foo.bar/auctionkey";
     public static final String COORDINATOR_URL_AUCTION = "https://example-auction.com/full/url";
+    public static final String COORDINATOR_URL_AUCTION_2 = "https://example-auction-2.com/full/url";
+    public static final String ALLOWLIST =
+            COORDINATOR_URL_AUCTION + "," + COORDINATOR_URL_AUCTION_2;
     public static final String COORDINATOR_URL_AUCTION_ORIGIN = "https://example-auction.com";
+    public static final Uri COORDINATOR_URL_AUCTION_URI = Uri.parse(COORDINATOR_URL_AUCTION);
+    public static final Uri COORDINATOR_URL_AUCTION_2_URI = Uri.parse(COORDINATOR_URL_AUCTION_2);
+    public static final Uri COORDINATOR_URL_AUCTION_ORIGIN_URI =
+            Uri.parse("https://example-auction.com");
     public static final DBEncryptionKey ENCRYPTION_KEY_AUCTION =
             DBEncryptionKey.builder()
                     .setKeyIdentifier("152233fc-f255-4c3d-b3ef-7e2b7fbb9ca7")
@@ -97,6 +109,15 @@ public class AuctionEncryptionKeyFixture {
                     .setExpiryTtlSeconds(1000L)
                     .setCoordinatorUrl(COORDINATOR_URL_AUCTION)
                     .build();
+
+    /** Creates an AdSelectionEncryptionKey using the keyId provided */
+    public static AdSelectionEncryptionKey createAdSelectionEncryptionKeyFromKeyId(String keyId) {
+        return AdSelectionEncryptionKey.builder()
+                .setKeyType(AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION)
+                .setKeyIdentifier(keyId)
+                .setPublicKey(new byte[0])
+                .build();
+    }
 
     public static String getAuctionResponseBodySingleKey() throws JSONException {
         JSONObject json = new JSONObject();
