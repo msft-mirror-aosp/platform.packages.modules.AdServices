@@ -33,6 +33,8 @@ import static android.adservices.common.AdServicesStatusUtils.StatusCode;
 import static android.adservices.common.AdServicesStatusUtils.isSuccess;
 
 import static com.android.adservices.service.profiling.RbATraceProvider.FeatureNames.TOPICS_API;
+import static com.android.adservices.service.profiling.TracingNames.CLASS_NAME_TOPICS_SERVICE;
+import static com.android.adservices.service.profiling.TracingNames.METHOD_NAME_GET_TOPICS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API;
@@ -135,7 +137,13 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             @NonNull CallerMetadata callerMetadata,
             @NonNull IGetTopicsCallback callback) {
 
-        if (isThrottled(topicsParam, callback)) return;
+        if (isThrottled(topicsParam, callback)) {
+            return;
+        }
+
+        int traceCookie =
+                RbATraceProvider.beginAsyncSection(
+                        TOPICS_API, CLASS_NAME_TOPICS_SERVICE, METHOD_NAME_GET_TOPICS, mFlags);
 
         long startServiceTime = mClock.elapsedRealtime();
         String packageName = topicsParam.getAppPackageName();
@@ -155,7 +163,6 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                 () -> {
                     @StatusCode int resultCode = STATUS_UNSET;
                     try {
-                        RbATraceProvider.beginSection(TOPICS_API, "TopicsService", "getTopics");
                         if (mFlags.getTopicsDisableDirectAppCalls()) {
                             // Check if the request is valid.
                             if (!validateRequest(topicsParam, callback)) {
@@ -216,7 +223,12 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                         .setLatencyMillisecond(apiLatency)
                                         .setResultCode(resultCode)
                                         .build());
-                        RbATraceProvider.endSection();
+                        RbATraceProvider.endAsyncSection(
+                                TOPICS_API,
+                                CLASS_NAME_TOPICS_SERVICE,
+                                METHOD_NAME_GET_TOPICS,
+                                traceCookie,
+                                mFlags);
                     }
                 });
     }
