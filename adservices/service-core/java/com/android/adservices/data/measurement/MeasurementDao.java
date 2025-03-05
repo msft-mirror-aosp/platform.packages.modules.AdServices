@@ -3457,7 +3457,6 @@ class MeasurementDao implements IMeasurementDao {
                 isSource
                         ? MeasurementTables.AggregateReport.SOURCE_ID
                         : MeasurementTables.AggregateReport.TRIGGER_ID;
-        String comparisonSymbol = isDelete ? " < " : " >= ";
 
         String eventReportQuery =
                 getEventAggUninstallQuery(
@@ -3468,17 +3467,21 @@ class MeasurementDao implements IMeasurementDao {
                         aggReportSourceTriggerId,
                         MeasurementTables.AggregateReport.TABLE);
 
-        String whereStatement =
+        String ignoreWhereStatement =
                 String.format(
                         Locale.ENGLISH,
-                        " WHERE max_trigger_time" + " + %1$d %2$s %3$d",
+                        " WHERE (max_trigger_time IS NOT NULL) AND (max_trigger_time + %1$d >="
+                                + " %2$d)",
                         TimeUnit.SECONDS.toMillis(
                                 FlagsFactory.getFlags()
                                         .getMeasurementMinReportLifespanForUninstallSeconds()), // 1
-                        comparisonSymbol, // 2
-                        eventTime // 3
+                        eventTime // 2
                         );
 
+        String inClause = isDelete ? "NOT IN" : "IN";
+
+        // Selects ids either IN or NOT IN the id table containing ids to ignore. If isDelete is
+        // false, we select ids from the id table. Otherwise, we select from the complement.
         String query =
                 String.format(
                         Locale.ENGLISH,
@@ -3486,16 +3489,22 @@ class MeasurementDao implements IMeasurementDao {
                                 + eventReportQuery
                                 + " UNION "
                                 + aggReportQuery
-                                + ") SELECT id FROM ( SELECT id, MAX(event_agg_table.trigger_time)"
+                                + "), "
+                                + "ignore_id_table AS ("
+                                + "SELECT id FROM ( SELECT id, MAX(event_agg_table.trigger_time)"
                                 + " AS max_trigger_time FROM event_agg_table LEFT JOIN %1$s ON id ="
-                                + " %2$s WHERE "
-                                + registrantMatcher.apply(registrant)
+                                + " %2$s"
                                 + " GROUP BY id)"
-                                + whereStatement,
+                                + ignoreWhereStatement
+                                + ") "
+                                + "SELECT %2$s FROM %1$s WHERE %2$s "
+                                + inClause
+                                + " ignore_id_table"
+                                + " AND "
+                                + registrantMatcher.apply(registrant),
                         table, // 1
                         table + "." + id // 2
                         );
-
         return query;
     }
 

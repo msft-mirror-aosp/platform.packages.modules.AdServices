@@ -8549,6 +8549,71 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    public void fetchMatchingSourcesTriggersUninstall_noReportsDelete() throws Exception {
+        // Setup
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableMinReportLifespanForUninstall();
+        doReturn(TimeUnit.DAYS.toSeconds(1))
+                .when(mMockFlags)
+                .getMeasurementMinReportLifespanForUninstallSeconds();
+
+        long currentTime = System.currentTimeMillis();
+        long baseEventTime = currentTime - DAYS.toMillis(3);
+        long expiryTime = baseEventTime + DAYS.toMillis(30);
+
+        List<Source> sources =
+                Arrays.asList(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(1L))
+                                .setId("source1")
+                                .setEventTime(baseEventTime)
+                                .setExpiryTime(expiryTime)
+                                .build(),
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(1L))
+                                .setId("source2")
+                                .setEventTime(baseEventTime)
+                                .setExpiryTime(expiryTime)
+                                .build());
+
+        List<Trigger> triggers =
+                Arrays.asList(
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger1")
+                                .setTriggerTime(currentTime)
+                                .build(),
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger2")
+                                .setTriggerTime(currentTime - DAYS.toMillis(2))
+                                .build());
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance().getWritableDatabase();
+        sources.forEach(source -> insertSource(source, source.getId()));
+        triggers.forEach(trigger -> AbstractDbIntegrationTest.insertToDb(trigger, db));
+
+        // Execution
+        mDatastoreManager.runInTransaction(
+                dao -> {
+                    Pair<List<String>, List<String>> actualTriggers =
+                            dao.fetchMatchingTriggersUninstall(
+                                    TriggerFixture.ValidTriggerParams.REGISTRANT, currentTime);
+                    Pair<List<String>, List<String>> actualSources =
+                            dao.fetchMatchingSourcesUninstall(
+                                    SourceFixture.ValidSourceParams.REGISTRANT, currentTime);
+
+                    // All Sources are deleted
+                    Truth.assertThat(actualSources.first.size()).isEqualTo(2);
+                    Truth.assertThat(actualSources.second.size()).isEqualTo(0);
+
+                    // All Triggers are deleted
+                    Truth.assertThat(actualTriggers.first.size()).isEqualTo(2);
+                    Truth.assertThat(actualTriggers.second.size()).isEqualTo(0);
+                });
+    }
+
+    @Test
     public void deletePendingFakeEventReportsForSources_success() {
         // Setup
         long baseTime = SOURCE_EVENT_TIME;
