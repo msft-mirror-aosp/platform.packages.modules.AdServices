@@ -1347,6 +1347,20 @@ public interface Flags extends ModuleSharedFlags {
         return PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES;
     }
 
+    @FeatureFlag boolean PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION = false;
+
+    /** Returns {@code true} feature flag if Protected Signals `prioritized` eviction is enabled. */
+    default boolean getProtectedSignalsEnablePrioritizedEviction() {
+        return PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION;
+    }
+
+    @ConfigFlag int PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION = 0;
+
+    /** Returns the update schema version to request when downloading signal updates. */
+    default int getProtectedSignalsUpdateSchemaVersion() {
+        return PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION;
+    }
+
     @FeatureFlag boolean FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE = false;
 
     @ConfigFlag
