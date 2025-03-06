@@ -185,7 +185,11 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                 context,
                                 () ->
                                         FlagsFactory.getFlags()
-                                                .getForegroundStatuslLevelForValidation()),
+                                                .getForegroundStatuslLevelForValidation(),
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getEnableGetBindingUidImportance())),
                         FledgeAuthorizationFilter.create(
                                 context, AdServicesLoggerImpl.getInstance()),
                         new FledgeAllowListsFilter(

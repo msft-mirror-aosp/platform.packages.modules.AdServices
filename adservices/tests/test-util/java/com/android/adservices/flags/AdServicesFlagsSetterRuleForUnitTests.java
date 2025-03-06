@@ -18,6 +18,7 @@ package com.android.adservices.flags;
 
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_8;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_GET_BINDING_UID_IMPORTANCE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
@@ -126,6 +127,7 @@ public abstract class AdServicesFlagsSetterRuleForUnitTests<
         nameValueSetter.accept(KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED, "true");
         nameValueSetter.accept(KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED, "true");
         nameValueSetter.accept(KEY_PAS_EXTENDED_METRICS_ENABLED, "true");
+        nameValueSetter.accept(KEY_ENABLE_GET_BINDING_UID_IMPORTANCE, "true");
     }
 
     @Override
