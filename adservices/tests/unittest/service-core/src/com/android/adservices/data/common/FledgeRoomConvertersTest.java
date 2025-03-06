@@ -24,6 +24,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.service.signals.evict.EvictionPriority;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -260,5 +261,14 @@ public final class FledgeRoomConvertersTest extends AdServicesUnitTestCase {
         String serialized = FledgeRoomConverters.uriListToString(originalUris);
         List<Uri> deserialized = FledgeRoomConverters.stringToUriList(serialized);
         expect.that(deserialized).isEmpty();
+    }
+
+    @Test
+    public void testSerializeDeserializeEvictionPriority_roundTrip() {
+        EvictionPriority original = EvictionPriority.EVICT_SOONER;
+        int serialized = FledgeRoomConverters.serializeEvictionPriority(original);
+        EvictionPriority deserialized =
+                FledgeRoomConverters.deserializeEvictionPriority(serialized);
+        expect.that(deserialized).isEqualTo(original);
     }
 }
