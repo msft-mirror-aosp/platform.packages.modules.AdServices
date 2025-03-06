@@ -24,8 +24,8 @@ option java_multiple_files = true;
 
 // A wrapper proto around Configuration proto with version number.
 message VersionedConfiguration {
-// Version number will be used in storage to figure out the latest configuration in
-// the configurations list.
+  // Version number will be used in storage to figure out the latest
+  // configuration in the configurations list.
   uint64 version = 1;
 
   // Privacy Sandbox configuration.
