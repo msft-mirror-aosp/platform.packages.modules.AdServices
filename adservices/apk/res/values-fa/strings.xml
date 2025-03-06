@@ -68,7 +68,7 @@
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"تنظیمات حریم خصوصی"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"شما عضوی از نسخه بتا هستید"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"«جعبه امن حریم خصوصی» در دستگاهتان روشن است و برنامه‌ها می‌توانند این روش‌های خصوصی‌تر جدید را برای نمایش آگهی به شما آزمایش کنند. هرزمان خواستید می‌توانید نسخه بتا را در تنظیمات حریم خصوصی خاموش کنید."</string>
-    <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"متوجه‌ام"</string>
+    <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"متوجهم"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="510882738544330831">"«جعبه امن حریم خصوصی Android» ویژگی‌های جدیدی را ارائه می‌کند که برنامه‌ها می‌توانند بااستفاده از آن‌ها آگهی‌هایی به شما نشان دهند که شاید بپسندید. این فناوری‌ها از شناسه‌های دستگاه استفاده نمی‌کنند.\n\nAndroid و برنامه‌های شما می‌توانند انواع آگهی‌هایی را که ممکن است به آن‌ها علاقه داشته باشید ارزیابی کنند و این علایق را به‌طور موقت در دستگاهتان ذخیره کنند. این ویژگی به برنامه‌ها امکان می‌دهد بدون ردیابی فعالیت شما در وب‌سایت‌ها و برنامه‌های توسعه‌دهندگان دیگر، آگهی‌هایی را که ممکن است بپسندید به شما نشان دهند."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="4718413599985793343">"شخصی‌سازی آگهی با «جعبه امن حریم خصوصی»"</string>
     <string name="notificationUI_how_it_works_expanded_text3" msgid="1721682192376354439">"•  علایق ارزیابی‌شده توسط Android"</string>
@@ -549,7 +549,7 @@
     <string name="topic10278" msgid="1736187026108921963">"ایمیل و پیام‌رسانی"</string>
     <string name="topic10279" msgid="9034205050642228743">"ایمیل"</string>
     <string name="topic10280" msgid="3168053876492638177">"پیامک و پیام‌رسانی فوری"</string>
-    <string name="topic10281" msgid="582764575763317221">"گپ صوتی و ویدیویی"</string>
+    <string name="topic10281" msgid="582764575763317221">"گپ صوتی و تصویری"</string>
     <string name="topic10282" msgid="7165187778548433480">"پردازشگر سیگنال تصویر (ISP)"</string>
     <string name="topic10283" msgid="4990902662337451282">"رساننده خدمات تلفن"</string>
     <string name="topic10284" msgid="8298837964949288587">"آهنگ زنگ و زمینه تلفن همراه"</string>

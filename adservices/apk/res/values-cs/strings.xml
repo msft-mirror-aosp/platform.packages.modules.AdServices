@@ -28,8 +28,8 @@
     <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"Umožňuje aplikaci získat přístup k rozhraní AdServices Ad Selection API."</string>
     <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"přístup k AdServices Protected Signals API"</string>
     <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"Umožňuje aplikaci získat přístup k rozhraní AdServices Protected Signals API."</string>
-    <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"Přístup k Ad ID API"</string>
-    <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"Umožňuje aplikaci přístup k Ad ID API."</string>
+    <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"Přístup k AdID API"</string>
+    <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"Umožňuje aplikaci přístup k AdID API."</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"přístup k rozhraní AdServices Consent API"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="7750277247326139879">"Umožňuje aplikaci přístup k rozhraní AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="8185488502054653570">"Přístup k Ad ID API"</string>
