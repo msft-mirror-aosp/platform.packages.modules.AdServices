@@ -76,6 +76,13 @@ public final class AndroidExtendedMockitoMocker extends AbstractStaticMocker
     }
 
     @Override
+    public void mockIsAtLeastV(boolean isIt) {
+        logV("mockIsAtLeastV(%b)", isIt);
+        assertSpiedOrMocked(SdkLevel.class);
+        doReturn(isIt).when(SdkLevel::isAtLeastV);
+    }
+
+    @Override
     public void mockSdkLevelR() {
         logV("mockSdkLevelR()");
         assertSpiedOrMocked(SdkLevel.class);

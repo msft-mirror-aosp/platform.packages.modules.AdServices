@@ -46,6 +46,9 @@ public interface AndroidStaticMocker {
     /** Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}. */
     void mockIsAtLeastT(boolean isIt);
 
+    /** Mocks a call to {@link SdkLevel#isAtLeastV()}, returning {@code isIt}. */
+    void mockIsAtLeastV(boolean isIt);
+
     /** Mocks a call to SDK level to return R */
     void mockSdkLevelR();
 

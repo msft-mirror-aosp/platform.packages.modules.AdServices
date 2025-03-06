@@ -24,6 +24,7 @@ import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeast
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS2;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastU;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastV;
 import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -202,6 +203,10 @@ public abstract class AbstractSdkLevelSupportedRule implements TestRule {
                 ranges.add(Range.forAtLeast(Level.U.getLevel()));
                 reason = getReason(reason, ((RequiresSdkLevelAtLeastU) annotation).reason());
             }
+            if (annotation instanceof RequiresSdkLevelAtLeastV) {
+                ranges.add(Range.forAtLeast(Level.V.getLevel()));
+                reason = getReason(reason, ((RequiresSdkLevelAtLeastV) annotation).reason());
+            }
             if (annotation instanceof RequiresSdkRange) {
                 RequiresSdkRange range = (RequiresSdkRange) annotation;
                 ranges.add(Range.forRange(range.atLeast(), range.atMost()));
@@ -336,6 +341,11 @@ public abstract class AbstractSdkLevelSupportedRule implements TestRule {
     /** Gets whether the device supports at least Android {@code U}. */
     public final boolean isAtLeastU() {
         return getDeviceApiLevel().isAtLeast(Level.U);
+    }
+
+    /** Gets whether the device supports at least Android {@code V}. */
+    public final boolean isAtLeastV() {
+        return getDeviceApiLevel().isAtLeast(Level.V);
     }
 
     @Override

@@ -123,6 +123,11 @@ public abstract class SharedExtendedMockitoTestCase extends SharedUnitTestCase {
         }
 
         @Override
+        public void mockIsAtLeastV(boolean isIt) {
+            mAndroidMocker.mockIsAtLeastV(isIt);
+        }
+
+        @Override
         public void mockSdkLevelR() {
             mAndroidMocker.mockSdkLevelR();
         }
