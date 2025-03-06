@@ -24,5 +24,22 @@ final class NoOpRbATrace implements RbATrace {
     public void beginSection(String featureName, String className, String methodName) {}
 
     @Override
+    public int beginAsyncSection(String featureName, String metricName) {
+        return -1;
+    }
+
+    @Override
+    public int beginAsyncSection(String featureName, String className, String methodName) {
+        return -1;
+    }
+
+    @Override
     public void endSection() {}
+
+    @Override
+    public void endAsyncSection(String featureName, String metricName, int cookie) {}
+
+    @Override
+    public void endAsyncSection(
+            String featureName, String className, String methodName, int cookie) {}
 }
