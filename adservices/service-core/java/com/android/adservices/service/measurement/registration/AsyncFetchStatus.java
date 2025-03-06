@@ -56,6 +56,7 @@ public class AsyncFetchStatus {
     private boolean mIsEventLevelEpsilonConfigured;
     private boolean mIsTriggerAggregatableValueFiltersConfigured;
     private boolean mIsTriggerFilteringIdConfigured;
+    private boolean mIsTriggerContextIdConfigured;
 
     public AsyncFetchStatus() {
         mResponseStatus = ResponseStatus.UNKNOWN;
@@ -67,6 +68,7 @@ public class AsyncFetchStatus {
         mIsEventLevelEpsilonConfigured = false;
         mIsTriggerAggregatableValueFiltersConfigured = false;
         mIsTriggerFilteringIdConfigured = false;
+        mIsTriggerContextIdConfigured = false;
     }
 
     /** Get the status of a communication with an Ad Tech server. */
@@ -188,6 +190,16 @@ public class AsyncFetchStatus {
     /** Sets the aggregatable value filtering id configure status. */
     public void setIsTriggerFilteringIdConfigured(boolean isTriggerFilteringIdConfigured) {
         mIsTriggerFilteringIdConfigured = isTriggerFilteringIdConfigured;
+    }
+
+    /** Returns {@code true} if the trigger has a trigger context ID set. */
+    public boolean isTriggerContextIdConfigured() {
+        return mIsTriggerContextIdConfigured;
+    }
+
+    /** Sets the trigger context ID configure status. */
+    public void setIsTriggerContextIdConfigured(boolean isTriggerContextIdConfigured) {
+        mIsTriggerContextIdConfigured = isTriggerContextIdConfigured;
     }
 
     /** Returns true if request is successful. */
