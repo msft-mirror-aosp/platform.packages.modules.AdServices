@@ -33,6 +33,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.android.adservices.service.proto.PrivacySandboxApi;
 import com.android.adservices.service.proto.RbEnrollment;
 import com.android.adservices.service.proto.config_delivery.Configuration;
 import com.android.adservices.service.proto.config_delivery.ConfigurationRecord;
@@ -40,6 +41,7 @@ import com.android.adservices.service.proto.config_delivery.ConfigurationType;
 import com.android.adservices.service.proto.config_delivery.VersionedConfiguration;
 
 import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 @RunWith(AndroidJUnit4.class)
 public class ConfigurationDaoTest {
@@ -56,40 +58,82 @@ public class ConfigurationDaoTest {
     private static final long configurationEntity2_v2_row_id = 4;
 
     //  Rb enrollment version 1 test configuration data
-    private static final ConfigurationEntity configurationEntity1_v1 =
-            ConfigurationEntity.create(
-                    configurationEntity1_v1_row_id,
-                    ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(),
-                    VERSION_1,
-                    "id1",
-                    "config1".getBytes());
-    private static final ConfigurationEntity configurationEntity2_v1 =
-            ConfigurationEntity.create(
-                    configurationEntity2_v1_row_id,
-                    ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(),
-                    VERSION_1,
-                    "id2",
-                    "config2".getBytes());
+    private static final ConfigurationEntity configurationEntity1_v1;
+    private static final ConfigurationEntity configurationEntity2_v1;
+
+    static {
+        try {
+            configurationEntity1_v1 =
+                    ConfigurationEntity.create(
+                            configurationEntity1_v1_row_id,
+                            ConfigurationType.TYPE_RB_ENROLLMENT,
+                            VERSION_1,
+                            "id1",
+                            Any.parseFrom(
+                                    RbEnrollment.newBuilder()
+                                            .addEnrolledApis(
+                                                    PrivacySandboxApi.PRIVACY_SANDBOX_API_TOPICS)
+                                            .build()
+                                            .toByteArray()));
+            configurationEntity2_v1 =
+                    ConfigurationEntity.create(
+                            configurationEntity2_v1_row_id,
+                            ConfigurationType.TYPE_RB_ENROLLMENT,
+                            VERSION_1,
+                            "id2",
+                            Any.parseFrom(
+                                    RbEnrollment.newBuilder()
+                                            .addEnrolledApis(
+                                                    PrivacySandboxApi
+                                                            .PRIVACY_SANDBOX_API_SHARED_STORAGE)
+                                            .build()
+                                            .toByteArray()));
+        } catch (InvalidProtocolBufferException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private static final LabelEntity labelEntity1_v1 =
             LabelEntity.create(configurationEntity1_v1_row_id, "label1");
     private static final LabelEntity labelEntity2_v1 =
             LabelEntity.create(configurationEntity2_v1_row_id, "label2");
 
     //  Rb enrollment version 2 test configuration data
-    private static final ConfigurationEntity configurationEntity1_v2 =
-            ConfigurationEntity.create(
-                    configurationEntity1_v2_row_id,
-                    ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(),
-                    VERSION_2,
-                    "id1",
-                    "v2_config1".getBytes());
-    private static final ConfigurationEntity configurationEntity2_v2 =
-            ConfigurationEntity.create(
-                    configurationEntity2_v2_row_id,
-                    ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(),
-                    VERSION_2,
-                    "id2",
-                    "v2_config2".getBytes());
+    private static final ConfigurationEntity configurationEntity1_v2;
+    private static final ConfigurationEntity configurationEntity2_v2;
+
+    static {
+        try {
+            configurationEntity1_v2 =
+                    ConfigurationEntity.create(
+                            configurationEntity1_v2_row_id,
+                            ConfigurationType.TYPE_RB_ENROLLMENT,
+                            VERSION_2,
+                            "id1",
+                            Any.parseFrom(
+                                    RbEnrollment.newBuilder()
+                                            .addEnrolledApis(
+                                                    PrivacySandboxApi
+                                                            .PRIVACY_SANDBOX_API_SHARED_STORAGE)
+                                            .build()
+                                            .toByteArray()));
+            configurationEntity2_v2 =
+                    ConfigurationEntity.create(
+                            configurationEntity2_v2_row_id,
+                            ConfigurationType.TYPE_RB_ENROLLMENT,
+                            VERSION_2,
+                            "id2",
+                            Any.parseFrom(
+                                    RbEnrollment.newBuilder()
+                                            .addEnrolledApis(
+                                                    PrivacySandboxApi.PRIVACY_SANDBOX_API_TOPICS)
+                                            .build()
+                                            .toByteArray()));
+        } catch (InvalidProtocolBufferException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private static final LabelEntity labelEntity1_v2 =
             LabelEntity.create(configurationEntity1_v2_row_id, "label1");
     private static final LabelEntity labelEntity2_v2 =
@@ -128,6 +172,25 @@ public class ConfigurationDaoTest {
     }
 
     @Test
+    public void testGetLatestVersion_returnsNullWhenConfigurationIsEmpty() {
+        Long latestVersion =
+                configurationDao.getLatestVersion(ConfigurationType.TYPE_RB_ENROLLMENT);
+
+        assertThat(latestVersion).isNull();
+    }
+
+    @Test
+    public void testGetLatestVersion_returnsLatestVersion() {
+        configurationDao.insertConfigurationEntities(
+                Arrays.asList(configurationEntity1_v1, configurationEntity1_v2));
+
+        Long latestVersion =
+                configurationDao.getLatestVersion(ConfigurationType.TYPE_RB_ENROLLMENT);
+
+        assertThat(latestVersion).isEqualTo(configurationEntity1_v2.getVersion());
+    }
+
+    @Test
     public void testGetAllVersions_shouldReturnAllVersionsOrderedDescending() {
         configurationDao.insertConfigurationEntities(
                 Arrays.asList(
@@ -135,15 +198,15 @@ public class ConfigurationDaoTest {
                         configurationEntity2_v1,
                         ConfigurationEntity.create(
                                 configurationEntity2_v1_row_id,
-                                ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(),
+                                ConfigurationType.TYPE_RB_ENROLLMENT,
                                 VERSION_3,
                                 "id1",
-                                "config1".getBytes()),
+                                null),
                         configurationEntity1_v2,
                         configurationEntity2_v2));
 
         List<Long> allVersionsReturned =
-                configurationDao.getAllVersions(ConfigurationType.TYPE_RB_ENROLLMENT.getNumber());
+                configurationDao.getAllVersions(ConfigurationType.TYPE_RB_ENROLLMENT);
 
         List<Long> expectedVersions = Arrays.asList(3L, 2L, 1L);
         assertThat(allVersionsReturned).containsExactlyElementsIn(expectedVersions).inOrder();
@@ -152,16 +215,16 @@ public class ConfigurationDaoTest {
     @Test
     public void testGetAllVersions_shouldReturnEmptyListWhenNoVersions() {
         List<Long> allVersions =
-                configurationDao.getAllVersions(ConfigurationType.TYPE_RB_ENROLLMENT.getNumber());
+                configurationDao.getAllVersions(ConfigurationType.TYPE_RB_ENROLLMENT);
 
         assertThat(allVersions).isEmpty();
     }
 
     @Test
-    public void testInsertConfigurations() throws Exception {
-        RbEnrollment rbEnrollmentConfig1 =
+    public void testInsertConfigurationsWithValue() throws InvalidProtocolBufferException {
+        RbEnrollment rbEnrollmentConfig =
                 RbEnrollment.newBuilder().addSdkNames("com.sample.com").build();
-        Any any = Any.parseFrom(rbEnrollmentConfig1.toByteString());
+        Any any = Any.parseFrom(rbEnrollmentConfig.toByteArray());
         VersionedConfiguration versionedConfiguration =
                 VersionedConfiguration.newBuilder()
                         .setVersion(VERSION_1)
@@ -181,15 +244,47 @@ public class ConfigurationDaoTest {
 
         List<ConfigurationEntity> returnedList =
                 configurationDao.getConfigurationEntities(
-                        ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(), VERSION_1);
+                        ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_1);
 
         assertThat(returnedList).hasSize(1);
         assertThat(returnedList.get(0).getConfigRowId()).isEqualTo(1);
-        assertThat(returnedList.get(0).getType()).isEqualTo(1);
+        assertThat(returnedList.get(0).getType()).isEqualTo(ConfigurationType.TYPE_RB_ENROLLMENT);
         assertThat(returnedList.get(0).getVersion()).isEqualTo(1);
         assertThat(returnedList.get(0).getId()).isEqualTo("id1");
-        assertThat(RbEnrollment.parseFrom(returnedList.get(0).getValue()).toString())
-                .isEqualTo(rbEnrollmentConfig1.toString());
+        assertThat(
+                        RbEnrollment.parseFrom(returnedList.get(0).getValue().toByteArray())
+                                .getSdkNames(0))
+                .isEqualTo("com.sample.com");
+    }
+
+    @Test
+    public void testInsertConfigurationsWithoutValue() {
+        VersionedConfiguration versionedConfiguration =
+                VersionedConfiguration.newBuilder()
+                        .setVersion(VERSION_1)
+                        .setConfiguration(
+                                Configuration.newBuilder()
+                                        .setConfigurationType(ConfigurationType.TYPE_RB_ENROLLMENT)
+                                        .addConfigurationRecords(
+                                                ConfigurationRecord.newBuilder()
+                                                        .setId("id1")
+                                                        .addLabels("label1")
+                                                        .addLabels("label2")
+                                                        .build())
+                                        .build())
+                        .build();
+        configurationDao.insertConfigurations(versionedConfiguration);
+
+        List<ConfigurationEntity> returnedList =
+                configurationDao.getConfigurationEntities(
+                        ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_1);
+
+        assertThat(returnedList).hasSize(1);
+        assertThat(returnedList.get(0).getConfigRowId()).isEqualTo(1);
+        assertThat(returnedList.get(0).getType()).isEqualTo(ConfigurationType.TYPE_RB_ENROLLMENT);
+        assertThat(returnedList.get(0).getVersion()).isEqualTo(1);
+        assertThat(returnedList.get(0).getId()).isEqualTo("id1");
+        assertThat(returnedList.get(0).getValue()).isNull();
     }
 
     @Test
@@ -199,27 +294,32 @@ public class ConfigurationDaoTest {
 
         List<ConfigurationEntity> returnedList =
                 configurationDao.getConfigurationEntities(
-                        ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(), VERSION_1);
+                        ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_1);
 
         assertThat(returnedList).isEmpty();
     }
 
     @Test
-    public void testInsertAndReadConfigurationEntity_conflictReplace() {
+    public void testInsertAndReadConfigurationEntity_conflictReplace()
+            throws InvalidProtocolBufferException {
         configurationDao.insertConfigurationEntities(
                 Collections.singletonList(configurationEntity1_v1));
         ConfigurationEntity updatedEntity =
                 ConfigurationEntity.create(
                         configurationEntity1_v1_row_id,
-                        ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(),
+                        ConfigurationType.TYPE_RB_ENROLLMENT,
                         VERSION_1,
                         "id1",
-                        "config1_updated".getBytes());
+                        Any.parseFrom(
+                                RbEnrollment.newBuilder()
+                                        .addSdkNames("com.example.com")
+                                        .build()
+                                        .toByteArray()));
         configurationDao.insertConfigurationEntities(Collections.singletonList(updatedEntity));
 
         List<ConfigurationEntity> returnedList =
                 configurationDao.getConfigurationEntities(
-                        ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(), VERSION_1);
+                        ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_1);
 
         assertThat(returnedList).containsExactly(updatedEntity);
     }
@@ -231,7 +331,7 @@ public class ConfigurationDaoTest {
 
         List<ConfigurationEntity> returnedList =
                 configurationDao.getConfigurationEntities(
-                        ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(), VERSION_1);
+                        ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_1);
 
         assertThat(returnedList).containsExactly(configurationEntity1_v1, configurationEntity2_v1);
     }
@@ -248,7 +348,7 @@ public class ConfigurationDaoTest {
         Set<String> labels = Set.of("label1", "label2");
         List<ConfigurationEntity> configurationEntities =
                 configurationDao.getConfigurationEntitiesByAnyLabel(
-                        ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(), VERSION_1, labels);
+                        ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_1, labels);
 
         assertThat(configurationEntities)
                 .containsExactly(configurationEntity1_v1, configurationEntity2_v1);
@@ -262,8 +362,7 @@ public class ConfigurationDaoTest {
         configurationDao.insertLabelEntities(Collections.singletonList(labelEntity1_v1));
         long configRowId =
                 configurationDao
-                        .getConfigurationEntities(
-                                ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(), VERSION_1)
+                        .getConfigurationEntities(ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_1)
                         .get(0)
                         .getConfigRowId();
 
@@ -282,7 +381,7 @@ public class ConfigurationDaoTest {
 
         long count =
                 configurationDao.getConfigurationEntitiesCount(
-                        ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(), VERSION_1);
+                        ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_1);
 
         assertThat(count).isEqualTo(2);
     }
@@ -293,11 +392,10 @@ public class ConfigurationDaoTest {
                 Arrays.asList(configurationEntity1_v1, configurationEntity2_v1));
 
         configurationDao.deleteConfigurationEntities(
-                ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(),
-                Collections.singletonList(VERSION_1));
+                ConfigurationType.TYPE_RB_ENROLLMENT, Collections.singletonList(VERSION_1));
         List<ConfigurationEntity> returnedList =
                 configurationDao.getConfigurationEntities(
-                        ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(), VERSION_1);
+                        ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_1);
 
         assertThat(returnedList).isEmpty();
     }
@@ -310,15 +408,13 @@ public class ConfigurationDaoTest {
         configurationDao.insertLabelEntities(Collections.singletonList(labelEntity1_v1));
         long configRowId =
                 configurationDao
-                        .getConfigurationEntities(
-                                ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(), VERSION_1)
+                        .getConfigurationEntities(ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_1)
                         .get(0)
                         .getConfigRowId();
 
         // Delete configuration entities
         configurationDao.deleteConfigurationEntities(
-                ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(),
-                Collections.singletonList(VERSION_1));
+                ConfigurationType.TYPE_RB_ENROLLMENT, Collections.singletonList(VERSION_1));
 
         // To verify that no configuration entities exist
         List<LabelEntity> labelEntities =
@@ -337,7 +433,7 @@ public class ConfigurationDaoTest {
 
         ConfigurationEntity returnedEntity =
                 configurationDao.getConfigurationEntityById(
-                        ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(), VERSION_2, "id2");
+                        ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_2, "id2");
 
         assertThat(returnedEntity).isEqualTo(configurationEntity2_v2);
     }
@@ -361,7 +457,7 @@ public class ConfigurationDaoTest {
 
         List<ConfigurationEntity> returnedList =
                 configurationDao.getConfigurationEntitiesByAnyLabel(
-                        ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(),
+                        ConfigurationType.TYPE_RB_ENROLLMENT,
                         VERSION_2,
                         Set.of("label1", "label3"));
 
@@ -390,10 +486,7 @@ public class ConfigurationDaoTest {
         Set<String> labels = Set.of("label1", "label3");
         List<ConfigurationEntity> returnedList =
                 configurationDao.getConfigurationEntitiesByAllLabels(
-                        ConfigurationType.TYPE_RB_ENROLLMENT.getNumber(),
-                        VERSION_2,
-                        labels,
-                        labels.size());
+                        ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_2, labels, labels.size());
 
         // Verify matching configuration entities with returned are from latest version
         assertThat(returnedList).containsExactly(configurationEntity1_v2);
