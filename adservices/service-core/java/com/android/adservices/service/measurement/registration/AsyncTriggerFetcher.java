@@ -702,6 +702,7 @@ public class AsyncTriggerFetcher {
                 return false;
             }
 
+            asyncFetchStatus.setIsTriggerContextIdConfigured(true);
             builder.setTriggerContextId(contextIdOpt.get());
         }
 

@@ -73,5 +73,8 @@ public class DBProtectedSignalFixture {
         assertWithMessage("Package name")
                 .that(actual.getPackageName())
                 .isEqualTo(expected.getPackageName());
+        assertWithMessage("Eviction priority")
+                .that(actual.getEvictionPriority())
+                .isEqualTo(expected.getEvictionPriority());
     }
 }

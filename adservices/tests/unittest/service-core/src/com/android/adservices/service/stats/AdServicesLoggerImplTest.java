@@ -374,7 +374,8 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                                 /* num entities deleted */ 5,
                                 /* isEventLevelEpsilonEnabled= */ false,
                                 /* isTriggerAggregatableValueFiltersConfigured= */ false,
-                                /* isTriggerFilteringIdConfigured= */ false)
+                                /* isTriggerFilteringIdConfigured= */ false,
+                                /* isTriggerContextIdConfigured= */ false)
                         .setAdTechDomain(null)
                         .build();
         mAdservicesLogger.logMeasurementRegistrationsResponseSize(stats, TEST_ENROLLMENT_ID);
@@ -401,6 +402,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         expect.that(loggedStats.isEventLevelEpsilonEnabled()).isFalse();
         expect.that(loggedStats.isTriggerAggregatableValueFiltersConfigured()).isFalse();
         expect.that(loggedStats.isTriggerFilteringIdConfigured()).isFalse();
+        expect.that(loggedStats.isTriggerContextIdConfigured()).isFalse();
         callback.assertCalled();
     }
 
