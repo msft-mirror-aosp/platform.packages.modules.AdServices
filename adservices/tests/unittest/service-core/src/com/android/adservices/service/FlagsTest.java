@@ -46,6 +46,7 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
+import static com.android.adservices.service.Flags.ENABLE_GET_BINDING_UID_IMPORTANCE;
 import static com.android.adservices.service.Flags.ENABLE_PAS_COMPONENT_ADS;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE;
@@ -1431,6 +1432,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getEnforceForegroundStatusForScheduleCustomAudience",
                 ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE,
                 Flags::getEnforceForegroundStatusForScheduleCustomAudience);
+    }
+
+    @Test
+    public void testGetEnableGetBindingUidImportance() {
+        testFlag(
+                "getEnableGetBindingUidImportance",
+                ENABLE_GET_BINDING_UID_IMPORTANCE,
+                Flags::getEnableGetBindingUidImportance);
     }
 
     @Test

@@ -3050,6 +3050,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableGetBindingUidImportance() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENABLE_GET_BINDING_UID_IMPORTANCE,
+                ENABLE_GET_BINDING_UID_IMPORTANCE);
+    }
+
+    @Override
     public boolean getEnablePasComponentAds() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ENABLE_PAS_COMPONENT_ADS, ENABLE_PAS_COMPONENT_ADS);

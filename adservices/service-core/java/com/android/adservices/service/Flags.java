@@ -3365,6 +3365,12 @@ public interface Flags extends ModuleSharedFlags {
     @ConfigFlag boolean ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE = true;
     boolean ENFORCE_FOREGROUND_STATUS_TOPICS = true;
     boolean ENFORCE_FOREGROUND_STATUS_SIGNALS = true;
+    @FeatureFlag boolean ENABLE_GET_BINDING_UID_IMPORTANCE = false;
+
+    /** Returns if the feature to use {@code ActivityManager.getBindingUidImportance} is enabled. */
+    default boolean getEnableGetBindingUidImportance() {
+        return ENABLE_GET_BINDING_UID_IMPORTANCE;
+    }
 
     /**
      * Returns true if FLEDGE runAdSelection API should require that the caller is running in

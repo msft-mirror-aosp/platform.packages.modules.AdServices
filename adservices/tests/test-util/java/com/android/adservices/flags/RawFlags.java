@@ -3701,4 +3701,10 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
                 KEY_MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE,
                 MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE);
     }
+
+    @Override
+    public boolean getEnableGetBindingUidImportance() {
+        return mBackend.getFlag(
+                KEY_ENABLE_GET_BINDING_UID_IMPORTANCE, ENABLE_GET_BINDING_UID_IMPORTANCE);
+    }
 }

@@ -1799,5 +1799,8 @@ public final class FlagsConstants {
     /** Key debug join keys sample rate. */
     public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE =
             "Measurement__debug_join_keys_sample_rate";
+
+    public static final String KEY_ENABLE_GET_BINDING_UID_IMPORTANCE =
+            "CommonInfra__enable_get_binding_uid_importance";
 }
 
