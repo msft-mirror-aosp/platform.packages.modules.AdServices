@@ -25,6 +25,7 @@ import android.util.ArrayMap;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.server.sdksandbox.helpers.PackageManagerHelper;
+import com.android.server.sdksandbox.verifier.SdkDexVerifier;
 
 import java.io.PrintWriter;
 import java.util.List;
@@ -42,6 +43,8 @@ class SdkSandboxRestrictionManager {
 
     private final Object mLock = new Object();
     private final Injector mInjector;
+    // TODO(b/231441674) check cache of verification results
+    private final SdkDexVerifier mSdkDexVerifier;
 
     // The key will be the client app's UID
     @GuardedBy("mLock")
@@ -53,13 +56,16 @@ class SdkSandboxRestrictionManager {
 
     SdkSandboxRestrictionManager(Injector injector) {
         mInjector = injector;
+        mSdkDexVerifier = mInjector.getSdkDexVerifier();
     }
 
     static class Injector {
         private final Context mContext;
+        private final SdkDexVerifier mSdkDexVerifier;
 
         Injector(Context context) {
             mContext = context;
+            mSdkDexVerifier = SdkDexVerifier.getInstance();
         }
 
         PackageManagerHelper getPackageManagerHelper(int callingUid) {
@@ -69,6 +75,15 @@ class SdkSandboxRestrictionManager {
         int getCurrentSdkLevel() {
             return Build.VERSION.SDK_INT;
         }
+
+        SdkDexVerifier getSdkDexVerifier() {
+            return mSdkDexVerifier;
+        }
+    }
+
+    public void setSdkSandboxSettingsListener(
+            SdkSandboxSettingsListener sdkSandboxSettingsListener) {
+        mSdkDexVerifier.setSdkSandboxSettingsListener(sdkSandboxSettingsListener);
     }
 
     /** Cache and get the effectiveTargetSdkVersion for the sdk sandbox process */

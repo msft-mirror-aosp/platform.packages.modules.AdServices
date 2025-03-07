@@ -28,6 +28,7 @@ import android.util.Log;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.server.sdksandbox.SdkSandboxSettingsListener;
 import com.android.server.sdksandbox.proto.Verifier.AllowedApi;
 import com.android.server.sdksandbox.proto.Verifier.AllowedApisList;
 import com.android.server.sdksandbox.verifier.SerialDexLoader.DexSymbols;
@@ -72,6 +73,7 @@ public class SdkDexVerifier {
     private static SdkDexVerifier sSdkDexVerifier;
     private ApiAllowlistProvider mApiAllowlistProvider;
     private SerialDexLoader mDexLoader;
+    private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
 
     // Maps targetSdkVersion to its allowlist
     @GuardedBy("mPlatformApiAllowlistsLock")
@@ -98,6 +100,24 @@ public class SdkDexVerifier {
     SdkDexVerifier(Injector injector) {
         mApiAllowlistProvider = injector.getApiAllowlistProvider();
         mDexLoader = injector.getDexLoader();
+    }
+
+    /**
+     * Sets a {@link SdkSandboxSettingsListener} to check for flags gating verification. If the
+     * settingsListener is null, verification will be disabled
+     */
+    public void setSdkSandboxSettingsListener(SdkSandboxSettingsListener settingsListener) {
+        mSdkSandboxSettingsListener = settingsListener;
+    }
+
+    /**
+     * Checks relevant DeviceConfig flags and returns true if SDK DEX files verification is enabled.
+     */
+    public boolean dexVerificationEnabled() {
+        return mSdkSandboxSettingsListener != null
+                ? mSdkSandboxSettingsListener.areRestrictionsEnforced()
+                        && mSdkSandboxSettingsListener.verifyDexFiles()
+                : false;
     }
 
     /**
