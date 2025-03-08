@@ -26,6 +26,7 @@ import com.android.adservices.shared.meta_testing.SimpleStatement;
 
 import com.google.common.collect.ImmutableList;
 
+import org.junit.AssumptionViolatedException;
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -44,6 +45,8 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     private final Exception mException1 = new Exception("D'OH!");
     private final Exception mException2 = new IOException("Hi-Yo, Silver!");
     private final RuntimeException mTestException = new RuntimeException("TEST, Y U NO PASS?");
+    private final RuntimeException mAssumptionFailure =
+            new AssumptionViolatedException("Assumption failed. Skip Test");
 
     // Counters used in the fake actions
     private final AtomicInteger mExecutionOrder = new AtomicInteger();
@@ -377,6 +380,32 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     }
 
     @Test
+    public void testWorkflow_allActionsExecuted_testFailedAssumption() {
+        setTestToFailAssumption();
+        mRule.addAction(mFakeAction1).addAction(mFakeAction2);
+
+        // The rule should simply rethrow the exception if a test fails an assumption (i.e.
+        // skipped), so that it is not considered a test failure.
+        assertThrows(AssumptionViolatedException.class, () -> runRule());
+
+        mTest.assertEvaluated();
+
+        // Actions should be reverted.
+        expect.withMessage("execution order of action1")
+                .that(mFakeAction1.getExecutionOrder())
+                .isEqualTo(1);
+        expect.withMessage("execution order of action2")
+                .that(mFakeAction2.getExecutionOrder())
+                .isEqualTo(2);
+        expect.withMessage("reversion order of action1")
+                .that(mFakeAction1.getReversionOrder())
+                .isEqualTo(2);
+        expect.withMessage("reversion order of action2")
+                .that(mFakeAction2.getReversionOrder())
+                .isEqualTo(1);
+    }
+
+    @Test
     public void testWorkflow_actionSkipped_testFailed() throws Throwable {
         setTestToFail();
         mFakeAction1.onExecuteReturn(false);
@@ -464,6 +493,13 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
         mTest.onEvaluate(
                 () -> {
                     throw mTestException;
+                });
+    }
+
+    private void setTestToFailAssumption() {
+        mTest.onEvaluate(
+                () -> {
+                    throw mAssumptionFailure;
                 });
     }
 
