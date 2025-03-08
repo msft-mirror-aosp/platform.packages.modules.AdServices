@@ -237,7 +237,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getNumDeletedEntities(),
                 stats.isEventLevelEpsilonEnabled(),
                 stats.isTriggerAggregatableValueFiltersConfigured(),
-                stats.isTriggerFilteringIdConfigured());
+                stats.isTriggerFilteringIdConfigured(),
+                stats.isTriggerContextIdConfigured());
     }
 
     @Override

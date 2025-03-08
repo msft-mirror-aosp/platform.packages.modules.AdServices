@@ -16,10 +16,14 @@
 
 package com.android.adservices.download;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.MOBILE_DATA_DOWNLOAD_LATENCY_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.MOBILE_DATA_DOWNLOAD_DOWNLOAD_RESULT_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.MOBILE_DATA_DOWNLOAD_FILE_GROUP_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.MOBILE_DATA_DOWNLOAD_FILE_GROUP_STORAGE_STATS_REPORTED;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
 
 import static com.google.mobiledatadownload.LogEnumsProto.MddDownloadResult.Code.SUCCESS;
 import static com.google.mobiledatadownload.LogEnumsProto.MddDownloadResult.Code.SUCCESS_VALUE;
@@ -35,7 +39,6 @@ import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.mobiledatadownload.LogProto.DataDownloadFileGroupStats;
@@ -57,6 +60,7 @@ public final class MddLoggerTest extends AdServicesExtendedMockitoTestCase {
     private static final int DATA_DOWNLOAD_FILE_GROUP_STATUS = 1044;
     private static final int DATA_DOWNLOAD_RESULT_LOG = 1068;
     private static final int DATA_DOWNLOAD_STORAGE_STATS = 1055;
+    private static final int DATA_DOWNLOAD_LATENCY_LOG = 1080;
     private static final long SAMPLE_INTERVAL = 1;
     private static final long TEST_TIMESTAMP = 1L;
     private static final int TEST_DAYS = 3;
@@ -75,13 +79,13 @@ public final class MddLoggerTest extends AdServicesExtendedMockitoTestCase {
     public void mddLoggerTest_unspecified() {
         mMddLogger.log(mMockLog, EVENT_CODE_UNSPECIFIED);
         // Unspecified event does not trigger MDD logging.
-        ExtendedMockito.verifyZeroInteractions(staticMockMarker(AdServicesStatsLog.class));
+        verifyZeroInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 
     @Test
     public void mddLoggerTest_logFileGroupStatusComplete() {
         // This test will not log any test data.
-        ExtendedMockito.doNothing()
+        doNothing()
                 .when(
                         () ->
                                 AdServicesStatsLog.write(
@@ -109,7 +113,7 @@ public final class MddLoggerTest extends AdServicesExtendedMockitoTestCase {
         mMddLogger.log(mMessageLite, DATA_DOWNLOAD_FILE_GROUP_STATUS);
 
         // Verify AdServicesStatsLog code and mocked value.
-        ExtendedMockito.verify(
+        verify(
                 () ->
                         AdServicesStatsLog.write(
                                 eq(MOBILE_DATA_DOWNLOAD_FILE_GROUP_STATUS_REPORTED),
@@ -125,8 +129,7 @@ public final class MddLoggerTest extends AdServicesExtendedMockitoTestCase {
     @Test
     public void mddLoggerTest_logDownloadResultSuccess() {
         // This test will not log any test data.
-        ExtendedMockito.doNothing()
-                .when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), any(byte[].class)));
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), any(byte[].class)));
 
         // Create a MessageLite using mock or default value.
         mMessageLite =
@@ -143,7 +146,7 @@ public final class MddLoggerTest extends AdServicesExtendedMockitoTestCase {
         mMddLogger.log(mMessageLite, DATA_DOWNLOAD_RESULT_LOG);
 
         // Verify AdServicesStatsLog code and mocked value.
-        ExtendedMockito.verify(
+        verify(
                 () ->
                         AdServicesStatsLog.write(
                                 eq(MOBILE_DATA_DOWNLOAD_DOWNLOAD_RESULT_REPORTED),
@@ -156,7 +159,7 @@ public final class MddLoggerTest extends AdServicesExtendedMockitoTestCase {
     @Test
     public void mddLoggerTest_logStorageStats() {
         // This test will not log any test data.
-        ExtendedMockito.doNothing()
+        doNothing()
                 .when(
                         () ->
                                 AdServicesStatsLog.write(
@@ -175,13 +178,44 @@ public final class MddLoggerTest extends AdServicesExtendedMockitoTestCase {
         mMddLogger.log(mMessageLite, DATA_DOWNLOAD_STORAGE_STATS);
 
         // Verify AdServicesStatsLog code and mocked value.
-        ExtendedMockito.verify(
+        verify(
                 () ->
                         AdServicesStatsLog.write(
                                 eq(MOBILE_DATA_DOWNLOAD_FILE_GROUP_STORAGE_STATS_REPORTED),
                                 /* storage status */ any(byte[].class),
                                 /* total mdd bytes used */ eq(TEST_BYTE_USED),
                                 /* total directory bytes used */ eq(TEST_BYTE_USED)));
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void mddLoggerTest_logDownloadLatency() {
+        // This test will not log any test data.
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(), any(byte[].class), anyLong(), anyLong()));
+
+        // Create a MessageLite using mock or default value.
+        mMessageLite =
+                MddLogData.newBuilder()
+                        .setSamplingInterval(SAMPLE_INTERVAL)
+                        .setDataDownloadFileGroupStats(mSpyDataDownloadFileGroupStats)
+                        .build();
+
+        mMddLogger.log(mMessageLite, DATA_DOWNLOAD_LATENCY_LOG);
+
+        // Verify AdServicesStatsLog code and mocked value.
+        verify(
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(MOBILE_DATA_DOWNLOAD_LATENCY_REPORTED),
+                                /* download_attempt_count= */ anyInt(),
+                                /* download_latency_ms= */ anyLong(),
+                                /* total_latency_ms= */ anyLong(),
+                                /* file_group_stats */ any(byte[].class)));
 
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }

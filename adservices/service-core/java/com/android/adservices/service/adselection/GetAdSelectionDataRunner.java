@@ -161,6 +161,7 @@ public class GetAdSelectionDataRunner {
     private final BuyerInputGeneratorArgumentsPreparer mBuyerInputGeneratorArgumentsPreparer;
     private final AuctionServerDebugConfigurationGenerator
             mAuctionServerDebugConfigurationGenerator;
+    private final CoordinatorOriginUriValidator mCoordinatorOriginUriValidator;
 
     public GetAdSelectionDataRunner(
             int e2eTraceCookie,
@@ -184,7 +185,8 @@ public class GetAdSelectionDataRunner {
             @NonNull final AppInstallAdFilterer appInstallAdFilterer,
             @NonNull
                     final AuctionServerDebugConfigurationGenerator
-                            auctionServerDebugConfigurationGenerator) {
+                            auctionServerDebugConfigurationGenerator,
+            @NonNull final CoordinatorOriginUriValidator coordinatorOriginUriValidator) {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
@@ -201,6 +203,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(auctionServerPayloadMetricsStrategy);
         Objects.requireNonNull(appInstallAdFilterer);
         Objects.requireNonNull(auctionServerDebugConfigurationGenerator);
+        Objects.requireNonNull(coordinatorOriginUriValidator);
 
         mE2ETraceCookie = e2eTraceCookie;
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
@@ -263,6 +266,7 @@ public class GetAdSelectionDataRunner {
         mAdsRelevanceExecutionLogger = adsRelevanceExecutionLogger;
         mAdServicesLogger = adServicesLogger;
         mAuctionServerDebugConfigurationGenerator = auctionServerDebugConfigurationGenerator;
+        mCoordinatorOriginUriValidator = coordinatorOriginUriValidator;
     }
 
     @VisibleForTesting
@@ -289,7 +293,8 @@ public class GetAdSelectionDataRunner {
             @NonNull final AppInstallAdFilterer appInstallAdFilterer,
             @NonNull
                     final AuctionServerDebugConfigurationGenerator
-                            auctionServerDebugConfigurationGenerator) {
+                            auctionServerDebugConfigurationGenerator,
+            @NonNull final CoordinatorOriginUriValidator coordinatorOriginUriValidator) {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
@@ -307,6 +312,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(auctionServerPayloadMetricsStrategy);
         Objects.requireNonNull(appInstallAdFilterer);
         Objects.requireNonNull(auctionServerDebugConfigurationGenerator);
+        Objects.requireNonNull(coordinatorOriginUriValidator);
 
         mE2ETraceCookie = e2ETraceCookie;
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
@@ -368,6 +374,7 @@ public class GetAdSelectionDataRunner {
         mAdsRelevanceExecutionLogger = adsRelevanceExecutionLogger;
         mAdServicesLogger = adServicesLogger;
         mAuctionServerDebugConfigurationGenerator = auctionServerDebugConfigurationGenerator;
+        mCoordinatorOriginUriValidator = coordinatorOriginUriValidator;
     }
 
     /** Orchestrates GetAdSelectionData process. */
@@ -415,11 +422,9 @@ public class GetAdSelectionDataRunner {
                                             Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA,
                                             mDevContext);
 
-                                    String allowlist =
-                                            mFlags.getFledgeAuctionServerCoordinatorUrlAllowlist();
                                     // Validate the coordinator origin URI
-                                    CoordinatorOriginUriValidator.createEnabledInstance(allowlist)
-                                            .validate(inputParams.getCoordinatorOriginUri());
+                                    mCoordinatorOriginUriValidator.validate(
+                                            inputParams.getCoordinatorOriginUri());
                                 } finally {
                                     sLogger.v("Completed filtering.");
                                 }

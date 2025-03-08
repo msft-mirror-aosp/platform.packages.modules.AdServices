@@ -18,15 +18,17 @@ package com.android.adservices.data.configdelivery;
 
 import androidx.room.Database;
 import androidx.room.RoomDatabase;
+import androidx.room.TypeConverters;
 
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 
-import com.google.errorprone.annotations.concurrent.GuardedBy;
+import com.android.internal.annotations.GuardedBy;
 
 @Database(
         entities = {ConfigurationEntity.class, LabelEntity.class},
         version = ConfigurationDatabase.DATABASE_VERSION)
+@TypeConverters({Converters.class})
 public abstract class ConfigurationDatabase extends RoomDatabase {
 
     private static final Object SINGLETON_LOCK = new Object();

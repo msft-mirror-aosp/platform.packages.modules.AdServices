@@ -49,6 +49,10 @@ public final class Tracing {
             "FledgeRoomConverters#adSelectionSignalsToString";
     public static final String ROOM_CONVERT_ADSELECTIONSIGNALS_FROM_STRING =
             "FledgeRoomConverters#adSelectionSignalsFromString";
+    public static final String ROOM_CONVERT_EVICTIONPRIORITY_TO_INT =
+            "FledgeRoomConverters#evictionPriorityToInt";
+    public static final String ROOM_CONVERT_EVICTIONPRIORITY_FROM_INT =
+            "FledgeRoomConverters#evictionPriorityFromInt";
     public static final String AD_SELECTION_SERVICE_FILTER =
             "AdSelectionServiceFilter#filterRequest";
     public static final String GET_AD_SELECTION_DATA_OFF_BINDER_THREAD =

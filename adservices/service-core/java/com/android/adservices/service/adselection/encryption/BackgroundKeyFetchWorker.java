@@ -122,7 +122,9 @@ public final class BackgroundKeyFetchWorker {
                                     flags,
                                     adServicesHttpsClient,
                                     AdServicesExecutors.getLightWeightExecutor(),
-                                    AdServicesLoggerImpl.getInstance());
+                                    AdServicesLoggerImpl.getInstance(),
+                                    new ServerAuctionCoordinatorUriStrategyFactory(
+                                            flags.getFledgeAuctionServerCoordinatorUrlAllowlist()));
                     // TODO (b/344636522): Derive DevContext from calling environment.
                     sBackgroundKeyFetchWorker =
                             new BackgroundKeyFetchWorker(

@@ -97,6 +97,7 @@ import com.android.adservices.service.adselection.debug.AuctionServerDebugConfig
 import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.CoordinatorOriginUriValidator;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
@@ -213,6 +214,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     @Mock
     private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
 
+    @Mock private CoordinatorOriginUriValidator mCoordinatorOriginUriValidator;
+
     @Before
     public void setup() throws Exception {
         mLegacyFakeFlags = new GetAdSelectionDataRunnerTestFlags();
@@ -273,6 +276,9 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                                         .setConsentedDebugConfiguration(
                                                 CONSENTED_DEBUG_CONFIGURATION)
                                         .build()));
+
+        doNothing().when(mCoordinatorOriginUriValidator).validate(any(Uri.class));
+
         mGetAdSelectionDataRunner = initRunner(mLegacyFakeFlags, mAdsRelevanceExecutionLogger);
     }
 
@@ -1191,6 +1197,10 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong(), any(), any());
 
+        doThrow(new IllegalArgumentException())
+                .when(mCoordinatorOriginUriValidator)
+                .validate(any(Uri.class));
+
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
                 new GetAdSelectionDataInput.Builder()
@@ -1204,32 +1214,6 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
 
         Assert.assertFalse("Call should not have succeeded", callback.mIsSuccess);
         Assert.assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
-    }
-
-    @Test
-    public void testRunner_getAdSelectionData_validCoordinator_IsSuccess() throws Exception {
-        mocker.mockGetFlags(mLegacyFakeFlags);
-
-        doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
-                .when(mObliviousHttpEncryptorMock)
-                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
-
-        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger();
-
-        createAndPersistDBCustomAudiencesWithAdRenderId();
-        GetAdSelectionDataInput inputParams =
-                new GetAdSelectionDataInput.Builder()
-                        .setSeller(SELLER)
-                        .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setCoordinatorOriginUri(Uri.parse(ALLOW_LIST_COORDINATORS))
-                        .build();
-
-        GetAdSelectionDataTestCallback callback =
-                invokeGetAdSelectionData(mGetAdSelectionDataRunner, inputParams);
-
-        Assert.assertTrue("Call should have succeeded", callback.mIsSuccess);
-
-        verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
     }
 
     @Test
@@ -1580,7 +1564,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         mAdServicesLoggerSpy,
                         new AuctionServerPayloadMetricsStrategyDisabled(),
                         mAppInstallAdFiltererSpy,
-                        mAuctionServerDebugConfigurationGenerator);
+                        mAuctionServerDebugConfigurationGenerator,
+                        mCoordinatorOriginUriValidator);
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -1645,7 +1630,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                 mAdServicesLoggerSpy,
                 auctionServerPayloadMetricsStrategy,
                 mAppInstallAdFiltererSpy,
-                mAuctionServerDebugConfigurationGenerator);
+                mAuctionServerDebugConfigurationGenerator,
+                mCoordinatorOriginUriValidator);
     }
 
     private void createAndPersistDBCustomAudiencesWithAdRenderId() {

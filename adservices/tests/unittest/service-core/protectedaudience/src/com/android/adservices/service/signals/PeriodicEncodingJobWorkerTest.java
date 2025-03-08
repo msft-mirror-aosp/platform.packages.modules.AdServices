@@ -47,6 +47,7 @@ import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.signals.evict.EvictionPriority;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
@@ -105,7 +106,8 @@ public class PeriodicEncodingJobWorkerTest extends AdServicesExtendedMockitoTest
                             "v1".getBytes(),
                             "valid value".getBytes(),
                             Instant.now(),
-                            "package name"));
+                            "package name",
+                            EvictionPriority.DEFAULT));
 
     private static final int MAX_SIZE_BYTES = 100;
     private static final int PAS_ENCODING_SOURCE_TYPE =

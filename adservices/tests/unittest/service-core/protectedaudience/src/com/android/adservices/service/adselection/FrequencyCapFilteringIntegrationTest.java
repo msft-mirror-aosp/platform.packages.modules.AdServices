@@ -83,6 +83,7 @@ import com.android.adservices.service.adselection.UpdateAdCounterHistogramWorker
 import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
+import com.android.adservices.service.adselection.encryption.ServerAuctionCoordinatorUriStrategyFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
@@ -225,6 +226,7 @@ public final class FrequencyCapFilteringIntegrationTest extends AdServicesExtend
     @Mock private AdIdFetcher mAdIdFetcher;
     private RetryStrategyFactory mRetryStrategyFactory;
     private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
+    private ServerAuctionCoordinatorUriStrategyFactory mServerAuctionCoordinatorUriStrategyFactory;
 
     @Before
     public void setup() {
@@ -290,6 +292,9 @@ public final class FrequencyCapFilteringIntegrationTest extends AdServicesExtend
                         mAdIdFetcher,
                         consentedDebugConfigurationGeneratorFactory.create(),
                         mLightweightExecutorService);
+        mServerAuctionCoordinatorUriStrategyFactory =
+                new ServerAuctionCoordinatorUriStrategyFactory(
+                        mFakeFlags.getFledgeAuctionServerCoordinatorUrlAllowlist());
         mAdSelectionServiceImpl =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
@@ -320,7 +325,8 @@ public final class FrequencyCapFilteringIntegrationTest extends AdServicesExtend
                         false,
                         mRetryStrategyFactory,
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED,
-                        mAuctionServerDebugConfigurationGenerator);
+                        mAuctionServerDebugConfigurationGenerator,
+                        mServerAuctionCoordinatorUriStrategyFactory);
 
         mInputParams =
                 new UpdateAdCounterHistogramInput.Builder(
@@ -486,7 +492,8 @@ public final class FrequencyCapFilteringIntegrationTest extends AdServicesExtend
                         false,
                         mRetryStrategyFactory,
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED,
-                        mAuctionServerDebugConfigurationGenerator);
+                        mAuctionServerDebugConfigurationGenerator,
+                        mServerAuctionCoordinatorUriStrategyFactory);
 
         UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
 
@@ -560,7 +567,8 @@ public final class FrequencyCapFilteringIntegrationTest extends AdServicesExtend
                         false,
                         mRetryStrategyFactory,
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED,
-                        mAuctionServerDebugConfigurationGenerator);
+                        mAuctionServerDebugConfigurationGenerator,
+                        mServerAuctionCoordinatorUriStrategyFactory);
 
         UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
 
@@ -795,7 +803,8 @@ public final class FrequencyCapFilteringIntegrationTest extends AdServicesExtend
                         false,
                         mRetryStrategyFactory,
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED,
-                        mAuctionServerDebugConfigurationGenerator);
+                        mAuctionServerDebugConfigurationGenerator,
+                        mServerAuctionCoordinatorUriStrategyFactory);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
@@ -899,7 +908,8 @@ public final class FrequencyCapFilteringIntegrationTest extends AdServicesExtend
                         false,
                         mRetryStrategyFactory,
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED,
-                        mAuctionServerDebugConfigurationGenerator);
+                        mAuctionServerDebugConfigurationGenerator,
+                        mServerAuctionCoordinatorUriStrategyFactory);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);

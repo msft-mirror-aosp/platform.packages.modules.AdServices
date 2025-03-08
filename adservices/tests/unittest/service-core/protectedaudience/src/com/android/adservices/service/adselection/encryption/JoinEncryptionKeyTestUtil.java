@@ -32,6 +32,7 @@ public class JoinEncryptionKeyTestUtil {
     static final String CONTENT_TYPE = "application/ohttp-keys";
     private static final Long EXPIRY_TTL_1SEC = 1L;
     public static final String COORDINATOR_URL_JOIN = "https://example-join.com";
+    public static final String JOIN_KEY_FETCH_DEFAULT_URI = "https://foo.bar/joinkey";
 
     public static final String JOIN_PUBLIC_KEY_1_BASE_16 =
             "01002031e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e"

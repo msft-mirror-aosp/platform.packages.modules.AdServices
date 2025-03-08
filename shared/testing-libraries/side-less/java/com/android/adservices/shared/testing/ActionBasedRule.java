@@ -20,6 +20,7 @@ import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
+import org.junit.AssumptionViolatedException;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -172,7 +173,7 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
         mIsRunning = true;
         try {
             base.evaluate();
-        } catch (ActionExecutionException t) {
+        } catch (ActionExecutionException | AssumptionViolatedException t) {
             // Pass it around, otherwise it would be encapsulated into a TestFailure
             throw t;
         } catch (Throwable t) {

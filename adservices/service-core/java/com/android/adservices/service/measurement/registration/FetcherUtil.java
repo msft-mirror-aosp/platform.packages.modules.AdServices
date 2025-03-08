@@ -669,7 +669,8 @@ public class FetcherUtil {
                                 asyncFetchStatus.getNumDeletedEntities(),
                                 asyncFetchStatus.isEventLevelEpsilonConfigured(),
                                 asyncFetchStatus.isTriggerAggregatableValueFiltersConfigured(),
-                                asyncFetchStatus.isTriggerFilteringIdConfigured())
+                                asyncFetchStatus.isTriggerFilteringIdConfigured(),
+                                asyncFetchStatus.isTriggerContextIdConfigured())
                         .setAdTechDomain(adTechDomain)
                         .build(),
                 enrollmentId);

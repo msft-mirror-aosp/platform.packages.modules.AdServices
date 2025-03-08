@@ -37,14 +37,15 @@ import com.android.adservices.shared.common.ApplicationContextSingleton;
         autoMigrations = {
             @AutoMigration(from = 1, to = 2),
             @AutoMigration(from = 2, to = 3),
-            @AutoMigration(from = 3, to = 4)
+            @AutoMigration(from = 3, to = 4),
+            @AutoMigration(from = 4, to = 5)
         },
         version = ProtectedSignalsDatabase.DATABASE_VERSION)
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class ProtectedSignalsDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 4;
+    public static final int DATABASE_VERSION = 5;
     public static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("protectedsignals.db");
 

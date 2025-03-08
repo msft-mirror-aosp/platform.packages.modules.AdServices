@@ -40,6 +40,7 @@ public class MeasurementRegistrationResponseStats {
     private final boolean mIsEventLevelEpsilonEnabled;
     private final boolean mIsTriggerAggregatableValueFiltersConfigured;
     private final boolean mIsTriggerFilteringIdConfigured;
+    private final boolean mIsTriggerContextIdConfigured;
 
     private MeasurementRegistrationResponseStats(Builder builder) {
         mCode = builder.mCode;
@@ -60,6 +61,7 @@ public class MeasurementRegistrationResponseStats {
         mIsTriggerAggregatableValueFiltersConfigured =
                 builder.mIsTriggerAggregatableValueFiltersConfigured;
         mIsTriggerFilteringIdConfigured = builder.mIsTriggerFilteringIdConfigured;
+        mIsTriggerContextIdConfigured = builder.mIsTriggerContextIdConfigured;
     }
 
     @Override
@@ -84,7 +86,8 @@ public class MeasurementRegistrationResponseStats {
                 && mIsEventLevelEpsilonEnabled == that.mIsEventLevelEpsilonEnabled
                 && mIsTriggerAggregatableValueFiltersConfigured
                         == that.mIsTriggerAggregatableValueFiltersConfigured
-                && mIsTriggerFilteringIdConfigured == that.mIsTriggerFilteringIdConfigured;
+                && mIsTriggerFilteringIdConfigured == that.mIsTriggerFilteringIdConfigured
+                && mIsTriggerContextIdConfigured == that.mIsTriggerContextIdConfigured;
     }
 
     @Override
@@ -106,7 +109,8 @@ public class MeasurementRegistrationResponseStats {
                 mNumDeletedEntities,
                 mIsEventLevelEpsilonEnabled,
                 mIsTriggerAggregatableValueFiltersConfigured,
-                mIsTriggerFilteringIdConfigured);
+                mIsTriggerFilteringIdConfigured,
+                mIsTriggerContextIdConfigured);
     }
 
     @Override
@@ -146,6 +150,8 @@ public class MeasurementRegistrationResponseStats {
                 + mIsTriggerAggregatableValueFiltersConfigured
                 + ", mIsTriggerFilteringIdConfigured="
                 + mIsTriggerFilteringIdConfigured
+                + ", mIsTriggerContextIdConfigured="
+                + mIsTriggerContextIdConfigured
                 + '}';
     }
 
@@ -218,6 +224,10 @@ public class MeasurementRegistrationResponseStats {
         return mIsTriggerFilteringIdConfigured;
     }
 
+    public boolean isTriggerContextIdConfigured() {
+        return mIsTriggerContextIdConfigured;
+    }
+
     /** Builder for {@link MeasurementRegistrationResponseStats}. */
     public static final class Builder {
         private final int mCode;
@@ -237,6 +247,7 @@ public class MeasurementRegistrationResponseStats {
         private final boolean mIsEventLevelEpsilonEnabled;
         private final boolean mIsTriggerAggregatableValueFiltersConfigured;
         private final boolean mIsTriggerFilteringIdConfigured;
+        private final boolean mIsTriggerContextIdConfigured;
 
         public Builder(
                 int code,
@@ -254,7 +265,8 @@ public class MeasurementRegistrationResponseStats {
                 int numDeletedEntities,
                 boolean isEventLevelEpsilonEnabled,
                 boolean isTriggerAggregatableValueFiltersConfigured,
-                boolean isTriggerFilteringIdConfigured) {
+                boolean isTriggerFilteringIdConfigured,
+                boolean isTriggerContextIdConfigured) {
             mCode = code;
             mRegistrationType = registrationType;
             mResponseSize = responseSize;
@@ -272,6 +284,7 @@ public class MeasurementRegistrationResponseStats {
             mIsTriggerAggregatableValueFiltersConfigured =
                     isTriggerAggregatableValueFiltersConfigured;
             mIsTriggerFilteringIdConfigured = isTriggerFilteringIdConfigured;
+            mIsTriggerContextIdConfigured = isTriggerContextIdConfigured;
         }
 
         /** See {@link MeasurementRegistrationResponseStats#getAdTechDomain()} . */

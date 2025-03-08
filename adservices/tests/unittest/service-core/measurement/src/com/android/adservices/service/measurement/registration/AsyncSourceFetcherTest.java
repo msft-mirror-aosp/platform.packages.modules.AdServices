@@ -45,6 +45,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -343,6 +344,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 false,
                                                 false,
                                                 0,
+                                                false,
                                                 false,
                                                 false,
                                                 false)
@@ -5949,6 +5951,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 false,
                                                 false,
                                                 0,
+                                                false,
                                                 false,
                                                 false,
                                                 false)
@@ -12316,12 +12319,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     public void fetchSource_registersCountUniqueEvent_IfCountUniqueHeaderPresent()
             throws IOException {
 
-        when(mMockFlags.getMeasurementEnableCountUniqueService()).thenReturn(true);
-        when(mMockFlags.getMeasurementCountUniqueAppAllowlist()).thenReturn("*");
-        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
+        RegistrationRequest request = setupCountUniqueTests();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -12517,6 +12515,133 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 .that(result.getRegistrationOrigin().toString())
                 .isEqualTo(DEFAULT_REGISTRATION);
         verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchSource_forNoEventHeader_doesNotRegister() throws IOException {
+        RegistrationRequest request = setupCountUniqueTests();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\",\n"
+                                                + "\"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\",\n"
+                                                + "\"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\""
+                                                + "}\n")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        verifyNoMoreInteractions(mCountUniqueRegistrar);
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+    }
+
+    @Test
+    public void fetchSource_registersCountUniqueMetadata_IfCountUniqueMetadataHeaderPresent()
+            throws IOException {
+        RegistrationRequest request = setupCountUniqueTests();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Count-Unique-Metadata",
+                                List.of(
+                                        "set;key=\"key1\";value=\"1\";ignore_if_present, set;"
+                                                + "key=\"key2\";value=\"2\", \n"
+                                                + "delete;key=\"key1\""),
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\",\n"
+                                                + "\"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\",\n"
+                                                + "\"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\""
+                                                + "}\n")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        verify(mCountUniqueRegistrar).registerCountUniqueMetadata(any(), any());
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+    }
+
+    @Test
+    public void fetchSource_forNoMetadataHeader_doesNotRegister() throws IOException {
+        RegistrationRequest request = setupCountUniqueTests();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\",\n"
+                                                + "\"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\",\n"
+                                                + "\"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\""
+                                                + "}\n")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        verifyNoMoreInteractions(mCountUniqueRegistrar);
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+    }
+
+    private RegistrationRequest setupCountUniqueTests() throws IOException {
+        when(mMockFlags.getMeasurementEnableCountUniqueService()).thenReturn(true);
+        when(mMockFlags.getMeasurementCountUniqueAppAllowlist()).thenReturn("*");
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
+        return request;
     }
 
     private RegistrationRequest buildRequest(String registrationUri) {

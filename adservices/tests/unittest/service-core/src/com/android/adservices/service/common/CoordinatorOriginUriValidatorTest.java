@@ -25,9 +25,12 @@ import com.android.adservices.common.AdServicesUnitTestCase;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.List;
+
 public final class CoordinatorOriginUriValidatorTest extends AdServicesUnitTestCase {
     private CoordinatorOriginUriValidator mValidator;
-    private static final String ALLOWLIST = "https://example-2.com,https://example.com";
+    private static final List<Uri> ALLOWLIST =
+            List.of(Uri.parse("https://example-2.com"), Uri.parse("https://example.com"));
 
     private static final String HOSTNAME = "example.com";
     private static final String SCHEME = "https://";
@@ -41,7 +44,7 @@ public final class CoordinatorOriginUriValidatorTest extends AdServicesUnitTestC
     }
 
     @Test
-    public void test_multiCloudFlagOff_invalidUri_hasNoViolation() {
+    public void test_validationDisabled_invalidUri_hasNoViolation() {
         mValidator = CoordinatorOriginUriValidator.createDisabledInstance();
 
         assertThat(mValidator.getValidationViolations(Uri.parse(INVALID_URL))).isEmpty();

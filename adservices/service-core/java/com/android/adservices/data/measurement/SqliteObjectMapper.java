@@ -22,6 +22,7 @@ import android.database.Cursor;
 import android.net.Uri;
 
 import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
+import com.android.adservices.service.measurement.CountUniqueMetadata;
 import com.android.adservices.service.measurement.CountUniqueReport;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
@@ -594,6 +595,26 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.CountUniqueReportingContract.CONTEXT_ID,
                 builder::setContextId);
+        return builder.build();
+    }
+
+    /**
+     * Create {@link com.android.adservices.service.measurement.CountUniqueMetadata} object from
+     * SQLite datastore.
+     */
+    public static CountUniqueMetadata constructCountUniqueMetadata(Cursor cursor) {
+        CountUniqueMetadata.Builder builder = new CountUniqueMetadata.Builder();
+        setUriColumn(
+                cursor,
+                MeasurementTables.CountUniqueMetadataContract.REPORTING_ORIGIN,
+                builder::setReportingOrigin);
+        setTextColumn(cursor, MeasurementTables.CountUniqueMetadataContract.KEY, builder::setKey);
+        setIntColumn(
+                cursor, MeasurementTables.CountUniqueMetadataContract.VALUE, builder::setValue);
+        setLongColumn(
+                cursor,
+                MeasurementTables.CountUniqueMetadataContract.EXPIRATION_TIME,
+                builder::setExpirationTime);
         return builder.build();
     }
 
