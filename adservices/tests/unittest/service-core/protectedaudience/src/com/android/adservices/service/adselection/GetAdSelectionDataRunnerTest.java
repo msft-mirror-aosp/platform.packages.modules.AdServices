@@ -58,7 +58,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.AdSelectionConfigFixture;
@@ -1365,9 +1365,9 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
         Assert.assertEquals(
                 GetAdSelectionDataRunner.REVOKED_CONSENT_RANDOM_DATA_SIZE,
                 callback.mGetAdSelectionDataResponse.getAdSelectionData().length);
-        verifyZeroInteractions(mObliviousHttpEncryptorMock);
-        verifyZeroInteractions(mAdSelectionEntryDaoSpy);
-        verifyZeroInteractions(mFrequencyCapAdFiltererSpy);
+        verifyNoMoreInteractions(mObliviousHttpEncryptorMock);
+        verifyNoMoreInteractions(mAdSelectionEntryDaoSpy);
+        verifyNoMoreInteractions(mFrequencyCapAdFiltererSpy);
     }
 
     @Test
@@ -1406,9 +1406,9 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
         Assert.assertEquals(
                 GetAdSelectionDataRunner.REVOKED_CONSENT_RANDOM_DATA_SIZE,
                 callback.mGetAdSelectionDataResponse.getAdSelectionData().length);
-        verifyZeroInteractions(mObliviousHttpEncryptorMock);
-        verifyZeroInteractions(mAdSelectionEntryDaoSpy);
-        verifyZeroInteractions(mFrequencyCapAdFiltererSpy);
+        verifyNoMoreInteractions(mObliviousHttpEncryptorMock);
+        verifyNoMoreInteractions(mAdSelectionEntryDaoSpy);
+        verifyNoMoreInteractions(mFrequencyCapAdFiltererSpy);
     }
 
     @Test

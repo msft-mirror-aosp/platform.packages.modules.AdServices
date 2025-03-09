@@ -19,7 +19,7 @@ package com.android.adservices.service.signals.evict;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.CommonFixture;
@@ -69,7 +69,7 @@ public class SignalEvictionControllerTest {
                 mUpdateSignalsProcessReportedLoggerMock);
 
         verify(mSignalEvictorMock1).evict(any(), any(), any(), anyInt(), anyInt(), any());
-        verifyZeroInteractions(mSignalEvictorMock2, mSignalEvictorMock3);
+        verifyNoMoreInteractions(mSignalEvictorMock2, mSignalEvictorMock3);
     }
 
     @Test
@@ -87,6 +87,6 @@ public class SignalEvictionControllerTest {
 
         verify(mSignalEvictorMock1).evict(any(), any(), any(), anyInt(), anyInt(), any());
         verify(mSignalEvictorMock2).evict(any(), any(), any(), anyInt(), anyInt(), any());
-        verifyZeroInteractions(mSignalEvictorMock3);
+        verifyNoMoreInteractions(mSignalEvictorMock3);
     }
 }

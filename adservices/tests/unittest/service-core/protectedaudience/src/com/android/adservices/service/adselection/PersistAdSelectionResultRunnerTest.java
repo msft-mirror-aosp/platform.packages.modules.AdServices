@@ -69,7 +69,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.AdSelectionConfigFixture;
@@ -2281,9 +2281,9 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
         Assert.assertEquals(
                 AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
         Assert.assertEquals(Uri.EMPTY, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
-        verifyZeroInteractions(mCustomAudienceDaoMock);
-        verifyZeroInteractions(mObliviousHttpEncryptorMock);
-        verifyZeroInteractions(mAdSelectionEntryDao);
+        verifyNoMoreInteractions(mCustomAudienceDaoMock);
+        verifyNoMoreInteractions(mObliviousHttpEncryptorMock);
+        verifyNoMoreInteractions(mAdSelectionEntryDao);
     }
 
     @Test
@@ -2388,9 +2388,9 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
         Assert.assertEquals(
                 AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
         Assert.assertEquals(Uri.EMPTY, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
-        verifyZeroInteractions(mCustomAudienceDaoMock);
-        verifyZeroInteractions(mObliviousHttpEncryptorMock);
-        verifyZeroInteractions(mAdSelectionEntryDao);
+        verifyNoMoreInteractions(mCustomAudienceDaoMock);
+        verifyNoMoreInteractions(mObliviousHttpEncryptorMock);
+        verifyNoMoreInteractions(mAdSelectionEntryDao);
 
         verify(mAdSelectionServiceFilterMock)
                 .filterRequest(
@@ -2774,7 +2774,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
         countDownLatch.await();
 
         Assert.assertTrue(callback.mIsSuccess);
-        verifyZeroInteractions(mKAnonSignJoinFactoryMock);
+        verifyNoMoreInteractions(mKAnonSignJoinFactoryMock);
     }
 
     @Test

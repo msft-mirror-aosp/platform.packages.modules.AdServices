@@ -25,7 +25,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.adservices.common.CommonFixture;
 import android.adservices.common.KeyedFrequencyCap;
@@ -456,6 +456,6 @@ public final class FledgeMaintenanceTasksWorkerTests extends AdServicesExtendedM
 
         worker.clearExpiredKAnonMessageEntities();
 
-        verifyZeroInteractions(mKAnonMessageDaoMock);
+        verifyNoMoreInteractions(mKAnonMessageDaoMock);
     }
 }

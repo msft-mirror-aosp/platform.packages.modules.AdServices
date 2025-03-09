@@ -27,7 +27,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
@@ -119,6 +119,6 @@ public final class TopicsScheduleEpochJobSettingReportedStatsLoggerTest
                 /* previousScheduledEpochJobRequireBatteryNotLow */ false);
         mLogger.logScheduleIfNeeded();
 
-        verifyZeroInteractions(mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
     }
 }

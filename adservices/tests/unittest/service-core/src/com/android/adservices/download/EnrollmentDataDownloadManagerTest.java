@@ -29,7 +29,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -174,8 +174,8 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
 
         // Verify no duplicate inserts after enrollment data is saved before.
         verifyEnrollmentDataDownloadStatus(EnrollmentDataDownloadManager.DownloadStatus.SKIP);
-        verifyZeroInteractions(mMockEnrollmentDao);
-        verifyZeroInteractions(mEnrollmentUtil);
+        verifyNoMoreInteractions(mMockEnrollmentDao);
+        verifyNoMoreInteractions(mEnrollmentUtil);
     }
 
     @Test
@@ -194,7 +194,7 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
                 EnrollmentDataDownloadManager.DownloadStatus.NO_FILE_AVAILABLE);
 
         verify(mMockEnrollmentDao, never()).insert(any());
-        verifyZeroInteractions(mLogger);
+        verifyNoMoreInteractions(mLogger);
     }
 
     @Test
@@ -222,7 +222,7 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
                 EnrollmentDataDownloadManager.DownloadStatus.NO_FILE_AVAILABLE);
 
         verify(mMockEnrollmentDao, never()).insert(any());
-        verifyZeroInteractions(mLogger);
+        verifyNoMoreInteractions(mLogger);
     }
 
     @Test
@@ -245,7 +245,7 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
                 EnrollmentDataDownloadManager.DownloadStatus.NO_FILE_AVAILABLE);
 
         verify(mMockEnrollmentDao, never()).insert(any());
-        verifyZeroInteractions(mLogger);
+        verifyNoMoreInteractions(mLogger);
     }
 
     @Test
@@ -346,8 +346,8 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
 
         // Verify no duplicate inserts after enrollment data is saved before.
         verifyEnrollmentDataDownloadStatus(EnrollmentDataDownloadManager.DownloadStatus.SKIP);
-        verifyZeroInteractions(mMockEnrollmentDao);
-        verifyZeroInteractions(mEnrollmentUtil);
+        verifyNoMoreInteractions(mMockEnrollmentDao);
+        verifyNoMoreInteractions(mEnrollmentUtil);
     }
 
     @Test
@@ -416,8 +416,8 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
 
         // Verify no duplicate inserts after enrollment data is saved before.
         verifyEnrollmentDataDownloadStatus(EnrollmentDataDownloadManager.DownloadStatus.SKIP);
-        verifyZeroInteractions(mMockEnrollmentDao);
-        verifyZeroInteractions(mEnrollmentUtil);
+        verifyNoMoreInteractions(mMockEnrollmentDao);
+        verifyNoMoreInteractions(mEnrollmentUtil);
 
         EnrollmentUtil enrollmentUtil = EnrollmentUtil.getInstance();
         assertThat(enrollmentUtil.getBuildId()).isEqualTo(1);
@@ -516,8 +516,8 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
 
         // Verify no duplicate inserts after enrollment data is saved before.
         verifyEnrollmentDataDownloadStatus(EnrollmentDataDownloadManager.DownloadStatus.SKIP);
-        verifyZeroInteractions(mMockEnrollmentDao);
-        verifyZeroInteractions(mEnrollmentUtil);
+        verifyNoMoreInteractions(mMockEnrollmentDao);
+        verifyNoMoreInteractions(mEnrollmentUtil);
     }
 
     @Test
@@ -553,7 +553,7 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
         verifyEnrollmentDataDownloadStatus(
                 EnrollmentDataDownloadManager.DownloadStatus.PARSING_FAILED);
 
-        verifyZeroInteractions(mMockEnrollmentDao);
+        verifyNoMoreInteractions(mMockEnrollmentDao);
     }
 
     @Test
@@ -622,8 +622,8 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
 
         // Verify no duplicate inserts after enrollment data is saved before.
         verifyEnrollmentDataDownloadStatus(EnrollmentDataDownloadManager.DownloadStatus.SKIP);
-        verifyZeroInteractions(mMockEnrollmentDao);
-        verifyZeroInteractions(mEnrollmentUtil);
+        verifyNoMoreInteractions(mMockEnrollmentDao);
+        verifyNoMoreInteractions(mEnrollmentUtil);
     }
 
     @Test
@@ -666,7 +666,7 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
 
         verifyEnrollmentDataDownloadStatus(
                 EnrollmentDataDownloadManager.DownloadStatus.NO_FILE_AVAILABLE);
-        verifyZeroInteractions(mMockEnrollmentDao);
-        verifyZeroInteractions(mLogger);
+        verifyNoMoreInteractions(mMockEnrollmentDao);
+        verifyNoMoreInteractions(mLogger);
     }
 }

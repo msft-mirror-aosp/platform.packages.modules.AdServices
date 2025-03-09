@@ -27,7 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdServicesStatusUtils;
@@ -125,7 +125,7 @@ public class AuctionServerPayloadMetricsStrategyEnabledTest {
     public void testSetServerAuctionCoordinatorSourceDoesNothing() {
         mAuctionServerPayloadMetricsStrategy.setServerAuctionCoordinatorSource(
                 mBuilderMock, SERVER_AUCTION_COORDINATOR_SOURCE_API);
-        verifyZeroInteractions(mBuilderMock);
+        verifyNoMoreInteractions(mBuilderMock);
     }
 
     @Test
@@ -188,7 +188,7 @@ public class AuctionServerPayloadMetricsStrategyEnabledTest {
                         encodedSignalsMinSizeInBytes);
         verify(mAdServicesLoggerMock, times(2))
                 .logGetAdSelectionDataBuyerInputGeneratedStats(argumentCaptor.capture());
-        verifyZeroInteractions(mComponentAdsStrategyMock);
+        verifyNoMoreInteractions(mComponentAdsStrategyMock);
 
         GetAdSelectionDataBuyerInputGeneratedStats stats = argumentCaptor.getAllValues().get(0);
         assertThat(stats.getNumEncodedSignals()).isEqualTo(encodedSignalsCount);

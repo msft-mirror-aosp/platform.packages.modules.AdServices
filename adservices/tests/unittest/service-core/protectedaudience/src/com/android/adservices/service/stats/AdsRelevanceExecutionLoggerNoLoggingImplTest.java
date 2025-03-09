@@ -20,7 +20,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory.GET_AD_SELECTION_DATA_API_NAME;
 
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -43,6 +43,6 @@ public class AdsRelevanceExecutionLoggerNoLoggingImplTest {
                 new AdsRelevanceExecutionLoggerNoLoggingImpl(GET_AD_SELECTION_DATA_API_NAME);
 
         getAdSelectionDataLogger.endAdsRelevanceApi(STATUS_SUCCESS);
-        verifyZeroInteractions(mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
     }
 }

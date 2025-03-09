@@ -18,7 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
 
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
@@ -52,7 +52,7 @@ public class AuctionServerPayloadMetricsStrategyDisabledTest {
     @Test
     public void testSetNumBuyerDoesNothing() {
         mAuctionServerPayloadMetricsStrategy.setNumBuyers(mBuilder, 2);
-        verifyZeroInteractions(mBuilder);
+        verifyNoMoreInteractions(mBuilder);
     }
 
     @Test
@@ -64,14 +64,14 @@ public class AuctionServerPayloadMetricsStrategyDisabledTest {
                 /* inputGenerationLatencyMs= */ 3,
                 /* compressedBuyerInputCreatorVersion= */ 1,
                 /* numReEstimations= */ 2);
-        verifyZeroInteractions(mBuilder);
+        verifyNoMoreInteractions(mBuilder);
     }
 
     @Test
     public void testSetSellerMaxSizeDoesNothing() {
         mAuctionServerPayloadMetricsStrategy.setSellerMaxPayloadSizeKb(
                 mBuilder, /* sellerMaxSize= */ 5);
-        verifyZeroInteractions(mBuilder);
+        verifyNoMoreInteractions(mBuilder);
     }
 
     @Test
@@ -81,35 +81,35 @@ public class AuctionServerPayloadMetricsStrategyDisabledTest {
                 mBuilder,
                 /* inputGenerationLatencyMs= */ 5,
                 CompressedBuyerInputCreatorNoOptimizations.VERSION);
-        verifyZeroInteractions(mBuilder);
+        verifyNoMoreInteractions(mBuilder);
     }
 
     @Test
     public void testSetServerAuctionCoordinatorSourceDoesNothing() {
         mAuctionServerPayloadMetricsStrategy.setServerAuctionCoordinatorSource(
                 mBuilder, SERVER_AUCTION_COORDINATOR_SOURCE_API);
-        verifyZeroInteractions(mBuilder);
+        verifyNoMoreInteractions(mBuilder);
     }
 
     @Test
     public void testLogGetAdSelectionDataApiCalledStatsDoesNothing() {
         mAuctionServerPayloadMetricsStrategy.logGetAdSelectionDataApiCalledStats(
                 mBuilder, 2000, AdServicesStatusUtils.STATUS_SUCCESS);
-        verifyZeroInteractions(mBuilder);
+        verifyNoMoreInteractions(mBuilder);
     }
 
     @Test
     public void testLogGetAdSelectionDataBuyerInputGeneratedStatsDoesNothing() {
         mAuctionServerPayloadMetricsStrategy.logGetAdSelectionDataBuyerInputGeneratedStats(
                 mPerBuyerStatsMock);
-        verifyZeroInteractions(mPerBuyerStatsMock);
+        verifyNoMoreInteractions(mPerBuyerStatsMock);
     }
 
     @Test
     public void testAddToBuyerIntermediateStatsDoesNothing() {
         mAuctionServerPayloadMetricsStrategy.addToBuyerIntermediateStats(
                 mPerBuyerStatsMock, mDBCustomAudienceMock, mCustomAudienceMock);
-        verifyZeroInteractions(mPerBuyerStatsMock, mDBCustomAudienceMock, mCustomAudienceMock);
+        verifyNoMoreInteractions(mPerBuyerStatsMock, mDBCustomAudienceMock, mCustomAudienceMock);
     }
 
     @Test
@@ -122,6 +122,6 @@ public class AuctionServerPayloadMetricsStrategyDisabledTest {
                         /* encodedSignalsTotalSizeInBytes */ 0,
                         /* encodedSignalsMaxSizeInBytes */ 0,
                         /* encodedSignalsMinSizeInBytes */ 0);
-        verifyZeroInteractions(mPerBuyerStatsMock);
+        verifyNoMoreInteractions(mPerBuyerStatsMock);
     }
 }

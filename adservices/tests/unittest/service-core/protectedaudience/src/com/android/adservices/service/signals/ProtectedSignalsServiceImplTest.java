@@ -50,7 +50,6 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdServicesPermissions;
@@ -637,7 +636,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
 
         verify(mUpdateSignalsCallbackMock).onSuccess();
-        verifyZeroInteractions(mEnrollmentDaoMock);
+        verifyNoMoreInteractions(mEnrollmentDaoMock);
     }
 
     private void verifyUpdateSignalsApiUsageLog(int resultCode, String packageName)

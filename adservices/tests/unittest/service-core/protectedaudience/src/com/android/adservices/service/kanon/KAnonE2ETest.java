@@ -57,7 +57,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.adservices.adid.AdId;
 import android.adservices.adselection.AdSelectionConfigFixture;
@@ -612,8 +612,8 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
                                 .getAdSelectionId());
         assertThat(kAnonMessageEntityList.get(0).getStatus())
                 .isEqualTo(KAnonMessageEntity.KanonMessageEntityStatus.JOINED);
-        verifyZeroInteractions(mockKeyAttestation);
-        verifyZeroInteractions(mockKeyAttestationCertificate);
+        verifyNoMoreInteractions(mockKeyAttestation);
+        verifyNoMoreInteractions(mockKeyAttestationCertificate);
     }
 
     @Test

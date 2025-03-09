@@ -93,7 +93,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.spy;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -854,9 +853,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mCustomAudienceDaoMock)
                 .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
-        verifyZeroInteractions(mProtectedSignalsDaoMock);
+        verifyNoMoreInteractions(mProtectedSignalsDaoMock);
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
-        verifyZeroInteractions(mEncodedPayloadDaoMock);
+        verifyNoMoreInteractions(mEncodedPayloadDaoMock);
         verify(mUserProfileIdManagerMock).deleteId();
     }
 
@@ -876,7 +875,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock)
                 .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
-        verifyZeroInteractions(mFrequencyCapDaoMock);
+        verifyNoMoreInteractions(mFrequencyCapDaoMock);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mEncodedPayloadDaoMock).deleteAllEncodedPayloads();
@@ -899,7 +898,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mCustomAudienceDaoMock)
                 .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
-        verifyZeroInteractions(mAppInstallDaoMock);
+        verifyNoMoreInteractions(mAppInstallDaoMock);
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mEncodedPayloadDaoMock).deleteAllEncodedPayloads();
         verify(mUserProfileIdManagerMock).deleteId();
@@ -940,7 +939,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock)
                 .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
-        verifyZeroInteractions(mFrequencyCapDaoMock);
+        verifyNoMoreInteractions(mFrequencyCapDaoMock);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mUserProfileIdManagerMock).deleteId();
         verify(mUserProfileIdManagerMock).getOrCreateId();
@@ -961,7 +960,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mCustomAudienceDaoMock)
                 .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
-        verifyZeroInteractions(mAppInstallDaoMock);
+        verifyNoMoreInteractions(mAppInstallDaoMock);
         verify(mUserProfileIdManagerMock).deleteId();
         verify(mUserProfileIdManagerMock).getOrCreateId();
     }
@@ -981,9 +980,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mCustomAudienceDaoMock)
                 .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
-        verifyZeroInteractions(mProtectedSignalsDaoMock);
+        verifyNoMoreInteractions(mProtectedSignalsDaoMock);
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
-        verifyZeroInteractions(mEncodedPayloadDaoMock);
+        verifyNoMoreInteractions(mEncodedPayloadDaoMock);
         verify(mUserProfileIdManagerMock).deleteId();
         verify(mUserProfileIdManagerMock).getOrCreateId();
     }

@@ -30,7 +30,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -71,7 +70,7 @@ public final class FledgeAllowListsFilterTest extends AdServicesExtendedMockitoT
         mFledgeAllowListsFilter.assertAppInAllowlist(
                 PACKAGE_ALLOWED_PPAPI_1, API_NAME_LOGGING_ID, API_CUSTOM_AUDIENCES);
 
-        verifyZeroInteractions(mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
     }
 
     @Test
@@ -79,7 +78,7 @@ public final class FledgeAllowListsFilterTest extends AdServicesExtendedMockitoT
         mFledgeAllowListsFilter.assertAppInAllowlist(
                 PACKAGE_ALLOWED_PAS_1, API_NAME_LOGGING_ID, API_PROTECTED_SIGNALS);
 
-        verifyZeroInteractions(mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
     }
 
     @Test
@@ -87,7 +86,7 @@ public final class FledgeAllowListsFilterTest extends AdServicesExtendedMockitoT
         mFledgeAllowListsFilter.assertAppInAllowlist(
                 PACKAGE_ALLOWED_PAS_1, API_NAME_LOGGING_ID, API_AD_SELECTION);
 
-        verifyZeroInteractions(mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
     }
 
     @Test
@@ -95,7 +94,7 @@ public final class FledgeAllowListsFilterTest extends AdServicesExtendedMockitoT
         mFledgeAllowListsFilter.assertAppInAllowlist(
                 PACKAGE_ALLOWED_PPAPI_1, API_NAME_LOGGING_ID, API_AD_SELECTION);
 
-        verifyZeroInteractions(mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
     }
 
     @Test
@@ -103,7 +102,7 @@ public final class FledgeAllowListsFilterTest extends AdServicesExtendedMockitoT
         mFledgeAllowListsFilter.assertAppInAllowlist(
                 PACKAGE_ALLOWED_ALL, API_NAME_LOGGING_ID, API_AD_SELECTION);
 
-        verifyZeroInteractions(mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
     }
 
     @Test
@@ -225,7 +224,7 @@ public final class FledgeAllowListsFilterTest extends AdServicesExtendedMockitoT
                         mFledgeAllowListsFilter.assertAppInAllowlist(
                                 null, API_NAME_LOGGING_ID, API_CUSTOM_AUDIENCES));
 
-        verifyZeroInteractions(mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
     }
 
     public static class AllowListTestFlags implements Flags {

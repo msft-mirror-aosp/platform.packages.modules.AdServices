@@ -23,7 +23,6 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.shared.SharedExtendedMockitoTestCase;
@@ -76,7 +75,7 @@ public final class AbstractLoggingUsageRuleTest extends SharedExtendedMockitoTes
         // Base should still be evaluated
         mBaseStatement.assertEvaluated();
         // No setup work and verification should take place
-        verifyZeroInteractions(mLogVerifier1);
+        verifyNoMoreInteractions(mLogVerifier1);
     }
 
     @Test
