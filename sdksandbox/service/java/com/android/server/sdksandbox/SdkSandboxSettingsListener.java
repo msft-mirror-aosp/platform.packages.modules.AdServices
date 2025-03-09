@@ -100,6 +100,13 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
     // Trivial bug fix. Enabled by default.
     private static final boolean DEFAULT_VALUE_ENABLE_HSUM_SUPPORT_FOR_SDK_STORAGE = true;
 
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static final String PROPERTY_FIX_STOP_SANDBOX_DEADLOCK =
+            "SdkSandbox__fix_deadlock_bug_398296192";
+
+    // Trivial bug fix. Enabled by default.
+    private static final boolean DEFAULT_VALUE_FIX_STOP_SANDBOX_DEADLOCK = true;
+
     private final Context mContext;
     private final Object mLock = new Object();
     private final SdkSandboxManagerService mSdkSandboxManagerService;
@@ -199,6 +206,13 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
                     DeviceConfig.NAMESPACE_ADSERVICES,
                     PROPERTY_ENABLE_HSUM_SUPPORT_FOR_SDK_STORAGE,
                     DEFAULT_VALUE_ENABLE_HSUM_SUPPORT_FOR_SDK_STORAGE);
+
+    @GuardedBy("mLock")
+    private boolean mStopSandboxDeadlockFix =
+            DeviceConfig.getBoolean(
+                    DeviceConfig.NAMESPACE_ADSERVICES,
+                    PROPERTY_FIX_STOP_SANDBOX_DEADLOCK,
+                    DEFAULT_VALUE_FIX_STOP_SANDBOX_DEADLOCK);
 
     SdkSandboxSettingsListener(Context context, SdkSandboxManagerService sdkSandboxManagerService) {
         mContext = context;
@@ -308,6 +322,11 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
                             mSdkSandboxManagerService.registerPackageUpdateBroadcastReceiver();
                         }
                         break;
+                    case PROPERTY_FIX_STOP_SANDBOX_DEADLOCK:
+                        mStopSandboxDeadlockFix =
+                                properties.getBoolean(
+                                        PROPERTY_FIX_STOP_SANDBOX_DEADLOCK,
+                                        DEFAULT_VALUE_FIX_STOP_SANDBOX_DEADLOCK);
                     default:
                 }
                 if (propertyIsLogged) {
@@ -406,6 +425,12 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
     public boolean getEnableHsumSupportForSdkStorage() {
         synchronized (mLock) {
             return mEnableHsumSupportForSdkStorage;
+        }
+    }
+
+    public boolean getStopSandboxDeadlockFix() {
+        synchronized (mLock) {
+            return mStopSandboxDeadlockFix;
         }
     }
 

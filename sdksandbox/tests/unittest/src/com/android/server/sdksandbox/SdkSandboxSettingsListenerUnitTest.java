@@ -17,6 +17,7 @@
 package com.android.server.sdksandbox;
 
 import static com.android.server.sdksandbox.SdkSandboxSettingsListener.PROPERTY_ENABLE_HSUM_SUPPORT_FOR_SDK_STORAGE;
+import static com.android.server.sdksandbox.SdkSandboxSettingsListener.PROPERTY_FIX_STOP_SANDBOX_DEADLOCK;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -183,6 +184,17 @@ public class SdkSandboxSettingsListenerUnitTest extends DeviceSupportedBaseTest 
 
         setDeviceConfigProperty(PROPERTY_ENABLE_HSUM_SUPPORT_FOR_SDK_STORAGE, "false");
         assertThat(mSdkSandboxSettingsListener.getEnableHsumSupportForSdkStorage()).isFalse();
+    }
+
+    @Test
+    public void testEnableStopSdkSandboxServiceDeadlockFix() {
+        assertThat(mSdkSandboxSettingsListener.getStopSandboxDeadlockFix()).isTrue();
+
+        setDeviceConfigProperty(PROPERTY_FIX_STOP_SANDBOX_DEADLOCK, "true");
+        assertThat(mSdkSandboxSettingsListener.getStopSandboxDeadlockFix()).isTrue();
+
+        setDeviceConfigProperty(PROPERTY_FIX_STOP_SANDBOX_DEADLOCK, "false");
+        assertThat(mSdkSandboxSettingsListener.getStopSandboxDeadlockFix()).isFalse();
     }
 
     private void verifyAllowlistEntryContents(

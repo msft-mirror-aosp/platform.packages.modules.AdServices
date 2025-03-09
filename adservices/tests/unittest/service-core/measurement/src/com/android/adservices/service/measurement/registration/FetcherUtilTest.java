@@ -1508,6 +1508,7 @@ public final class FetcherUtilTest extends AdServicesExtendedMockitoTestCase {
                                                 0,
                                                 false,
                                                 false,
+                                                false,
                                                 false)
                                         .setAdTechDomain(null)
                                         .build()),
@@ -1556,6 +1557,7 @@ public final class FetcherUtilTest extends AdServicesExtendedMockitoTestCase {
                                                 false,
                                                 false,
                                                 0,
+                                                false,
                                                 false,
                                                 false,
                                                 false)
@@ -1609,6 +1611,7 @@ public final class FetcherUtilTest extends AdServicesExtendedMockitoTestCase {
                                                 false,
                                                 false,
                                                 0,
+                                                false,
                                                 false,
                                                 false,
                                                 false)

@@ -98,6 +98,7 @@ import com.android.adservices.service.adselection.debug.DebugReportingDisabled;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptorImpl;
 import com.android.adservices.service.adselection.encryption.ProtectedServersEncryptionConfigManager;
+import com.android.adservices.service.adselection.encryption.ServerAuctionCoordinatorUriStrategyFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -206,6 +207,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     private final AuctionServerDebugConfigurationGenerator
             mAuctionServerDebugConfigurationGenerator;
 
+    @NonNull
+    private final ServerAuctionCoordinatorUriStrategyFactory
+            mServerAuctionCoordinatorUriStrategyFactory;
+
     @VisibleForTesting
     public AdSelectionServiceImpl(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
@@ -238,7 +243,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             boolean consoleMessageInLogsEnabled,
             @NonNull
                     AuctionServerDebugConfigurationGenerator
-                            auctionServerDebugConfigurationGenerator) {
+                            auctionServerDebugConfigurationGenerator,
+            @NonNull
+                    ServerAuctionCoordinatorUriStrategyFactory
+                            serverAuctionCoordinatorUriStrategyFactory) {
         Objects.requireNonNull(context, "Context must be provided.");
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(appInstallDao);
@@ -263,6 +271,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(kAnonSignJoinFactory);
         Objects.requireNonNull(retryStrategyFactory);
         Objects.requireNonNull(auctionServerDebugConfigurationGenerator);
+        Objects.requireNonNull(serverAuctionCoordinatorUriStrategyFactory);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAppInstallDao = appInstallDao;
@@ -295,11 +304,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mRetryStrategyFactory = retryStrategyFactory;
         mAuctionServerDebugConfigurationGenerator = auctionServerDebugConfigurationGenerator;
         mConsoleMessageInLogsEnabled = consoleMessageInLogsEnabled;
+        mServerAuctionCoordinatorUriStrategyFactory = serverAuctionCoordinatorUriStrategyFactory;
     }
 
     /** Creates a new instance of {@link AdSelectionServiceImpl}. */
     @SuppressWarnings("AvoidStaticContext") // Factory method
     public static AdSelectionServiceImpl create(@NonNull Context context) {
+        sLogger.d("AdSelectionServiceImpl create");
         return new AdSelectionServiceImpl(context);
     }
 
@@ -362,7 +373,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                         CacheProviderFactory.create(
                                                 context, FlagsFactory.getFlags())),
                                 AdServicesExecutors.getLightWeightExecutor(),
-                                AdServicesLoggerImpl.getInstance()),
+                                AdServicesLoggerImpl.getInstance(),
+                                new ServerAuctionCoordinatorUriStrategyFactory(
+                                        BinderFlagReader.readFlag(
+                                                () ->
+                                                        FlagsFactory.getFlags()
+                                                                .getFledgeAuctionServerCoordinatorUrlAllowlist()))),
                         AdSelectionServerDatabase.getInstance().encryptionContextDao(),
                         AdServicesExecutors.getLightWeightExecutor()),
                 AdSelectionDebugReportingDatabase.getInstance().getAdSelectionDebugReportDao(),
@@ -414,7 +430,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                         AdSelectionDatabase.getInstance()
                                                 .consentedDebugConfigurationDao())
                                 .create(),
-                        AdServicesExecutors.getLightWeightExecutor()));
+                        AdServicesExecutors.getLightWeightExecutor()),
+                new ServerAuctionCoordinatorUriStrategyFactory(
+                        BinderFlagReader.readFlag(
+                                () ->
+                                        FlagsFactory.getFlags()
+                                                .getFledgeAuctionServerCoordinatorUrlAllowlist())));
     }
 
     @Override
@@ -689,6 +710,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             int e2eTraceCookie) {
         int offBinderThreadTraceCookie =
                 Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_DATA_OFF_BINDER_THREAD);
+
         GetAdSelectionDataRunner runner =
                 new GetAdSelectionDataRunner(
                         e2eTraceCookie,
@@ -710,7 +732,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesLogger,
                         getAuctionServerPayloadMetricsStrategy(mFlags),
                         mAdFilteringFeatureFactory.getAppInstallAdFilterer(),
-                        mAuctionServerDebugConfigurationGenerator);
+                        mAuctionServerDebugConfigurationGenerator,
+                        mServerAuctionCoordinatorUriStrategyFactory
+                                .createStrategy(devContext)
+                                .getCoordinatorOriginUriValidator());
         Tracing.endAsyncSection(
                 Tracing.GET_AD_SELECTION_DATA_OFF_BINDER_THREAD, offBinderThreadTraceCookie);
         runner.run(inputParams, callback);

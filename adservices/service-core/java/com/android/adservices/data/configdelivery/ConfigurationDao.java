@@ -25,6 +25,7 @@ import androidx.room.Transaction;
 
 import com.android.adservices.service.proto.config_delivery.Configuration;
 import com.android.adservices.service.proto.config_delivery.ConfigurationRecord;
+import com.android.adservices.service.proto.config_delivery.ConfigurationType;
 import com.android.adservices.service.proto.config_delivery.VersionedConfiguration;
 
 import java.util.ArrayList;
@@ -60,14 +61,15 @@ public abstract class ConfigurationDao {
     @Query("SELECT MAX(config_row_id) FROM configurations")
     public abstract long getLastConfigRowId();
 
-    @Query(
-            """
-                SELECT MAX(version) FROM configurations
-                WHERE type = :type
-                ORDER BY version DESC
-                LIMIT 1
-            """)
-    public abstract long getLatestVersion(int type);
+    /**
+     * Gets the latest version of the configuration entities of a given type.
+     *
+     * @param type The type of the configuration entities.
+     * @return The latest version of the configuration entities of the given type, or null if no
+     *     configurations of the given type exist.
+     */
+    @Query("SELECT MAX(version) FROM configurations WHERE type = :type")
+    public abstract Long getLatestVersion(ConfigurationType type);
 
     /**
      * Gets all versions of the configuration entities of a given type, ordered from latest to
@@ -77,7 +79,7 @@ public abstract class ConfigurationDao {
      * @return A list of all versions of the configuration entities of the given type.
      */
     @Query("SELECT DISTINCT version FROM configurations WHERE type = :type ORDER BY version DESC")
-    public abstract List<Long> getAllVersions(int type);
+    public abstract List<Long> getAllVersions(ConfigurationType type);
 
     /**
      * Gets the configuration entities of a given type and version.
@@ -88,7 +90,8 @@ public abstract class ConfigurationDao {
      *     entities exist.
      */
     @Query("SELECT * FROM configurations WHERE type = :type AND version = :version")
-    public abstract List<ConfigurationEntity> getConfigurationEntities(int type, long version);
+    public abstract List<ConfigurationEntity> getConfigurationEntities(
+            ConfigurationType type, long version);
 
     /**
      * Gets the number of configuration entities existing for the given type and version.
@@ -98,7 +101,7 @@ public abstract class ConfigurationDao {
      * @return The count of latest configuration entities of the given type.
      */
     @Query("SELECT COUNT(*) FROM configurations WHERE type = :type AND version = :version")
-    public abstract long getConfigurationEntitiesCount(int type, long version);
+    public abstract long getConfigurationEntitiesCount(ConfigurationType type, long version);
 
     /**
      * Deletes configurations associated with the given type and versions.
@@ -113,7 +116,7 @@ public abstract class ConfigurationDao {
                     WHERE configurations.type = :type AND version IN (:versions)
             """)
     @VisibleForTesting
-    public abstract void deleteConfigurationEntities(int type, List<Long> versions);
+    public abstract void deleteConfigurationEntities(ConfigurationType type, List<Long> versions);
 
     /**
      * Inserts the given configuration entities and label entities.
@@ -132,10 +135,10 @@ public abstract class ConfigurationDao {
             configurationEntities.add(
                     ConfigurationEntity.builder()
                             .setConfigRowId(currentConfigRowId)
-                            .setType(configuration.getConfigurationType().getNumber())
+                            .setType(configuration.getConfigurationType())
                             .setVersion(versionedConfiguration.getVersion())
                             .setId(configurationRecord.getId())
-                            .setValue(configurationRecord.getValue().toByteArray())
+                            .setValue(configurationRecord.getValue())
                             .build());
             for (String label : configurationRecord.getLabelsList()) {
                 labelEntities.add(
@@ -165,7 +168,7 @@ public abstract class ConfigurationDao {
                 WHERE type = :type AND id = :id AND version = :version
             """)
     public abstract ConfigurationEntity getConfigurationEntityById(
-            int type, long version, String id);
+            ConfigurationType type, long version, String id);
 
     /**
      * Gets the configuration entities associated with any of the specified labels for the given
@@ -184,7 +187,7 @@ public abstract class ConfigurationDao {
                 WHERE c.type = :configurationType AND c.version = :version AND l.label IN (:labels)
             """)
     public abstract List<ConfigurationEntity> getConfigurationEntitiesByAnyLabel(
-            int configurationType, long version, Set<String> labels);
+            ConfigurationType configurationType, long version, Set<String> labels);
 
     /**
      * Gets the configuration entities associated with all of the specified labels for the given
@@ -208,5 +211,5 @@ public abstract class ConfigurationDao {
                 HAVING COUNT(DISTINCT l.label) = :labelsCount
             """)
     public abstract List<ConfigurationEntity> getConfigurationEntitiesByAllLabels(
-            int configurationType, long version, Set<String> labels, int labelsCount);
+            ConfigurationType configurationType, long version, Set<String> labels, int labelsCount);
 }

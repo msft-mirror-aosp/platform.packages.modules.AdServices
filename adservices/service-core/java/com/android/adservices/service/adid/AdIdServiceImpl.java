@@ -28,6 +28,8 @@ import static android.adservices.common.AdServicesStatusUtils.StatusCode;
 import static android.adservices.common.AdServicesStatusUtils.isSuccess;
 
 import static com.android.adservices.service.profiling.RbATraceProvider.FeatureNames.AD_ID_API;
+import static com.android.adservices.service.profiling.TracingNames.CLASS_NAME_AD_ID_SERVICE;
+import static com.android.adservices.service.profiling.TracingNames.METHOD_NAME_GET_AD_ID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_ADID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR;
@@ -111,7 +113,13 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
             return;
         }
 
-        if (isThrottled(adIdParam, callback)) return;
+        if (isThrottled(adIdParam, callback)) {
+            return;
+        }
+
+        int traceCookie =
+                RbATraceProvider.beginAsyncSection(
+                        AD_ID_API, CLASS_NAME_AD_ID_SERVICE, METHOD_NAME_GET_AD_ID, mFlags);
 
         final long startServiceTime = mClock.elapsedRealtime();
         final String packageName = adIdParam.getAppPackageName();
@@ -132,7 +140,6 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                 () -> {
                     int resultCode = STATUS_UNSET;
                     try {
-                        RbATraceProvider.beginSection(AD_ID_API, "AdIdService", "getAdId");
                         resultCode =
                                 canCallerInvokeAdIdService(
                                         hasAdIdPermission, adIdParam, callingUid, callback);
@@ -165,7 +172,12 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                                         .setLatencyMillisecond(apiLatency)
                                         .setResultCode(resultCode)
                                         .build());
-                        RbATraceProvider.endSection();
+                        RbATraceProvider.endAsyncSection(
+                                AD_ID_API,
+                                CLASS_NAME_AD_ID_SERVICE,
+                                METHOD_NAME_GET_AD_ID,
+                                traceCookie,
+                                mFlags);
                     }
                 });
     }

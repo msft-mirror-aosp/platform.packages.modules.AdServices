@@ -16,18 +16,6 @@
 
 package com.android.cobalt.crypto;
 
-import static com.android.cobalt.crypto.PublicKeys.ANALYZER_CONTEXT_INFO_BYTES;
-import static com.android.cobalt.crypto.PublicKeys.ANALYZER_KEY_DEV;
-import static com.android.cobalt.crypto.PublicKeys.ANALYZER_KEY_INDEX_DEV;
-import static com.android.cobalt.crypto.PublicKeys.ANALYZER_KEY_INDEX_PROD;
-import static com.android.cobalt.crypto.PublicKeys.ANALYZER_KEY_PROD;
-import static com.android.cobalt.crypto.PublicKeys.SHUFFLER_CONTEXT_INFO_BYTES;
-import static com.android.cobalt.crypto.PublicKeys.SHUFFLER_KEY_DEV;
-import static com.android.cobalt.crypto.PublicKeys.SHUFFLER_KEY_INDEX_DEV;
-import static com.android.cobalt.crypto.PublicKeys.SHUFFLER_KEY_INDEX_PROD;
-import static com.android.cobalt.crypto.PublicKeys.SHUFFLER_KEY_PROD;
-import static com.android.cobalt.crypto.PublicKeys.X25519_PUBLIC_VALUE_LEN;
-
 import com.android.cobalt.CobaltPipelineType;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -44,6 +32,7 @@ import java.util.Optional;
 /** Handler for encryption of {@link Envelope} and {@link Observation} via {@link HpkeEncrypt}. */
 public final class HpkeEncrypter implements Encrypter {
     private final HpkeEncrypt mEncrypter;
+    private final PublicEncryptionKeys mPublicEncryptionKeys;
 
     @VisibleForTesting final int mShufflerKeyIndex;
     @VisibleForTesting final int mAnalyzerKeyIndex;
@@ -53,39 +42,49 @@ public final class HpkeEncrypter implements Encrypter {
 
     /** Creates a HpkeEncrypter compatible with the specified Cobalt environment */
     public static HpkeEncrypter createForEnvironment(
-            HpkeEncrypt encrypter, CobaltPipelineType type) {
-        Objects.requireNonNull(type);
+            HpkeEncrypt encrypter,
+            CobaltPipelineType type,
+            PublicEncryptionKeys publicEncryptionKeys) {
+        Objects.requireNonNull(encrypter, "HpkeEncrypt cannot be null");
+        Objects.requireNonNull(type, "CobaltPipelineType cannot be null");
+        Objects.requireNonNull(publicEncryptionKeys, "PublicEncryptionKeys cannot be null");
 
         switch (type) {
             case PROD:
                 return new HpkeEncrypter(
                         encrypter,
-                        SHUFFLER_KEY_PROD,
-                        SHUFFLER_KEY_INDEX_PROD,
-                        ANALYZER_KEY_PROD,
-                        ANALYZER_KEY_INDEX_PROD);
+                        publicEncryptionKeys,
+                        publicEncryptionKeys.getShufflerKeyProd(),
+                        publicEncryptionKeys.getShufflerKeyIndexProd(),
+                        publicEncryptionKeys.getAnalyzerKeyProd(),
+                        publicEncryptionKeys.getAnalyzerKeyIndexProd());
             case DEV:
                 return new HpkeEncrypter(
                         encrypter,
-                        SHUFFLER_KEY_DEV,
-                        SHUFFLER_KEY_INDEX_DEV,
-                        ANALYZER_KEY_DEV,
-                        ANALYZER_KEY_INDEX_DEV);
+                        publicEncryptionKeys,
+                        publicEncryptionKeys.getShufflerKeyDev(),
+                        publicEncryptionKeys.getShufflerKeyIndexDev(),
+                        publicEncryptionKeys.getAnalyzerKeyDev(),
+                        publicEncryptionKeys.getAnalyzerKeyIndexDev());
         }
 
-        throw new IllegalArgumentException("Unknown Cobalt environment");
+        throw new IllegalArgumentException("Unknown Cobalt environment" + type);
     }
 
+    @VisibleForTesting
     HpkeEncrypter(
             HpkeEncrypt encrypter,
+            PublicEncryptionKeys publicEncryptionKeys,
             byte[] shufflerKey,
             int shufflerKeyIndex,
             byte[] analyzerKey,
             int analyzerKeyIndex) {
-        this.mEncrypter = Objects.requireNonNull(encrypter);
-        this.mShufflerKey = Objects.requireNonNull(shufflerKey);
+        this.mEncrypter = Objects.requireNonNull(encrypter, "HpkeEncrypt cannot be null");
+        this.mPublicEncryptionKeys =
+                Objects.requireNonNull(publicEncryptionKeys, "PublicEncryptionKeys cannot be null");
+        this.mShufflerKey = Objects.requireNonNull(shufflerKey, "Shuffler key cannot be null");
         this.mShufflerKeyIndex = shufflerKeyIndex;
-        this.mAnalyzerKey = Objects.requireNonNull(analyzerKey);
+        this.mAnalyzerKey = Objects.requireNonNull(analyzerKey, "Analyzer key cannot be null");
         this.mAnalyzerKeyIndex = analyzerKeyIndex;
     }
 
@@ -100,18 +99,18 @@ public final class HpkeEncrypter implements Encrypter {
     @Override
     public Optional<EncryptedMessage> encryptEnvelope(Envelope envelope)
             throws EncryptionFailedException {
-        Objects.requireNonNull(envelope);
+        Objects.requireNonNull(envelope, "Envelope cannot be null");
 
         return encrypt(
                 envelope,
                 mShufflerKey,
                 mShufflerKeyIndex,
-                SHUFFLER_CONTEXT_INFO_BYTES,
+                mPublicEncryptionKeys.getShufflerContextInfoBytes(),
                 ByteString.EMPTY);
     }
 
     /**
-     * Extract and encrypts {@link Observation} from the provided {@link ObservationToEncrypt} with
+     * Extracts and encrypts {@link Observation} from the provided {@link ObservationToEncrypt} with
      * the key for the analyzer and wraps it into an {@link EncryptedMessage}.
      *
      * @return {@link EncryptedMessage} wrapped in an Optional if the {@link Observation} is
@@ -121,18 +120,18 @@ public final class HpkeEncrypter implements Encrypter {
     @Override
     public Optional<EncryptedMessage> encryptObservation(ObservationToEncrypt observationToEncrypt)
             throws EncryptionFailedException {
-        Objects.requireNonNull(observationToEncrypt);
+        Objects.requireNonNull(observationToEncrypt, "ObservationToEncrypt cannot be null");
 
         return encrypt(
                 observationToEncrypt.getObservation(),
                 mAnalyzerKey,
                 mAnalyzerKeyIndex,
-                ANALYZER_CONTEXT_INFO_BYTES,
+                mPublicEncryptionKeys.getAnalyzerContextInfoBytes(),
                 observationToEncrypt.getContributionId());
     }
 
     /**
-     * Encrypt the given message and wraps it into an {@link EncryptedMessage.Builder}
+     * Encrypts the given message and wraps it into an {@link EncryptedMessage.Builder}
      *
      * @param publicKey used by the encryption algorithm, must satisfies the encryption scheme
      *     required key length
@@ -155,12 +154,13 @@ public final class HpkeEncrypter implements Encrypter {
             throws EncryptionFailedException {
         // Assert the public key length matches the X25519 public key requirement, and
         // contextInfoBytes.
-        if (publicKey.length != X25519_PUBLIC_VALUE_LEN || contextInfoBytes.length == 0) {
+        int x25519PublicValueLen = mPublicEncryptionKeys.getX25519PublicValueLen();
+        if (publicKey.length != x25519PublicValueLen || contextInfoBytes.length == 0) {
             throw new AssertionError(
                     String.format(
                             "Invalid HPKE parameters. Expected public key length of %d, got %d. "
                                     + "Expected non-zero context info length, got %d",
-                            X25519_PUBLIC_VALUE_LEN, publicKey.length, contextInfoBytes.length));
+                            x25519PublicValueLen, publicKey.length, contextInfoBytes.length));
         }
 
         byte[] plainText = message.toByteArray();

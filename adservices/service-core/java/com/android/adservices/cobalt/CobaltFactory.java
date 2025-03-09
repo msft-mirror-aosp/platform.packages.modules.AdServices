@@ -138,7 +138,9 @@ public final class CobaltFactory {
                                 getSecureRandom(),
                                 new CobaltUploader(context, PIPELINE_TYPE),
                                 HpkeEncrypter.createForEnvironment(
-                                        new HpkeEncryptImpl(), PIPELINE_TYPE),
+                                        new HpkeEncryptImpl(),
+                                        PIPELINE_TYPE,
+                                        CobaltPublicKeyLoader.getInstance()),
                                 CobaltApiKeys.copyFromHexApiKey(
                                         flags.getCobaltAdservicesApiKeyHex()),
                                 Duration.ofMillis(flags.getCobaltUploadServiceUnbindDelayMs()),

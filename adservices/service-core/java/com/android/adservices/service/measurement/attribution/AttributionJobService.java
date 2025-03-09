@@ -18,6 +18,8 @@ package com.android.adservices.service.measurement.attribution;
 
 import static com.android.adservices.service.measurement.util.JobLockHolder.Type.ATTRIBUTION_PROCESSING;
 import static com.android.adservices.service.profiling.RbATraceProvider.FeatureNames.MEASUREMENT_API;
+import static com.android.adservices.service.profiling.TracingNames.CLASS_NAME_ATTRIBUTION_JOB_SERVICE;
+import static com.android.adservices.service.profiling.TracingNames.METHOD_NAME_ON_START_JOB;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_ATTRIBUTION_JOB;
 
@@ -90,12 +92,17 @@ public final class AttributionJobService extends JobService {
                     /* doRecord=*/ true);
         }
 
+        int traceCookie =
+                RbATraceProvider.beginAsyncSection(
+                        MEASUREMENT_API,
+                        CLASS_NAME_ATTRIBUTION_JOB_SERVICE,
+                        METHOD_NAME_ON_START_JOB,
+                        FlagsFactory.getFlags());
+
         LoggerFactory.getMeasurementLogger().d("AttributionJobService.onStartJob");
         mExecutorFuture =
                 sBackgroundExecutor.submit(
                         () -> {
-                            RbATraceProvider.beginSection(
-                                    MEASUREMENT_API, "AttributionJobService", "onStartJob");
                             ProcessingResult result = acquireLockAndProcessPendingAttributions();
                             LoggerFactory.getMeasurementLogger()
                                     .d("AttributionJobService finished processing [%s]", result);
@@ -135,7 +142,12 @@ public final class AttributionJobService extends JobService {
                                 ReportingJobService.scheduleIfNeeded(
                                         getApplicationContext(), /* forceSchedule */ false);
                             }
-                            RbATraceProvider.endSection();
+                            RbATraceProvider.endAsyncSection(
+                                    MEASUREMENT_API,
+                                    CLASS_NAME_ATTRIBUTION_JOB_SERVICE,
+                                    METHOD_NAME_ON_START_JOB,
+                                    traceCookie,
+                                    FlagsFactory.getFlags());
                         });
         return true;
     }

@@ -22,7 +22,10 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Index;
 
+import com.android.adservices.service.proto.config_delivery.ConfigurationType;
+
 import com.google.auto.value.AutoValue;
+import com.google.protobuf.Any;
 
 /** Table representing Configurations. */
 @Entity(
@@ -38,15 +41,11 @@ public abstract class ConfigurationEntity {
     @ColumnInfo(name = "config_row_id")
     public abstract long getConfigRowId();
 
-    /**
-     * Configuration type to which this configuration entry belongs to.
-     *
-     * <p>This config type will be one of the types in,
-     * AdServices/adservices/service-core/proto/config-delivery/configuration_type.proto
-     */
+    /** Configuration type to which this configuration entry belongs to. */
     @AutoValue.CopyAnnotations
+    @NonNull
     @ColumnInfo(name = "type")
-    public abstract int getType();
+    public abstract ConfigurationType getType();
 
     /** Version of the configuration record. */
     @AutoValue.CopyAnnotations
@@ -66,13 +65,13 @@ public abstract class ConfigurationEntity {
     /**
      * Configuration proto binary data (persisted as Blob).
      *
-     * <p>This byte array will be parsed into its relevant proto type using Proto's parseFrom API.
+     * <p>Any value will be parsed into its relevant proto type using Proto's parseFrom API.
      */
     @AutoValue.CopyAnnotations
     @Nullable
     @ColumnInfo(name = "value", typeAffinity = ColumnInfo.BLOB)
     @SuppressWarnings("mutable")
-    public abstract byte[] getValue();
+    public abstract Any getValue();
 
     /** Returns a {@link Builder} for {@link ConfigurationEntity} */
     public static Builder builder() {
@@ -85,7 +84,7 @@ public abstract class ConfigurationEntity {
      * <p>Creates and returns a {@link ConfigurationEntity} object.
      */
     public static ConfigurationEntity create(
-            long configRowId, int type, long version, String id, byte[] value) {
+            long configRowId, ConfigurationType type, long version, String id, Any value) {
 
         return builder()
                 .setConfigRowId(configRowId)
@@ -104,7 +103,7 @@ public abstract class ConfigurationEntity {
         public abstract Builder setConfigRowId(long configRowId);
 
         /** For more details see {@link #getType()} ()} */
-        public abstract Builder setType(int type);
+        public abstract Builder setType(ConfigurationType type);
 
         /** For more details see {@link #getVersion()} */
         public abstract Builder setVersion(long version);
@@ -113,7 +112,7 @@ public abstract class ConfigurationEntity {
         public abstract Builder setId(String id);
 
         /** For more details see {@link #getValue()} */
-        public abstract Builder setValue(byte[] value);
+        public abstract Builder setValue(Any value);
 
         /**
          * @return an instance of {@link ConfigurationEntity}
