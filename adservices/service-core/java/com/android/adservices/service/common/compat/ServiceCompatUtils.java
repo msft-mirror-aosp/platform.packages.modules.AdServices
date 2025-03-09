@@ -43,6 +43,8 @@ public final class ServiceCompatUtils {
      * @return true if the device is running on Android T+ and the package name matches the
      *     AdServices package within the ExtServices apex.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static boolean shouldDisableExtServicesJobOnTPlus(@NonNull Context context) {
         Objects.requireNonNull(context);
 

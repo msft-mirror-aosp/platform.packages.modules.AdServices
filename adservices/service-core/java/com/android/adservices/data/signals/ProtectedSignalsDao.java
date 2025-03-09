@@ -56,23 +56,40 @@ public abstract class ProtectedSignalsDao {
     public abstract List<DBProtectedSignal> getSignalsByBuyer(AdTechIdentifier buyer);
 
     /**
+     * Returns if any raw signals exist from the given buyer.
+     *
+     * @param buyer The buyer to check existence of signals for.
+     * @return If any signals exist from the given buyer.
+     */
+    @Query("SELECT EXISTS(SELECT 1 FROM protected_signals WHERE buyer = :buyer)")
+    public abstract boolean hasSignalsFromBuyer(AdTechIdentifier buyer);
+
+    /**
      * Inserts signals into the database.
+     *
+     * <p>This method is not meant to be called externally. Instead, use {@link
+     * #insertAndDelete(AdTechIdentifier, Instant, List, List)}.
      *
      * @param signals The signals to insert.
      */
     @Insert
-    public abstract void insertSignals(@NonNull List<DBProtectedSignal> signals);
+    protected abstract void insertSignals(@NonNull List<DBProtectedSignal> signals);
 
     /**
      * Deletes signals from the database.
      *
+     * <p>This method is not meant to be called externally. Instead, use {@link
+     * #insertAndDelete(AdTechIdentifier, Instant, List, List)}.
+     *
      * @param signals The signals to delete.
      */
     @Delete
-    public abstract void deleteSignals(@NonNull List<DBProtectedSignal> signals);
+    protected abstract void deleteSignals(@NonNull List<DBProtectedSignal> signals);
 
     /**
      * Inserts and deletes signals in a single transaction.
+     *
+     * <p>Also writes metadata about the update and clears any orphaned encoded payloads.
      *
      * @param signalsToInsert The signals to insert.
      * @param signalsToDelete The signals to delete.
@@ -90,6 +107,7 @@ public abstract class ProtectedSignalsDao {
                         .setBuyer(buyer)
                         .setLastSignalsUpdatedTime(now)
                         .build());
+        deleteEncodedPayloadsWithMissingRawSignals();
     }
 
     /**
@@ -121,7 +139,9 @@ public abstract class ProtectedSignalsDao {
                             .setLastSignalsUpdatedTime(now)
                             .build());
         }
-        return deleteSignalsBeforeTime(expiryTime);
+        int numDeletedSignals = deleteSignalsBeforeTime(expiryTime);
+        deleteEncodedPayloadsWithMissingRawSignals();
+        return numDeletedSignals;
     }
 
     /**
@@ -148,6 +168,7 @@ public abstract class ProtectedSignalsDao {
             for (AdTechIdentifier buyer : buyersToRemove) {
                 deleteSignalsUpdateMetadata(buyer);
             }
+            deleteEncodedPayloadsWithMissingRawSignals();
         }
 
         return numDeletedEvents;
@@ -175,7 +196,7 @@ public abstract class ProtectedSignalsDao {
      * source apps cannot be found in the app package name allowlist or are not installed on the
      * device.
      *
-     * @return the number of deleted signals
+     * @return the number of deleted raw signals
      */
     @Transaction
     public int deleteAllDisallowedPackageSignalsAndUpdateSignalUpdateMetadata(
@@ -219,12 +240,39 @@ public abstract class ProtectedSignalsDao {
     protected abstract List<String> getAllPackages();
 
     /**
-     * Deletes all signals generated from the given packages.
+     * Deletes all raw signals generated from the given packages.
      *
-     * @return the number of deleted signals
+     * <p>Also clears any encoded signals that are no longer linked to any raw signals.
+     *
+     * @return the number of deleted raw signals
+     */
+    @Transaction
+    public int deleteSignalsByPackage(@NonNull List<String> packages) {
+        int numDeletedRawSignals = deleteRawSignalsByPackage(packages);
+        deleteEncodedPayloadsWithMissingRawSignals();
+        return numDeletedRawSignals;
+    }
+
+    /**
+     * Deletes all raw signals generated from the given packages.
+     *
+     * <p>This is an internal method not meant to be called outside of {@link
+     * #deleteSignalsByPackage(List)}.
+     *
+     * @return the number of deleted raw signals
      */
     @Query("DELETE FROM protected_signals WHERE packageName in (:packages)")
-    public abstract int deleteSignalsByPackage(@NonNull List<String> packages);
+    protected abstract int deleteRawSignalsByPackage(@NonNull List<String> packages);
+
+    /**
+     * Deletes encoded signals for all buyers who no longer have raw signals.
+     *
+     * <p>This method is not meant to be called externally. It should only be called from {@link
+     * #deleteSignalsByPackage(List)}.
+     */
+    // TODO(b/372334616): Consider moving this cross-table deletion into the EncodedPayloadDao
+    @Query("DELETE FROM encoded_payload WHERE buyer NOT IN (SELECT buyer FROM protected_signals)")
+    protected abstract int deleteEncodedPayloadsWithMissingRawSignals();
 
     /** Deletes all signals */
     @Query("DELETE FROM protected_signals")

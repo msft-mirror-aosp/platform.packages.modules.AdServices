@@ -83,7 +83,8 @@ public class AttributionJobHandlerIntegrationTest extends AbstractDbIntegrationT
                                 new SourceNoiseHandler(FlagsFactory.getFlags()),
                                 mLogger,
                                 new XnaSourceCreator(FlagsFactory.getFlags()),
-                                new AggregateDebugReportApi(FlagsFactory.getFlags()))
+                                new AggregateDebugReportApi(FlagsFactory.getFlags()),
+                                sContext)
                         .performPendingAttributions()));
     }
 }

@@ -18,7 +18,9 @@ package com.android.adservices.service.customaudience;
 
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 
+import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.LoggerFactory;
@@ -31,6 +33,7 @@ import com.google.errorprone.annotations.concurrent.GuardedBy;
 import java.time.Instant;
 import java.util.function.Supplier;
 
+@RequiresApi(Build.VERSION_CODES.S)
 public final class ScheduleCustomAudienceUpdateWorker {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 

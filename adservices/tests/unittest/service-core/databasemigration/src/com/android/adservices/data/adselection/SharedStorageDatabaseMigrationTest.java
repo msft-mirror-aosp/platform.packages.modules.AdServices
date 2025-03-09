@@ -16,34 +16,28 @@
 
 package com.android.adservices.data.adselection;
 
-import static org.junit.Assert.assertEquals;
+import static com.google.common.truth.Truth.assertThat;
 
 import android.app.Instrumentation;
 import android.database.Cursor;
 
 import androidx.room.testing.MigrationTestHelper;
 import androidx.sqlite.db.SupportSQLiteDatabase;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.io.IOException;
 
-@RunWith(AndroidJUnit4.class)
-public class SharedStorageDatabaseMigrationTest {
+public final class SharedStorageDatabaseMigrationTest extends AdServicesUnitTestCase {
     private static final String QUERY_TABLES_FROM_SQL_MASTER =
             "SELECT * FROM sqlite_master " + "WHERE type='table' AND name='%s';";
     private static final String TEST_DB = "migration-test";
     private static final Instrumentation INSTRUMENTATION =
             InstrumentationRegistry.getInstrumentation();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Rule(order = 1)
     public MigrationTestHelper helper =
@@ -56,15 +50,15 @@ public class SharedStorageDatabaseMigrationTest {
                 db.query(
                         String.format(
                                 QUERY_TABLES_FROM_SQL_MASTER, DBHistogramEventData.TABLE_NAME));
-        assertEquals(0, c.getCount());
+        assertThat(c.getCount()).isEqualTo(0);
         c = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, DBHistogramIdentifier.TABLE_NAME));
-        assertEquals(0, c.getCount());
+        assertThat(c.getCount()).isEqualTo(0);
 
         // Re-open the database with version 2 and provide MIGRATION_1_2 as the migration process.
         db = helper.runMigrationsAndValidate(TEST_DB, 2, true);
         c = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, DBHistogramEventData.TABLE_NAME));
-        assertEquals(1, c.getCount());
+        assertThat(c.getCount()).isEqualTo(1);
         c = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, DBHistogramIdentifier.TABLE_NAME));
-        assertEquals(1, c.getCount());
+        assertThat(c.getCount()).isEqualTo(1);
     }
 }

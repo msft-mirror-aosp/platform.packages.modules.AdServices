@@ -130,6 +130,14 @@
                         android:layout_marginTop="0dp"
                         style="@style/MainStyle.Body1" />
                     <TextView
+                        android:text="@string/notificationUI_pas_combined_dropdown_subtitle3"
+                        style="@style/MainStyle.Body1Bold" />
+                    <TextView
+                        android:id="@+id/notificationUI_pas_combined_dropdown_body6"
+                        android:text="@string/notificationUI_pas_combined_dropdown_body6"
+                        android:layout_marginTop="0dp"
+                        style="@style/MainStyle.Body1" />
+                    <TextView
                         android:id="@+id/learn_more_from_privacy_policy1"
                         android:text="@string/notificationUI_how_it_works_row_body7_v2"
                         style="@style/MainStyle.Body1" />

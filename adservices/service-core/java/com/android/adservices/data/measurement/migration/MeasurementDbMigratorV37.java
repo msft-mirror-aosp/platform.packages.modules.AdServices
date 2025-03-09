@@ -20,9 +20,25 @@ import android.annotation.NonNull;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.data.measurement.MeasurementTables.AppReportHistoryContract;
 
 /** Migrates Measurement DB to version 37 */
 public class MeasurementDbMigratorV37 extends AbstractMeasurementDbMigrator {
+    public static final String CREATE_TABLE_APP_REPORT_HISTORY_V37 =
+            "CREATE TABLE "
+                    + AppReportHistoryContract.TABLE
+                    + " ("
+                    + AppReportHistoryContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + AppReportHistoryContract.APP_DESTINATION
+                    + " TEXT, "
+                    + AppReportHistoryContract.LAST_REPORT_DELIVERED_TIME
+                    + " INTEGER, "
+                    + "PRIMARY KEY("
+                    + AppReportHistoryContract.REGISTRATION_ORIGIN
+                    + ", "
+                    + AppReportHistoryContract.APP_DESTINATION
+                    + "))";
     private static final String[] CREATE_INDEXES = {
         "CREATE INDEX "
                 + "idx_"
@@ -48,7 +64,7 @@ public class MeasurementDbMigratorV37 extends AbstractMeasurementDbMigrator {
 
     @Override
     protected void performMigration(@NonNull SQLiteDatabase db) {
-        db.execSQL(MeasurementTables.CREATE_TABLE_APP_REPORT_HISTORY_LATEST);
+        db.execSQL(CREATE_TABLE_APP_REPORT_HISTORY_V37);
         for (String statement : CREATE_INDEXES) {
             db.execSQL(statement);
         }

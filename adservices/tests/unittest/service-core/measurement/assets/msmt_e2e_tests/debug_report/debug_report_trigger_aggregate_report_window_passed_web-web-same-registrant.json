@@ -174,7 +174,6 @@
             "debug_mode": "enabled",
             "reporting_origin": "https://www.ad-tech1.test",
             "scheduled_report_time": "5600",
-            "source_registration_time": "0",
             "version": "0.1"
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
@@ -182,7 +181,11 @@
             {
               "key": "0x11",
               "value": 123
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key" : "347982378",
           "trigger_debug_key" : "8971346781"
@@ -200,7 +203,6 @@
             "debug_mode": "enabled",
             "reporting_origin": "https://www.ad-tech1.test",
             "scheduled_report_time": "5600",
-            "source_registration_time": "0",
             "version": "0.1"
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
@@ -208,7 +210,11 @@
             {
               "key": "0x11",
               "value": 123
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key" : "347982378",
           "trigger_debug_key" : "8971346781"

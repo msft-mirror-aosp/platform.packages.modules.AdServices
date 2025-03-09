@@ -24,6 +24,7 @@ import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.BuyerInputGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
+import com.android.adservices.service.devapi.DevSessionDataStore;
 import com.android.adservices.service.shell.NoOpShellCommand;
 import com.android.adservices.service.shell.ShellCommand;
 import com.android.adservices.service.shell.ShellCommandFactory;
@@ -41,6 +42,7 @@ public final class AdSelectionShellCommandFactoryTest extends AdServicesMockitoT
     @Mock private AuctionServerDataCompressor mAuctionServerDataCompressor;
     @Mock private ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
     @Mock private AdSelectionEntryDao mAdSelectionEntryDao;
+    @Mock private DevSessionDataStore mDevSessionDataStore;
     private ShellCommandFactory mFactory;
 
     @Before
@@ -53,7 +55,8 @@ public final class AdSelectionShellCommandFactoryTest extends AdServicesMockitoT
                         mBuyerInputGenerator,
                         mAuctionServerDataCompressor,
                         mConsentedDebugConfigurationGenerator,
-                        mAdSelectionEntryDao);
+                        mAdSelectionEntryDao,
+                        mDevSessionDataStore);
     }
 
     @Test
@@ -78,7 +81,8 @@ public final class AdSelectionShellCommandFactoryTest extends AdServicesMockitoT
                         mBuyerInputGenerator,
                         mAuctionServerDataCompressor,
                         mConsentedDebugConfigurationGenerator,
-                        mAdSelectionEntryDao);
+                        mAdSelectionEntryDao,
+                        mDevSessionDataStore);
         ShellCommand shellCommand = mFactory.getShellCommand(ConsentedDebugShellCommand.CMD);
         assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
     }
@@ -93,7 +97,8 @@ public final class AdSelectionShellCommandFactoryTest extends AdServicesMockitoT
                         mBuyerInputGenerator,
                         mAuctionServerDataCompressor,
                         mConsentedDebugConfigurationGenerator,
-                        mAdSelectionEntryDao);
+                        mAdSelectionEntryDao,
+                        mDevSessionDataStore);
         ShellCommand shellCommand = mFactory.getShellCommand(GetAdSelectionDataCommand.CMD);
         assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
     }
@@ -114,7 +119,8 @@ public final class AdSelectionShellCommandFactoryTest extends AdServicesMockitoT
                         mBuyerInputGenerator,
                         mAuctionServerDataCompressor,
                         mConsentedDebugConfigurationGenerator,
-                        mAdSelectionEntryDao);
+                        mAdSelectionEntryDao,
+                        mDevSessionDataStore);
         ShellCommand shellCommand = mFactory.getShellCommand(ViewAuctionResultCommand.CMD);
         assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
     }
@@ -147,7 +153,8 @@ public final class AdSelectionShellCommandFactoryTest extends AdServicesMockitoT
                         mBuyerInputGenerator,
                         mAuctionServerDataCompressor,
                         mConsentedDebugConfigurationGenerator,
-                        mAdSelectionEntryDao);
+                        mAdSelectionEntryDao,
+                        mDevSessionDataStore);
         ShellCommand shellCommand = mFactory.getShellCommand("invalid");
         assertThat(shellCommand).isNull();
     }
@@ -162,7 +169,8 @@ public final class AdSelectionShellCommandFactoryTest extends AdServicesMockitoT
                         mBuyerInputGenerator,
                         mAuctionServerDataCompressor,
                         mConsentedDebugConfigurationGenerator,
-                        mAdSelectionEntryDao);
+                        mAdSelectionEntryDao,
+                        mDevSessionDataStore);
 
         assertThat(Sets.newHashSet(mFactory.getAllCommandsHelp()))
                 .containsExactlyElementsIn(

@@ -276,6 +276,7 @@ public final class AdIdCacheManager {
 
     @NonNull
     @VisibleForTesting
+    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
     SharedPreferences getSharedPreferences() {
         return mContext.getSharedPreferences(SHARED_PREFS_IAPC, Context.MODE_PRIVATE);
     }

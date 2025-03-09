@@ -50,7 +50,7 @@ public abstract class MeasurementJobServiceTestCase<T extends JobService>
         T spied = getSpiedService();
         assertWithMessage("getSpiedService()").that(spied).isNotNull();
         mSpyService = spy(spied);
-        mSpyLogger = jobMocker.getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
+        mSpyLogger = mocker.getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
     }
 
     // TODO(b/361555631): rename to testMeasurementJobServiceTestCaseFixtures() and annotate

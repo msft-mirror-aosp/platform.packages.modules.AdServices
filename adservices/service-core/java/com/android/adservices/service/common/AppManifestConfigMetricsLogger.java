@@ -18,10 +18,10 @@ package com.android.adservices.service.common;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_UNSPECIFIED;
 import static com.android.adservices.service.common.AppManifestConfigCall.apiToString;
 import static com.android.adservices.service.common.AppManifestConfigCall.resultToString;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_LOGGING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -72,7 +72,9 @@ public final class AppManifestConfigMetricsLogger {
         AdServicesExecutors.getBackgroundExecutor().execute(() -> handleLogUsage(call));
     }
 
-    private static void handleLogUsage(AppManifestConfigCall call) {
+    // Exposing so tests call it directly to avoid race conditions
+    @VisibleForTesting
+    static void handleLogUsage(AppManifestConfigCall call) {
         Context context = ApplicationContextSingleton.get();
         try {
             @Result int newValue = call.result;
@@ -119,6 +121,8 @@ public final class AppManifestConfigMetricsLogger {
     }
 
     /** Dumps the internal state. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void dump(Context context, PrintWriter pw) {
         String prefix = "  ";
         pw.println("AppManifestConfigMetricsLogger");
@@ -162,7 +166,10 @@ public final class AppManifestConfigMetricsLogger {
         }
     }
 
-    @SuppressWarnings("NewAdServicesFile") // PREFS_NAME already called FileCompatUtils
+    @SuppressWarnings({
+        "NewAdServicesFile", // PREFS_NAME already called FileCompatUtils
+        "AvoidSharedPreferences", // Legacy Usage
+    })
     private static SharedPreferences getPrefs(Context context) {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
     }

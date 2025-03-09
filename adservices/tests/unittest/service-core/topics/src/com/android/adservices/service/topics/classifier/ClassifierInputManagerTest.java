@@ -38,7 +38,6 @@ import android.content.res.Resources;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.topics.classifier.ClassifierInputConfig.ClassifierInputField;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -54,8 +53,6 @@ import org.mockito.Mock;
 @SpyStatic(SdkLevel.class)
 @SpyStatic(Preprocessor.class)
 @SpyStatic(FlagsFactory.class)
-// TODO(b/290839573) - Remove rule if Topics is enabled on R in the future.
-@RequiresSdkLevelAtLeastS
 public final class ClassifierInputManagerTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_PACKAGE_NAME = "com.sample.package.name";
     private static final String TEST_APP_NAME = "Name for App";

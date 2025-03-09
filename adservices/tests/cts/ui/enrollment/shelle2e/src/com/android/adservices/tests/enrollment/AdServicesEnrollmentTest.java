@@ -15,15 +15,17 @@
  */
 package com.android.adservices.tests.enrollment;
 
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_ENABLED;
+import static android.adservices.common.Module.MEASUREMENT;
+
 import static com.android.adservices.service.shell.adservicesapi.AdServicesApiShellCommandFactory.COMMAND_PREFIX;
 import static com.android.adservices.service.shell.adservicesapi.EnableAdServicesCommand.CMD_ENABLE_ADSERVICES;
 import static com.android.adservices.service.shell.adservicesapi.ResetConsentCommand.CMD_RESET_CONSENT_DATA;
 
 import android.adservices.common.AdServicesCommonManager;
-import android.adservices.common.AdServicesCommonResponse;
-import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesOutcomeReceiver;
-import android.adservices.common.NotificationTypeParams;
+import android.adservices.common.NotificationType;
+import android.adservices.common.UpdateAdServicesModuleStatesParams;
 import android.util.Log;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -40,9 +42,6 @@ import com.android.adservices.tests.ui.libs.UiConstants;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public final class AdServicesEnrollmentTest extends AdServicesCtsTestCase
         implements EnrollmentTestFlags {
@@ -65,23 +64,21 @@ public final class AdServicesEnrollmentTest extends AdServicesCtsTestCase
 
         AdServicesCommonManager commonManager = AdServicesCommonManager.get(mContext);
 
-        List<AdServicesModuleState> adServicesModuleStateList = new ArrayList<>();
-        adServicesModuleStateList.add(
-                new AdServicesModuleState.Builder().setModule(1).setModuleState(0).build());
-        NotificationTypeParams notificationTypeParams =
-                new NotificationTypeParams.Builder().setNotificationType(1).build();
+        UpdateAdServicesModuleStatesParams params =
+                new UpdateAdServicesModuleStatesParams.Builder()
+                        .setModuleState(MEASUREMENT, MODULE_STATE_ENABLED)
+                        .setNotificationType(NotificationType.NOTIFICATION_ONGOING)
+                        .build();
         ListenableFuture<Integer> responseFuture =
                 CallbackToFutureAdapter.getFuture(
                         completer -> {
-                            commonManager.setAdServicesModuleOverrides(
-                                    adServicesModuleStateList,
-                                    notificationTypeParams,
+                            commonManager.requestAdServicesModuleOverrides(
+                                    params,
                                     AdServicesExecutors.getLightWeightExecutor(),
-                                    new AdServicesOutcomeReceiver<
-                                            AdServicesCommonResponse, Exception>() {
+                                    new AdServicesOutcomeReceiver<Void, Exception>() {
                                         @Override
-                                        public void onResult(AdServicesCommonResponse result) {
-                                            completer.set(1);
+                                        public void onResult(Void unused) {
+                                            completer.set(null);
                                         }
 
                                         @Override

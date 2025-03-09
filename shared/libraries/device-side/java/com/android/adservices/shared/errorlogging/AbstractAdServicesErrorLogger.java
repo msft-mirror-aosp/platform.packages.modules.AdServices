@@ -27,6 +27,7 @@ import java.util.Objects;
  */
 public abstract class AbstractAdServicesErrorLogger implements AdServicesErrorLogger {
     private final StatsdAdServicesErrorLogger mStatsdAdServicesErrorLogger;
+    private static final int MAX_CAUSE_NUMBER = 5;
 
     protected AbstractAdServicesErrorLogger(
             StatsdAdServicesErrorLogger statsdAdServicesErrorLogger) {
@@ -35,14 +36,12 @@ public abstract class AbstractAdServicesErrorLogger implements AdServicesErrorLo
 
     @Override
     public void logError(int errorCode, int ppapiName) {
-        if (!isEnabled(errorCode)) {
-            return;
-        }
         // Create a temporary exception to get stack trace.
-        logErrorInternal(errorCode, ppapiName, new Exception());
+        logErrorInternal(new Throwable(), errorCode, ppapiName, false);
     }
 
     @Override
+    @Deprecated
     public void logErrorWithExceptionInfo(Throwable tr, int errorCode, int ppapiName) {
         if (!isEnabled(errorCode)) {
             return;
@@ -54,24 +53,54 @@ public abstract class AbstractAdServicesErrorLogger implements AdServicesErrorLo
         mStatsdAdServicesErrorLogger.logAdServicesError(builder.build());
     }
 
+    @Override
+    public void logError(Throwable tr, int errorCode, int ppapiName) {
+        logErrorInternal(tr, errorCode, ppapiName, true);
+    }
+
     /** Checks if error logging is enabled for a particular error code. */
     protected abstract boolean isEnabled(int errorCode);
 
     @VisibleForTesting
-    void logErrorInternal(int errorCode, int ppapiName, Exception exception) {
-        StackTraceElement[] stackTrace = exception.getStackTrace();
-        // Look at the 3rd element of the stack trace as that's where we actually log the error.
-        // For example, StackTrace = {AdServicesErrorLoggerImpl.logError, ErrorLogUtil.e,
-        // EpochJobService.onStartJob, ... } and we log stats for EpochJobService.onStartJob.
-        int elementIdx = 2;
-        if (stackTrace.length < elementIdx + 1) {
-            LogUtil.w("Stack trace length less than 3, skipping client error logging");
+    void logErrorInternal(Throwable tr, int errorCode, int ppapiName, boolean isSearchingCause) {
+        if (!isEnabled(errorCode)) {
             return;
+        }
+
+        StackTraceElement stackTraceElement = null;
+        if (!isSearchingCause) {
+            StackTraceElement[] stackTrace = tr.getStackTrace();
+            // Look at the 3rd element of the stack trace as that's where we actually log the error.
+            // For example, StackTrace = {AdServicesErrorLoggerImpl.logError, ErrorLogUtil.e,
+            // EpochJobService.onStartJob, ... } and we log stats for EpochJobService.onStartJob.
+            int elementIdx = 2;
+            if (stackTrace.length < elementIdx + 1) {
+                LogUtil.w("Stack trace length less than 3, skipping client error logging");
+                return;
+            }
+            stackTraceElement = stackTrace[elementIdx];
+        } else {
+            stackTraceElement = getRootCauseStackTraceElement(tr);
+            if (stackTraceElement == null) {
+                return;
+            }
         }
         AdServicesErrorStats.Builder builder =
                 AdServicesErrorStats.builder().setErrorCode(errorCode).setPpapiName(ppapiName);
-        populateClassInfo(stackTrace[elementIdx], builder);
+        populateClassInfo(stackTraceElement, builder);
         mStatsdAdServicesErrorLogger.logAdServicesError(builder.build());
+    }
+
+    private StackTraceElement getRootCauseStackTraceElement(Throwable tr) {
+        int maxCauseNumber = MAX_CAUSE_NUMBER;
+        StackTraceElement stackTraceElement = null;
+        while (tr != null && maxCauseNumber-- > 0) {
+            if (tr.getStackTrace().length > 0) {
+                stackTraceElement = tr.getStackTrace()[0];
+            }
+            tr = tr.getCause();
+        }
+        return stackTraceElement;
     }
 
     private void populateExceptionInfo(Throwable tr, AdServicesErrorStats.Builder builder) {

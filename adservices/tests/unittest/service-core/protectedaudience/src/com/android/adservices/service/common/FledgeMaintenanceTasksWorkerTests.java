@@ -42,7 +42,6 @@ import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.InteractionReportingTableClearedStats;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +50,6 @@ import org.mockito.Mock;
 
 import java.time.Instant;
 
-@RequiresSdkLevelAtLeastS()
 public final class FledgeMaintenanceTasksWorkerTests extends AdServicesExtendedMockitoTestCase {
     private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
     @Mock private AdSelectionEntryDao mAdSelectionEntryDaoMock;

@@ -22,11 +22,8 @@ import android.adservices.adselection.SellerConfigurationFixture;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class GetAdSelectionDataRequestTest extends CtsAdServicesDeviceTestCase {
 
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;

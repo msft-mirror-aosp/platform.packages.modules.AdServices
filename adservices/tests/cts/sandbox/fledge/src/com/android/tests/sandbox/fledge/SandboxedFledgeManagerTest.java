@@ -71,10 +71,11 @@ public final class SandboxedFledgeManagerTest extends CtsSandboxedFledgeManagerT
 
     @Before
     public void setup() throws TimeoutException {
-        DevContextFilter devContextFilter = DevContextFilter.create(sContext);
-        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
+        DevContextFilter devContextFilter =
+                DevContextFilter.create(mContext, /* developerModeFeatureEnabled= */ false);
+        DevContext devContext = devContextFilter.createDevContext(Process.myUid());
         boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());
-        boolean isDeveloperMode = devContextFilter.isDeveloperMode();
+        boolean isDeveloperMode = devContextFilter.isDeviceDevOptionsEnabledOrDebuggable();
         mHasAccessToDevOverrides = devContext.getDeviceDevOptionsEnabled();
         mAccessStatus =
                 String.format("Debuggable: %b\n", isDebuggable)
@@ -82,7 +83,9 @@ public final class SandboxedFledgeManagerTest extends CtsSandboxedFledgeManagerT
 
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+                .adoptShellPermissionIdentity(
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG);
 
         makeTestProcessForeground();
 

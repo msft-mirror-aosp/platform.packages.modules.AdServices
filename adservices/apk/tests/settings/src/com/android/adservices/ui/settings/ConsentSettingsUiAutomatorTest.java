@@ -22,7 +22,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.os.Build;
 
@@ -39,7 +39,7 @@ import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.adservices.shared.testing.annotations.SetStringFlag;
-import com.android.adservices.ui.util.AdServicesUiTestCase;
+import com.android.adservices.ui.util.AdservicesSettingsUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 
 import org.junit.Ignore;
@@ -51,7 +51,7 @@ import org.junit.Test;
 @SetCompatModeFlags
 @SetFlagDisabled(KEY_GA_UX_FEATURE_ENABLED)
 @SetStringFlag(name = "debug_ux", value = "BETA_UX")
-public final class ConsentSettingsUiAutomatorTest extends AdServicesUiTestCase {
+public final class ConsentSettingsUiAutomatorTest extends AdservicesSettingsUiTestCase {
     @Test
     @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = 0)
     @SetFlagDisabled(KEY_UI_DIALOGS_FEATURE_ENABLED)
@@ -132,11 +132,15 @@ public final class ConsentSettingsUiAutomatorTest extends AdServicesUiTestCase {
 
         // click switch
         performSwitchClick(dialogsOn, consentSwitch);
-        assertThat(consentSwitch.isChecked()).isTrue();
+        assertWithMessage("consent switch checked should be true")
+                .that(consentSwitch.isChecked())
+                .isTrue();
 
         // click switch
         performSwitchClick(dialogsOn, consentSwitch);
-        assertThat(consentSwitch.isChecked()).isFalse();
+        assertWithMessage("consent switch checked should be false")
+                .that(consentSwitch.isChecked())
+                .isFalse();
     }
 
     private void setConsentToFalse(boolean dialogsOn) {
@@ -154,8 +158,9 @@ public final class ConsentSettingsUiAutomatorTest extends AdServicesUiTestCase {
             UiObject2 positiveText =
                     ApkTestUtil.getElement(
                             mDevice, R.string.settingsUI_dialog_opt_out_positive_text);
-            assertThat(dialogTitle).isNotNull();
-            assertThat(positiveText).isNotNull();
+            ApkTestUtil.assertNotNull(dialogTitle, R.string.settingsUI_dialog_opt_out_title);
+            ApkTestUtil.assertNotNull(
+                    positiveText, R.string.settingsUI_dialog_opt_out_positive_text);
             positiveText.click();
         } else {
             mainSwitch.click();

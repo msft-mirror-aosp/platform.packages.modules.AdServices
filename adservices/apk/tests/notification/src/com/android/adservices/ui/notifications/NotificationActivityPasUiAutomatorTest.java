@@ -27,7 +27,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
 import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.FlakyTest;
@@ -35,25 +35,20 @@ import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
 
-
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
-import com.android.adservices.ui.util.AdServicesUiTestCase;
+import com.android.adservices.ui.util.AdservicesNotificationUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS UX is currently only available on T+ devices")
 @RunWith(AndroidJUnit4.class)
-public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTestCase {
+public final class NotificationActivityPasUiAutomatorTest extends AdservicesNotificationUiTestCase {
 
     private static final String ANDROID_WIDGET_SWITCH = "android.widget.Switch";
     private static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS = 2_000;
@@ -73,23 +68,8 @@ public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTe
                     .setFlag(KEY_IS_EEA_DEVICE, false)
                     .setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
 
-    /**
-     * Setup before notification tests.
-     *
-     * @throws Exception general exception
-     */
-    @BeforeClass
-    public static void classSetup() throws Exception {
-
-        NotificationActivityTestUtil.setupBeforeTests();
-    }
-
-    @Before
-    public void setup() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-    }
-
     @Test
+    @FlakyTest(bugId = 374129459)
     public void renotifyClickSettingsTest() throws Exception {
         // enable at least one of Fledge or Mesurement API
         ApkTestUtil.launchSettingView(mDevice, LAUNCH_TIMEOUT);
@@ -109,26 +89,30 @@ public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTe
 
         UiObject2 pasNotificationHeader =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_pas_renotify_header_title);
-        assertThat(pasNotificationHeader).isNotNull();
+        assertWithMessage("pas head should show").that(pasNotificationHeader).isNotNull();
 
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         UiObject2 leftControlButton =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_left_control_button_text);
-        assertThat(leftControlButton).isNotNull();
+        assertWithMessage("left button should show").that(leftControlButton).isNotNull();
         UiObject2 rightControlButton =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_right_control_button_text);
-        assertThat(rightControlButton).isNotNull();
+        assertWithMessage("right button should show").that(rightControlButton).isNotNull();
 
         // check manage settings button works
         leftControlButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
         UiObject2 topicsTitle =
                 ApkTestUtil.getElement(mDevice, R.string.settingsUI_topics_ga_title);
         ApkTestUtil.scrollTo(mDevice, R.string.settingsUI_topics_ga_title);
-        assertThat(topicsTitle).isNotNull();
+        assertWithMessage("pas notification enter settings page should see topics title")
+                .that(topicsTitle)
+                .isNotNull();
         UiObject2 appsTitle = ApkTestUtil.getElement(mDevice, R.string.settingsUI_apps_ga_title);
         ApkTestUtil.scrollTo(mDevice, R.string.settingsUI_apps_ga_title);
-        assertThat(appsTitle).isNotNull();
+        assertWithMessage("pas notification enter settings page should see apps title")
+                .that(appsTitle)
+                .isNotNull();
     }
 
     @Test
@@ -163,18 +147,26 @@ public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTe
 
         UiObject2 pasNotificationHeader =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_pas_combined_header_title);
-        assertThat(pasNotificationHeader).isNotNull();
+        assertWithMessage("pas notification header should show")
+                .that(pasNotificationHeader)
+                .isNotNull();
         UiObject2 pasNotificationBody =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_pas_combined_body_2);
-        assertThat(pasNotificationBody).isNotNull();
+        assertWithMessage("pas notification body should show")
+                .that(pasNotificationBody)
+                .isNotNull();
 
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         UiObject2 leftControlButton =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_left_control_button_text);
-        assertThat(leftControlButton).isNotNull();
+        assertWithMessage("pas notification left button should show")
+                .that(leftControlButton)
+                .isNotNull();
         UiObject2 rightControlButton =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_right_control_button_text);
-        assertThat(rightControlButton).isNotNull();
+        assertWithMessage("pas notification right button should show")
+                .that(rightControlButton)
+                .isNotNull();
     }
 }

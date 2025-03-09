@@ -107,18 +107,14 @@ public class ConsentNotificationPasFragment extends Fragment {
                 !mIsRenotify
                         && consentManager.getUserManualInteractionWithConsent()
                                 != MANUAL_INTERACTIONS_RECORDED;
-        boolean isAdultFromRvcMsmtEnabled =
-                consentManager.isOtaAdultUserFromRvc()
-                        && consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
         if (UxStatesManager.getInstance().getFlag(KEY_EEA_PAS_UX_ENABLED)) {
             consentManager.recordPasNotificationOpened(true);
-            if (mIsStrictConsentBehavior
-                    && (isNotRenotifyNoManualInteraction || isAdultFromRvcMsmtEnabled)) {
+            if (mIsStrictConsentBehavior && isNotRenotifyNoManualInteraction) {
                 consentManager.enable(requireContext(), AdServicesApiType.FLEDGE);
                 consentManager.enable(requireContext(), AdServicesApiType.MEASUREMENTS);
             }
         }
-        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED, getContext());
+        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED);
     }
 
     @Override
@@ -127,7 +123,7 @@ public class ConsentNotificationPasFragment extends Fragment {
         if (mScrollToBottomController != null) {
             mScrollToBottomController.saveInstanceState(savedInstanceState);
         }
-        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISMISSED, getContext());
+        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISMISSED);
     }
 
     private void setupListeners(Bundle savedInstanceState) {
@@ -138,7 +134,7 @@ public class ConsentNotificationPasFragment extends Fragment {
         howItWorksExpander.setOnClickListener(
                 view -> {
                     ConsentNotificationActivity.handleAction(
-                            CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED, getContext());
+                            CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED);
 
                     setInfoViewState1(!mIsInfoViewExpanded1);
                 });
@@ -154,10 +150,18 @@ public class ConsentNotificationPasFragment extends Fragment {
             howItWorksExpander2.setOnClickListener(
                     view -> {
                         ConsentNotificationActivity.handleAction(
-                                LANDING_PAGE_ADDITIONAL_INFO_2_CLICKED, getContext());
+                                LANDING_PAGE_ADDITIONAL_INFO_2_CLICKED);
                         setInfoViewState2(!mIsInfoViewExpanded2);
                     });
             ((TextView) requireActivity().findViewById(R.id.learn_more_from_privacy_policy2))
+                    .setMovementMethod(LinkMovementMethod.getInstance());
+            // initialize hyperlink in 1st section
+            ((TextView) requireActivity().findViewById(R.id.notificationUI_pas_app_body2_part2))
+                    .setMovementMethod(LinkMovementMethod.getInstance());
+        } else {
+            ((TextView)
+                            requireActivity()
+                                    .findViewById(R.id.notificationUI_pas_combined_dropdown_body6))
                     .setMovementMethod(LinkMovementMethod.getInstance());
         }
 
@@ -165,7 +169,7 @@ public class ConsentNotificationPasFragment extends Fragment {
         leftControlButton.setOnClickListener(
                 view -> {
                     ConsentNotificationActivity.handleAction(
-                            CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED, getContext());
+                            CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED);
 
                     // go to settings activity
                     Intent intent =

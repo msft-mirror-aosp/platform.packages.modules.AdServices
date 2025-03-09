@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.signals;
 
-
 import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
@@ -60,10 +59,12 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
@@ -86,6 +87,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
@@ -117,6 +119,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
     @NonNull private final DevContextFilter mDevContextFilter;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
     @NonNull private final ProtectedSignalsServiceFilter mProtectedSignalsServiceFilter;
     @NonNull private final EnrollmentDao mEnrollmentDao;
@@ -140,16 +143,37 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                         new UpdateProcessingOrchestrator(
                                 ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
                                 new UpdateProcessorSelector(),
-                                new UpdateEncoderEventHandler(context),
-                                new SignalEvictionController()),
+                                new UpdateEncoderEventHandler(
+                                        context,
+                                        new ForcedEncoderFactory(
+                                                        FlagsFactory.getFlags()
+                                                                .getFledgeEnableForcedEncodingAfterSignalsUpdate(),
+                                                        FlagsFactory.getFlags()
+                                                                .getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds(),
+                                                        context)
+                                                .createInstance()),
+                                new SignalEvictionController(),
+                                new ForcedEncoderFactory(
+                                                FlagsFactory.getFlags()
+                                                        .getFledgeEnableForcedEncodingAfterSignalsUpdate(),
+                                                FlagsFactory.getFlags()
+                                                        .getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds(),
+                                                context)
+                                        .createInstance()),
                         new AdTechUriValidator(ADTECH_CALLER_NAME, "", CLASS_NAME, FIELD_NAME),
                         Clock.systemUTC()),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
                 ConsentManager.getInstance(),
-                DevContextFilter.create(context),
+                DevContextFilter.create(
+                        context,
+                        BinderFlagReader.readFlag(
+                                () ->
+                                        DebugFlags.getInstance()
+                                                .getDeveloperSessionFeatureEnabled())),
                 AdServicesExecutors.getBackgroundExecutor(),
                 AdServicesLoggerImpl.getInstance(),
                 FlagsFactory.getFlags(),
+                DebugFlags.getInstance(),
                 CallingAppUidSupplierBinderImpl.create(),
                 new ProtectedSignalsServiceFilter(
                         context,
@@ -185,6 +209,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
             @NonNull ExecutorService executorService,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull Flags flags,
+            @NonNull DebugFlags debugFlags,
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
             @NonNull ProtectedSignalsServiceFilter protectedSignalsServiceFilter,
             @NonNull EnrollmentDao enrollmentDao,
@@ -207,6 +232,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         mExecutorService = executorService;
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mCallingAppUidSupplier = callingAppUidSupplier;
         mProtectedSignalsServiceFilter = protectedSignalsServiceFilter;
         mEnrollmentDao = enrollmentDao;
@@ -214,6 +240,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
     }
 
     /** Creates a new instance of {@link ProtectedSignalsServiceImpl}. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static ProtectedSignalsServiceImpl create(@NonNull Context context) {
         return new ProtectedSignalsServiceImpl(context);
     }
@@ -230,8 +258,10 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         sLogger.v("Entering updateSignals");
 
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
-        String callerPackageName = updateSignalsInput == null ?
-                EMPTY_PACKAGE_NAME : updateSignalsInput.getCallerPackageName();
+        String callerPackageName =
+                updateSignalsInput == null
+                        ? EMPTY_PACKAGE_NAME
+                        : updateSignalsInput.getCallerPackageName();
 
         try {
             Objects.requireNonNull(updateSignalsInput);
@@ -249,7 +279,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                             .build());
             mUpdateSignalsProcessReportedLogger.setAdservicesApiStatusCode(
                     AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
-            ErrorLogUtil.e(
+            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
                     exception,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_SERVICE_IMPL_NULL_ARGUMENT,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
@@ -329,7 +360,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                     // TODO (b/327187357): Move per-API/per-app consent into the
                                     //  filter
                                     /* enforceConsent= */ false,
-                                    !mFlags.getConsentNotificationDebugMode(),
+                                    !mDebugFlags.getConsentNotificationDebugMode(),
                                     callerUid,
                                     apiName,
                                     PROTECTED_SIGNAL_API_UPDATE_SIGNALS,
@@ -367,9 +398,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                 // the service filter
                 // TODO (b/327187357): Move per-API/per-app consent into the filter
                 if (mConsentManager.isPasFledgeConsentGiven()) {
-                    if (!mConsentManager
-                            .isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                                    input.getCallerPackageName())) {
+                    if (!mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
+                            input.getCallerPackageName())) {
                         sLogger.v("Orchestrating signal update");
                         mUpdateSignalsOrchestrator
                                 .orchestrateUpdate(
@@ -377,7 +407,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                         buyer,
                                         input.getCallerPackageName(),
                                         devContext,
-                                        UpdateSignalsApiCalledStats.builder(),
+                                        jsonProcessingStatsBuilder,
                                         updateSignalsProcessReportedLogger)
                                 .get();
                         PeriodicEncodingJobService.scheduleIfNeeded(mContext, mFlags, false);
@@ -460,7 +490,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                     AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
             updateSignalsProcessReportedLogger.setAdservicesApiStatusCode(
                     AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
-            ErrorLogUtil.e(
+            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
                     illegalStateException,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_GET_CALLING_UID_ILLEGAL_STATE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);

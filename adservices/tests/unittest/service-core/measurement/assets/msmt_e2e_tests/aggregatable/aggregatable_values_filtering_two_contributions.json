@@ -97,7 +97,8 @@
                 },
                 "filters": {"conversion_subdomain": ["electronics.megastore"]}
               }
-            ]
+            ],
+            "aggregatable_source_registration_time": "INCLUDE"
           },
           "Location": null,
           "Attribution-Reporting-Redirect": null
@@ -135,7 +136,10 @@
         "source_site": "android-app://example.1s1.test",
         "histograms": [
           {"key": "0x559", "value": 32768},
-          {"key": "0xa85", "value": 1664}
+          {"key": "0xa85", "value": 1664},
+          {"key": "0x0", "value": 0},
+          {"key": "0x0", "value": 0},
+          {"key": "0x0", "value": 0}
         ]
       }
     }]

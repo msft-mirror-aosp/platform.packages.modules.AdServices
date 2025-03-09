@@ -22,7 +22,7 @@ import static org.junit.Assert.fail;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import com.android.adservices.shared.meta_testing.FakeLogger;
+import com.android.adservices.shared.meta_testing.FakeRealLogger;
 import com.android.adservices.shared.testing.LogEntry;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.SidelessTestCase;
@@ -40,7 +40,7 @@ public final class ConcurrencyHelperTest extends SidelessTestCase {
 
     private static final long SLEEP_TIMEOUT_MS = 100;
 
-    private final FakeLogger mFakeLogger = new FakeLogger();
+    private final FakeRealLogger mFakeLogger = new FakeRealLogger();
 
     private final ConcurrencyHelper mHelper = new ConcurrencyHelper(mFakeLogger);
 

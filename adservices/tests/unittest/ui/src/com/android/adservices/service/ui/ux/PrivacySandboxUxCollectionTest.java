@@ -71,7 +71,7 @@ public class PrivacySandboxUxCollectionTest {
                 0,
                 PrivacySandboxUxCollection.UNSUPPORTED_UX.getEnrollmentChannelCollection().length);
         assertEquals(5, PrivacySandboxUxCollection.U18_UX.getEnrollmentChannelCollection().length);
-        assertEquals(9, PrivacySandboxUxCollection.GA_UX.getEnrollmentChannelCollection().length);
+        assertEquals(8, PrivacySandboxUxCollection.GA_UX.getEnrollmentChannelCollection().length);
         assertEquals(4, PrivacySandboxUxCollection.BETA_UX.getEnrollmentChannelCollection().length);
     }
 }

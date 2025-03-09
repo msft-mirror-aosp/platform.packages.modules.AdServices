@@ -16,15 +16,22 @@
 
 package com.android.server.sdksandbox.verifier;
 
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Handler;
+import android.util.Log;
 
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.server.sdksandbox.verifier.DexParser.DexEntry;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Handles the loading of dex files for multiple apks to be verified, ensures that a single dex file
@@ -53,11 +60,14 @@ public class SerialDexLoader {
      * @param verificationHandler object to handle the verification of the loaded dex
      */
     public void queueApkToLoad(
-            File apkPathFile, String packagename, VerificationHandler verificationHandler) {
+            File apkPathFile,
+            String packagename,
+            Context context,
+            VerificationHandler verificationHandler) {
 
         mHandler.post(
                 () -> {
-                    Map<File, List<String>> dexEntries;
+                    List<DexEntry> dexEntries = null;
                     try {
                         dexEntries = mParser.getDexFilePaths(apkPathFile);
                     } catch (IOException e) {
@@ -65,24 +75,84 @@ public class SerialDexLoader {
                         return;
                     }
 
-                    for (Map.Entry<File, List<String>> dexFileEntries : dexEntries.entrySet()) {
-                        for (String dexEntry : dexFileEntries.getValue()) {
-                            try {
-                                mParser.loadDexSymbols(
-                                        dexFileEntries.getKey(), dexEntry, mDexSymbols);
-                            } catch (IOException e) {
-                                verificationHandler.onVerificationErrorForPackage(e);
-                                return;
-                            }
-                            if (!verificationHandler.verify(mDexSymbols)) {
-                                verificationHandler.onVerificationCompleteForPackage(false);
-                                return;
-                            }
+                    File installedPackageFile = null;
+                    List<String> verifiedEntries = new ArrayList<>();
+                    boolean passedVerification = false;
+                    try {
+                        passedVerification =
+                                verifyDexEntries(dexEntries, verifiedEntries, verificationHandler);
+                        verificationHandler.onVerificationCompleteForPackage(passedVerification);
+                        return;
+                    } catch (IOException e) {
+                        // tmp dex files were deleted while verifying, this happens when
+                        // installation completes, try fetching installed apk to continue verifying
+                        installedPackageFile = getInstalledPackageFile(packagename, context);
+                        if (installedPackageFile == null) {
+                            verificationHandler.onVerificationErrorForPackage(
+                                    new Exception("apk files not found for " + packagename));
+                            return;
                         }
                     }
 
-                    verificationHandler.onVerificationCompleteForPackage(true);
+                    // verify installed dex entries if we ran out of time to verify the tmp files
+                    List<DexEntry> installedDexEntries = null;
+                    try {
+                        installedDexEntries = mParser.getDexFilePaths(installedPackageFile);
+                    } catch (IOException e) {
+                        verificationHandler.onVerificationErrorForPackage(e);
+                        return;
+                    }
+
+                    // avoid verifying the same dex file twice
+                    List<DexEntry> pendingDexEntries =
+                            installedDexEntries.stream()
+                                    .filter(
+                                            entry ->
+                                                    !verifiedEntries.contains(
+                                                            entry.getEntryFilename()))
+                                    .collect(Collectors.toList());
+
+                    try {
+                        passedVerification =
+                                verifyDexEntries(
+                                        pendingDexEntries, verifiedEntries, verificationHandler);
+                        verificationHandler.onVerificationCompleteForPackage(passedVerification);
+                        return;
+                    } catch (IOException e) {
+                        verificationHandler.onVerificationErrorForPackage(e);
+                        return;
+                    }
                 });
+    }
+
+    private boolean verifyDexEntries(
+            List<DexEntry> dexEntries,
+            List<String> verifiedEntries,
+            VerificationHandler verificationHandler)
+            throws IOException {
+        for (DexEntry entry : dexEntries) {
+            mParser.loadDexSymbols(entry.getApkFile(), entry.getDexEntry(), mDexSymbols);
+            if (!verificationHandler.verify(mDexSymbols)) {
+                return false;
+            }
+            verifiedEntries.add(entry.getEntryFilename());
+        }
+        return true;
+    }
+
+    private File getInstalledPackageFile(String packagename, Context context) {
+        try {
+            ApplicationInfo applicationInfo =
+                    context.getPackageManager()
+                            .getPackageInfo(
+                                    packagename,
+                                    PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES
+                                            | PackageManager.MATCH_ANY_USER)
+                            .applicationInfo;
+            return new File(applicationInfo.sourceDir);
+        } catch (NameNotFoundException e) {
+            return null;
+        }
     }
 
     /** Interface for handling processing of the loaded dex contents */

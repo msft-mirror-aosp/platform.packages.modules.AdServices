@@ -19,7 +19,6 @@ package com.android.adservices.data.adselection;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -28,7 +27,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
-@RequiresSdkLevelAtLeastS
 public final class DBConsentedDebugConfigurationTest extends AdServicesUnitTestCase {
     private static final boolean IS_CONSENTED = true;
     private static final Instant CREATION_TIMESTAMP = Instant.now();

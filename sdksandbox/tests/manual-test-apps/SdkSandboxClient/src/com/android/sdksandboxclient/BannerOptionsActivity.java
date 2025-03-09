@@ -55,6 +55,7 @@ public class BannerOptionsActivity extends AppCompatActivity {
 
         private final Executor mExecutor = Executors.newSingleThreadExecutor();
         private EditTextPreference mVideoUrlPreference;
+        private EditTextPreference mImageUrlPreference;
 
         private EditTextPreference mPackageToOpen;
         private ListPreference mOnClickPreference;
@@ -81,6 +82,7 @@ public class BannerOptionsActivity extends AppCompatActivity {
 
         private void configurePreferences() {
             mVideoUrlPreference = (EditTextPreference) findPreferenceOrFail("banner_video_url");
+            mImageUrlPreference = (EditTextPreference) findPreferenceOrFail("banner_image_url");
             mOnClickPreference = (ListPreference) findPreferenceOrFail("banner_on_click");
             mPackageToOpen = (EditTextPreference) findPreferenceOrFail("package_to_open");
             mSizePreference = (ListPreference) findPreferenceOrFail("banner_ad_size");
@@ -90,21 +92,22 @@ public class BannerOptionsActivity extends AppCompatActivity {
             viewTypePreference.setOnPreferenceChangeListener(
                     (preference, object) -> {
                         final String selection = (String) object;
-                        refreshVideoPreferenceVisibility(selection);
+                        refreshVideoOrImagePreferenceVisibility(selection);
                         refreshOnClickEnabled(selection);
                         refreshAdSize((selection));
                         return true;
                     });
 
             final String viewTypeSelection = viewTypePreference.getValue();
-            refreshVideoPreferenceVisibility(viewTypeSelection);
+            refreshVideoOrImagePreferenceVisibility(viewTypeSelection);
             refreshOnClickEnabled(viewTypeSelection);
             refreshAdSize(viewTypeSelection);
         }
 
-        private void refreshVideoPreferenceVisibility(String viewTypeSelection) {
+        private void refreshVideoOrImagePreferenceVisibility(String viewTypeSelection) {
             BannerOptions.ViewType viewType = BannerOptions.ViewType.valueOf(viewTypeSelection);
             mVideoUrlPreference.setVisible(viewType == BannerOptions.ViewType.VIDEO);
+            mImageUrlPreference.setVisible(viewType == BannerOptions.ViewType.IMAGE);
         }
 
         private void refreshOnClickEnabled(String viewTypeSelection) {

@@ -39,7 +39,6 @@ import java.util.function.Function;
  *   <li>common logging events
  * </ul>
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class BaseActionDelegate implements UxSelector {
     final AdServicesBaseActivity mActivity;

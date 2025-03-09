@@ -150,6 +150,8 @@ public final class EventFallbackReportingJobService extends JobService {
      * @param context the context
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
         if (flags.getMeasurementJobEventFallbackReportingKillSwitch()) {
@@ -177,6 +179,8 @@ public final class EventFallbackReportingJobService extends JobService {
         }
     }
 
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID,

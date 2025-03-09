@@ -25,6 +25,13 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_PROTECTED_SIGNALS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_AD_TECH_NOT_AUTHORIZED_BY_APP;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ANY_PERMISSION_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ENROLLMENT_DATA_MATCH_NOT_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NO_MATCH_PACKAGE_NAME;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_PERMISSION_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
@@ -39,11 +46,13 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Collection;
@@ -86,6 +95,8 @@ public class FledgeAuthorizationFilter {
     }
 
     /** Creates an instance of {@link FledgeAuthorizationFilter}. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static FledgeAuthorizationFilter create(
             @NonNull Context context, @NonNull AdServicesLogger adServicesLogger) {
         Objects.requireNonNull(context);
@@ -123,6 +134,12 @@ public class FledgeAuthorizationFilter {
         sLogger.v("No match found, failing calling package name match in API %d", apiNameLoggingId);
         mAdServicesLogger.logFledgeApiCallStats(
                 apiNameLoggingId, callingPackageName, STATUS_UNAUTHORIZED, /*latencyMs=*/ 0);
+        int celApiNameId = AdsRelevanceStatusUtils.getCelPpApiNameId(apiNameLoggingId);
+        if (celApiNameId != AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED) {
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NO_MATCH_PACKAGE_NAME,
+                    celApiNameId);
+        }
         throw new CallerMismatchException();
     }
 
@@ -183,6 +200,13 @@ public class FledgeAuthorizationFilter {
                 callerAppPackageName,
                 STATUS_PERMISSION_NOT_REQUESTED,
                 /*latencyMs=*/ 0);
+        int celApiNameId = AdsRelevanceStatusUtils.getCelPpApiNameId(apiNameLoggingId);
+        if (celApiNameId != AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED) {
+            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_PERMISSION_FAILURE,
+                    celApiNameId);
+        }
         throw new SecurityException(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
     }
@@ -195,6 +219,13 @@ public class FledgeAuthorizationFilter {
                 callerAppPackageName,
                 STATUS_PERMISSION_NOT_REQUESTED,
                 /*latencyMs=*/ 0);
+        int celApiNameId = AdsRelevanceStatusUtils.getCelPpApiNameId(apiNameLoggingId);
+        if (celApiNameId != AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED) {
+            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ANY_PERMISSION_FAILURE,
+                    celApiNameId);
+        }
         throw new SecurityException(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
     }
@@ -228,6 +259,7 @@ public class FledgeAuthorizationFilter {
         }
         int enrollmentRecordsCount = mEnrollmentDao.getEnrollmentRecordCountForLogging();
         EnrollmentData enrollmentData = getEnrollmentData(adTechIdentifier, apiType);
+        int celApiNameId = AdsRelevanceStatusUtils.getCelPpApiNameId(apiNameLoggingId);
 
         if (enrollmentData == null) {
             sLogger.v(
@@ -246,6 +278,11 @@ public class FledgeAuthorizationFilter {
                         enrollmentRecordsCount,
                         adTechIdentifier.toString(),
                         EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE.getValue());
+            }
+            if (celApiNameId != AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED) {
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ENROLLMENT_DATA_MATCH_NOT_FOUND,
+                        celApiNameId);
             }
             throw new AdTechNotAllowedException();
         }
@@ -267,6 +304,11 @@ public class FledgeAuthorizationFilter {
                     enrollmentRecordsCount,
                     adTechIdentifier.toString(),
                     EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue());
+            if (celApiNameId != AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED) {
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_AD_TECH_NOT_AUTHORIZED_BY_APP,
+                        celApiNameId);
+            }
             throw new AdTechNotAllowedException();
         }
 
@@ -288,6 +330,11 @@ public class FledgeAuthorizationFilter {
                     enrollmentRecordsCount,
                     adTechIdentifier.toString(),
                     EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE.getValue());
+            if (celApiNameId != AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED) {
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED,
+                        celApiNameId);
+            }
             throw new AdTechNotAllowedException();
         }
     }

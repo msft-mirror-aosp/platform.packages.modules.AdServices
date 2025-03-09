@@ -32,6 +32,7 @@ public class AppPackageNameRetriever {
     private final PackageManager mPackageManager;
 
     /** Creates an instance of {@link AppPackageNameRetriever} */
+    @SuppressWarnings("AvoidStaticContext")
     public static AppPackageNameRetriever create(@NonNull Context context) {
         Objects.requireNonNull(context);
         return new AppPackageNameRetriever(context.getPackageManager());

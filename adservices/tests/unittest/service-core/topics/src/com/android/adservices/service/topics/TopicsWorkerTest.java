@@ -35,16 +35,14 @@ import static org.mockito.Mockito.when;
 import android.adservices.topics.GetTopicsResult;
 import android.app.adservices.AdServicesManager;
 import android.app.adservices.topics.TopicParcel;
-import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.util.Pair;
 
-import androidx.test.core.app.ApplicationProvider;
-
 import com.android.adservices.MockRandom;
 import com.android.adservices.cobalt.TopicsCobaltLogger;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.topics.EncryptedTopic;
@@ -54,7 +52,6 @@ import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -62,11 +59,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Correspondence;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -81,32 +76,23 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /** Unit test for {@link com.android.adservices.service.topics.TopicsWorker}. */
-public class TopicsWorkerTest {
-    // Spy the Context to test app reconciliation
-    private final Context mContext = spy(ApplicationProvider.getApplicationContext());
+public final class TopicsWorkerTest extends AdServicesMockitoTestCase {
     private final DbHelper mDbHelper = spy(DbTestUtil.getDbHelperForTest());
 
     private TopicsWorker mTopicsWorker;
     private TopicsDao mTopicsDao;
     private CacheManager mCacheManager;
     private BlockedTopicsManager mBlockedTopicsManager;
-    // Spy DbHelper to mock supportsTopContributorsTable feature.
 
     @Mock private EpochManager mMockEpochManager;
-    @Mock private Flags mMockFlags;
-    @Mock AdServicesLogger mLogger;
-    @Mock AdServicesManager mMockAdServicesManager;
-    @Mock AppSearchConsentManager mAppSearchConsentManager;
-    @Mock TopicsCobaltLogger mTopicsCobaltLogger;
-    @Mock Clock mClock;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    @Mock private AdServicesLogger mLogger;
+    @Mock private AdServicesManager mMockAdServicesManager;
+    @Mock private AppSearchConsentManager mAppSearchConsentManager;
+    @Mock private TopicsCobaltLogger mTopicsCobaltLogger;
+    @Mock private Clock mClock;
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-
         // Clean DB before each test
         DbTestUtil.deleteTable(TopicsTables.TaxonomyContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.AppClassificationTopicsContract.TABLE);
@@ -150,9 +136,9 @@ public class TopicsWorkerTest {
 
     @Test
     public void testGetTopics() {
-        final long epochId = 4L;
-        final int numberOfLookBackEpochs = 3;
-        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        long epochId = 4L;
+        int numberOfLookBackEpochs = 3;
+        Pair<String, String> appSdkKey = Pair.create("app", "sdk");
         Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
         Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
@@ -198,9 +184,9 @@ public class TopicsWorkerTest {
 
     @Test
     public void testGetTopics_enableEncryption_disablePlaintextTopics() {
-        final long epochId = 4L;
-        final int numberOfLookBackEpochs = 3;
-        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        long epochId = 4L;
+        int numberOfLookBackEpochs = 3;
+        Pair<String, String> appSdkKey = Pair.create("app", "sdk");
         Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         EncryptedTopic encryptedTopic1 =
                 EncryptedTopic.create(
@@ -296,9 +282,9 @@ public class TopicsWorkerTest {
 
     @Test
     public void testGetTopics_enableEncryption_featureOn() {
-        final long epochId = 4L;
-        final int numberOfLookBackEpochs = 3;
-        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        long epochId = 4L;
+        int numberOfLookBackEpochs = 3;
+        Pair<String, String> appSdkKey = Pair.create("app", "sdk");
         Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         EncryptedTopic encryptedTopic1 =
                 EncryptedTopic.create(
@@ -393,9 +379,9 @@ public class TopicsWorkerTest {
 
     @Test
     public void testGetTopics_enableEncryption_featureOff() {
-        final long epochId = 4L;
-        final int numberOfLookBackEpochs = 3;
-        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        long epochId = 4L;
+        int numberOfLookBackEpochs = 3;
+        Pair<String, String> appSdkKey = Pair.create("app", "sdk");
         Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         EncryptedTopic encryptedTopic1 =
                 EncryptedTopic.create(
@@ -449,9 +435,9 @@ public class TopicsWorkerTest {
                         .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
                         .setModelVersions(Arrays.asList(4L, 5L, 6L))
                         .setTopics(Arrays.asList(1, 2, 3))
-                        .setEncryptedTopics(Arrays.asList())
-                        .setEncryptionKeys(Arrays.asList())
-                        .setEncapsulatedKeys(Arrays.asList())
+                        .setEncryptedTopics(List.of())
+                        .setEncryptionKeys(List.of())
+                        .setEncapsulatedKeys(List.of())
                         .build();
 
         // Since the returned topic list is shuffled, elements have to be verified separately
@@ -481,7 +467,7 @@ public class TopicsWorkerTest {
 
     @Test
     public void testGetTopics_emptyCache() {
-        final long epochId = 4L;
+        long epochId = 4L;
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
 
@@ -511,9 +497,9 @@ public class TopicsWorkerTest {
 
     @Test
     public void testGetTopics_appNotInCache() {
-        final long epochId = 4L;
-        final int numberOfLookBackEpochs = 1;
-        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        long epochId = 4L;
+        int numberOfLookBackEpochs = 1;
+        Pair<String, String> appSdkKey = Pair.create("app", "sdk");
         Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         Topic[] topics = {topic1};
         // persist returned topics into DB
@@ -545,9 +531,9 @@ public class TopicsWorkerTest {
 
     @Test
     public void testGetTopics_sdkNotInCache() {
-        final long epochId = 4L;
-        final int numberOfLookBackEpochs = 1;
-        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        long epochId = 4L;
+        int numberOfLookBackEpochs = 1;
+        Pair<String, String> appSdkKey = Pair.create("app", "sdk");
         Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         Topic[] topics = {topic1};
         // persist returned topics into DB
@@ -579,11 +565,11 @@ public class TopicsWorkerTest {
 
     @Test
     public void testGetTopics_handleSdkTopicAssignment() {
-        final int numberOfLookBackEpochs = 3;
-        final long currentEpochId = 5L;
+        int numberOfLookBackEpochs = 3;
+        long currentEpochId = 5L;
 
-        final String app = "app";
-        final String sdk = "sdk";
+        String app = "app";
+        String sdk = "sdk";
 
         Pair<String, String> appOnlyCaller = Pair.create(app, /* sdk */ "");
 
@@ -633,11 +619,11 @@ public class TopicsWorkerTest {
 
     @Test
     public void testGetTopics_handleSdkTopicAssignment_existingTopicsForSdk() {
-        final int numberOfLookBackEpochs = 3;
-        final long currentEpochId = 5L;
+        int numberOfLookBackEpochs = 3;
+        long currentEpochId = 5L;
 
-        final String app = "app";
-        final String sdk = "sdk";
+        String app = "app";
+        String sdk = "sdk";
 
         Pair<String, String> appOnlyCaller = Pair.create(app, /* sdk */ "");
         Pair<String, String> appSdkCaller = Pair.create(app, sdk);
@@ -707,9 +693,9 @@ public class TopicsWorkerTest {
 
     @Test
     public void testGetKnownTopicsWithConsent_oneTopicBlocked() {
-        final long lastEpoch = 3;
-        final int numberOfLookBackEpochs = 3;
-        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        long lastEpoch = 3;
+        int numberOfLookBackEpochs = 3;
+        Pair<String, String> appSdkKey = Pair.create("app", "sdk");
         Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
         Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
@@ -751,9 +737,9 @@ public class TopicsWorkerTest {
 
     @Test
     public void testGetKnownTopicsWithConsent_allTopicsBlocked() {
-        final long lastEpoch = 3;
-        final int numberOfLookBackEpochs = 3;
-        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        long lastEpoch = 3;
+        int numberOfLookBackEpochs = 3;
+        Pair<String, String> appSdkKey = Pair.create("app", "sdk");
         Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
         Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
@@ -810,7 +796,7 @@ public class TopicsWorkerTest {
         mTopicsDao.recordBlockedTopic(blockedTopic3);
 
         // persist one not blocked topic.
-        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        Pair<String, String> appSdkKey = Pair.create("app", "sdk");
         Topic topic1 = Topic.create(/* topic */ 4, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
         returnedAppSdkTopicsMap.put(appSdkKey, topic1);
@@ -831,8 +817,8 @@ public class TopicsWorkerTest {
 
     @Test
     public void testTopicsWithRevokedConsent_noTopicsBlocked() {
-        final int numberOfLookBackEpochs = 3;
-        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        int numberOfLookBackEpochs = 3;
+        Pair<String, String> appSdkKey = Pair.create("app", "sdk");
         Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
         Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
@@ -918,10 +904,10 @@ public class TopicsWorkerTest {
 
     @Test
     public void testClearAllTopicsData() {
-        final long epochId = 4L;
-        final int numberOfLookBackEpochs = 3;
-        final String app = "app";
-        final String sdk = "sdk";
+        long epochId = 4L;
+        int numberOfLookBackEpochs = 3;
+        String app = "app";
+        String sdk = "sdk";
 
         ArrayList<String> tableExclusionList = new ArrayList<>();
         tableExclusionList.add(TopicsTables.BlockedTopicsContract.TABLE);
@@ -1013,9 +999,9 @@ public class TopicsWorkerTest {
 
     @Test
     public void testClearAllTopicsData_topicContributorsTable() {
-        final long epochId = 1;
-        final int topicId = 1;
-        final String app = "app";
+        long epochId = 1;
+        int topicId = 1;
+        String app = "app";
         Map<Integer, Set<String>> topicContributorsMap = Map.of(topicId, Set.of(app));
         mTopicsDao.persistTopicContributors(epochId, topicContributorsMap);
 
@@ -1039,19 +1025,19 @@ public class TopicsWorkerTest {
 
     @Test
     public void testReconcileApplicationUpdate() {
-        final String app1 = "app1"; // regular app
-        final String app2 = "app2"; // unhandled uninstalled app
-        final String app3 = "app3"; // unhandled installed app
-        final String app4 = "app4"; // uninstalled app but with only usage
-        final String app5 = "app5"; // installed app but with only returned topic
-        final String sdk = "sdk";
+        String app1 = "app1"; // regular app
+        String app2 = "app2"; // unhandled uninstalled app
+        String app3 = "app3"; // unhandled installed app
+        String app4 = "app4"; // uninstalled app but with only usage
+        String app5 = "app5"; // installed app but with only returned topic
+        String sdk = "sdk";
 
-        final long currentEpochId = 4L;
-        final long taxonomyVersion = 1L;
-        final long modelVersion = 1L;
-        final int numOfLookBackEpochs = 3;
-        final int topicsNumberOfTopTopics = 5;
-        final int topicsPercentageForRandomTopic = 5;
+        long currentEpochId = 4L;
+        long taxonomyVersion = 1L;
+        long modelVersion = 1L;
+        int numOfLookBackEpochs = 3;
+        int topicsNumberOfTopTopics = 5;
+        int topicsPercentageForRandomTopic = 5;
 
         Topic topic1 = Topic.create(/* topic */ 1, taxonomyVersion, modelVersion);
         Topic topic2 = Topic.create(/* topic */ 2, taxonomyVersion, modelVersion);
@@ -1064,7 +1050,7 @@ public class TopicsWorkerTest {
         // In order to mock Package Manager, context also needs to be mocked to return
         // mocked Package Manager
         PackageManager mockPackageManager = Mockito.mock(PackageManager.class);
-        when(mContext.getPackageManager()).thenReturn(mockPackageManager);
+        doReturn(mockPackageManager).when(mSpyContext).getPackageManager();
 
         // Mock Package Manager for installed applications
         // Note app2 is not here to mock uninstallation, app3 is here to mock installation
@@ -1163,10 +1149,10 @@ public class TopicsWorkerTest {
         // Reconcile the unhandled uninstalled apps.
         // As PackageManager is mocked, app2 will be identified as unhandled uninstalled app.
         // All data belonging to app2 will be deleted.
-        topicsWorker.reconcileApplicationUpdate(mContext);
+        topicsWorker.reconcileApplicationUpdate(mSpyContext);
 
         // Both reconciling uninstalled apps and installed apps call these mocked functions
-        verify(mContext, times(2)).getPackageManager();
+        verify(mSpyContext, times(2)).getPackageManager();
 
         PackageManager verifier = verify(mockPackageManager, times(2));
         if (SdkLevel.isAtLeastT()) {
@@ -1243,12 +1229,12 @@ public class TopicsWorkerTest {
 
     @Test
     public void testHandleAppUninstallation() {
-        final long epochId = 4L;
-        final int numberOfLookBackEpochs = 3;
-        final String app = "app";
-        final String sdk = "sdk";
+        long epochId = 4L;
+        int numberOfLookBackEpochs = 3;
+        String app = "app";
+        String sdk = "sdk";
 
-        final Pair<String, String> appSdkKey = Pair.create(app, sdk);
+        Pair<String, String> appSdkKey = Pair.create(app, sdk);
         Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
         Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
         Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
@@ -1325,17 +1311,17 @@ public class TopicsWorkerTest {
         //   app1 is uninstalled in Epoch4, topic1 will be removed for app4 as returned topic in
         //   Epoch1 but not in Epoch3. So if app4 calls Topics API in Epoch4, it's still able to
         //   return topic1 as a result.
-        final long epochId1 = 1;
-        final long epochId2 = 2;
-        final long epochId3 = 3;
-        final long epochId4 = 4;
-        final long taxonomyVersion = 1L;
-        final long modelVersion = 1L;
-        final String app1 = "app1"; // app to uninstall at Epoch4
-        final String app2 = "app2"; // positive case to verify the removal of the returned topic
-        final String app3 = "app3"; // negative case to verify scenario of multiple contributors
-        final String app4 = "app4"; // negative ase to verify the removal is on epoch basis
-        final String sdk = "sdk";
+        long epochId1 = 1;
+        long epochId2 = 2;
+        long epochId3 = 3;
+        long epochId4 = 4;
+        long taxonomyVersion = 1L;
+        long modelVersion = 1L;
+        String app1 = "app1"; // app to uninstall at Epoch4
+        String app2 = "app2"; // positive case to verify the removal of the returned topic
+        String app3 = "app3"; // negative case to verify scenario of multiple contributors
+        String app4 = "app4"; // negative ase to verify the removal is on epoch basis
+        String sdk = "sdk";
         Topic topic1 = Topic.create(/* topic */ 1, taxonomyVersion, modelVersion);
         Topic topic2 = Topic.create(/* topic */ 2, taxonomyVersion, modelVersion);
         Topic topic3 = Topic.create(/* topic */ 3, taxonomyVersion, modelVersion);
@@ -1475,14 +1461,14 @@ public class TopicsWorkerTest {
         // To test the scenario a topic has two contributors, and both are deleted consecutively.
         // Both app1 and app2 are contributors to topic1 and return topic1. app3 is not the
         // contributor but also returns topic1, learnt via same SDK.
-        final long epochId1 = 1;
-        final long epochId2 = 2;
-        final long taxonomyVersion = 1L;
-        final long modelVersion = 1L;
-        final String app1 = "app1";
-        final String app2 = "app2";
-        final String app3 = "app3";
-        final String sdk = "sdk";
+        long epochId1 = 1;
+        long epochId2 = 2;
+        long taxonomyVersion = 1L;
+        long modelVersion = 1L;
+        String app1 = "app1";
+        String app2 = "app2";
+        String app3 = "app3";
+        String sdk = "sdk";
         Topic topic1 = Topic.create(/* topic */ 1, taxonomyVersion, modelVersion);
         Topic topic2 = Topic.create(/* topic */ 2, taxonomyVersion, modelVersion);
         Topic topic3 = Topic.create(/* topic */ 3, taxonomyVersion, modelVersion);
@@ -1551,14 +1537,14 @@ public class TopicsWorkerTest {
 
     @Test
     public void testHandleAppInstallation() {
-        final String appName = "app";
+        String appName = "app";
         Uri packageUri = Uri.parse("package:" + appName);
-        final long currentEpochId = 4L;
-        final long taxonomyVersion = 1L;
-        final long modelVersion = 1L;
-        final int numOfLookBackEpochs = 3;
-        final int topicsNumberOfTopTopics = 5;
-        final int topicsPercentageForRandomTopic = 5;
+        long currentEpochId = 4L;
+        long taxonomyVersion = 1L;
+        long modelVersion = 1L;
+        int numOfLookBackEpochs = 3;
+        int topicsNumberOfTopTopics = 5;
+        int topicsPercentageForRandomTopic = 5;
 
         // As selectAssignedTopicFromTopTopics() randomly assigns a top topic, pass in a Mocked
         // Random object to make the result deterministic.

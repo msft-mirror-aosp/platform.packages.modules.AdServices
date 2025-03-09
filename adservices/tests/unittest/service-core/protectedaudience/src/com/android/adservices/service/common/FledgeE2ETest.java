@@ -21,6 +21,7 @@ import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DA
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_OWNER;
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.CALLER_PACKAGE_NAME_MISMATCH;
@@ -106,6 +107,7 @@ import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RecreateJSSandboxIsolateRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -129,6 +131,7 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdCacheManager;
@@ -136,7 +139,6 @@ import com.android.adservices.service.adselection.AdCost;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.adselection.AdIdFetcher;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
-import com.android.adservices.service.adselection.DebugReportSenderJobService;
 import com.android.adservices.service.adselection.EventReporter;
 import com.android.adservices.service.adselection.JsVersionHelper;
 import com.android.adservices.service.adselection.JsVersionRegister;
@@ -144,7 +146,9 @@ import com.android.adservices.service.adselection.MockAdIdWorker;
 import com.android.adservices.service.adselection.MultiCloudSupportStrategy;
 import com.android.adservices.service.adselection.MultiCloudTestStrategyFactory;
 import com.android.adservices.service.adselection.UpdateAdCounterHistogramWorkerTest;
+import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
+import com.android.adservices.service.adselection.debug.DebugReportSenderJobService;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -152,6 +156,7 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.customaudience.BackgroundFetchJob;
+import com.android.adservices.service.customaudience.ComponentAdsStrategy;
 import com.android.adservices.service.customaudience.CustomAudienceBlobFixture;
 import com.android.adservices.service.customaudience.CustomAudienceImpl;
 import com.android.adservices.service.customaudience.CustomAudienceQuantityChecker;
@@ -161,9 +166,9 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
-import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.testutils.FetchCustomAudienceTestSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -199,12 +204,15 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@SpyStatic(DebugFlags.class)
 @SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 @MockStatic(BackgroundJobsManager.class)
 @MockStatic(ConsentManager.class)
 @MockStatic(AppImportanceFilter.class)
 @MockStatic(DebugReportSenderJobService.class)
 @MockStatic(BackgroundFetchJob.class)
+@SetFlagDisabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
 public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
     public static final String CUSTOM_AUDIENCE_SEQ_1 = "/ca1";
     public static final String CUSTOM_AUDIENCE_SEQ_2 = "/ca2";
@@ -318,6 +326,10 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
     @Rule(order = 12)
     public final MockWebServerRule mockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
+    @Rule(order = 13)
+    public final RecreateJSSandboxIsolateRule recreateJSSandboxIsolateRule =
+            new RecreateJSSandboxIsolateRule();
+
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
     // This object access some system APIs
@@ -350,21 +362,21 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
+    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
     private MultiCloudSupportStrategy mMultiCloudSupportStrategy =
             MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
     private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     private MockAdIdWorker mMockAdIdWorker;
     private AdIdFetcher mAdIdFetcher;
-    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
     private RetryStrategyFactory mRetryStrategyFactory;
     private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
-    private ConsentedDebugConfigurationGeneratorFactory
-            mConsentedDebugConfigurationGeneratorFactory;
-    private EgressConfigurationGenerator mEgressConfigurationGenerator;
+    private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
 
     @Before
     public void setUp() throws Exception {
         mocker.mockGetFlags(DEFAULT_FLAGS);
+        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetConsentNotificationDebugMode(false);
 
         mFledgeAllowListsFilterSpy =
                 spy(new FledgeAllowListsFilter(DEFAULT_FLAGS, mAdServicesLoggerMock));
@@ -418,14 +430,18 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                 Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDatabase.class)
                         .build()
                         .consentedDebugConfigurationDao();
-        mConsentedDebugConfigurationGeneratorFactory =
+        ConsentedDebugConfigurationGeneratorFactory consentedDebugConfigurationGeneratorFactory =
                 new ConsentedDebugConfigurationGeneratorFactory(
                         false, mConsentedDebugConfigurationDao);
-        mEgressConfigurationGenerator =
-                EgressConfigurationGenerator.createInstance(
-                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
-                        mAdIdFetcher,
+        mAuctionServerDebugConfigurationGenerator =
+                new AuctionServerDebugConfigurationGenerator(
+                        Flags.ADID_KILL_SWITCH,
                         Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
+                        Flags.FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING,
+                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
+                        Flags.DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER,
+                        mAdIdFetcher,
+                        consentedDebugConfigurationGeneratorFactory.create(),
                         mLightweightExecutorService);
 
         initClients(false, true, false, false, false, false);
@@ -1210,6 +1226,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mSpyContext,
                         mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1221,9 +1238,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1274,12 +1290,13 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                    + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + " trusted_bidding_signals, contextual_signals, custom_audience_signals)"
+                        + " { \n"
+                        + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                        + "}\n"
+                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                        + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
                         + BUYER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
@@ -1372,6 +1389,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mSpyContext,
                         mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1383,9 +1401,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1672,12 +1689,13 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                    + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + " trusted_bidding_signals, contextual_signals, custom_audience_signals)"
+                        + " { \n"
+                        + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                        + "}\n"
+                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                        + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
                         + BUYER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
@@ -3494,6 +3512,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mSpyContext,
                         mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3505,9 +3524,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
@@ -4890,7 +4908,9 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                                 : new FrequencyCapAdDataValidatorNoOpImpl(),
                                         AdRenderIdValidator.createInstance(flags)),
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                flags),
+                                flags,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         mFledgeAuthorizationFilterMock,
                         mConsentManagerMock,
                         mDevContextFilterMock,
@@ -4898,6 +4918,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         flags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mSpyContext,
@@ -4937,6 +4958,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -4948,9 +4970,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
     }
 
     private AdSelectionTestCallback invokeRunAdSelection(
@@ -5721,11 +5742,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         @Override
         public String getPpapiAppAllowList() {
             return CommonFixture.TEST_PACKAGE_NAME;
-        }
-
-        @Override
-        public boolean getConsentNotificationDebugMode() {
-            return false;
         }
     }
 }

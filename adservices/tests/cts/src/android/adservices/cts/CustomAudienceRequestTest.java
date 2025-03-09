@@ -26,11 +26,8 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
 import android.adservices.customaudience.LeaveCustomAudienceRequest;
 
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class CustomAudienceRequestTest extends CtsAdServicesDeviceTestCase {
     private static final CustomAudience CUSTOM_AUDIENCE =
             CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();

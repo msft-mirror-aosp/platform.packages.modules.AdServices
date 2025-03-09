@@ -23,36 +23,29 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
-
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link Preprocessor}. */
-@SmallTest
-public final class PreprocessorTest {
-
+public final class PreprocessorTest extends AdServicesUnitTestCase {
     private Preprocessor mPreprocessor;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {
-        mPreprocessor = new Preprocessor(ApplicationProvider.getApplicationContext());
+        mPreprocessor = new Preprocessor(mContext);
     }
 
     @Test
     public void removeStopWords_removesLegitStopWords() {
-        assertThat(mPreprocessor.removeStopWords(
-                "sample it they them input string is CustomStopWord1"))
+        expect.that(
+                        mPreprocessor.removeStopWords(
+                                "sample it they them input string is CustomStopWord1"))
                 .isEqualTo("sample it they them input string is");
-        assertThat(mPreprocessor.removeStopWords(
-                "do CustomStopWord1 sample it they them input string"))
+        expect.that(
+                        mPreprocessor.removeStopWords(
+                                "do CustomStopWord1 sample it they them input string"))
                 .isEqualTo("do sample it they them input string");
     }
 
@@ -80,52 +73,55 @@ public final class PreprocessorTest {
 
     @Test
     public void testPreprocessing_forHttpsURLRemoval() {
-        assertThat(preprocessAppDescription("The website is https://youtube.com"))
+        expect.that(preprocessAppDescription("The website is https://youtube.com"))
                 .isEqualTo("the website is");
-        assertThat(preprocessAppDescription("https://youtube.com is the website"))
+        expect.that(preprocessAppDescription("https://youtube.com is the website"))
                 .isEqualTo("is the website");
-        assertThat(preprocessAppDescription("https://www.tensorflow.org/lite/tutorials")).isEmpty();
+        expect.that(preprocessAppDescription("https://www.tensorflow.org/lite/tutorials"))
+                .isEmpty();
     }
 
     @Test
     public void testPreprocessing_forHttpURLRemoval() {
-        assertThat(preprocessAppDescription("The website is http://google.com"))
+        expect.that(preprocessAppDescription("The website is http://google.com"))
                 .isEqualTo("the website is");
-        assertThat(preprocessAppDescription("http://google.com is the website"))
+        expect.that(preprocessAppDescription("http://google.com is the website"))
                 .isEqualTo("is the website");
-        assertThat(preprocessAppDescription("http://google.com")).isEmpty();
+        expect.that(preprocessAppDescription("http://google.com")).isEmpty();
     }
 
     @Test
     public void testPreprocessing_forNotHttpURLRemoval() {
-        assertThat(preprocessAppDescription("The website is www.youtube.com"))
+        expect.that(preprocessAppDescription("The website is www.youtube.com"))
                 .isEqualTo("the website is");
-        assertThat(preprocessAppDescription("www.youtube.com is the website"))
+        expect.that(preprocessAppDescription("www.youtube.com is the website"))
                 .isEqualTo("is the website");
-        assertThat(preprocessAppDescription("www.tensorflow.org/lite/tutorials")).isEmpty();
+        expect.that(preprocessAppDescription("www.tensorflow.org/lite/tutorials")).isEmpty();
     }
 
     @Test
     public void testPreprocessing_forMentionsRemoval() {
-        assertThat(preprocessAppDescription("Code author: @xyz123")).isEqualTo("code author:");
-        assertThat(preprocessAppDescription("@xyz123 Code author: @xyz123"))
+        expect.that(preprocessAppDescription("Code author: @xyz123")).isEqualTo("code author:");
+        expect.that(preprocessAppDescription("@xyz123 Code author: @xyz123"))
                 .isEqualTo("code author:");
-        assertThat(preprocessAppDescription("Code @xyz123 author: @xyz123"))
+        expect.that(preprocessAppDescription("Code @xyz123 author: @xyz123"))
                 .isEqualTo("code author:");
-        assertThat(preprocessAppDescription("@xyz123")).isEmpty();
+        expect.that(preprocessAppDescription("@xyz123")).isEmpty();
     }
 
     @Test
     public void testPreprocessing_forHtmlTagsRemoval() {
-        assertThat(preprocessAppDescription("<title>Google is a search engine.</title>"))
+        expect.that(preprocessAppDescription("<title>Google is a search engine.</title>"))
                 .isEqualTo("google is a search engine.");
-        assertThat(preprocessAppDescription("<!DOCTYPE html>"
-                + "<html lang=\"en\">"
-                + "<head>"
-                + "<title>Hello World!</title>"
-                + "</head>"))
+        expect.that(
+                        preprocessAppDescription(
+                                "<!DOCTYPE html>"
+                                        + "<html lang=\"en\">"
+                                        + "<head>"
+                                        + "<title>Hello World!</title>"
+                                        + "</head>"))
                 .isEqualTo("hello world!");
-        assertThat(preprocessAppDescription("<p></p>")).isEmpty();
+        expect.that(preprocessAppDescription("<p></p>")).isEmpty();
     }
 
     @Test
@@ -209,9 +205,9 @@ public final class PreprocessorTest {
 
     @Test
     public void testPreprocessing_forEmptyDescription() {
-        assertThat(preprocessAppDescription("")).isEmpty();
-        assertThat(preprocessAppDescription("        ")).isEmpty();
-        assertThat(preprocessAppDescription("  \n  \n   \n")).isEmpty();
+        expect.that(preprocessAppDescription("")).isEmpty();
+        expect.that(preprocessAppDescription("        ")).isEmpty();
+        expect.that(preprocessAppDescription("  \n  \n   \n")).isEmpty();
     }
 
     @Test
@@ -221,25 +217,25 @@ public final class PreprocessorTest {
 
     @Test
     public void testLimitDescriptionSize_numberOfWords() {
-        assertThat(
+        expect.that(
                         limitDescriptionSize(
                                 "abc def gh i ", /*maxNumberOfWords*/
                                 10, /*maxNumberOfCharacters*/
                                 20))
                 .isEqualTo("abc def gh i");
-        assertThat(
+        expect.that(
                         limitDescriptionSize(
                                 "abc def gh i ", /*maxNumberOfWords*/
                                 2, /*maxNumberOfCharacters*/
                                 20))
                 .isEqualTo("abc def");
-        assertThat(
+        expect.that(
                         limitDescriptionSize(
                                 "abc def gh i ", /*maxNumberOfWords*/
                                 1, /*maxNumberOfCharacters*/
                                 20))
                 .isEqualTo("abc");
-        assertThat(
+        expect.that(
                         limitDescriptionSize(
                                 "abc def gh i ", /*maxNumberOfWords*/
                                 0, /*maxNumberOfCharacters*/
@@ -249,31 +245,31 @@ public final class PreprocessorTest {
 
     @Test
     public void testLimitDescriptionSize_maxLength() {
-        assertThat(
+        expect.that(
                         limitDescriptionSize(
                                 "abc def gh i ", /*maxNumberOfWords*/
                                 10, /*maxNumberOfCharacters*/
                                 20))
                 .isEqualTo("abc def gh i");
-        assertThat(
+        expect.that(
                         limitDescriptionSize(
                                 "abc def gh i ", /*maxNumberOfWords*/
                                 10, /*maxNumberOfCharacters*/
                                 13))
                 .isEqualTo("abc def gh i");
-        assertThat(
+        expect.that(
                         limitDescriptionSize(
                                 "abc def gh i ", /*maxNumberOfWords*/
                                 10, /*maxNumberOfCharacters*/
                                 10))
                 .isEqualTo("abc def gh");
-        assertThat(
+        expect.that(
                         limitDescriptionSize(
                                 "abc def gh i ", /*maxNumberOfWords*/
                                 10, /*maxNumberOfCharacters*/
                                 1))
                 .isEqualTo("a");
-        assertThat(
+        expect.that(
                         limitDescriptionSize(
                                 "abc def gh i ", /*maxNumberOfWords*/
                                 10, /*maxNumberOfCharacters*/
@@ -283,9 +279,11 @@ public final class PreprocessorTest {
 
     @Test
     public void testLimitDescriptionSize_emptyString() {
-        assertThat(limitDescriptionSize("", /*maxNumberOfWords*/ 10, /*maxNumberOfCharacters*/ 20))
+        expect.that(limitDescriptionSize("", /*maxNumberOfWords*/ 10, /*maxNumberOfCharacters*/ 20))
                 .isEqualTo("");
-        assertThat(limitDescriptionSize(" ", /*maxNumberOfWords*/ 10, /*maxNumberOfCharacters*/ 20))
+        expect.that(
+                        limitDescriptionSize(
+                                " ", /*maxNumberOfWords*/ 10, /*maxNumberOfCharacters*/ 20))
                 .isEqualTo("");
     }
 

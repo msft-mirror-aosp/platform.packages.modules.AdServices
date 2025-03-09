@@ -24,6 +24,7 @@ import android.os.IBinder;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -36,7 +37,6 @@ import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
 /** Measurement Service */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementService extends Service {
 
@@ -60,6 +60,7 @@ public class MeasurementService extends Service {
     public void onCreate() {
         super.onCreate();
         Flags flags = FlagsFactory.getFlags();
+        DebugFlags debugFlags = DebugFlags.getInstance();
         if (!flags.getMeasurementEnabled()) {
             LogUtil.e("Measurement API is disabled");
             return;
@@ -77,6 +78,7 @@ public class MeasurementService extends Service {
                             Clock.getInstance(),
                             ConsentManager.getInstance(),
                             new CachedFlags(flags),
+                            debugFlags,
                             appImportanceFilter);
         }
 

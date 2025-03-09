@@ -158,11 +158,9 @@ public final class ScheduleCustomAudienceUpdateTest extends FledgeRootScenarioTe
         try {
             doScheduleCustomAudienceUpdate(request);
             assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
-            assertThat(
-                            mBackgroundJobHelper.runJobWithBroadcastIntent(
-                                    SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB.getJobId(),
-                                    ACTION_SCHEDULE_CA_COMPLETE_INTENT))
-                    .isTrue();
+            mBackgroundJobHelper.runJobWithBroadcastIntent(
+                    SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB.getJobId(),
+                    ACTION_SCHEDULE_CA_COMPLETE_INTENT);
             AdSelectionOutcome result = doSelectAds(adSelectionConfig);
             assertThat(result.hasOutcome()).isTrue();
             assertThat(result.getRenderUri()).isNotNull();

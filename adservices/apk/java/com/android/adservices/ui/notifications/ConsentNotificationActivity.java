@@ -29,6 +29,7 @@ import androidx.fragment.app.FragmentActivity;
 import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.api.R;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.OTAResourcesManager;
@@ -37,7 +38,6 @@ import com.android.adservices.ui.UxSelector;
 /**
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationActivity extends FragmentActivity implements UxSelector {
     public enum NotificationFragmentEnum {
@@ -95,15 +95,14 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
             OTAResourcesManager.applyOTAResources(context, true);
         }
         boolean debugModeEnabled =
-                FlagsFactory.getFlags().getConsentNotificationActivityDebugMode();
-        boolean isUxStateReady = isUxStatesReady(this);
-
+                DebugFlags.getInstance().getConsentNotificationActivityDebugMode();
+        boolean isUxStateReady = isUxStatesReady();
         LoggerFactory.getUILogger()
                 .d(
                         "getting debug mode %b, getting ux state ready %b",
                         debugModeEnabled, isUxStateReady);
         if (debugModeEnabled || isUxStateReady) {
-            initWithUx(context, /* beforePasUxActive */ true);
+            initWithUx(/* beforePasUxActive */ true);
         } else {
             initFragment();
         }
@@ -140,7 +139,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
      * Notification fragments should call this when view is created. Used to keep track of user's
      * current page and log correct page exit if user exits.
      */
-    public static void handleAction(NotificationFragmentEnum fragmentAction, Context context) {
+    public static void handleAction(NotificationFragmentEnum fragmentAction) {
         switch (fragmentAction) {
             case LANDING_PAGE_DISPLAYED:
                 sCurrentFragment = fragmentAction;

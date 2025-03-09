@@ -79,6 +79,8 @@ public final class AppImportanceFilter {
      *     flag. Using a {@link Supplier} instead of the final value to allow building an instance
      *     of this class in Binder threads (e.g. in Service's constructors) using pH flags.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static AppImportanceFilter create(
             @NonNull Context context,
             // Cannot pass directly the value since this is read from pH and this shouldn't happen

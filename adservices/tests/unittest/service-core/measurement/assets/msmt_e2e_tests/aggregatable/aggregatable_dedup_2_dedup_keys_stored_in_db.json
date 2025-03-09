@@ -61,7 +61,8 @@
                     "category": ["filter_3", "filter_4"]
                   }
                 }
-              ]
+              ],
+              "aggregatable_source_registration_time": "INCLUDE"
             }
           }
         }]
@@ -100,7 +101,8 @@
                     "category": ["filter_1"]
                   }
                 }
-              ]
+              ],
+              "aggregatable_source_registration_time": "INCLUDE"
             }
           }
         }]
@@ -126,7 +128,11 @@
             {
               "key": "0x559",
               "value": 123
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
@@ -147,7 +153,11 @@
             {
               "key": "0x559",
               "value": 456
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",

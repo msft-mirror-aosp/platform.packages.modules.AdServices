@@ -31,3 +31,15 @@ android_test {
     defaults: ["AdExtServices-ServiceCoreUnitTest-Defaults"],
     test_config: "AndroidTest.ExtServices.xml",
 }
+
+android_test {
+    name: "AdExtServicesServiceCoreMeasurementRvcUnitTests",
+    srcs: [
+        "src/com/android/adservices/service/measurement/MeasurementServiceImplRvcTest.java",
+    ],
+    defaults: ["AdExtServices-ServiceCoreUnitTest-Defaults"],
+    min_sdk_version: "30",
+    max_sdk_version: "30",
+    test_config: "AndroidTest.ExtServicesRvc.xml",
+    manifest: "AndroidManifestExtServicesRvc.xml",
+}

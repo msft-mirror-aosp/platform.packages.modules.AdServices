@@ -26,7 +26,6 @@ import android.adservices.common.KeyedFrequencyCapFixture;
 import android.os.Parcel;
 
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,7 +34,6 @@ import org.junit.Test;
 import java.time.Duration;
 
 /** Unit tests for {@link KeyedFrequencyCap}. */
-@RequiresSdkLevelAtLeastS
 public final class KeyedFrequencyCapTest extends CtsAdServicesDeviceTestCase {
     @Test
     public void testBuildValidKeyedFrequencyCap_success() {

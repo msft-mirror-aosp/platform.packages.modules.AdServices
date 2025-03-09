@@ -182,6 +182,8 @@ public final class MaintenanceJobService extends JobService {
     }
 
     @VisibleForTesting
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     static void schedule(
             Context context,
             @NonNull JobScheduler jobScheduler,
@@ -208,6 +210,8 @@ public final class MaintenanceJobService extends JobService {
      * @param forceSchedule a flag to indicate whether to force rescheduling the job.
      * @return a {@code boolean} to indicate if the service job is actually scheduled.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static boolean scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
 

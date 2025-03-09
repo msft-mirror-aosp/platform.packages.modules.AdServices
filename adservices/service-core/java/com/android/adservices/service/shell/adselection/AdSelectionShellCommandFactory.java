@@ -43,6 +43,8 @@ import com.android.adservices.service.adselection.CompressedBuyerInputCreatorNoO
 import com.android.adservices.service.adselection.FrequencyCapAdFiltererNoOpImpl;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
+import com.android.adservices.service.devapi.DevSessionDataStore;
+import com.android.adservices.service.devapi.DevSessionDataStoreFactory;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
 import com.android.adservices.service.shell.NoOpShellCommand;
 import com.android.adservices.service.shell.ShellCommand;
@@ -74,7 +76,8 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
             BuyerInputGenerator buyerInputGenerator,
             AuctionServerDataCompressor auctionServerDataCompressor,
             ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator,
-            AdSelectionEntryDao adSelectionEntryDao) {
+            AdSelectionEntryDao adSelectionEntryDao,
+            DevSessionDataStore devSessionDataStore) {
         Objects.requireNonNull(consentedDebugConfigurationDao);
         Objects.requireNonNull(adSelectionEntryDao);
 
@@ -86,7 +89,8 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                         new GetAdSelectionDataCommand(
                                 buyerInputGenerator,
                                 auctionServerDataCompressor,
-                                consentedDebugConfigurationGenerator),
+                                consentedDebugConfigurationGenerator,
+                                devSessionDataStore),
                         new ViewAuctionResultCommand(adSelectionEntryDao));
         mAllCommandsMap =
                 allCommands.stream()
@@ -96,6 +100,8 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
     }
 
     /** Gets a new {@link AdSelectionShellCommandFactory} instance. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static AdSelectionShellCommandFactory newInstance(
             DebugFlags debugFlags, Flags flags, Context context) {
         SharedStorageDatabase sharedStorageDatabase = SharedStorageDatabase.getInstance();
@@ -145,6 +151,7 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                                 debugFlags.getFledgeAuctionServerConsentedDebuggingEnabled(),
                                 consentedDebugConfigurationDao)
                         .create();
+        DevSessionDataStore devSessionDataStore = DevSessionDataStoreFactory.get();
         return new AdSelectionShellCommandFactory(
                 debugFlags.getFledgeConsentedDebuggingCliEnabledStatus(),
                 debugFlags.getAdSelectionCommandsEnabled(),
@@ -152,7 +159,8 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                 buyerInputGenerator,
                 auctionServerDataCompressor,
                 consentedDebugConfigurationGenerator,
-                adSelectionEntryDao);
+                adSelectionEntryDao,
+                devSessionDataStore);
     }
 
     @SuppressLint("VisibleForTests")

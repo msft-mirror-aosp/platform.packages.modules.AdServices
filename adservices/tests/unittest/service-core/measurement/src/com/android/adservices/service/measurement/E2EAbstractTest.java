@@ -806,9 +806,12 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
             List<String> tempList = new ArrayList<>();
             for (int i = 0; i < arr.length(); i++) {
                 JSONObject obj = arr.getJSONObject(i);
-                tempList.add(obj.optString(AggregateHistogramKeys.ID, "") + ","
-                        + obj.optString(AggregateHistogramKeys.BUCKET, "") + ","
-                        + obj.optString(AggregateHistogramKeys.VALUE, ""));
+                tempList.add(
+                        obj.optString(AggregateHistogramKeys.ID, "")
+                                + ","
+                                + obj.optString(AggregateHistogramKeys.BUCKET, "")
+                                + ","
+                                + obj.optString(AggregateHistogramKeys.VALUE, ""));
             }
             Collections.sort(tempList);
             return String.join(";", tempList);
@@ -1073,17 +1076,7 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
     protected static String getDatastoreState() {
         StringBuilder result = new StringBuilder();
         SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
-        List<String> tableNames =
-                ImmutableList.of(
-                        "msmt_source",
-                        "msmt_source_destination",
-                        "msmt_trigger",
-                        "msmt_attribution",
-                        "msmt_event_report",
-                        "msmt_aggregate_report",
-                        "msmt_async_registration_contract",
-                        "msmt_app_report_history");
-        for (String tableName : tableNames) {
+        for (String tableName : getMeasurementTableNames(db)) {
             result.append("\n" + tableName + ":\n");
             result.append(getTableState(db, tableName));
         }
@@ -1094,6 +1087,20 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
             result.append(getTableState(enrollmentDb, tableName));
         }
         return result.toString();
+    }
+
+    private static List<String> getMeasurementTableNames(SQLiteDatabase db) {
+        List<String> tableNames = new ArrayList<>();
+        try (Cursor cursor =
+                db.rawQuery(
+                        "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE"
+                                + " 'msmt_%';",
+                        null)) {
+            while (cursor.moveToNext()) {
+                tableNames.add(cursor.getString(cursor.getColumnIndex("name")));
+            }
+        }
+        return tableNames;
     }
 
     private static String getTableState(SQLiteDatabase db, String tableName) {
@@ -1617,13 +1624,9 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
      * Empties measurement database tables, used for test cleanup.
      */
     private static void emptyTables(SQLiteDatabase db) {
-        db.delete("msmt_source", null, null);
-        db.delete("msmt_trigger", null, null);
-        db.delete("msmt_event_report", null, null);
-        db.delete("msmt_attribution", null, null);
-        db.delete("msmt_aggregate_report", null, null);
-        db.delete("msmt_async_registration_contract", null, null);
-        db.delete("msmt_app_report_history", null, null);
+        for (String tableName : getMeasurementTableNames(db)) {
+            db.delete(tableName, null, null);
+        }
     }
 
     abstract void processAction(RegisterSource sourceRegistration)

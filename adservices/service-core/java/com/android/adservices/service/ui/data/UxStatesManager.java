@@ -52,8 +52,8 @@ import java.util.Map;
 @RequiresApi(Build.VERSION_CODES.S)
 public class UxStatesManager {
 
-    private static final Object LOCK = new Object();
-    private static volatile UxStatesManager sUxStatesManager;
+    private static final String UX_SHARED_PREFS = "UX_SHARED_PREFERENCES";
+
     private final Map<String, Boolean> mUxFlags;
     private final ConsentManager mConsentManager;
     private final SharedPreferences mUxSharedPreferences;
@@ -70,8 +70,7 @@ public class UxStatesManager {
         mUxFlags = flags.getUxFlags();
         mConsentManager = consentManager;
         mIsEeaDevice = DeviceRegionProvider.isEuDevice(context);
-        mUxSharedPreferences =
-                context.getSharedPreferences("UX_SHARED_PREFERENCES", Context.MODE_PRIVATE);
+        mUxSharedPreferences = getPrefs(context);
     }
 
     private static class UxStatesManagerLazyInstanceHolder {
@@ -209,5 +208,11 @@ public class UxStatesManager {
             return getFlag(KEY_EEA_PAS_UX_ENABLED);
         }
         return ConsentManager.getInstance().wasPasNotificationOpened();
+    }
+
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings({"AvoidSharedPreferences", "AvoidStaticContext"}) // Legacy usage
+    private static SharedPreferences getPrefs(Context context) {
+        return context.getSharedPreferences(UX_SHARED_PREFS, Context.MODE_PRIVATE);
     }
 }
