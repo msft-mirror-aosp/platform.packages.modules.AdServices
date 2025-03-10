@@ -16,25 +16,10 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_test {
-    name: "AdServicesEndToEndTests",
-    srcs: [
-        "src/**/*.java",
-    ],
+java_defaults {
+    name: "AdServices-EndToEndTests-Defaults",
     sdk_version: "module_current",
     min_sdk_version: "33",
-    static_libs: [
-        "adservices-clients",
-        "androidx.concurrent_concurrent-futures",
-        "androidx.test.rules",
-        "compatibility-device-util-axt",
-        "mockito-target-extended-minus-junit4",
-        "truth",
-        "framework-adservices.impl",
-        "framework-sdksandbox.impl",
-        "adservices-test-fixtures",
-        "adservices-test-utility",
-    ],
     libs: [
         "android.test.base.stubs.system",
     ],
@@ -50,6 +35,24 @@ java_defaults {
     name: "AdExtServices-EndToEndTests-Defaults",
     defaults: ["mts-target-sdk-version-current"],
     sdk_version: "module_current",
+    libs: [
+        "android.test.base.stubs.system",
+        "android.ext.adservices",
+    ],
+    test_suites: [
+        "general-tests",
+    ],
+}
+
+android_test {
+    name: "AdServicesEndToEndTests",
+    defaults: ["AdServices-EndToEndTests-Defaults"],
+    srcs: [
+        "src/**/*.java",
+    ],
+    exclude_srcs: [
+        "src/com/android/adservices/debuggableendtoends/*.java",
+    ],
     static_libs: [
         "adservices-clients",
         "androidx.concurrent_concurrent-futures",
@@ -62,13 +65,33 @@ java_defaults {
         "adservices-test-fixtures",
         "adservices-test-utility",
     ],
-    libs: [
-        "android.test.base.stubs.system",
-        "android.ext.adservices",
+}
+
+android_test {
+    name: "AdServicesDebuggableEndToEndTests",
+    defaults: ["AdServices-EndToEndTests-Defaults"],
+    srcs: [
+        "src/com/android/adservices/debuggableendtoends/*.java",
+        "src/com/android/adservices/AdServicesEndToEndTestCase.java",
     ],
-    test_suites: [
-        "general-tests",
+    static_libs: [
+        "adservices-clients",
+        "androidx.concurrent_concurrent-futures",
+        "androidx.test.rules",
+        "compatibility-device-util-axt",
+        "mockito-target-extended-minus-junit4",
+        "truth",
+        "framework-adservices.impl",
+        "framework-sdksandbox.impl",
+        "adservices-test-fixtures",
+        "adservices-test-utility",
+        "adservices-assets",
     ],
+    jni_libs: [
+        "libhpke_jni",
+    ],
+    manifest: "AndroidManifestDebuggable.xml",
+    test_config: "AndroidTestDebuggable.xml",
 }
 
 android_test {
@@ -77,10 +100,55 @@ android_test {
     srcs: [
         "src/**/*.java",
     ],
+    exclude_srcs: [
+        "src/com/android/adservices/debuggableendtoends/*.java",
+    ],
     min_sdk_version: "31",
     max_sdk_version: "32",
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
+    static_libs: [
+        "adservices-clients",
+        "androidx.concurrent_concurrent-futures",
+        "androidx.test.rules",
+        "compatibility-device-util-axt",
+        "mockito-target-extended-minus-junit4",
+        "truth",
+        "framework-adservices.impl",
+        "framework-sdksandbox.impl",
+        "adservices-test-fixtures",
+        "adservices-test-utility",
+    ],
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        baseline_filename: "lint-baseline-adextservices.xml",
+    },
+}
+
+android_test {
+    name: "AdExtServicesDebuggableEndToEndTests",
+    defaults: ["AdExtServices-EndToEndTests-Defaults"],
+    srcs: [
+        "src/com/android/adservices/debuggableendtoends/*.java",
+        "src/com/android/adservices/AdServicesEndToEndTestCase.java",
+    ],
+    static_libs: [
+        "adservices-clients",
+        "androidx.concurrent_concurrent-futures",
+        "androidx.test.rules",
+        "compatibility-device-util-axt",
+        "mockito-target-extended-minus-junit4",
+        "truth",
+        "framework-adservices.impl",
+        "framework-sdksandbox.impl",
+        "adservices-test-fixtures",
+        "adservices-test-utility",
+        "adservices-assets",
+    ],
+    min_sdk_version: "31",
+    max_sdk_version: "32",
+    test_config: "AndroidTestDebuggable.ExtServices.xml",
+    manifest: "AndroidManifestDebuggableExtServices.xml",
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
         baseline_filename: "lint-baseline-adextservices.xml",
@@ -94,6 +162,18 @@ android_test {
         "src/com/android/adservices/measurement/MeasurementManagerRvcTest.java",
         "src/com/android/adservices/measurement/MeasurementManagerUtil.java",
         "src/com/android/adservices/AdServicesEndToEndTestCase.java",
+    ],
+    static_libs: [
+        "adservices-clients",
+        "androidx.concurrent_concurrent-futures",
+        "androidx.test.rules",
+        "compatibility-device-util-axt",
+        "mockito-target-extended-minus-junit4",
+        "truth",
+        "framework-adservices.impl",
+        "framework-sdksandbox.impl",
+        "adservices-test-fixtures",
+        "adservices-test-utility",
     ],
     min_sdk_version: "30",
     max_sdk_version: "30",

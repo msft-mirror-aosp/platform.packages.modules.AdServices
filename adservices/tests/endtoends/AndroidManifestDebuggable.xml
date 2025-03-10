@@ -16,7 +16,7 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.android.adservices.endtoendtest" >
+    package="com.android.adservices.debuggableendtoends" >
 
     <!-- Used for scheduling connectivity jobs -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -24,13 +24,14 @@
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" />
-    <application>
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_PROTECTED_SIGNALS" />
+    <application android:debuggable="true">
         <property android:name="android.adservices.AD_SERVICES_CONFIG"
                   android:resource="@xml/ad_services_config" />
     </application>
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"
-        android:label="E2E adservices tests"
-        android:targetPackage="com.android.adservices.endtoendtest">
+        android:label="Debuggable E2E adservices tests"
+        android:targetPackage="com.android.adservices.debuggableendtoends">
     </instrumentation>
 </manifest>
