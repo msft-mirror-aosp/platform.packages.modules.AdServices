@@ -55,7 +55,7 @@ public class ServerAuctionTestHelper {
             ImmutableList.of(0, 1024, 2048, 4096, 8192, 16384, 32768, 65536);
 
     private final OhttpGatewayPrivateKey mPrivateKey;
-    private final AuctionEncryptionKeyFixture.AuctionKey mAuctionKey;
+    public final AuctionEncryptionKeyFixture.AuctionKey mAuctionKey;
     private final AuctionServerDataCompressor mAuctionServerDataCompressor;
     private final AuctionServerPayloadFormatter mAuctionServerPayloadFormatter;
     private final AuctionServerPayloadExtractor mAuctionServerPayloadExtractor;
@@ -127,13 +127,11 @@ public class ServerAuctionTestHelper {
         return decompressedBuyerInputs;
     }
 
-    /** Get a protected auction input from the getAdSelectionData response */
-    public BiddingAuctionServers.ProtectedAuctionInput decryptGetAdSelectionDataResponse(
-            GetAdSelectionDataResponse adSelectionResponse) throws Exception {
+    /** Get a protected auction input from the encrypted ad selection data */
+    public BiddingAuctionServers.ProtectedAuctionInput decryptAdSelectionData(
+            byte[] adSelectionData) throws Exception {
         byte[] decrypted =
-                ObliviousHttpGateway.decrypt(
-                        mPrivateKey,
-                        Objects.requireNonNull(adSelectionResponse.getAdSelectionData()));
+                ObliviousHttpGateway.decrypt(mPrivateKey, Objects.requireNonNull(adSelectionData));
         AuctionServerPayloadUnformattedData unformatted =
                 mAuctionServerPayloadExtractor.extract(
                         AuctionServerPayloadFormattedData.create(decrypted));

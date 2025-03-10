@@ -66,12 +66,7 @@ public interface CoordinatorOriginUriValidator extends Validator<Uri> {
     }
 
     private static boolean isUrlAllowListed(List<Uri> allowlist, Uri uri) {
-        for (Uri allowedUri : allowlist) {
-            if (uri.getHost().equals(allowedUri.getHost())) {
-                return true;
-            }
-        }
-
-        return false;
+        return allowlist.stream()
+                .anyMatch(allowedUri -> Objects.equals(uri.getHost(), allowedUri.getHost()));
     }
 }
