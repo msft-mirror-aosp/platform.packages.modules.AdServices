@@ -88,6 +88,7 @@ import com.android.adservices.service.measurement.registration.AsyncRegistration
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.CountUniqueReportingJob;
 import com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
@@ -683,6 +684,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                     VerboseDebugReportingFallbackJobService.scheduleIfNeeded(
                                             mContext, false);
                                     EncryptionKeyJobService.scheduleIfNeeded(mContext, false);
+                                    CountUniqueReportingJob.schedule();
                                 }))
                 .addCallback(
                         new FutureCallback<Object>() {
