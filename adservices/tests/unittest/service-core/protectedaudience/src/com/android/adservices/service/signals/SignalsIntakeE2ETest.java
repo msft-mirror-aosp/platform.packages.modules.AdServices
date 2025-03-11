@@ -27,6 +27,7 @@ import static com.android.adservices.service.signals.SignalsFixture.intToBytes;
 import static com.android.adservices.service.signals.UpdateProcessingOrchestrator.COLLISION_ERROR;
 import static com.android.adservices.service.signals.UpdatesDownloader.CONVERSION_ERROR_MSG;
 import static com.android.adservices.service.signals.UpdatesDownloader.PACKAGE_NAME_HEADER;
+import static com.android.adservices.service.signals.UpdatesDownloader.UPDATE_SCHEMA_VERSION_HEADER;
 import static com.android.adservices.service.signals.updateprocessors.Append.TOO_MANY_SIGNALS_ERROR;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -300,14 +301,18 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
     private void setupService(boolean mockHttpClient) {
         if (mockHttpClient) {
             mUpdatesDownloader =
-                    new UpdatesDownloader(mLightweightExecutorService, mAdServicesHttpsClientMock);
+                    new UpdatesDownloader(
+                            mLightweightExecutorService,
+                            mAdServicesHttpsClientMock,
+                            mFakeFlags.getProtectedSignalsUpdateSchemaVersion());
         } else {
             // Shorter timeouts so the test fails quickly if there are issues
             mUpdatesDownloader =
                     new UpdatesDownloader(
                             mLightweightExecutorService,
                             new AdServicesHttpsClient(
-                                    mBackgroundExecutorService, 2000, 2000, 10000));
+                                    mBackgroundExecutorService, 2000, 2000, 10000),
+                            mFakeFlags.getProtectedSignalsUpdateSchemaVersion());
         }
         mUpdateSignalsOrchestrator =
                 new UpdateSignalsOrchestrator(
@@ -826,7 +831,11 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
 
     private void setupAndRunUpdateSignals(String json) throws Exception {
         ImmutableMap<String, String> requestProperties =
-                ImmutableMap.of(PACKAGE_NAME_HEADER, CommonFixture.TEST_PACKAGE_NAME);
+                ImmutableMap.of(
+                        PACKAGE_NAME_HEADER,
+                        CommonFixture.TEST_PACKAGE_NAME,
+                        UPDATE_SCHEMA_VERSION_HEADER,
+                        String.valueOf(mFakeFlags.getProtectedSignalsUpdateSchemaVersion()));
         AdServicesHttpClientRequest expected =
                 AdServicesHttpClientRequest.builder()
                         .setRequestProperties(requestProperties)
