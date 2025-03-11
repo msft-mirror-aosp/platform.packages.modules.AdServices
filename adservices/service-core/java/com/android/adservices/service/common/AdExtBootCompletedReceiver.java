@@ -26,7 +26,7 @@ import android.content.Intent;
 import com.android.adservices.LogUtil;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 
-/** Handles the BootCompleted initialization for AdExtServices APK on S-. */
+/** Handles the BootCompleted initialization for AdExtServices APK on S. */
 public class AdExtBootCompletedReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {

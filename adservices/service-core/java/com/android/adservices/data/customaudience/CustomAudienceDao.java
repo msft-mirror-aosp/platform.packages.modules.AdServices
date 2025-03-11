@@ -16,11 +16,15 @@
 
 package com.android.adservices.data.customaudience;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE;
+
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.ComponentAdData;
 import android.adservices.customaudience.PartialCustomAudience;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -40,6 +44,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.JsVersionHelper;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.adservices.service.exception.PersistScheduleCAUpdateException;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableMap;
@@ -215,6 +220,10 @@ public abstract class CustomAudienceDao {
     @Query("SELECT COUNT(*) FROM custom_audience WHERE owner=:owner")
     public abstract long getCustomAudienceCountForOwner(String owner);
 
+    /** Get count of custom audience of a given buyer. */
+    @Query("SELECT COUNT(*) FROM custom_audience WHERE buyer=:buyer")
+    public abstract long getCustomAudienceCountForBuyer(AdTechIdentifier buyer);
+
     /** Get the total number of distinct custom audience owner. */
     @Query("SELECT COUNT(DISTINCT owner) FROM custom_audience")
     public abstract long getCustomAudienceOwnerCount();
@@ -243,19 +252,24 @@ public abstract class CustomAudienceDao {
      */
     @Transaction
     @NonNull
-    public CustomAudienceStats getCustomAudienceStats(@NonNull String owner) {
-        Objects.requireNonNull(owner);
+    public CustomAudienceStats getCustomAudienceStats(
+            @NonNull String owner, @NonNull AdTechIdentifier buyer) {
+        Objects.requireNonNull(owner, "Owner must not be null");
+        Objects.requireNonNull(buyer, "Buyer must not be null");
 
         long customAudienceCount = getCustomAudienceCount();
         long customAudienceCountPerOwner = getCustomAudienceCountForOwner(owner);
         long ownerCount = getCustomAudienceOwnerCount();
+        long customAudienceCountPerBuyer = getCustomAudienceCountForBuyer(buyer);
 
         // TODO(b/255780705): Add buyer and per-buyer stats
         return CustomAudienceStats.builder()
                 .setOwner(owner)
+                .setBuyer(buyer)
                 .setTotalCustomAudienceCount(customAudienceCount)
                 .setPerOwnerCustomAudienceCount(customAudienceCountPerOwner)
                 .setTotalOwnerCount(ownerCount)
+                .setPerBuyerCustomAudienceCount(customAudienceCountPerBuyer)
                 .build();
     }
 
@@ -801,28 +815,34 @@ public abstract class CustomAudienceDao {
             @NonNull Instant currentTime);
 
     /**
-     * Persists a delayed Custom Audience Update along with the overrides If
-     * shouldReplacePendingUpdates is {@code true}, then we remove the pending updates with the same
-     * buyer and owner from the tables. If is {@code false} then we make sure that there are no
-     * pending updates and throw an {@link IllegalStateException} if there are pending updates with
-     * the same buyer and owner
+     * Persists a delayed Custom Audience Update along with the overrides and custom audiences to
+     * leave, if shouldReplacePendingUpdates is {@code true}, then we remove the pending updates
+     * with the same buyer and owner from the tables. If is {@code false} then we make sure that
+     * there are no ending updates and throw an {@link IllegalStateException} if there are pending
+     * updates with the same buyer and owner
      *
      * @param update delayed update
      * @param partialCustomAudienceList overrides for incoming custom audiences
+     * @param customAudienceToLeaveList custom audiences to leave
      */
     // TODO(b/324478492) Refactor Update queries in a separate Dao
     @Transaction
-    public void insertScheduledUpdateAndPartialCustomAudienceList(
+    public void insertScheduledCustomAudienceUpdate(
             @NonNull DBScheduledCustomAudienceUpdate update,
             @NonNull List<PartialCustomAudience> partialCustomAudienceList,
-            boolean shouldReplacePendingUpdates) {
-        if (shouldReplacePendingUpdates) {
-            deleteScheduleCAUpdatesByOwnerAndBuyer(update.getOwner(), update.getBuyer());
-        } else {
-            int pendingUpdates =
-                    getNumberOfScheduleCAUpdatesByOwnerAndBuyer(
-                            update.getOwner(), update.getBuyer());
-            if (pendingUpdates != 0) {
+            @NonNull List<String> customAudienceToLeaveList,
+            boolean shouldReplacePendingUpdates,
+            ScheduledCustomAudienceUpdateScheduleAttemptedStats.Builder statsBuilder) {
+        int pendingUpdates =
+                getNumberOfScheduleCAUpdatesByOwnerAndBuyer(update.getOwner(), update.getBuyer());
+        if (pendingUpdates != 0) {
+            if (shouldReplacePendingUpdates) {
+                statsBuilder.setExistingUpdateStatus(
+                        SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE);
+                deleteScheduleCAUpdatesByOwnerAndBuyer(update.getOwner(), update.getBuyer());
+            } else {
+                statsBuilder.setExistingUpdateStatus(
+                        SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE);
                 throw new PersistScheduleCAUpdateException(
                         String.format(
                                 Locale.ENGLISH,
@@ -830,42 +850,82 @@ public abstract class CustomAudienceDao {
                                         + " update(s)",
                                 pendingUpdates));
             }
+        } else {
+            statsBuilder.setExistingUpdateStatus(
+                    SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE);
         }
 
         long updateId = insertScheduledCustomAudienceUpdate(update);
 
-        List<DBPartialCustomAudience> dbPartialCustomAudienceList =
-                partialCustomAudienceList.stream()
-                        .map(
-                                partialCa ->
-                                        DBPartialCustomAudience.builder()
-                                                .setUpdateId(updateId)
-                                                .setName(partialCa.getName())
-                                                .setActivationTime(partialCa.getActivationTime())
-                                                .setExpirationTime(partialCa.getExpirationTime())
-                                                .setUserBiddingSignals(
-                                                        partialCa.getUserBiddingSignals())
-                                                .build())
-                        .collect(Collectors.toList());
-        insertPartialCustomAudiencesForUpdate(dbPartialCustomAudienceList);
+        if (!partialCustomAudienceList.isEmpty()) {
+            List<DBPartialCustomAudience> dbPartialCustomAudienceList =
+                    partialCustomAudienceList.stream()
+                            .map(
+                                    partialCa ->
+                                            DBPartialCustomAudience.fromPartialCustomAudience(
+                                                    updateId, partialCa))
+                            .collect(Collectors.toList());
+
+            insertPartialCustomAudiencesForUpdate(dbPartialCustomAudienceList);
+        }
+
+        if (!customAudienceToLeaveList.isEmpty()) {
+            List<DBCustomAudienceToLeave> dbLeaveList =
+                    customAudienceToLeaveList.stream()
+                            .map(caToLeave -> DBCustomAudienceToLeave.create(updateId, caToLeave))
+                            .collect(Collectors.toList());
+
+            insertCustomAudiencesToLeaveForUpdate(dbLeaveList);
+        }
     }
 
     /** Gets updates schedule before a given time along with its corresponding overrides */
     @Transaction
-    public List<Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>>
-            getScheduledUpdatesAndOverridesBeforeTime(@NonNull Instant timestamp) {
+    public List<DBScheduledCustomAudienceUpdateRequest> getScheduledCustomAudienceUpdateRequests(
+            @NonNull Instant timestamp) {
 
         List<DBScheduledCustomAudienceUpdate> scheduledUpdates =
                 getCustomAudienceUpdatesScheduledBeforeTime(timestamp);
 
-        List<Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>> updatesList =
-                new ArrayList<>();
+        List<DBScheduledCustomAudienceUpdateRequest> updatesList = new ArrayList<>();
         scheduledUpdates.forEach(
                 update ->
                         updatesList.add(
-                                new Pair(
-                                        update,
-                                        getPartialAudienceListForUpdateId(update.getUpdateId()))));
+                                DBScheduledCustomAudienceUpdateRequest.builder()
+                                        .setUpdate(update)
+                                        .setPartialCustomAudienceList(
+                                                getPartialAudienceListForUpdateId(
+                                                        update.getUpdateId()))
+                                        .build()));
+
+        return updatesList;
+    }
+
+    /**
+     * Gets updates schedule before a given time along with its corresponding overrides and custom
+     * audiences to leave
+     */
+    @Transaction
+    public List<DBScheduledCustomAudienceUpdateRequest>
+            getScheduledCustomAudienceUpdateRequestsWithLeave(@NonNull Instant timestamp) {
+
+        List<DBScheduledCustomAudienceUpdate> scheduledUpdates =
+                getCustomAudienceUpdatesScheduledBeforeTime(timestamp);
+
+        List<DBScheduledCustomAudienceUpdateRequest> updatesList = new ArrayList<>();
+        scheduledUpdates.forEach(
+                update ->
+                        updatesList.add(
+                                DBScheduledCustomAudienceUpdateRequest.builder()
+                                        .setUpdate(update)
+                                        .setPartialCustomAudienceList(
+                                                getPartialAudienceListForUpdateId(
+                                                        update.getUpdateId()))
+                                        .setCustomAudienceToLeaveList(
+                                                getCustomAudienceToLeaveListForUpdateId(
+                                                        update.getUpdateId()))
+                                        .build()));
+
         return updatesList;
     }
 
@@ -876,12 +936,21 @@ public abstract class CustomAudienceDao {
 
     /** Persists Custom Audience Overrides associated with a delayed update */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    public abstract void insertPartialCustomAudiencesForUpdate(
+    abstract void insertPartialCustomAudiencesForUpdate(
             @NonNull List<DBPartialCustomAudience> partialCustomAudienceList);
 
     /** Gets Custom Audience Overrides associated with a delayed update */
     @Query("SELECT * FROM partial_custom_audience WHERE update_id = :updateId")
-    public abstract List<DBPartialCustomAudience> getPartialAudienceListForUpdateId(Long updateId);
+    abstract List<DBPartialCustomAudience> getPartialAudienceListForUpdateId(Long updateId);
+
+    /** Persists Custom Audiences to leave associated with a delayed update */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract void insertCustomAudiencesToLeaveForUpdate(
+            @NonNull List<DBCustomAudienceToLeave> customAudienceToLeaveList);
+
+    /** Gets Custom Audiences to leave associated with a delayed update */
+    @Query("SELECT * FROM custom_audience_to_leave WHERE update_id = :updateId")
+    abstract List<DBCustomAudienceToLeave> getCustomAudienceToLeaveListForUpdateId(Long updateId);
 
     /** Gets list of delayed Custom Audience Updates scheduled before the given time */
     @Query("SELECT * FROM scheduled_custom_audience_update WHERE scheduled_time <= :timestamp")
@@ -899,19 +968,17 @@ public abstract class CustomAudienceDao {
 
     /** Removes all the Custom Audience Update with the given owner */
     @Query("DELETE FROM scheduled_custom_audience_update WHERE owner = :owner")
-    protected abstract void deleteScheduledCustomAudienceUpdatesByOwner(String owner);
+    abstract void deleteScheduledCustomAudienceUpdatesByOwner(String owner);
 
     /** Deletes all the Custom Audience Updates which matches the given owner and buyer */
     @Query("DELETE FROM scheduled_custom_audience_update where owner = :owner AND buyer = :buyer")
-    public abstract void deleteScheduleCAUpdatesByOwnerAndBuyer(
-            String owner, AdTechIdentifier buyer);
+    abstract void deleteScheduleCAUpdatesByOwnerAndBuyer(String owner, AdTechIdentifier buyer);
 
     /** Returns the number of Custom Audience Updates with matching owner and buyer */
     @Query(
             "SELECT COUNT(*) FROM scheduled_custom_audience_update where owner = :owner AND buyer ="
                     + " :buyer")
-    public abstract int getNumberOfScheduleCAUpdatesByOwnerAndBuyer(
-            String owner, AdTechIdentifier buyer);
+    abstract int getNumberOfScheduleCAUpdatesByOwnerAndBuyer(String owner, AdTechIdentifier buyer);
 
     /**
      * Deletes all the Custom Audience Updates data
@@ -920,7 +987,7 @@ public abstract class CustomAudienceDao {
      * #deleteAllCustomAudienceData(boolean)} instead.
      */
     @Query("DELETE FROM scheduled_custom_audience_update")
-    protected abstract void deleteAllScheduledCustomAudienceUpdates();
+    abstract void deleteAllScheduledCustomAudienceUpdates();
 
     /**
      * Removes a Custom Audience Update from storage and cascades the deletion to associated Partial
@@ -929,6 +996,51 @@ public abstract class CustomAudienceDao {
     @Delete
     public abstract void deleteScheduledCustomAudienceUpdate(
             @NonNull DBScheduledCustomAudienceUpdate update);
+
+    /** Persists a component ad */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract void insertComponentAdData(DBComponentAdData componentAdData);
+
+    /**
+     * Clears any existing component ads associated with the primary keys of this custom audience,
+     * then inserts a list of component ads.
+     */
+    @Transaction
+    public void insertAndOverwriteComponentAds(
+            List<ComponentAdData> componentAdDataList,
+            String owner,
+            AdTechIdentifier buyer,
+            String name) {
+        deleteComponentAdsByCustomAudienceInfo(owner, buyer, name);
+        for (ComponentAdData componentAdData : componentAdDataList) {
+            DBComponentAdData dbComponentAdData =
+                    DBComponentAdData.builder()
+                            .setRenderUri(componentAdData.getRenderUri())
+                            .setRenderId(componentAdData.getAdRenderId())
+                            .setOwner(owner)
+                            .setBuyer(buyer)
+                            .setName(name)
+                            .build();
+            insertComponentAdData(dbComponentAdData);
+        }
+    }
+
+    /**
+     * Gets a list of component ads associated with the primary keys of a custom audience. This list
+     * will be ordered by the ascending order in which the component ads were persisted.
+     */
+    @Query(
+            "SELECT * FROM component_ad_data WHERE owner = :owner AND buyer = :buyer AND name ="
+                    + " :name ORDER BY rowId")
+    abstract List<DBComponentAdData> getComponentAdsByCustomAudienceInfo(
+            String owner, AdTechIdentifier buyer, String name);
+
+    /** Deletes all component ads associated with the primary keys of a custom audience. */
+    @Query(
+            "DELETE FROM component_ad_data WHERE owner = :owner AND buyer = :buyer AND name ="
+                    + " :name")
+    abstract void deleteComponentAdsByCustomAudienceInfo(
+            String owner, AdTechIdentifier buyer, String name);
 
     @VisibleForTesting
     static class BiddingLogicJsWithVersion {

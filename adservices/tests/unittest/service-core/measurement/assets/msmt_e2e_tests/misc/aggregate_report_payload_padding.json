@@ -1,9 +1,5 @@
 {
   "description": "Aggregate report payload padding with extra null contributions appended.",
-  "phflags_override": {
-    "measurement_enable_aggregatable_report_payload_padding": "true",
-    "measurement_max_aggregate_keys_per_source_registration": "5"
-  },
   "input": {
     "sources": [{
       "registration_request": {
@@ -112,7 +108,8 @@
                       "navigation"
                     ]
                   }
-                ]
+                ],
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null

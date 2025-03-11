@@ -16,6 +16,7 @@
 
 package android.adservices.customaudience;
 
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_DEFAULT_PARTIAL_CUSTOM_AUDIENCES_CONSTRUCTOR;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 
 import android.adservices.common.AdServicesOutcomeReceiver;
@@ -26,6 +27,7 @@ import android.net.Uri;
 import com.android.internal.util.Preconditions;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -151,20 +153,37 @@ public final class ScheduleCustomAudienceUpdateRequest {
          * @param minDelay Minimum {@link Duration} for which the update should be deferred
          * @param partialCustomAudienceList {@link List} of {@link PartialCustomAudience} objects
          *     which will be sent to the buyer ad tech's server
+         * @deprecated use {@link #Builder(Uri, Duration)} instead as {@code
+         *     partialCustomAudienceList} is no longer a required parameter. Users can still use
+         *     {@link #setPartialCustomAudienceList(List)}
          */
+        @Deprecated
         public Builder(
                 @NonNull Uri updateUri,
                 @NonNull Duration minDelay,
                 @NonNull List<PartialCustomAudience> partialCustomAudienceList) {
+            setRequiredFields(updateUri, minDelay);
+            setPartialCustomAudienceList(partialCustomAudienceList);
+        }
+
+        /**
+         * Instantiates a builder for a {@link ScheduleCustomAudienceUpdateRequest} object.
+         *
+         * @param updateUri {@link Uri} of the buyer ad tech's server from which the updates for the
+         *     buyer's custom audiences will be fetched
+         * @param minDelay Minimum {@link Duration} for which the update should be deferred
+         */
+        @FlaggedApi(
+                FLAG_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_DEFAULT_PARTIAL_CUSTOM_AUDIENCES_CONSTRUCTOR)
+        public Builder(@NonNull Uri updateUri, @NonNull Duration minDelay) {
+            setRequiredFields(updateUri, minDelay);
+        }
+
+        private void setRequiredFields(@NonNull Uri updateUri, @NonNull Duration minDelay) {
             this.mUpdateUri = Objects.requireNonNull(updateUri, "Update URI must not be null");
-            Objects.requireNonNull(minDelay, "Minimum delay must not be null");
+            this.mMinDelay = Objects.requireNonNull(minDelay, "Minimum delay must not be null");
             Preconditions.checkArgument(
                     !minDelay.isNegative(), "Minimum delay %d must not be negative", minDelay);
-            this.mMinDelay = minDelay;
-            this.mPartialCustomAudienceList =
-                    Objects.requireNonNull(
-                            partialCustomAudienceList,
-                            "Partial custom audience list must not be null");
         }
 
         /**
@@ -231,6 +250,9 @@ public final class ScheduleCustomAudienceUpdateRequest {
         /** Builds an instance of {@link ScheduleCustomAudienceUpdateRequest}. */
         @NonNull
         public ScheduleCustomAudienceUpdateRequest build() {
+            if (Objects.isNull(mPartialCustomAudienceList)) {
+                mPartialCustomAudienceList = Collections.emptyList();
+            }
             return new ScheduleCustomAudienceUpdateRequest(this);
         }
     }

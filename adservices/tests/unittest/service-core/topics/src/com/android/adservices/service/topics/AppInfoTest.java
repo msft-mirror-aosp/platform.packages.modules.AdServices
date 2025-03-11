@@ -15,53 +15,38 @@
  */
 package com.android.adservices.service.topics;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
-/**
- * Unit tests for {@link AppInfo}
- */
-@SmallTest
-public final class AppInfoTest {
-
+/** Unit tests for {@link AppInfo} */
+public final class AppInfoTest extends AdServicesUnitTestCase {
     private static final String APP_NAME = "appName";
     private static final String APP_DESCRIPTION = "appDescription";
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testCreation() throws Exception {
         AppInfo appInfo = new AppInfo(APP_NAME, APP_DESCRIPTION);
-        assertEquals(APP_NAME, appInfo.getAppName());
-        assertEquals(APP_DESCRIPTION, appInfo.getAppDescription());
+        expect.withMessage("AppName").that(appInfo.getAppName()).isEqualTo(APP_NAME);
+        expect.withMessage("AppDescription")
+                .that(appInfo.getAppDescription())
+                .isEqualTo(APP_DESCRIPTION);
     }
 
     @Test
-    public void testNullInput() throws Exception {
+    public void testNullInput() {
         assertThrows(
-            NullPointerException.class,
-            () -> {
-                new AppInfo(/* app name */ null, APP_DESCRIPTION);
-            });
+                NullPointerException.class,
+                () -> new AppInfo(/* appName= */ null, APP_DESCRIPTION));
 
         assertThrows(
-            NullPointerException.class,
-            () -> {
-                new AppInfo(APP_NAME, /* app description */ null);
-            });
+                NullPointerException.class,
+                () -> new AppInfo(APP_NAME, /* appDescription= */ null));
 
         assertThrows(
-            NullPointerException.class,
-            () -> {
-                new AppInfo(/* app name */ null, /* app description */ null);
-            });
+                NullPointerException.class,
+                () -> new AppInfo(/* appName= */ null, /* appDescription= */ null));
     }
 }

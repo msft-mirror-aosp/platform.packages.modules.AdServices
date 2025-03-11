@@ -31,9 +31,7 @@ import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.annotations.RequiresAndroidServiceAvailable;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -60,15 +58,14 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS(reason = "OutcomeReceiver is not available on R")
-    public void testAdIdManager_SPlus() throws Exception {
+    public void testAdIdManager_outcomeReceiver() throws Exception {
         OutcomeReceiverForTests<AdId> callback = new OutcomeReceiverForTests<>();
         mAdIdManager.getAdId(sCallbackExecutor, callback);
         validateAdIdManagerTestResults(callback);
     }
 
     @Test
-    public void testAdIdManager_R() throws Exception {
+    public void testAdIdManager_customReceiver() throws Exception {
         AdServicesOutcomeReceiverForTests<AdId> callback =
                 new AdServicesOutcomeReceiverForTests<>();
         mAdIdManager.getAdId(sCallbackExecutor, callback);
@@ -125,16 +122,9 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
     }
 
     private boolean getAdIdAndVerifyRateLimitReached() throws InterruptedException {
-        if (SdkLevel.isAtLeastS()) {
-            OutcomeReceiverForTests<AdId> callback = new OutcomeReceiverForTests<>();
-            mAdIdManager.getAdId(sCallbackExecutor, callback);
-            return verifyAdIdRateLimitReached(callback);
-        } else {
-            AdServicesOutcomeReceiverForTests<AdId> callback =
-                    new AdServicesOutcomeReceiverForTests<>();
-            mAdIdManager.getAdId(sCallbackExecutor, callback);
-            return verifyAdIdRateLimitReached(callback);
-        }
+        OutcomeReceiverForTests<AdId> callback = new OutcomeReceiverForTests<>();
+        mAdIdManager.getAdId(sCallbackExecutor, callback);
+        return verifyAdIdRateLimitReached(callback);
     }
 
     private boolean verifyAdIdRateLimitReached(FailableResultSyncCallback<AdId, Exception> callback)
@@ -154,8 +144,7 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
 
     @Test
     @RequiresLowRamDevice
-    @RequiresSdkLevelAtLeastS(reason = "OutcomeReceiver is not available on R")
-    public void testAdIdManager_whenDeviceNotSupported_SPlus() throws Exception {
+    public void testAdIdManager_whenDeviceNotSupported_outcomeReceiver() throws Exception {
         AdIdManager adIdManager = AdIdManager.get(sContext);
         assertWithMessage("adIdManager").that(adIdManager).isNotNull();
         OutcomeReceiverForTests<AdId> receiver = new OutcomeReceiverForTests<>();
@@ -166,7 +155,7 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
 
     @Test
     @RequiresLowRamDevice
-    public void testAdIdManager_whenDeviceNotSupported_R() throws Exception {
+    public void testAdIdManager_whenDeviceNotSupported_customReceiver() throws Exception {
         AdIdManager adIdManager = AdIdManager.get(sContext);
         assertWithMessage("adIdManager").that(adIdManager).isNotNull();
         AdServicesOutcomeReceiverForTests<AdId> receiver =

@@ -25,7 +25,6 @@ import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -33,7 +32,6 @@ import org.junit.Test;
 
 import java.util.Map;
 
-@RequiresSdkLevelAtLeastS
 public final class PerBuyerDecisionLogicTest extends CtsAdServicesDeviceTestCase {
 
     private static final AdTechIdentifier BUYER_1 = CommonFixture.VALID_BUYER_1;

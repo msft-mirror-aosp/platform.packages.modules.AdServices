@@ -109,7 +109,7 @@ public class MeasurementDbMigratorV11 extends AbstractMeasurementDbMigrator {
                     + " TEXT NOT NULL"
                     + ")";
 
-    public static final String CREATE_TABLE_KEY_VALUE_DATA_V11 =
+    private static final String CREATE_TABLE_KEY_VALUE_DATA_V11 =
             "CREATE TABLE "
                     + MeasurementTables.KeyValueDataContract.TABLE
                     + " ("

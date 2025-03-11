@@ -28,6 +28,7 @@ import java.util.function.BiConsumer;
  */
 public class AdServicesSyncUtil {
     BiConsumer<Context, Boolean> mBiConsumer;
+    QuadConsumer<Context, Boolean, Boolean, Boolean> mNotificationTriggerV2Consumer;
     private static volatile AdServicesSyncUtil sAdservicesSyncUtil;
 
     private AdServicesSyncUtil() {}
@@ -64,5 +65,32 @@ public class AdServicesSyncUtil {
             return;
         }
         mBiConsumer.accept(context, param);
+    }
+
+    /**
+     * Register consumer for V2 notification trigger method.
+     *
+     * @param consumer Consumer for showConsentNotificationV2
+     */
+    public void registerNotificationTriggerV2(
+            QuadConsumer<Context, Boolean, Boolean, Boolean> consumer) {
+        try {
+            mNotificationTriggerV2Consumer = consumer;
+        } catch (Exception e) {
+            LogUtil.e("error while registering notificationTriggerV2Consumer" + e.getMessage());
+        }
+    }
+
+    /** execute the consumer. */
+    public void executeNotificationTriggerV2(
+            Context context,
+            boolean isRenotify,
+            boolean isNewAdPersonalizationModuleEnabled,
+            boolean isOngoingNotification) {
+        if (mNotificationTriggerV2Consumer == null) {
+            return;
+        }
+        mNotificationTriggerV2Consumer.accept(
+                context, isRenotify, isNewAdPersonalizationModuleEnabled, isOngoingNotification);
     }
 }

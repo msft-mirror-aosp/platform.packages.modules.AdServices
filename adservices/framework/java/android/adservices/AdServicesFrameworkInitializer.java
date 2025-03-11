@@ -50,7 +50,6 @@ import com.android.adservices.LogUtil;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 @SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
 public class AdServicesFrameworkInitializer {

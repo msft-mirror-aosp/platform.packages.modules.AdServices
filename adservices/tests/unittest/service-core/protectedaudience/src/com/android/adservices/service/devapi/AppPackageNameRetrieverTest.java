@@ -27,8 +27,6 @@ import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,9 +39,6 @@ public class AppPackageNameRetrieverTest {
     @Mock private PackageManager mPackageManager;
 
     private AppPackageNameRetriever mAppPackageNameRetriever;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

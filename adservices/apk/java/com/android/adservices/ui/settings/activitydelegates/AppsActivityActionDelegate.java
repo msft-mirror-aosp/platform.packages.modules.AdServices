@@ -47,7 +47,6 @@ import java.util.function.Function;
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppsActivityActionDelegate extends BaseActionDelegate {
     private final AppsViewModel mAppsViewModel;
@@ -55,7 +54,7 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
     public AppsActivityActionDelegate(AppsActivity appsActivity, AppsViewModel appsViewModel) {
         super(appsActivity);
         mAppsViewModel = appsViewModel;
-        initWithUx(appsActivity, appsActivity.getApplicationContext());
+        initWithUx();
         listenToAppsViewModelUiEvents();
     }
 

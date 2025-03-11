@@ -1,9 +1,6 @@
 {
   "description": "Given a trigger with aggregatable data, and configured to exclude source registration time, and has a context id, and no sources, create a null aggregatable report that has no source registration time",
   "phflags_override": {
-    "measurement_null_aggregate_report_enabled": "true",
-    "measurement_source_registration_time_optional_for_agg_reports_enabled": "true",
-    "measurement_enable_trigger_context_id": "true",
     // Though set to 1, the path for null agg reports including source registration time should
     // never be reached. This will detect bugs if agg reports including source registration time are
     // created.
@@ -76,11 +73,14 @@
           "attribution_destination": "android-app://example.2d1.test",
           "reporting_origin": "https://www.ad-tech1.test",
           "scheduled_report_time": "800000600",
-          "source_registration_time": "0",
           "version": "0.1"
         },
         "aggregation_coordinator_origin": "https://coordinator.test",
         "histograms": [
+          {"key": "0x0", "value": 0},
+          {"key": "0x0", "value": 0},
+          {"key": "0x0", "value": 0},
+          {"key": "0x0", "value": 0},
           {"key": "0x0", "value": 0}
         ],
         "trigger_context_id": "test_context_id"

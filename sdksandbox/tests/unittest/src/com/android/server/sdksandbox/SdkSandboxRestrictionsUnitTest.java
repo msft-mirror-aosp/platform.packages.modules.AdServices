@@ -16,6 +16,7 @@
 
 package com.android.server.sdksandbox;
 
+import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS;
 import static com.android.sdksandbox.flags.Flags.FLAG_SERVICE_RESTRICTION_PACKAGE_NAME_LOGIC_UPDATED;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
 
@@ -54,6 +55,8 @@ import com.android.server.sdksandbox.testutils.FakeSdkSandboxProvider;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
+import com.google.common.truth.Expect;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -86,6 +89,14 @@ public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
     private static final String PROPERTY_NEXT_SERVICE_ALLOWLIST =
             "sdksandbox_next_service_allowlist";
 
+    // Keep consistent with SdkSandboxManagerService.PROPERTY_BROADCASTRECEIVER_ALLOWLIST
+    private static final String PROPERTY_BROADCASTRECEIVER_ALLOWLIST =
+            "sdksandbox_broadcastreceiver_allowlist_per_targetSdkVersion";
+
+    // Keep the value consistent with SdkSandboxmanagerService.PROPERTY_CONTENTPROVIDER_ALLOWLIST.
+    private static final String PROPERTY_CONTENTPROVIDER_ALLOWLIST =
+            "contentprovider_allowlist_per_targetSdkVersion";
+
     private SdkSandboxManagerService mService;
     private MockitoSession mStaticMockSession;
     private ArgumentCaptor<ActivityInterceptorCallback> mInterceptorCallbackArgumentCaptor =
@@ -94,9 +105,13 @@ public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
     private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
     private SdkSandboxManagerService.Injector mInjector;
     private DeviceConfigUtil mDeviceConfigUtil;
+    private SdkSandboxRestrictionManager mSdkSandboxRestrictionManager;
 
     @Rule(order = 0)
     public final CheckFlagsRule checkFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
+
+    @Rule(order = 1)
+    public final Expect expect = Expect.create();
 
     @Before
     public void setup() {
@@ -134,8 +149,11 @@ public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
                 .adoptShellPermissionIdentity(
                         Manifest.permission.READ_DEVICE_CONFIG,
                         Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG,
                         // for Context#registerReceiverForAllUsers
                         Manifest.permission.INTERACT_ACROSS_USERS_FULL);
+
+        mSdkSandboxRestrictionManager = Mockito.spy(new SdkSandboxRestrictionManager(context));
 
         mInjector =
                 Mockito.spy(
@@ -151,7 +169,8 @@ public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
                                 new FakeSdkSandboxProvider(
                                         Mockito.spy(FakeSdkSandboxService.class)),
                                 Mockito.spy(SdkSandboxPulledAtoms.class),
-                                new SdkSandboxStatsdLogger()));
+                                new SdkSandboxStatsdLogger(),
+                                mSdkSandboxRestrictionManager));
         mService = new SdkSandboxManagerService(context, mInjector);
         mSdkSandboxManagerLocal = mService.getLocalManager();
         assertThat(mSdkSandboxManagerLocal).isNotNull();
@@ -954,6 +973,139 @@ public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
                 .isEqualTo(0);
 
         assertThat(mSdkSandboxManagerLocal.canSendBroadcast(broadcastIntent)).isFalse();
+    }
+
+    @Test
+    @RequiresFlagsEnabled(FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS)
+    public void
+            testCanRegisterBroadcastReceiver_withAllowlistAndDifferentEffectiveTargetSdkVersion()
+                    throws Exception {
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
+        ArrayMap<Integer, List<String>> allowedBroadcastReceivers = new ArrayMap<>();
+        allowedBroadcastReceivers.put(
+                Build.VERSION_CODES.UPSIDE_DOWN_CAKE,
+                new ArrayList<>(Arrays.asList(Intent.ACTION_VIEW)));
+        allowedBroadcastReceivers.put(
+                /* target_sdk_version= */ 35,
+                new ArrayList<>(Arrays.asList(Intent.ACTION_SCREEN_OFF)));
+        String encodedAllowlist =
+                ProtoUtil.encodeBroadcastReceiverAllowlist(allowedBroadcastReceivers);
+
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_BROADCASTRECEIVER_ALLOWLIST, encodedAllowlist);
+
+        expect.that(
+                        mSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
+                                new IntentFilter(Intent.ACTION_VIEW),
+                                /* flags= */ Context.RECEIVER_NOT_EXPORTED,
+                                /* onlyProtectedBroadcasts= */ false))
+                .isTrue();
+
+        expect.that(
+                        mSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
+                                new IntentFilter(Intent.ACTION_SCREEN_OFF),
+                                /* flags= */ Context.RECEIVER_NOT_EXPORTED,
+                                /* onlyProtectedBroadcasts= */ false))
+                .isFalse();
+
+        Mockito.doReturn(35)
+                .when(mSdkSandboxRestrictionManager)
+                .getEffectiveTargetSdkVersion(Mockito.anyInt());
+        expect.that(
+                        mSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
+                                new IntentFilter(Intent.ACTION_SCREEN_OFF),
+                                /* flags= */ Context.RECEIVER_NOT_EXPORTED,
+                                /* onlyProtectedBroadcasts= */ false))
+                .isTrue();
+
+        expect.that(
+                        mSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
+                                new IntentFilter(Intent.ACTION_VIEW),
+                                /* flags= */ Context.RECEIVER_NOT_EXPORTED,
+                                /* onlyProtectedBroadcasts= */ false))
+                .isFalse();
+    }
+
+    @Test
+    @RequiresFlagsEnabled(FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS)
+    public void testCanAccessContentProvider_withAllowlistAndDifferentEffectiveTargetSdkVersion()
+            throws Exception {
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
+        ArrayMap<Integer, List<String>> allowedAuthorities = new ArrayMap<>();
+        allowedAuthorities.put(
+                Build.VERSION_CODES.UPSIDE_DOWN_CAKE,
+                new ArrayList<>(Arrays.asList("com.android.textclassifier.icons")));
+        allowedAuthorities.put(
+                /* target_sdk_version= */ 35, new ArrayList<>(Arrays.asList("user_dictionary")));
+        String encodedAllowlist = ProtoUtil.encodeContentProviderAllowlist(allowedAuthorities);
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_CONTENTPROVIDER_ALLOWLIST, encodedAllowlist);
+
+        ProviderInfo providerInfo1 = new ProviderInfo();
+        providerInfo1.authority = "com.android.textclassifier.icons";
+
+        ProviderInfo providerInfo2 = new ProviderInfo();
+        providerInfo2.authority = "user_dictionary";
+
+        expect.that(mSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(providerInfo1))
+                .isTrue();
+
+        expect.that(mSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(providerInfo2))
+                .isFalse();
+
+        Mockito.doReturn(35)
+                .when(mSdkSandboxRestrictionManager)
+                .getEffectiveTargetSdkVersion(Mockito.anyInt());
+
+        expect.that(mSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(providerInfo1))
+                .isFalse();
+
+        expect.that(mSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(providerInfo2))
+                .isTrue();
+    }
+
+    @Test
+    @RequiresFlagsEnabled(FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS)
+    public void testCanStartActivity_withAllowlistAndDifferentEffectiveTargetSdkVersion()
+            throws Exception {
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
+        ArrayMap<Integer, List<String>> allowedActivities = new ArrayMap<>();
+        allowedActivities.put(
+                Build.VERSION_CODES.UPSIDE_DOWN_CAKE,
+                new ArrayList<>(Arrays.asList(Intent.ACTION_CALL)));
+        allowedActivities.put(
+                /* target_sdk_version= */ 35, new ArrayList<>(Arrays.asList(Intent.ACTION_VIEW)));
+        String encodedAllowlist = ProtoUtil.encodeContentProviderAllowlist(allowedActivities);
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowlist);
+
+        Intent intent1 = new Intent(Intent.ACTION_CALL);
+        Intent intent2 = new Intent(Intent.ACTION_VIEW);
+
+        Mockito.doReturn(34)
+                .when(mSdkSandboxRestrictionManager)
+                .getEffectiveTargetSdkVersion(Mockito.anyInt());
+
+        // No exception thrown as ACTION_CALL is allowed for Android 34
+        mSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent1);
+
+        SecurityException thrown =
+                assertThrows(
+                        SecurityException.class,
+                        () -> mSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent2));
+        assertThat(thrown).hasMessageThat().contains("may not be started from an SDK sandbox uid.");
+
+        Mockito.doReturn(35)
+                .when(mSdkSandboxRestrictionManager)
+                .getEffectiveTargetSdkVersion(Mockito.anyInt());
+
+        // No exception thrown as ACTION_CALL is allowed for Android 35
+        mSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent2);
+
+        thrown =
+                assertThrows(
+                        SecurityException.class,
+                        () -> mSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent1));
+        assertThat(thrown).hasMessageThat().contains("may not be started from an SDK sandbox uid.");
     }
 
     private void testServiceRestriction(

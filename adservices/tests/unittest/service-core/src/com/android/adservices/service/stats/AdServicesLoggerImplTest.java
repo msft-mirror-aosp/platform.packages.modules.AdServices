@@ -67,6 +67,7 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.ReportEventRequest;
 
+import com.android.adservices.cobalt.ApiResponseCobaltLogger;
 import com.android.adservices.cobalt.AppNameApiErrorLogger;
 import com.android.adservices.cobalt.MeasurementCobaltLogger;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -101,6 +102,7 @@ import java.util.List;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AppNameApiErrorLogger.class)
 @SpyStatic(MeasurementCobaltLogger.class)
+@SpyStatic(ApiResponseCobaltLogger.class)
 public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_SOURCE_REGISTRATION = "android-app://com.registrant";
     private static final String TEST_ENROLLMENT_ID = "EnrollmentId";
@@ -108,6 +110,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     @Mock private StatsdAdServicesLogger mStatsdLoggerMock;
     @Mock private AppNameApiErrorLogger mMockAppNameApiErrorLogger;
     @Mock private MeasurementCobaltLogger mMeasurementCobaltLogger;
+    @Mock private ApiResponseCobaltLogger mMockApiResponseCobaltLogger;
     private AdServicesLoggerImpl mAdservicesLogger;
 
     @Before
@@ -128,6 +131,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     @Test
     public void testLogFledgeApiCallStatsWithAppPackageNameLogging() throws Exception {
         mockAppNameApiErrorLogger();
+        mockApiResponseCobaltLogger();
         int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
         String appPackageName = TEST_PACKAGE_NAME;
         int resultCode = STATUS_SUCCESS;
@@ -140,6 +144,15 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         STATUS_SUCCESS);
 
+        AnswerSyncCallback<Void> apiResponseLoggerCallback =
+                AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(apiResponseLoggerCallback)
+                .when(mMockApiResponseCobaltLogger)
+                .logResponse(
+                        appPackageName,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        STATUS_SUCCESS);
+
         mAdservicesLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
 
         // Verify method logging app package name is called.
@@ -147,6 +160,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                 .logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
 
         callback.assertCalled();
+        apiResponseLoggerCallback.assertCalled();
     }
 
     @Test
@@ -214,11 +228,19 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
 
         mocker.mockGetFlags(mMockFlags);
         mockAppNameApiErrorLogger();
+        mockApiResponseCobaltLogger();
 
         AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
         doAnswer(callback)
                 .when(mMockAppNameApiErrorLogger)
                 .logErrorOccurrence(
+                        packageName, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS, STATUS_SUCCESS);
+
+        AnswerSyncCallback<Void> apiResponseLoggerCallback =
+                AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(apiResponseLoggerCallback)
+                .when(mMockApiResponseCobaltLogger)
+                .logResponse(
                         packageName, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS, STATUS_SUCCESS);
 
         ApiCallStats stats =
@@ -233,6 +255,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .build();
         mAdservicesLogger.logApiCallStats(stats);
         callback.assertCalled();
+        apiResponseLoggerCallback.assertCalled();
 
         ArgumentCaptor<ApiCallStats> argumentCaptor = ArgumentCaptor.forClass(ApiCallStats.class);
         verify(mStatsdLoggerMock).logApiCallStats(argumentCaptor.capture());
@@ -268,6 +291,17 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                 NullPointerException.class,
                 () ->
                         mAdservicesLogger.cobaltLogAppNameApiError(
+                                null,
+                                AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS,
+                                STATUS_SUCCESS));
+    }
+
+    @Test
+    public void testApiResponseCobaltLogger_nullPackageName() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mAdservicesLogger.cobaltLogApiResponse(
                                 null,
                                 AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS,
                                 STATUS_SUCCESS));
@@ -336,7 +370,8 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                                 /* isPARequest= */ false,
                                 /* num entities deleted */ 5,
                                 /* isEventLevelEpsilonEnabled= */ false,
-                                /* isTriggerAggregatableValueFiltersConfigured= */ false)
+                                /* isTriggerAggregatableValueFiltersConfigured= */ false,
+                                /* isTriggerFilteringIdConfigured= */ false)
                         .setAdTechDomain(null)
                         .build();
         mAdservicesLogger.logMeasurementRegistrationsResponseSize(stats, TEST_ENROLLMENT_ID);
@@ -362,6 +397,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         expect.that(loggedStats.getNumDeletedEntities()).isEqualTo(5);
         expect.that(loggedStats.isEventLevelEpsilonEnabled()).isFalse();
         expect.that(loggedStats.isTriggerAggregatableValueFiltersConfigured()).isFalse();
+        expect.that(loggedStats.isTriggerFilteringIdConfigured()).isFalse();
         callback.assertCalled();
     }
 
@@ -909,6 +945,8 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setSignalEncodingSuccesses(5)
                         .setSignalEncodingFailures(3)
                         .setSignalEncodingSkips(2)
+                        .setEncodingSourceType(
+                                AdsRelevanceStatusUtils.PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL)
                         .build();
         mAdservicesLogger.logEncodingJobRunStats(stats);
         verify(mStatsdLoggerMock).logEncodingJobRunStats(eq(stats));
@@ -972,28 +1010,92 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         verify(mStatsdLoggerMock).logTopicsScheduleEpochJobSettingReportedStats(eq(stats));
     }
 
-    private void mockAppNameApiErrorLogger() {
+    @Test
+    public void testLogScheduledCustomAudienceUpdateScheduleAttemptedStats() {
+        ScheduledCustomAudienceUpdateScheduleAttemptedStats stats =
+                ScheduledCustomAudienceUpdateScheduleAttemptedStats.builder()
+                        .setExistingUpdateStatus(1)
+                        .setMinimumDelayInMinutes(1)
+                        .setNumberOfLeaveCustomAudiences(1)
+                        .setNumberOfPartialCustomAudiences(1)
+                        .setInitialHop(true)
+                        .build();
+        mAdservicesLogger.logScheduledCustomAudienceUpdateScheduleAttemptedStats(stats);
+        verify(mStatsdLoggerMock).logScheduledCustomAudienceUpdateScheduleAttemptedStats(eq(stats));
+    }
+
+    @Test
+    public void testLogScheduledCustomAudienceUpdateBackgroundJobStats() {
+        ScheduledCustomAudienceUpdateBackgroundJobStats stats =
+                ScheduledCustomAudienceUpdateBackgroundJobStats.builder()
+                        .setNumberOfUpdatesFound(1)
+                        .setNumberOfSuccessfulUpdates(2)
+                        .build();
+        mAdservicesLogger.logScheduledCustomAudienceUpdateBackgroundJobStats(stats);
+        verify(mStatsdLoggerMock).logScheduledCustomAudienceUpdateBackgroundJobStats(eq(stats));
+    }
+
+    @Test
+    public void testLogScheduledCustomAudienceUpdatePerformedFailureStats() {
+        ScheduledCustomAudienceUpdatePerformedFailureStats stats =
+                ScheduledCustomAudienceUpdatePerformedFailureStats.builder()
+                        .setFailureAction(1)
+                        .setFailureType(2)
+                        .build();
+        mAdservicesLogger.logScheduledCustomAudienceUpdatePerformedFailureStats(stats);
+        verify(mStatsdLoggerMock).logScheduledCustomAudienceUpdatePerformedFailureStats(eq(stats));
+    }
+
+    @Test
+    public void testLogScheduledCustomAudienceUpdatePerformedStats() {
+        ScheduledCustomAudienceUpdatePerformedStats stats =
+                ScheduledCustomAudienceUpdatePerformedStats.builder()
+                        .setNumberOfPartialCustomAudienceInRequest(1)
+                        .setNumberOfLeaveCustomAudienceInRequest(2)
+                        .setNumberOfJoinCustomAudienceInResponse(3)
+                        .setNumberOfLeaveCustomAudienceInResponse(4)
+                        .setNumberOfCustomAudienceJoined(5)
+                        .setNumberOfCustomAudienceLeft(6)
+                        .setWasInitialHop(true)
+                        .setNumberOfScheduleUpdatesInResponse(7)
+                        .setNumberOfUpdatesScheduled(8)
+                        .build();
+        mAdservicesLogger.logScheduledCustomAudienceUpdatePerformedStats(stats);
+        verify(mStatsdLoggerMock).logScheduledCustomAudienceUpdatePerformedStats(eq(stats));
+    }
+
+    private void mockCobaltLoggingEnabled() {
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
+    }
+
+    private void mockAppNameApiErrorLogger() {
+        mockCobaltLoggingEnabled();
         when(mMockFlags.getAppNameApiErrorCobaltLoggingEnabled()).thenReturn(true);
         doReturn(mMockAppNameApiErrorLogger).when(AppNameApiErrorLogger::getInstance);
     }
 
     private void mockMsmtRegistrationCobaltLogger(boolean isEeaDevice) {
-        when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
+        mockCobaltLoggingEnabled();
         when(mMockFlags.getMsmtRegistrationCobaltLoggingEnabled()).thenReturn(true);
         when(mMockFlags.isEeaDevice()).thenReturn(isEeaDevice);
         doReturn(mMeasurementCobaltLogger).when(MeasurementCobaltLogger::getInstance);
     }
 
     private void mockMsmtAttributionCobaltLogger() {
-        when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
+        mockCobaltLoggingEnabled();
         when(mMockFlags.getMsmtAttributionCobaltLoggingEnabled()).thenReturn(true);
         doReturn(mMeasurementCobaltLogger).when(MeasurementCobaltLogger::getInstance);
     }
 
     private void mockMsmtReportingCobaltLogger() {
-        when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
+        mockCobaltLoggingEnabled();
         when(mMockFlags.getMsmtReportingCobaltLoggingEnabled()).thenReturn(true);
         doReturn(mMeasurementCobaltLogger).when(MeasurementCobaltLogger::getInstance);
+    }
+
+    private void mockApiResponseCobaltLogger() {
+        mockCobaltLoggingEnabled();
+        when(mMockFlags.getCobaltEnableApiCallResponseLogging()).thenReturn(true);
+        doReturn(mMockApiResponseCobaltLogger).when(ApiResponseCobaltLogger::getInstance);
     }
 }

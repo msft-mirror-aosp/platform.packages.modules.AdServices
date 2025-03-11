@@ -41,7 +41,7 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
             MeasurementActivity measurementActivity, MeasurementViewModel measurementViewModel) {
         super(measurementActivity);
         this.mMeasurementViewModel = measurementViewModel;
-        initWithUx(measurementActivity, measurementActivity.getApplicationContext());
+        initWithUx();
         listenToMeasurementViewModelUiEvents();
     }
 

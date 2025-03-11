@@ -550,6 +550,7 @@ public class TriggerTest {
     @Test
     public void testParseAggregateTrigger() throws JSONException {
         when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true, false);
+        when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
         JSONArray triggerDatas = new JSONArray();
         JSONObject jsonObject1 = new JSONObject();
         jsonObject1.put("key_piece", "0x400");
@@ -584,11 +585,24 @@ public class TriggerTest {
         aggregateDedupKeys.put(dedupKeyJsonObject2);
         aggregateDedupKeys.put(dedupKeyJsonObject3);
 
+        JSONArray namedBudgets = new JSONArray();
+        JSONObject budgetJsonObject1 = new JSONObject();
+        budgetJsonObject1.put("name", "biddable");
+        budgetJsonObject1.put("filters", createFilterJSONArray());
+        budgetJsonObject1.put("not_filters", createFilterJSONArray());
+        JSONObject budgetJsonObject2 = new JSONObject();
+        budgetJsonObject2.put("name", "nonbiddable");
+        budgetJsonObject2.put("filters", createFilterJSONArray());
+        budgetJsonObject2.put("not_filters", createFilterJSONArray());
+        namedBudgets.put(budgetJsonObject1);
+        namedBudgets.put(budgetJsonObject2);
+
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setAggregateTriggerData(triggerDatas.toString())
                         .setAggregateValuesString(values.toString())
                         .setAggregateDeduplicationKeys(aggregateDedupKeys.toString())
+                        .setNamedBudgetsString(namedBudgets.toString())
                         .build();
         Optional<AggregatableAttributionTrigger> aggregatableAttributionTrigger =
                 trigger.getAggregatableAttributionTrigger(mFlags);
@@ -785,10 +799,91 @@ public class TriggerTest {
                         .get(2)
                         .getDeduplicationKey()
                         .isEmpty());
+
+        assertThat(aggregateTrigger.getNamedBudgets()).isNotNull();
+        assertThat(aggregateTrigger.getNamedBudgets().size()).isEqualTo(2);
+        assertThat(aggregateTrigger.getNamedBudgets().get(0).getName()).isEqualTo("biddable");
+        assertThat(aggregateTrigger.getNamedBudgets().get(0).getFilterSet()).isNotNull();
+        assertThat(
+                        aggregateTrigger
+                                .getNamedBudgets()
+                                .get(0)
+                                .getFilterSet()
+                                .get(0)
+                                .getAttributionFilterMap()
+                                .size())
+                .isEqualTo(2);
+        assertThat(aggregateTrigger.getNamedBudgets().get(0).getNotFilterSet()).isNotNull();
+        assertThat(
+                        aggregateTrigger
+                                .getNamedBudgets()
+                                .get(0)
+                                .getNotFilterSet()
+                                .get(0)
+                                .getAttributionFilterMap()
+                                .size())
+                .isEqualTo(2);
+        assertThat(aggregateTrigger.getNamedBudgets().get(1).getFilterSet()).isNotNull();
+        assertThat(
+                        aggregateTrigger
+                                .getNamedBudgets()
+                                .get(1)
+                                .getFilterSet()
+                                .get(0)
+                                .getAttributionFilterMap()
+                                .size())
+                .isEqualTo(2);
+        assertThat(aggregateTrigger.getNamedBudgets().get(1).getNotFilterSet()).isNotNull();
+        assertThat(
+                        aggregateTrigger
+                                .getNamedBudgets()
+                                .get(1)
+                                .getNotFilterSet()
+                                .get(0)
+                                .getAttributionFilterMap()
+                                .size())
+                .isEqualTo(2);
+        assertThat(aggregateTrigger.getNamedBudgets().get(1).getName()).isEqualTo("nonbiddable");
     }
 
     @Test
-    public void testGetAttributionDestinationBaseUri_appDestination() throws JSONException {
+    public void testParseAggregateTrigger_noNamedBudgets() throws JSONException {
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true, false);
+        when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
+        JSONArray triggerDatas = new JSONArray();
+        JSONObject jsonObject1 = new JSONObject();
+        jsonObject1.put("key_piece", "0x400");
+        jsonObject1.put("source_keys", new JSONArray(Arrays.asList("campaignCounts")));
+        jsonObject1.put("filters", createFilterJSONArray());
+        jsonObject1.put("not_filters", createFilterJSONArray());
+        jsonObject1.put("x_network_data", createXNetworkDataJSONObject());
+        JSONObject jsonObject2 = new JSONObject();
+        jsonObject2.put("key_piece", "0xA80");
+        jsonObject2.put("source_keys", new JSONArray(Arrays.asList("geoValue", "noMatch")));
+        jsonObject1.put("x_network_data", createXNetworkDataJSONObject());
+        triggerDatas.put(jsonObject1);
+        triggerDatas.put(jsonObject2);
+
+        JSONObject values = new JSONObject();
+        values.put("campaignCounts", 32768);
+        values.put("geoValue", 1664);
+
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregateTriggerData(triggerDatas.toString())
+                        .setAggregateValuesString(values.toString())
+                        .build();
+        Optional<AggregatableAttributionTrigger> aggregatableAttributionTrigger =
+                trigger.getAggregatableAttributionTrigger(mFlags);
+
+        assertThat(aggregatableAttributionTrigger).isPresent();
+        AggregatableAttributionTrigger aggregateTrigger = aggregatableAttributionTrigger.get();
+
+        assertThat(aggregateTrigger.getNamedBudgets()).isNull();
+    }
+
+    @Test
+    public void testGetAttributionDestinationBaseUri_appDestination() {
         Trigger trigger = TriggerFixture.getValidTriggerBuilder()
                 .setAttributionDestination(APP_DESTINATION)
                 .setDestinationType(EventSurfaceType.APP)
@@ -797,7 +892,7 @@ public class TriggerTest {
     }
 
     @Test
-    public void testGetAttributionDestinationBaseUri_webDestination() throws JSONException {
+    public void testGetAttributionDestinationBaseUri_webDestination() {
         Trigger trigger = TriggerFixture.getValidTriggerBuilder()
                 .setAttributionDestination(WEB_DESTINATION)
                 .setDestinationType(EventSurfaceType.WEB)
@@ -806,8 +901,7 @@ public class TriggerTest {
     }
 
     @Test
-    public void testGetAttributionDestinationBaseUri_trimsWebDestinationWithSubdomain()
-            throws JSONException {
+    public void testGetAttributionDestinationBaseUri_trimsWebDestinationWithSubdomain() {
         Trigger trigger = TriggerFixture.getValidTriggerBuilder()
                 .setAttributionDestination(WEB_DESTINATION_WITH_SUBDOMAIN)
                 .setDestinationType(EventSurfaceType.WEB)
@@ -816,8 +910,7 @@ public class TriggerTest {
     }
 
     @Test
-    public void testGetAttributionDestinationBaseUri_trimsWebDestinationWithPath()
-            throws JSONException {
+    public void testGetAttributionDestinationBaseUri_trimsWebDestinationWithPath() {
         Trigger trigger = TriggerFixture.getValidTriggerBuilder()
                 .setAttributionDestination(WEB_DESTINATION_WITH_PATH)
                 .setDestinationType(EventSurfaceType.WEB)
@@ -826,8 +919,8 @@ public class TriggerTest {
     }
 
     @Test
-    public void testGetAttributionDestinationBaseUri_trimsWebDestinationWithSubdomainPathQueryFrag()
-            throws JSONException {
+    public void
+            testGetAttributionDestinationBaseUri_trimsWebDestinationWithSubdomainPathQueryFrag() {
         Trigger trigger = TriggerFixture.getValidTriggerBuilder()
                 .setAttributionDestination(WEB_DESTINATION_WITH_SUBDOMAIN_PATH_QUERY_FRAGMENT)
                 .setDestinationType(EventSurfaceType.WEB)
@@ -836,8 +929,7 @@ public class TriggerTest {
     }
 
     @Test
-    public void testGetAttributionDestinationBaseUri_invalidWebDestination()
-            throws JSONException {
+    public void testGetAttributionDestinationBaseUri_invalidWebDestination() {
         Trigger trigger = TriggerFixture.getValidTriggerBuilder()
                 .setAttributionDestination(WEB_DESTINATION_INVALID)
                 .setDestinationType(EventSurfaceType.WEB)
@@ -962,7 +1054,81 @@ public class TriggerTest {
     }
 
     @Test
-    public void testParseAggregateTrigger_aggregateValueFiltersJsonArrayParses_success()
+    public void testParseAggregateTrigger_anyUnsupportedAggValuesJsonObject_throwsException() {
+        String unsupportedAggregatableValues =
+                "{\"campaignCounts\": 32768, \"geoValue\":{\"value\": " + "1664}}";
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregateValuesString(unsupportedAggregatableValues)
+                        .build();
+        assertThrows(JSONException.class, () -> trigger.getAggregatableAttributionTrigger(mFlags));
+    }
+
+    @Test
+    public void testParseAggregateTrigger_anyUnsupportedAggValuesJsonArray_throwsException() {
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        String unsupportedAggregatableValues =
+                "[ {\"values\":  {\"campaignCounts\": 32768, \"geoValue\":{\"value\": " + "1664}}";
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregateValuesString(unsupportedAggregatableValues)
+                        .build();
+        assertThrows(JSONException.class, () -> trigger.getAggregatableAttributionTrigger(mFlags));
+    }
+
+    @Test
+    public void testParseAggregateTrigger_aggValuesJsonObjectFlexibleFilterOn_passes()
+            throws Exception {
+        when(mFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        String validAggregatableValues =
+                "{\"campaignCounts\": {\"value\":32768, \"filtering_id\":\"255\"},"
+                        + " \"geoValue\":1664}}";
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregateValuesString(validAggregatableValues)
+                        .build();
+        Optional<AggregatableAttributionTrigger> aggregatableAttributionTrigger =
+                trigger.getAggregatableAttributionTrigger(mFlags);
+        assertThat(aggregatableAttributionTrigger).isNotNull();
+        AggregatableValuesConfig config =
+                aggregatableAttributionTrigger.get().getValueConfigs().get(0);
+        assertThat(config.getValues().keySet().size()).isEqualTo(2);
+        assertThat(config.getValues().get("campaignCounts").getFilteringId())
+                .isEqualTo(new UnsignedLong("255"));
+        assertThat(config.getValues().get("campaignCounts").getValue()).isEqualTo(32768);
+        assertThat(config.getValues().get("geoValue").getValue()).isEqualTo(1664);
+        assertThat(config.getValues().get("geoValue").getFilteringId())
+                .isEqualTo(UnsignedLong.ZERO);
+    }
+
+    @Test
+    public void testParseAggregateTrigger_aggValuesJsonArrayAggregateValueFiltersOff_returnsEmpty()
+            throws JSONException {
+        String invalidAggregatableValues =
+                "[ {\"values\": {\"campaignCounts\": {\"value\": 1664}}} ]";
+        // Aggregate Values in Trigger table is persisted in JSONArray string format.
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregateValuesString(invalidAggregatableValues)
+                        .build();
+        // Values are not parsable and trigger is rejected.
+        assertThat(trigger.getAggregatableAttributionTrigger(mFlags)).isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void testParseAggregateTrigger_aggValuesJsonArrayFlexibleFilterAggUnsupported_throws() {
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        String unsupportedAggregatableValues =
+                "[ {\"values\": {\"campaignCounts\": {\"value\": 1664}}} ]";
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregateValuesString(unsupportedAggregatableValues)
+                        .build();
+        assertThrows(JSONException.class, () -> trigger.getAggregatableAttributionTrigger(mFlags));
+    }
+
+    @Test
+    public void testParseAggregateTrigger_aggValuesJsonArrayAggregateValueFiltersOn_success()
             throws Exception {
         when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
         String validAggregatableValues =
@@ -985,20 +1151,31 @@ public class TriggerTest {
     }
 
     @Test
-    public void testParseAggregateTrigger_aggregateValueFiltersFlagOffJsonArray_fails()
-            throws JSONException {
-        String invalidAggregatableValuesWithFlagOff =
-                "[{\"values\":{\"campaignCounts\":32768, \"geoValue\":1664}},{\"values\":{\"a\":1,"
-                        + " \"b\":2, \"c\":3}}]";
-        // Aggregate Values in Trigger table is persisted in JSONArray string format.
+    public void
+            testParseAggregateTrigger_aggregateValuesJsonArrayFlagsEnabledWithFilteringId_passes()
+                    throws Exception {
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        when(mFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        String validAggregatableValues =
+                "[{\"values\":{\"campaignCounts\":{\"value\":32768,\"filtering_id\":\"123\"},"
+                        + "\"geoValue\":1664}}]";
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
-                        .setAggregateValuesString(invalidAggregatableValuesWithFlagOff)
+                        .setAggregateValuesString(validAggregatableValues)
                         .build();
-        // Values are not parsable and trigger is rejected.
-        assertThat(trigger.getAggregatableAttributionTrigger(mFlags))
-                .isEqualTo(Optional.empty());
+        Optional<AggregatableAttributionTrigger> aggregatableAttributionTrigger =
+                trigger.getAggregatableAttributionTrigger(mFlags);
+        assertThat(aggregatableAttributionTrigger).isNotNull();
+        AggregatableValuesConfig config =
+                aggregatableAttributionTrigger.get().getValueConfigs().get(0);
+        assertThat(config.getValues().get("campaignCounts").getValue()).isEqualTo(32768);
+        assertThat(config.getValues().get("campaignCounts").getFilteringId())
+                .isEqualTo(new UnsignedLong("123"));
+        assertThat(config.getValues().get("geoValue").getValue()).isEqualTo(1664);
+        assertThat(config.getValues().get("geoValue").getFilteringId())
+                .isEqualTo(UnsignedLong.ZERO);
     }
+
 
     @Test
     public void aggregateDebugReport_parsing_asExpected() throws JSONException {

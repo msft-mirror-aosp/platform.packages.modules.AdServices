@@ -56,6 +56,7 @@ public class ReportingStatus {
         VERBOSE_DEBUG_TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA(30),
         VERBOSE_DEBUG_TRIGGER_EVENT_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT(31),
         VERBOSE_DEBUG_TRIGGER_AGG_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT(32),
+        VERBOSE_DEBUG_HEADER_ERROR(33),
         VERBOSE_DEBUG_UNKNOWN(9999);
 
         private final int mValue;
@@ -222,6 +223,8 @@ public class ReportingStatus {
             mReportType = ReportType.VERBOSE_DEBUG_TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED;
         } else if (reportType.equals(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA)) {
             mReportType = ReportType.VERBOSE_DEBUG_TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA;
+        } else if (reportType.equals(DebugReportApi.Type.HEADER_PARSING_ERROR)) {
+            mReportType = ReportType.VERBOSE_DEBUG_HEADER_ERROR;
         } else {
             mReportType = ReportType.VERBOSE_DEBUG_UNKNOWN;
         }

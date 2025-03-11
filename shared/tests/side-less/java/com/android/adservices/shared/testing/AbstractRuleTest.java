@@ -19,7 +19,7 @@ import static com.android.adservices.shared.testing.LogEntry.Subject.logEntry;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import com.android.adservices.shared.meta_testing.FakeLogger;
+import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 import com.android.adservices.shared.meta_testing.SimpleStatement;
 import com.android.adservices.shared.meta_testing.TestNamerRuleTester;
 import com.android.adservices.shared.testing.Logger.LogLevel;
@@ -39,9 +39,8 @@ public final class AbstractRuleTest extends SharedSidelessTestCase {
     private final SimpleStatement mBaseStatement = new SimpleStatement();
     private final Description mDefaultDescription =
             Description.createTestDescription(AbstractRuleTest.class, "aTestHasNoName");
-    private final FakeLogger mFakeLogger = new FakeLogger();
 
-    private final ConcreteRule mRule = new ConcreteRule(mFakeLogger);
+    private final ConcreteRule mRule = new ConcreteRule(mFakeRealLogger);
 
     @Test
     public void testApply() throws Throwable {
@@ -75,7 +74,7 @@ public final class AbstractRuleTest extends SharedSidelessTestCase {
 
         expect.withMessage("errors").that(errors).containsExactly(exception);
 
-        ImmutableList<LogEntry> logEntries = mFakeLogger.getEntries();
+        ImmutableList<LogEntry> logEntries = mFakeRealLogger.getEntries();
         assertWithMessage("log entries").that(logEntries).hasSize(1);
         expect.withMessage("logged message")
                 .about(logEntry())

@@ -180,19 +180,6 @@ public final class AdServicesBackCompatInitTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testInitializeComponents_withRFlagOn_enablesComponents() {
-        mocker.mockIsAtLeastT(false);
-        doReturn(Build.VERSION_CODES.R).when(AdServicesBackCompatInit::getSdkLevelInt);
-        mockAdServicesFlags(true);
-        mockPackageName(TEST_PACKAGE_NAME);
-
-        mSpyCompatInit.initializeComponents();
-
-        verifyEnablingComponents(SUPPORTED_SERVICES_ON_R);
-        verifyNoMoreInteractions(mPackageManager, mJobScheduler);
-    }
-
-    @Test
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_CANCEL_JOB_FAILURE)
     public void testInitializeComponents_disableScheduledBackgroundJobsException_celLogged() {

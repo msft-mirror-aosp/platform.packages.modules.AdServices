@@ -44,6 +44,9 @@ import java.util.stream.Collectors;
 /**
  * Log verifier for scanning usage of {@code ErrorLogUtil.e(int, int)} invocations. Use {@link
  * ExpectErrorLogUtilCall} to verify logging calls.
+ *
+ * <p>NOTE: This only verifies sync logging calls. For background logging calls, use {@link
+ * ErrorLogUtilSyncCallback}.
  */
 public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<ErrorLogUtilCall> {
     @Override
@@ -65,7 +68,8 @@ public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<Er
     public Set<ErrorLogUtilCall> getExpectedLogCalls(Description description) {
         List<ExpectErrorLogUtilCall> annotations = getAnnotations(description);
         SetErrorLogUtilDefaultParams defaultParams =
-                TestHelper.getAnnotation(description, SetErrorLogUtilDefaultParams.class);
+                TestHelper.getAnnotationFromAnywhere(
+                        description, SetErrorLogUtilDefaultParams.class);
 
         if (annotations.isEmpty()) {
             Log.v(mTag, "No @" + ANNOTATION_NAME + " found over test method.");

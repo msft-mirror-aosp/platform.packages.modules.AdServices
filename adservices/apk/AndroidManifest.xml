@@ -436,7 +436,7 @@
 
         <!-- FLEDGE Ad selection debug report sender Job -->
         <service android:name=
-                     "com.android.adservices.service.adselection.DebugReportSenderJobService"
+                     "com.android.adservices.service.adselection.debug.DebugReportSenderJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
@@ -484,6 +484,12 @@
         <!-- Cobalt Logging Job -->
         <service
             android:name="com.android.adservices.cobalt.CobaltJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Ad Package Deny Pre Process Job -->
+        <service
+            android:name="com.android.adservices.service.common.AdPackageDenyPreProcessJobService"
             android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 

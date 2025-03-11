@@ -48,6 +48,12 @@
             android:name="com.android.adservices.cobalt.CobaltJobService"
             android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
+
+        <!-- AdPackageDenyPreProcess Job -->
+        <service
+            android:name="com.android.adservices.service.common.AdPackageDenyPreProcessJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
         <provider
             android:name="com.android.adservices.common.AdServicesTestingProvider"
             android:authorities="com.android.adservices.provider.testing"

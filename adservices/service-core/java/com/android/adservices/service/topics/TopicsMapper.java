@@ -31,6 +31,8 @@ import java.util.stream.Collectors;
  *
  * <p>E.g. <string name="topic10001">/Arts &amp; Entertainment</string>
  */
+// TODO(b/311183933): Remove passed in Context from static method.
+@SuppressWarnings("AvoidStaticContext")
 public class TopicsMapper {
 
     /** @return a Android resource Id for provided {@link Topic} or 0 if it doesn't exist. */

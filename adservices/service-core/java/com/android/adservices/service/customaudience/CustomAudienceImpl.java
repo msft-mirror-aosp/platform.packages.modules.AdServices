@@ -59,6 +59,7 @@ public final class CustomAudienceImpl {
     @NonNull private final Flags mFlags;
     private final boolean mAuctionServerRequestFlagsEnabled;
     private final boolean mSellerConfigurationFlagEnabled;
+    private final ComponentAdsStrategy mComponentAdsStrategy;
 
     @VisibleForTesting
     public CustomAudienceImpl(
@@ -66,7 +67,8 @@ public final class CustomAudienceImpl {
             @NonNull CustomAudienceQuantityChecker customAudienceQuantityChecker,
             @NonNull Validator<CustomAudience> customAudienceValidator,
             @NonNull Clock clock,
-            @NonNull Flags flags) {
+            @NonNull Flags flags,
+            ComponentAdsStrategy componentAdsStrategy) {
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(customAudienceQuantityChecker);
         Objects.requireNonNull(customAudienceValidator);
@@ -83,6 +85,7 @@ public final class CustomAudienceImpl {
         mSellerConfigurationFlagEnabled =
                 BinderFlagReader.readFlag(
                         flags::getFledgeGetAdSelectionDataSellerConfigurationEnabled);
+        mComponentAdsStrategy = componentAdsStrategy;
     }
 
     /**
@@ -103,7 +106,9 @@ public final class CustomAudienceImpl {
                                 new CustomAudienceQuantityChecker(customAudienceDao, flags),
                                 CustomAudienceValidator.getInstance(),
                                 Clock.systemUTC(),
-                                flags);
+                                flags,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false));
             }
             return sSingleton;
         }
@@ -163,6 +168,8 @@ public final class CustomAudienceImpl {
         sLogger.v("Inserting CA in the DB: %s", dbCustomAudience);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dbCustomAudience, customAudience.getDailyUpdateUri(), isDebuggableCustomAudience);
+        mComponentAdsStrategy.persistComponentAds(
+                customAudience, callerPackageName, mCustomAudienceDao);
     }
 
     /** Delete a custom audience with given key. No-op if not exist. */

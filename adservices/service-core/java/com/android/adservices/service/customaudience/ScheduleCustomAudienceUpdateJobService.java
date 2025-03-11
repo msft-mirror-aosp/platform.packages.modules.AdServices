@@ -153,6 +153,8 @@ public class ScheduleCustomAudienceUpdateJobService extends JobService {
      * Attempts to schedule the update Custom Audience job as a singleton job if it is not already
      * scheduled.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void scheduleIfNeeded(Context context, Flags flags, boolean forceSchedule) {
         LoggerFactory.getFledgeLogger()
                 .v(
@@ -185,6 +187,8 @@ public class ScheduleCustomAudienceUpdateJobService extends JobService {
      *
      * <p>Split out from {@link #scheduleIfNeeded(Context, Flags, boolean)} for mockable testing
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     @VisibleForTesting
     protected static void schedule(Context context, Flags flags) {
         if (!flags.getFledgeScheduleCustomAudienceUpdateEnabled()) {

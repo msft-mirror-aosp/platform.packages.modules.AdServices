@@ -44,7 +44,6 @@ import com.android.adservices.service.adselection.HistogramEvent;
 import com.android.adservices.service.adselection.HistogramEventFixture;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.Before;
@@ -55,7 +54,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.HashSet;
 
-@RequiresSdkLevelAtLeastS()
 @MockStatic(PackageManagerCompatUtils.class)
 public final class FrequencyCapDaoTest extends AdServicesExtendedMockitoTestCase {
     private static final int ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10;

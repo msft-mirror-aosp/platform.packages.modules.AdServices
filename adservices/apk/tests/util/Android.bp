@@ -30,7 +30,7 @@ filegroup {
 android_library {
     name: "adservices-ui-test-utility",
     sdk_version: "module_current",
-    min_sdk_version: "30",
+    min_sdk_version: "31",
     srcs: [
         ":adservices-ui-test-utility-sources",
     ],

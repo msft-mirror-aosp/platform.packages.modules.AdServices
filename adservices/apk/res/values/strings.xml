@@ -407,7 +407,7 @@
     <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_how_it_works_row_body6_v2" translatable="false">@string/notificationUI_how_it_works_row_body6</string>
     <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_how_it_works_row_body7_v2" translatable="false">@string/notificationUI_how_it_works_row_body7</string>
+    <string name="notificationUI_how_it_works_row_body7_v2"><a href="https://support.google.com/android/answer/13720755?sjid=5065763854652067029">Learn more about ad privacy on Android</a></string>
     <!-- Text for button that scrolls the page down to view more text. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_next_button_text">Next</string>
 
@@ -718,7 +718,7 @@
     <!-- Text for the title of the explainer for the PAS notification landing page. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_pas_header_title" translatable="false">@string/notificationUI_pas_notification_title</string>
     <!-- Text for the body of the explainer for the PAS notification landing page. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_pas_body_main">Android is expanding ad privacy features to restrict what apps can learn about you when they show you personalized ads.</string>
+    <string name="notificationUI_pas_body_main">Ad privacy features help limit what apps can learn about you when they show you personalized ads.</string>
     <!-- Text for the subtitle of the explainer for subsection 1 of the PAS notification landing page. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_pas_subtitle1" translatable="false">@string/settingsUI_apps_ga_title</string>
     <!-- Text for the body of the explainer for the PAS notification landing page. [CHAR LIMIT=NONE] -->
@@ -785,6 +785,11 @@
     <string name="notificationUI_pas_combined_dropdown_subtitle2" translatable="false">@string/notificationUI_how_it_works_subtitle2</string>
     <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_pas_combined_dropdown_body5">Apps you use can ask Android for information to help them measure the performance of their ads. Android helps protect your privacy by limiting the information apps can share with one another.</string>
+    <!-- Text for subtitle in the dropdown info about ad privacy. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_dropdown_subtitle3">How apps use your data</string>
+    <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_dropdown_body6">Google requires companies to state publicly that they won’t use this data to re-identify you across apps. Some apps may use your activity to personalize your experience for more than just ads. They may also combine it with other information they already know about you. Companies are responsible for letting you know how they use your data.<a href="https://policies.google.com/privacy">Learn more about how Google protects your data in our Privacy Policy</a></string>
+
 
     <!-- PAS Additional Info Dropdown Sections **************************************************-->
     <!-- Text for the subtitle of the explainer for a subsection of the PAS notification landing page. [CHAR LIMIT=NONE] -->
@@ -795,6 +800,8 @@
     <string name="notificationUI_pas_msmt_dropdown_subtitle2">How is my identity protected?</string>
     <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_pas_msmt_body2">Android uses multiple privacy measures such as aggregation and noising data to limit the information apps can share with one another and help protect your identity.\n\nAd measurement data is also deleted regularly from your device.</string>
+    <!-- Link that takes user to additional info on ad privacy for Android. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_learn_more_msmt_link"><a href="https://support.google.com/android?p=ad_measurement">Learn more about how Android helps protect your privacy</a></string>
     <!-- Text for the subtitle of the explainer for a subsection of the PAS notification landing page. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_pas_app_dropdown_subtitle1" translatable="false">@string/notificationUI_pas_msmt_dropdown_subtitle1</string>
     <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
@@ -803,18 +810,20 @@
     <string name="notificationUI_pas_app_dropdown_subtitle2">How do apps use this data?</string>
     <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_pas_app_body2">Apps can securely store this information so that it can only be used by their advertising partners to personalize ads on other apps. For example, if you regularly use cooking apps, you may see ads for grocery delivery services or related content in other apps.</string>
+    <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_app_body2_part2" translatable="false">@string/notificationUI_pas_combined_dropdown_body6</string>
     <!-- Text for the subtitle of the explainer for a subsection of the PAS notification landing page. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_pas_app_dropdown_subtitle3">How can I manage this data?</string>
     <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_pas_app_body3">You can block specific apps from sharing your activity with advertising partners. You can reset or turn app-suggested ads off at any time in your privacy settings. Android also auto-deletes this data regularly.</string>
     <!-- Link that takes user to additional info on ad privacy for Android. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_pas_leanr_more_link"><a href="https://support.google.com/android?p=ad_privacy">Learn more about how Android helps protect your privacy</a></string>
+    <string name="notificationUI_pas_leanr_more_link"><a href="https://support.google.com/android?p=manage_appsuggested_ads">Learn more about how Android helps protect your privacy</a></string>
 
     <!-- PAS Settings Activity ******************************************************************-->
     <!-- Title for the PAS apps view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_pas_apps_view_body_text">Apps and their advertising partners can use your activity across other apps on this device to personalize ads while still keeping information about you private and secure.\n\nFor example, if you regularly use cooking apps, you may see ads for grocery delivery services or related content in other apps.\n\nAndroid auto-deletes your activity regularly, but you can also block apps from sharing this information with their advertising partners.\n\nWhile this feature can be turned on, you may not see a list of apps until this feature is fully available and apps start using it.</string>
+    <string name="settingsUI_pas_apps_view_body_text">Apps and their advertising partners can use your activity across other apps on this device to personalize ads while still keeping information about you private and secure.\n\nFor example, if you regularly use cooking apps, you may see ads for grocery delivery services or related content in other apps.\n\nYou can block an app from sharing your activity data with advertising partners. Android also auto-deletes shared activity data regularly, so an app you use again might reappear on this list.\n\nWhile this feature can be turned on, you may not see a list of apps until this feature is fully available and apps start using it.</string>
     <!-- Text for the PAS footer explanation of apps/PAS API controls for ad privacy. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_pas_apps_view_footer">It’s common for apps and their advertising partners to remember things you’re interested in to personalize your experience. Apps can securely store this information so that it can only be used by their advertising partners to show ads on other apps.\n\nYou can block an app from sharing your activity data with advertising partners. Android also auto-deletes shared activity data regularly, so an app you use again might reappear on this list.\n\nWhether an ad you see is personalized can depend on many factors like this setting, the ad topics setting, your advertising ID settings, and whether the app you’re using personalizes ads.\n\n<a href="https://support.google.com/android?p=ad_privacy">Learn more about app-suggested ads</a></string>
+    <string name="settingsUI_pas_apps_view_footer">It’s common for apps and their advertising partners to remember things you’re interested in to personalize your experience. Apps can securely store this information so that it can only be used by their advertising partners to show ads on other apps.\n\nWhether an ad you see is personalized can depend on many factors like this setting, the ad topics setting, your advertising ID settings, and whether the app you’re using personalizes ads.\n\nGoogle requires companies to state publicly that they won’t use this data to re-identify you across apps. Some apps may use your activity to personalize your experience for more than just ads. They may also combine it with other information they already know about you. Companies are responsible for letting you know how they use your data. <a href="https://policies.google.com/privacy">Learn more about how Google protects your data in our Privacy Policy</a>\n\n<a href="https://support.google.com/android?p=manage_appsuggested_ads">Learn more about app-suggested ads</a></string>
     <!-- Text for the PAS footer explanation of measurement API controls for ad privacy. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_pas_msmt_view_footer">Android uses multiple privacy measures such as aggregation and noising data to limit the information apps can share with one another and help protect your identity.\n\nYour browser may have a similar setting. If ad measurement is on for both Android and your browser, a company may be able to measure the effectiveness of an ad between apps you use and sites you visit. Your browsing history is kept private on your device.\n\n<a href="https://support.google.com/android?p=ad_privacy">Learn more about ad measurement</a></string>
     <!-- Text for the PAS footer explanation of measurement API controls for ad privacy. [CHAR LIMIT=NONE] -->

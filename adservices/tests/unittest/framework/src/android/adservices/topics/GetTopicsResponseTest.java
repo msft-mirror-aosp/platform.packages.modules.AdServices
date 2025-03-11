@@ -21,7 +21,6 @@ import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
@@ -29,7 +28,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /** Unit tests for {@link android.adservices.topics.GetTopicsResponse} */
-@RequiresSdkLevelAtLeastS
 public final class GetTopicsResponseTest extends AdServicesUnitTestCase {
     private static final List<Topic> TOPICS_LIST =
             List.of(new Topic(/* mTaxonomyVersion */ 1L, /* mModelVersion */ 1L, /* mTopicId */ 0));

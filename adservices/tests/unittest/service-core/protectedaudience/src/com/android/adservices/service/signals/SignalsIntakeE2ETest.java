@@ -32,6 +32,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -53,6 +55,10 @@ import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
+import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
@@ -84,6 +90,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.testutils.DevSessionHelper;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -92,6 +99,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.mockwebserver.MockResponse;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -117,6 +125,8 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
 
     @Rule(order = 11)
     public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+
+    public DevSessionHelper mDevSessionHelper;
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
@@ -151,6 +161,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
     private ListeningExecutorService mBackgroundExecutorService;
     private Flags mFakeFlags;
     private EnrollmentDao mEnrollmentDao;
+    private ForcedEncoder mForcedEncoder;
 
     @Before
     public void setup() {
@@ -188,13 +199,22 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mFakeFlags);
+        mForcedEncoder =
+                new ForcedEncoderFactory(
+                                mFakeFlags.getFledgeEnableForcedEncodingAfterSignalsUpdate(),
+                                mFakeFlags
+                                        .getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds(),
+                                mSpyContext)
+                        .createInstance();
         mUpdateEncoderEventHandler =
                 new UpdateEncoderEventHandler(
                         mEncoderEndpointsDao,
                         mEncoderLogicHandler,
                         mSpyContext,
                         AdServicesExecutors.getBackgroundExecutor(),
-                        /* isCompletionBroadcastEnabled= */ false);
+                        /* isCompletionBroadcastEnabled= */ false,
+                        mForcedEncoder,
+                        false);
         int oversubscriptionBytesLimit =
                 mFakeFlags.getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes();
         mSignalEvictionController =
@@ -207,7 +227,8 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         mSignalsDao,
                         mUpdateProcessorSelector,
                         mUpdateEncoderEventHandler,
-                        mSignalEvictionController);
+                        mSignalEvictionController,
+                        mForcedEncoder);
         mAdtechUriValidator = new AdTechUriValidator("", "", "", "");
         mFledgeAuthorizationFilter =
                 ExtendedMockito.spy(
@@ -215,6 +236,19 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                                 mSpyContext.getPackageManager(),
                                 mEnrollmentDao,
                                 mAdServicesLoggerMock));
+        CustomAudienceDao customAudienceDao =
+                Room.inMemoryDatabaseBuilder(mSpyContext, CustomAudienceDatabase.class)
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
+                        .build()
+                        .customAudienceDao();
+        SharedStorageDatabase sharedStorageDatabase =
+                Room.inMemoryDatabaseBuilder(mSpyContext, SharedStorageDatabase.class).build();
+        mDevSessionHelper =
+                new DevSessionHelper(
+                        customAudienceDao,
+                        sharedStorageDatabase.appInstallDao(),
+                        sharedStorageDatabase.frequencyCapDao(),
+                        mSignalsDao);
         mProtectedSignalsServiceFilter =
                 new ProtectedSignalsServiceFilter(
                         mSpyContext,
@@ -228,6 +262,11 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
         doReturn(DevContext.createForDevOptionsDisabled())
                 .when(mDevContextFilterMock)
                 .createDevContext();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        mDevSessionHelper.endDevSession();
     }
 
     private void setupService(boolean mockHttpClient) {
@@ -259,6 +298,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         AdServicesExecutors.getBackgroundExecutor(),
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mProtectedSignalsServiceFilter,
                         mEnrollmentDao,
@@ -285,6 +325,39 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
         List<DBProtectedSignal> actual = mSignalsDao.getSignalsByBuyer(BUYER);
         // TODO(b/298690010) Restructure code so time can be verified.
         assertSignalsUnorderedListEqualsExceptIdAndTime(expected, actual);
+    }
+
+    @Test
+    public void testPut_beforeDevSession_signalIsCleared() throws Exception {
+        setupService(true);
+        String json =
+                "{" + "\"put\":{\"" + BASE64_KEY_1 + "\":\"" + BASE64_VALUE_1 + "\"" + "}" + "}";
+
+        setupAndRunUpdateSignals(json);
+
+        assertThat(mSignalsDao.getSignalsByBuyer(BUYER)).isNotEmpty();
+        mDevSessionHelper.startDevSession();
+        assertThat(mSignalsDao.getSignalsByBuyer(BUYER)).isEmpty();
+        assertThat(mEncoderLogicMetadataDao.doesEncoderExist(BUYER)).isFalse();
+        assertThat(mEncoderEndpointsDao.getEndpoint(BUYER)).isNull();
+        mDevSessionHelper.endDevSession();
+    }
+
+    @Test
+    public void testPut_duringDevSession_signalIsCleared() throws Exception {
+        setupService(true);
+        String json =
+                "{" + "\"put\":{\"" + BASE64_KEY_1 + "\":\"" + BASE64_VALUE_1 + "\"" + "}" + "}";
+        mDevSessionHelper.startDevSession();
+
+        setupAndRunUpdateSignals(json);
+
+        assertThat(mSignalsDao.getSignalsByBuyer(BUYER)).isNotEmpty();
+        mDevSessionHelper.endDevSession();
+        assertThat(mSignalsDao.getSignalsByBuyer(BUYER)).isEmpty();
+        assertThat(mEncoderLogicMetadataDao.doesEncoderExist(BUYER)).isFalse();
+        assertThat(mEncoderEndpointsDao.getEndpoint(BUYER)).isNull();
+        mDevSessionHelper.endDevSession();
     }
 
     @Test

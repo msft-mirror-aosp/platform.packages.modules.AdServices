@@ -26,10 +26,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -50,9 +47,6 @@ public class ConsentedDebugConfigurationDaoTest {
             DBConsentedDebugConfiguration.create(
                     null, IS_CONSENTED, DEBUG_TOKEN, CREATION_TIMESTAMP, EXPIRY_TIMESTAMP);
     private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

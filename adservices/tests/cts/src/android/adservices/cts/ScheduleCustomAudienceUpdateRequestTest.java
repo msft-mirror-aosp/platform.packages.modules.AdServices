@@ -26,7 +26,6 @@ import android.net.Uri;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
@@ -34,7 +33,6 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
-@RequiresSdkLevelAtLeastS
 public final class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUnitTestCase {
     public static final Uri VALID_UPDATE_URI_1 =
             CustomAudienceFixture.getValidFetchUriByBuyer(CommonFixture.VALID_BUYER_1, "1");
@@ -56,6 +54,22 @@ public final class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUni
         expect.withMessage("Partial Custom Audience List")
                 .that(request.getPartialCustomAudienceList())
                 .containsExactly(VALID_PARTIAL_CA);
+        expect.withMessage("Default value of shouldReplacePendingUpdates()")
+                .that(request.shouldReplacePendingUpdates())
+                .isFalse();
+    }
+
+    @Test
+    public void testBuildValidRequest_withoutRequiredPartialCustomAudienceList_success() {
+        ScheduleCustomAudienceUpdateRequest request =
+                new ScheduleCustomAudienceUpdateRequest.Builder(VALID_UPDATE_URI_1, VALID_DELAY)
+                        .build();
+
+        expect.withMessage("Update Uri").that(request.getUpdateUri()).isEqualTo(VALID_UPDATE_URI_1);
+        expect.withMessage("Min Delay Time").that(request.getMinDelay()).isEqualTo(VALID_DELAY);
+        expect.withMessage("Default value of partial custom audience list")
+                .that(request.getPartialCustomAudienceList())
+                .isEmpty();
         expect.withMessage("Default value of shouldReplacePendingUpdates()")
                 .that(request.shouldReplacePendingUpdates())
                 .isFalse();
@@ -96,6 +110,13 @@ public final class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUni
     }
 
     @Test
+    public void testConstructorWithoutPartialCaList_NullUpdateUri_Throws() {
+        assertThrows(
+                NullPointerException.class,
+                () -> new ScheduleCustomAudienceUpdateRequest.Builder(null, VALID_DELAY));
+    }
+
+    @Test
     public void testConstructor_NullDelay_Throws() {
         assertThrows(
                 NullPointerException.class,
@@ -105,12 +126,28 @@ public final class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUni
     }
 
     @Test
+    public void testConstructorWithoutPartialCaList_NullDelay_Throws() {
+        assertThrows(
+                NullPointerException.class,
+                () -> new ScheduleCustomAudienceUpdateRequest.Builder(VALID_UPDATE_URI_1, null));
+    }
+
+    @Test
     public void testConstructor_NegativeDelay_Throws() {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         new ScheduleCustomAudienceUpdateRequest.Builder(
                                 VALID_UPDATE_URI_1, Duration.ofDays(-1), VALID_PARTIAL_CA_LIST));
+    }
+
+    @Test
+    public void testConstructorWithoutPartialCaList_NegativeDelay_Throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new ScheduleCustomAudienceUpdateRequest.Builder(
+                                VALID_UPDATE_URI_1, Duration.ofDays(-1)));
     }
 
     @Test

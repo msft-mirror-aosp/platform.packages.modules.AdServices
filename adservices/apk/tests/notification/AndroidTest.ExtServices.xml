@@ -42,8 +42,14 @@
 
     <!-- Create place to store tests apks that will be installed/uninstalled in the test. -->
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="test-user-token" value="%TEST_USER%"/>
         <option name="run-command" value="mkdir -p /data/local/tmp/cts/install"/>
         <option name="teardown-command" value="rm -rf /data/local/tmp/cts"/>
+        <!-- Uninstall the test app anyway in case failed test skips the uninstallation -->
+        <option name="teardown-command"
+                value="pm uninstall --user %TEST_USER% com.example.adservices.samples.ui.consenttestapp" />
+        <option name="teardown-command"
+                value="pm uninstall --user %TEST_USER% com.example.adservices.samples.ui.sampletestapp" />
 
         <!-- Some tests in the module require the AdServices components to be enabled.
         On R/S, these components are disabled by default, and are enabled after a reboot, by
@@ -63,6 +69,14 @@
     </target_preparer>
     <target_preparer class="com.android.tradefed.targetprep.DeviceSetup">
         <option name="force-skip-system-props" value="true"/>
+    </target_preparer>
+
+    <!-- Push compiled APK file of test apps to a local place for installation -->
+    <target_preparer class="com.android.compatibility.common.tradefed.targetprep.FilePusher">
+        <option name="push"
+                value="com.example.adservices.samples.ui.consenttestapp.apk->/data/local/tmp/cts/install/com.example.adservices.samples.ui.consenttestapp.apk" />
+        <option name="push"
+                value="com.example.adservices.samples.ui.sampletestapp.apk->/data/local/tmp/cts/install/com.example.adservices.samples.ui.sampletestapp.apk" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">

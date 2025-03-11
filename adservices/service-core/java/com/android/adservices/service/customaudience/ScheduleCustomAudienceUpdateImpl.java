@@ -37,6 +37,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
@@ -47,6 +48,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.exception.PersistScheduleCAUpdateException;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
@@ -57,6 +59,7 @@ import java.io.InvalidObjectException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 
 /**
  * Schedules a delayed update for Custom Audience. Calling apps provide and update uri on behalf of
@@ -67,7 +70,7 @@ import java.time.temporal.ChronoUnit;
 @RequiresApi(Build.VERSION_CODES.S)
 public class ScheduleCustomAudienceUpdateImpl {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private static final int API_NAME =
+    public static final int API_NAME =
             AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
     public static final int MIN_DELAY_TIME_MINUTES = 30;
     public static final int MAX_DELAY_TIME_MINUTES = 300;
@@ -75,6 +78,7 @@ public class ScheduleCustomAudienceUpdateImpl {
     @NonNull private final Context mContext;
     @NonNull private final ConsentManager mConsentManager;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final CustomAudienceServiceFilter mCustomAudienceServiceFilter;
@@ -82,6 +86,7 @@ public class ScheduleCustomAudienceUpdateImpl {
     @NonNull private final boolean mDisableFledgeEnrollmentCheck;
     @NonNull private final boolean mEnforceForegroundStatus;
     @NonNull private final boolean mScheduleCustomAudienceUpdateEnabled;
+    private final boolean mEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests;
     int mCallingAppUid;
     @NonNull private String mCallerAppPackageName;
 
@@ -90,6 +95,7 @@ public class ScheduleCustomAudienceUpdateImpl {
             @NonNull ConsentManager consentManager,
             int callerId,
             @NonNull Flags flags,
+            @NonNull DebugFlags debugFlags,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull ListeningExecutorService backgroundExecutorService,
             @NonNull CustomAudienceServiceFilter customAudienceServiceFilter,
@@ -102,9 +108,12 @@ public class ScheduleCustomAudienceUpdateImpl {
         mCustomAudienceServiceFilter = customAudienceServiceFilter;
         mCustomAudienceDao = customAudienceDao;
         mDisableFledgeEnrollmentCheck = flags.getDisableFledgeEnrollmentCheck();
-        mEnforceForegroundStatus = flags.getEnforceForegroundStatusForFledgeCustomAudience();
+        mEnforceForegroundStatus = flags.getEnforceForegroundStatusForScheduleCustomAudience();
         mScheduleCustomAudienceUpdateEnabled = flags.getFledgeScheduleCustomAudienceUpdateEnabled();
+        mEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests =
+                flags.getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests();
         mFlags = flags;
+        mDebugFlags = debugFlags;
     }
 
     /** Schedules a delayed Custom Audience Update */
@@ -114,6 +123,12 @@ public class ScheduleCustomAudienceUpdateImpl {
             @NonNull DevContext devContext) {
         try {
             mCallerAppPackageName = input.getCallerPackageName();
+            ScheduledCustomAudienceUpdateScheduleAttemptedStats.Builder statsBuilder =
+                    ScheduledCustomAudienceUpdateScheduleAttemptedStats.builder()
+                            .setNumberOfPartialCustomAudiences(
+                                    input.getPartialCustomAudienceList().size())
+                            .setMinimumDelayInMinutes((int) input.getMinDelay().toMinutes());
+
             if (!mScheduleCustomAudienceUpdateEnabled) {
                 sLogger.v("scheduleCustomAudienceUpdate is disabled.");
                 throw new IllegalStateException("scheduleCustomAudienceUpdate is disabled.");
@@ -122,7 +137,7 @@ public class ScheduleCustomAudienceUpdateImpl {
                     FluentFuture.from(filterAndValidateRequest(input, devContext));
             buyerFuture
                     .transformAsync(
-                            buyer -> scheduleUpdate(buyer, input, devContext),
+                            buyer -> scheduleUpdate(buyer, input, devContext, statsBuilder),
                             mBackgroundExecutorService)
                     .addCallback(
                             new FutureCallback<Void>() {
@@ -132,11 +147,13 @@ public class ScheduleCustomAudienceUpdateImpl {
                                     // Schedule job that triggers updates
                                     ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
                                             mContext, mFlags, false);
+                                    logScheduleAttemptedStats(statsBuilder.build());
                                     notifySuccess(callback);
                                 }
 
                                 @Override
                                 public void onFailure(Throwable t) {
+                                    logScheduleAttemptedStats(statsBuilder.build());
                                     sLogger.d(
                                             t,
                                             "Error encountered in scheduleCustomAudienceUpdate"
@@ -163,6 +180,12 @@ public class ScheduleCustomAudienceUpdateImpl {
         }
     }
 
+    private void logScheduleAttemptedStats(
+            ScheduledCustomAudienceUpdateScheduleAttemptedStats stats) {
+        sLogger.d("Logging telemetry stats for Schedule update API");
+        mAdServicesLogger.logScheduledCustomAudienceUpdateScheduleAttemptedStats(stats);
+    }
+
     private ListenableFuture<AdTechIdentifier> filterAndValidateRequest(
             @NonNull ScheduleCustomAudienceUpdateInput input, @NonNull DevContext devContext) {
 
@@ -185,7 +208,7 @@ public class ScheduleCustomAudienceUpdateImpl {
                                         mDisableFledgeEnrollmentCheck,
                                         mEnforceForegroundStatus,
                                         ENFORCE_CONSENT,
-                                        !mFlags.getConsentNotificationDebugMode(),
+                                        !mDebugFlags.getConsentNotificationDebugMode(),
                                         mCallingAppUid,
                                         API_NAME,
                                         FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE,
@@ -210,7 +233,8 @@ public class ScheduleCustomAudienceUpdateImpl {
     private ListenableFuture<Void> scheduleUpdate(
             AdTechIdentifier buyer,
             ScheduleCustomAudienceUpdateInput input,
-            DevContext devContext) {
+            DevContext devContext,
+            ScheduledCustomAudienceUpdateScheduleAttemptedStats.Builder statsBuilder) {
         String owner = input.getCallerPackageName();
         Uri updateUri = input.getUpdateUri();
         Instant now = Instant.now();
@@ -224,6 +248,8 @@ public class ScheduleCustomAudienceUpdateImpl {
                         .setCreationTime(Instant.now())
                         .setScheduledTime(scheduledTime)
                         .setIsDebuggable(devContext.getDeviceDevOptionsEnabled())
+                        .setAllowScheduleInResponse(
+                                mEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests)
                         .build();
 
         sLogger.d(
@@ -233,11 +259,12 @@ public class ScheduleCustomAudienceUpdateImpl {
         return (ListenableFuture<Void>)
                 mBackgroundExecutorService.submit(
                         () ->
-                                mCustomAudienceDao
-                                        .insertScheduledUpdateAndPartialCustomAudienceList(
-                                                scheduledUpdate,
-                                                input.getPartialCustomAudienceList(),
-                                                input.shouldReplacePendingUpdates()));
+                                mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                                        scheduledUpdate,
+                                        input.getPartialCustomAudienceList(),
+                                        Collections.emptyList(),
+                                        input.shouldReplacePendingUpdates(),
+                                        statsBuilder));
     }
 
     private void notifyFailure(ScheduleCustomAudienceUpdateCallback callback, Throwable t) {

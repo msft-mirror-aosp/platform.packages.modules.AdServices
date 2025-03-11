@@ -16,11 +16,17 @@
 
 package com.android.tests.sdksandbox.disablede2e;
 
+import static androidx.lifecycle.Lifecycle.State;
+
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
+
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
+import android.os.Binder;
 import android.os.Bundle;
 import android.os.SystemProperties;
 
@@ -56,13 +62,39 @@ public class SdkSandboxManagerDisabledTest {
     }
 
     @Test
-    public void testSdkSandboxDisabledErrorCode() throws Exception {
+    public void testLoadSdk_sdkSandboxDisabledErrorCode() throws Exception {
         String sdkName = "com.android.ctssdkprovider";
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         callback.assertLoadSdkIsUnsuccessful();
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED);
+        assertThat(mSdkSandboxManager.getSandboxedSdks()).isEmpty();
+    }
+
+    @Test
+    public void testRegisterAndUnregisterAppOwnedSdkSandboxInterface() throws Exception {
+        assertThat(mSdkSandboxManager.getAppOwnedSdkSandboxInterfaces()).isEmpty();
+        String sdkName = "com.android.ctssdkprovider";
+        mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
+                new AppOwnedSdkSandboxInterface(sdkName, 0, new Binder()));
+        assertThat(mSdkSandboxManager.getAppOwnedSdkSandboxInterfaces()).isNotEmpty();
+        mSdkSandboxManager.unregisterAppOwnedSdkSandboxInterface(sdkName);
+        assertThat(mSdkSandboxManager.getAppOwnedSdkSandboxInterfaces()).isEmpty();
+    }
+
+    @Test
+    public void testStartSdkSandboxActivity_noSandboxRunningError() throws Exception {
+        assertThat(mScenario.getState()).isEqualTo(State.RESUMED);
+        mScenario.onActivity(
+                clientActivity -> {
+                    // Throws SecurityException/UnsupportedOperationException.
+                    assertThrows(
+                            Exception.class,
+                            () ->
+                                    mSdkSandboxManager.startSdkSandboxActivity(
+                                            clientActivity, new Binder()));
+                });
     }
 
     private static boolean isEmulator() {

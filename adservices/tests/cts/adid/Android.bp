@@ -49,11 +49,8 @@ android_test {
     },
 }
 
-android_test {
-    name: "CtsAdExtServicesAdIdEndToEndTest",
-    srcs: [
-        "src/**/*.java",
-    ],
+java_defaults {
+    name: "AdExtServices-AdIdEndToEnd-Defaults",
     static_libs: [
         "adservices-clients",
         "adservices-test-utility",
@@ -73,13 +70,38 @@ android_test {
         "mcts-extservices",
     ],
     sdk_version: "module_current",
-    min_sdk_version: "30",
+}
+
+android_test {
+    name: "CtsAdExtServicesAdIdEndToEndTest",
+    defaults: ["AdExtServices-AdIdEndToEnd-Defaults"],
+    srcs: [
+        "src/**/*.java",
+    ],
+    min_sdk_version: "31",
     max_sdk_version: "32",
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
         baseline_filename: "lint-baseline-adextservices.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
+}
+
+android_test {
+    name: "CtsAdExtServicesAdIdRvcEndToEndTest",
+    defaults: ["AdExtServices-AdIdEndToEnd-Defaults"],
+    srcs: [
+        "src/com/android/adservices/tests/adid/AdIdManagerRvcTest.java",
+        "src/com/android/adservices/tests/adid/CtsAdIdEndToEndTestFlags.java",
+    ],
+    min_sdk_version: "30",
+    max_sdk_version: "30",
+    test_config: "AndroidTest.ExtServicesRvc.xml",
+    manifest: "AndroidManifestExtServicesRvc.xml",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
         test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }

@@ -37,6 +37,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
@@ -49,15 +50,17 @@ import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
 
 /**
  * Receiver to receive a com.android.adservices.PACKAGE_CHANGED broadcast from the AdServices system
  * service when package install/uninstalls occur.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
+@SuppressWarnings("AvoidStaticContext") // Helper class
 public class PackageChangedReceiver extends BroadcastReceiver {
 
     /**
@@ -83,6 +86,8 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     private static final int DEFAULT_PACKAGE_UID = -1;
     private static boolean sFrequencyCapFilteringEnabled;
     private static boolean sAppInstallFilteringEnabled;
+    private static boolean sProtectedSignalsCleanupEnabled;
+    private static boolean sScheduleCustomAudienceEnabled;
 
     private static final Object LOCK = new Object();
 
@@ -103,6 +108,10 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                     BinderFlagReader.readFlag(flags::getFledgeFrequencyCapFilteringEnabled);
             sAppInstallFilteringEnabled =
                     BinderFlagReader.readFlag(flags::getFledgeAppInstallFilteringEnabled);
+            sProtectedSignalsCleanupEnabled =
+                    BinderFlagReader.readFlag(flags::getProtectedSignalsCleanupEnabled);
+            sScheduleCustomAudienceEnabled =
+                    BinderFlagReader.readFlag(flags::getFledgeScheduleCustomAudienceUpdateEnabled);
             try {
                 context.getPackageManager()
                         .setComponentEnabledSetting(
@@ -184,6 +193,16 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     private void handlePackageAdded(Context context, Uri packageUri) {
         measurementOnPackageAdded(context, packageUri);
         topicsOnPackageAdded(packageUri);
+        packageDenyPreProcessOnPackageAdded();
+    }
+
+    @VisibleForTesting
+    void packageDenyPreProcessOnPackageAdded() {
+        if (FlagsFactory.getFlags().getEnablePackageDenyJobOnPackageAdd()) {
+            Future<AdPackageDenyResolver.PackageDenyMddProcessStatus>
+                    packageDenyMddProcessStatusFuture =
+                            AdPackageDenyResolver.getInstance().loadDenyDataFromMdd();
+        }
     }
 
     private void handlePackageDataCleared(Context context, Uri packageUri) {
@@ -281,9 +300,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                         getCustomAudienceDatabase(context)
                                 .customAudienceDao()
                                 .deleteCustomAudienceDataByOwner(
-                                        packageUri.toString(),
-                                        FlagsFactory.getFlags()
-                                                .getFledgeFetchCustomAudienceEnabled()));
+                                        packageUri.toString(), sScheduleCustomAudienceEnabled));
         if (sFrequencyCapFilteringEnabled) {
             LogUtil.d("Deleting frequency cap histogram data for package: " + packageUri);
             sBackgroundExecutor.execute(
@@ -299,6 +316,14 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                             getSharedStorageDatabase(context)
                                     .appInstallDao()
                                     .deleteByPackageName(packageUri.toString()));
+        }
+        if (sProtectedSignalsCleanupEnabled) {
+            LogUtil.d("Deleting protected signals data for package: " + packageUri);
+            sBackgroundExecutor.execute(
+                    () ->
+                            getProtectedSignalsDatabase(context)
+                                    .protectedSignalsDao()
+                                    .deleteSignalsByPackage(List.of(packageUri.toString())));
         }
     }
 
@@ -400,6 +425,18 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     SharedStorageDatabase getSharedStorageDatabase(@NonNull Context context) {
         Objects.requireNonNull(context);
         return SharedStorageDatabase.getInstance();
+    }
+
+    /**
+     * Returns an instance of the {@link ProtectedSignalsDatabase}.
+     *
+     * <p>This is split out for testing/mocking purposes only, since the {@link
+     * ProtectedSignalsDatabase} is abstract and therefore unmockable.
+     */
+    @VisibleForTesting
+    ProtectedSignalsDatabase getProtectedSignalsDatabase(@NonNull Context context) {
+        Objects.requireNonNull(context);
+        return ProtectedSignalsDatabase.getInstance();
     }
 
     private void logWipeoutStats(WipeoutStatus wipeoutStatus, String appPackageName) {

@@ -47,8 +47,7 @@ public class MainActivity extends AppCompatActivity {
         mAppSetIdTextView = findViewById(R.id.appSetIdTextView);
         mAppSetIdButton = findViewById(R.id.appSetIdButton);
 
-        // AppSetIdManager can not be called on R until OutcomeReceiver dependencies are removed.
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
             setAppSetIdText("Device not supported.");
             return;
         }

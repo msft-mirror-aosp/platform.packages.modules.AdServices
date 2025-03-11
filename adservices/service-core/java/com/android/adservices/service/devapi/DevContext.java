@@ -54,16 +54,16 @@ public abstract class DevContext {
     public abstract String getCallingAppPackageName();
 
     /**
-     * @return {@code true} if we are actively in a user-initiated development session. Note that
+     * @return {@link DevSession} state which represents if we are in a development session. Note
      *     this is very different from {@link DevContext#getDeviceDevOptionsEnabled()}.
      */
-    public abstract boolean getDevSessionActive();
+    public abstract DevSession getDevSession();
 
     /**
      * @deprecated use {@link #builder(String)} instead.
      */
     public static DevContext.Builder builder() {
-        return new AutoValue_DevContext.Builder().setDevSessionActive(false);
+        return new AutoValue_DevContext.Builder().setDevSession(DevSession.UNKNOWN);
     }
 
     // TODO(b/356709022): remove once all callers were refactored
@@ -73,7 +73,7 @@ public abstract class DevContext {
         Objects.requireNonNull(callingAppPackageName, "callingAppPackageName cannot be null");
         return new AutoValue_DevContext.Builder()
                 .setCallingAppPackageName(callingAppPackageName)
-                .setDevSessionActive(false);
+                .setDevSession(DevSession.UNKNOWN);
     }
 
     /** Returns a new instance of {@link DevContext} with developer options disabled. */
@@ -107,7 +107,7 @@ public abstract class DevContext {
         public abstract DevContext.Builder setCallingAppPackageName(@Nullable String value);
 
         /** Sets the value for the dev session active flag */
-        public abstract DevContext.Builder setDevSessionActive(boolean active);
+        public abstract DevContext.Builder setDevSession(DevSession devSession);
 
         /** Builds it!. */
         public abstract DevContext build();

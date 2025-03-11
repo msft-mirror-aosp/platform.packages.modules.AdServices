@@ -46,7 +46,10 @@ import android.adservices.common.FrequencyCapFilters;
 import android.os.Parcel;
 import android.os.RemoteException;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.consent.ConsentManager;
@@ -54,30 +57,27 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class UpdateAdCounterHistogramWorkerTest {
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
+public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLBACK_WAIT_MS = 500;
     private static final int CALLER_UID = 10;
     private static final long AD_SELECTION_ID = 20;
     private static final int LOGGING_API_NAME =
             AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM;
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
-
-    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
 
     @Mock private AdCounterHistogramUpdater mHistogramUpdaterMock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
@@ -87,11 +87,9 @@ public class UpdateAdCounterHistogramWorkerTest {
     private UpdateAdCounterHistogramWorker mUpdateWorker;
     private UpdateAdCounterHistogramInput mInputParams;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() {
+        mocker.mockGetDebugFlags(mMockDebugFlags);
         mUpdateWorker =
                 new UpdateAdCounterHistogramWorker(
                         mHistogramUpdaterMock,
@@ -99,6 +97,7 @@ public class UpdateAdCounterHistogramWorkerTest {
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                         mAdServicesLoggerMock,
                         new FlagsOverridingAdFiltering(true),
+                        mMockDebugFlags,
                         mServiceFilterMock,
                         mConsentManagerMock,
                         CALLER_UID,
@@ -142,14 +141,7 @@ public class UpdateAdCounterHistogramWorkerTest {
         CountDownLatch callbackLatch = new CountDownLatch(1);
         UpdateAdCounterHistogramTestCallback callback =
                 new UpdateAdCounterHistogramTestCallback(callbackLatch);
-
-        Flags flagsWithUXNotificationEnforcementDisabled =
-                new FlagsOverridingAdFiltering(true) {
-                    @Override
-                    public boolean getConsentNotificationDebugMode() {
-                        return true;
-                    }
-                };
+        mocker.mockGetConsentNotificationDebugMode(true);
 
         UpdateAdCounterHistogramWorker updateAdCounterHistogramWorker =
                 new UpdateAdCounterHistogramWorker(
@@ -157,7 +149,8 @@ public class UpdateAdCounterHistogramWorkerTest {
                         DIRECT_EXECUTOR,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                         mAdServicesLoggerMock,
-                        flagsWithUXNotificationEnforcementDisabled,
+                        new FlagsOverridingAdFiltering(true),
+                        mMockDebugFlags,
                         mServiceFilterMock,
                         mConsentManagerMock,
                         CALLER_UID,
@@ -235,6 +228,7 @@ public class UpdateAdCounterHistogramWorkerTest {
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                         mAdServicesLoggerMock,
                         new FlagsOverridingAdFiltering(false),
+                        mMockDebugFlags,
                         mServiceFilterMock,
                         mConsentManagerMock,
                         CALLER_UID,

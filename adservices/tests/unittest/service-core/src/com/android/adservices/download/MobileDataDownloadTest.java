@@ -48,7 +48,6 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.network.NetworkConnectionHelper;
 import com.android.adservices.shared.util.Clock;
 import com.android.compatibility.common.util.ShellUtils;
@@ -86,7 +85,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /** Unit tests for {@link MobileDataDownloadFactory} */
-@RequiresSdkLevelAtLeastS
 @SpyStatic(MddLogger.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(MobileDataDownloadFactory.class)
@@ -313,8 +311,10 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testEncryptionKeysDataDownload_production_featureEnabled() throws Exception {
         doReturn(true).when(mMockFlags).getEnableMddEncryptionKeys();
+        // NOTE: it looks like the statement below is not needed anymore - this tests would pass
+        // even if it's removed
         // All keys have greater expiration time than this timestamp. (Sep 2, 1996)
-        when(mMockClock.currentTimeMillis()).thenReturn(841622400000L);
+        mocker.mockCurrentTimeMillis(mMockClock, 841622400000L);
         createMddForEncryptionKeys(PRODUCTION_ENCRYPTION_KEYS_MANIFEST_FILE_URL);
 
         ClientFileGroup clientFileGroup =

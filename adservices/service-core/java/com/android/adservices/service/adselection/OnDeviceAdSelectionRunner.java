@@ -36,7 +36,10 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.adselection.debug.DebugReport;
+import com.android.adservices.service.adselection.debug.DebugReporting;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
@@ -90,6 +93,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final DevContext devContext,
             @NonNull final Flags flags,
+            @NonNull final DebugFlags debugFlags,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final FrequencyCapAdFilterer frequencyCapAdFilterer,
@@ -113,6 +117,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 scheduledExecutor,
                 adServicesLogger,
                 flags,
+                debugFlags,
                 adSelectionExecutionLogger,
                 adSelectionServiceFilter,
                 frequencyCapAdFilterer,
@@ -196,6 +201,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull Clock clock,
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final Flags flags,
+            @NonNull final DebugFlags debugFlags,
             int callerUid,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
@@ -220,6 +226,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 clock,
                 adServicesLogger,
                 flags,
+                debugFlags,
                 callerUid,
                 adSelectionServiceFilter,
                 frequencyCapAdFilterer,

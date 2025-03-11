@@ -24,6 +24,9 @@ import com.google.common.io.BaseEncoding;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.OkUrlFactory;
+import com.squareup.okhttp.Protocol;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -32,8 +35,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /** Utility class holding methods that enable Unified Flow auction */
 public class FakeAdExchangeServer {
@@ -116,22 +122,32 @@ public class FakeAdExchangeServer {
             boolean loggingEnabled,
             Map<String, String> httpHeaders)
             throws IOException {
+
+        OkHttpClient client = new OkHttpClient();
+        client.setProtocols(Arrays.asList(Protocol.HTTP_2, Protocol.HTTP_1_1)); // Enable HTTP/2
+        client.setConnectTimeout(10, TimeUnit.SECONDS);
+        client.setReadTimeout(30, TimeUnit.SECONDS);
+        client.setWriteTimeout(10, TimeUnit.SECONDS);
+
+        OkUrlFactory urlFactory = new OkUrlFactory(client);
         URL url = new URL(address);
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        HttpURLConnection con = urlFactory.open(url);
+
         con.setRequestMethod("POST");
         con.setRequestProperty("Content-Type", "application/json");
         con.setRequestProperty("Accept", "application/json");
         httpHeaders.forEach(con::setRequestProperty);
         con.setDoOutput(true);
+
         Log.d(TAG, "Call to url : " + address);
+        if (loggingEnabled) {
+            Log.d(TAG, "HTTP Post call made with payload : ");
+            largeLog(TAG, jsonInputString);
+        }
 
         try (OutputStream os = con.getOutputStream()) {
-            byte[] input = jsonInputString.getBytes("utf-8");
+            byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
             os.write(input, 0, input.length);
-            if (loggingEnabled) {
-                Log.d(TAG, "HTTP Post call made with payload : ");
-                largeLog(TAG, jsonInputString);
-            }
         }
 
         int responseCode = con.getResponseCode();
@@ -143,7 +159,8 @@ public class FakeAdExchangeServer {
         }
 
         StringBuilder response = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, "utf-8"))) {
+        try (BufferedReader br =
+                new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
             String responseLine;
             while ((responseLine = br.readLine()) != null) {
                 response.append(responseLine.trim());
@@ -156,13 +173,11 @@ public class FakeAdExchangeServer {
             }
             return response.toString();
         } else {
-            int grpcStatusCode = con.getHeaderFieldInt("grpc-status", /* defaultValue= */ -1);
-            String grpcMessage = con.getHeaderField("grpc-message");
             String errorMessage =
                     "Server call failed with status code : "
-                            + grpcStatusCode
+                            + responseCode
                             + " error : "
-                            + grpcMessage;
+                            + con.getResponseMessage();
             if (loggingEnabled) {
                 Log.d(TAG, errorMessage);
             }
@@ -189,7 +204,7 @@ public class FakeAdExchangeServer {
             is.read(buffer);
             is.close();
 
-            jsonString = new String(buffer, "UTF-8");
+            jsonString = new String(buffer, StandardCharsets.UTF_8);
         } catch (IOException e) {
             e.printStackTrace();
             return null;

@@ -17,6 +17,8 @@
 package com.android.adservices.service.adselection.encryption;
 
 import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.VALID_AD_SELECTION_ENCRYPTION_KEY_TYPES;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_ENCRYPTION_KEY_MANAGER_NULL_FETCH_URI;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_DATABASE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION;
@@ -32,6 +34,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.data.adselection.EncryptionKeyConstants;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -298,6 +301,9 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
             FetchProcessLogger keyFetchLogger) {
         Uri fetchUri = getKeyFetchUriOfType(adSelectionKeyType, null, null, keyFetchLogger);
         if (fetchUri == null) {
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_ENCRYPTION_KEY_MANAGER_NULL_FETCH_URI,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
             throw new IllegalStateException(
                     "Uri to fetch active key of type " + adSelectionKeyType + " is null.");
         }

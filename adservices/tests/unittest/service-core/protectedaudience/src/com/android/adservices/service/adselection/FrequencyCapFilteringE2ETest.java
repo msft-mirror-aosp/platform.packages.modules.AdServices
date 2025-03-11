@@ -75,6 +75,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionE2ETest.AdSelectionTestCallback;
 import com.android.adservices.service.adselection.UpdateAdCounterHistogramWorkerTest.FlagsOverridingAdFiltering;
 import com.android.adservices.service.adselection.UpdateAdCounterHistogramWorkerTest.UpdateAdCounterHistogramTestCallback;
+import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -93,10 +94,8 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
-import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.FetchProcessLogger;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -120,7 +119,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLBACK_WAIT_MS = 500;
@@ -217,10 +215,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @Mock private AdIdFetcher mAdIdFetcher;
     private RetryStrategyFactory mRetryStrategyFactory;
-    private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
-    private ConsentedDebugConfigurationGeneratorFactory
-            mConsentedDebugConfigurationGeneratorFactory;
-    private EgressConfigurationGenerator mEgressConfigurationGenerator;
+    private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
 
     @Before
     public void setup() {
@@ -271,20 +266,23 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mAppInstallDao, mFrequencyCapDaoSpy, flagsEnablingAdFiltering);
 
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
-        mConsentedDebugConfigurationDao =
+        ConsentedDebugConfigurationDao consentedDebugConfigurationDao =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
                         .build()
                         .consentedDebugConfigurationDao();
-        mConsentedDebugConfigurationGeneratorFactory =
+        ConsentedDebugConfigurationGeneratorFactory consentedDebugConfigurationGeneratorFactory =
                 new ConsentedDebugConfigurationGeneratorFactory(
-                        false, mConsentedDebugConfigurationDao);
-        mEgressConfigurationGenerator =
-                EgressConfigurationGenerator.createInstance(
-                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
-                        mAdIdFetcher,
+                        false, consentedDebugConfigurationDao);
+        mAuctionServerDebugConfigurationGenerator =
+                new AuctionServerDebugConfigurationGenerator(
+                        Flags.ADID_KILL_SWITCH,
                         Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
+                        Flags.FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING,
+                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
+                        Flags.DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER,
+                        mAdIdFetcher,
+                        consentedDebugConfigurationGeneratorFactory.create(),
                         mLightweightExecutorService);
-
         mAdSelectionServiceImpl =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
@@ -302,6 +300,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsEnablingAdFiltering,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mServiceFilterMock,
@@ -313,9 +312,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         mInputParams =
                 new UpdateAdCounterHistogramInput.Builder(
@@ -470,6 +468,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithDisabledAdFiltering,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mServiceFilterMock,
@@ -481,9 +480,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
 
@@ -535,6 +533,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithLowRateLimit,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         new AdSelectionServiceFilter(
@@ -555,9 +554,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
 
@@ -787,6 +785,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mSpyContext,
                         mAdServicesLoggerMock,
                         new FlagsWithLowEventCounts(),
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mServiceFilterMock,
@@ -798,9 +797,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
@@ -902,6 +900,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mSpyContext,
                         mAdServicesLoggerMock,
                         new FlagsWithLowPerBuyerEventCounts(),
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mServiceFilterMock,
@@ -913,9 +912,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
