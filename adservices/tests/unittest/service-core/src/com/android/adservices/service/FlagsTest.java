@@ -79,11 +79,14 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
+import static com.android.adservices.service.Flags.MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS;
+import static com.android.adservices.service.Flags.MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
@@ -1475,6 +1478,30 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getAdServicesCelSamplingConfig",
                 DEFAULT_AD_SERVICES_CEL_SAMPLING_CONFIG,
                 Flags::getAdServicesCelSamplingConfig);
+    }
+
+    @Test
+    public void testGetMeasurementEnableDebugJoinKeysOpenAccess() {
+        testFlag(
+                "getMeasurementEnableDebugJoinKeysOpenAccess",
+                MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS,
+                Flags::getMeasurementEnableDebugJoinKeysOpenAccess);
+    }
+
+    @Test
+    public void testGetMeasurementDebugJoinKeysNoncompliantAdtechs() {
+        testFlag(
+                "getMeasurementDebugJoinKeysNoncompliantAdtechs",
+                MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS,
+                Flags::getMeasurementDebugJoinKeysNoncompliantAdtechs);
+    }
+
+    @Test
+    public void testGetMeasurementDebugJoinKeysSampleRate() {
+        testFloatFlag(
+                "getMeasurementDebugJoinKeysSampleRate",
+                MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE,
+                Flags::getMeasurementDebugJoinKeysSampleRate);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {

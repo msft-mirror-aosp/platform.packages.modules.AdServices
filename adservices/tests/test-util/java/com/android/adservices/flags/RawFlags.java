@@ -3666,4 +3666,25 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
                 KEY_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST,
                 DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST);
     }
+
+    @Override
+    public boolean getMeasurementEnableDebugJoinKeysOpenAccess() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS,
+                MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS);
+    }
+
+    @Override
+    public String getMeasurementDebugJoinKeysNoncompliantAdtechs() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS,
+                MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS);
+    }
+
+    @Override
+    public float getMeasurementDebugJoinKeysSampleRate() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE,
+                MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE);
+    }
 }

@@ -1780,4 +1780,17 @@ public final class FlagsConstants {
     /** Key for AdServices' Client error logging sampling config. */
     public static final String KEY_AD_SERVICES_CEL_SAMPLING_CONFIG =
             "ClientErrorLogging__ad_services_cel_sampling_config";
+
+    /** Key to enable debug join keys to all adtechs instead of through allow list. */
+    public static final String KEY_MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS =
+            "Measurement__enable_debug_join_keys_open_access";
+
+    /** Key for all noncompilant adtechs that misuse debug join keys. */
+    public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS =
+            "Measurement__debug_join_keys_noncompilant_adtechs";
+
+    /** Key debug join keys sample rate. */
+    public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE =
+            "Measurement__debug_join_keys_sample_rate";
 }
+
