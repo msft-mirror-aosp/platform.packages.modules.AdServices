@@ -36,7 +36,6 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import android.app.job.JobInfo;
@@ -111,7 +110,7 @@ public final class AdServicesBackCompatInitTest extends AdServicesExtendedMockit
 
         mSpyCompatInit.initializeComponents();
 
-        verifyZeroInteractions(mMockFlags, mPackageManager, mJobScheduler);
+        verifyNoMoreInteractions(mMockFlags, mPackageManager, mJobScheduler);
     }
 
     @Test
@@ -120,7 +119,7 @@ public final class AdServicesBackCompatInitTest extends AdServicesExtendedMockit
 
         mSpyCompatInit.initializeComponents();
 
-        verifyZeroInteractions(mMockFlags, mPackageManager, mJobScheduler);
+        verifyNoMoreInteractions(mMockFlags, mPackageManager, mJobScheduler);
     }
 
     @Test
@@ -163,7 +162,7 @@ public final class AdServicesBackCompatInitTest extends AdServicesExtendedMockit
 
         mSpyCompatInit.initializeComponents();
 
-        verifyZeroInteractions(mPackageManager, mJobScheduler);
+        verifyNoMoreInteractions(mPackageManager, mJobScheduler);
     }
 
     @Test

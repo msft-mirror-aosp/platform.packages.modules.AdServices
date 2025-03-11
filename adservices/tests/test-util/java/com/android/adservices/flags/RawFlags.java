@@ -3659,4 +3659,11 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
                 KEY_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST,
                 DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST);
     }
+
+    @Override
+    public String getMeasurementCountUniqueAppSignatureAllowlist() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST,
+                DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST);
+    }
 }

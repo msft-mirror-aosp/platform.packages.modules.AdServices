@@ -35,7 +35,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
@@ -186,7 +186,7 @@ public final class EncoderLogicHandlerTest extends AdServicesExtendedMockitoTest
                         .get(5, TimeUnit.SECONDS);
         assertWithMessage("result of downloadAndUpdate()").that(updateSucceeded).isFalse();
 
-        verifyZeroInteractions(
+        verifyNoMoreInteractions(
                 mAdServicesHttpsClient, mEncoderPersistenceDao, mEncoderLogicMetadataDao);
 
         // Verify the logging of EncodingFetchStats
@@ -297,7 +297,7 @@ public final class EncoderLogicHandlerTest extends AdServicesExtendedMockitoTest
         when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(false);
         assertThat(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response)).isFalse();
 
-        verifyZeroInteractions(mEncoderLogicMetadataDao);
+        verifyNoMoreInteractions(mEncoderLogicMetadataDao);
     }
 
     @Test
@@ -377,8 +377,8 @@ public final class EncoderLogicHandlerTest extends AdServicesExtendedMockitoTest
         assertWithMessage("result of extractAndPersistEncoder() while locked")
                 .that(writeWhileLockedResult)
                 .isFalse();
-        verifyZeroInteractions(mEncoderLogicMetadataDao);
-        verifyZeroInteractions(mEncoderPersistenceDao);
+        verifyNoMoreInteractions(mEncoderLogicMetadataDao);
+        verifyNoMoreInteractions(mEncoderPersistenceDao);
 
         BooleanSyncCallback writeWhileUnLockedCallback = new BooleanSyncCallback();
         mService.submit(

@@ -21,7 +21,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -2604,7 +2604,7 @@ public final class FrequencyCapDaoTest extends AdServicesExtendedMockitoTestCase
                 .that(mFrequencyCapDao.deleteAllDisallowedBuyerHistogramData(mEnrollmentDaoMock))
                 .isEqualTo(0);
 
-        verifyZeroInteractions(mEnrollmentDaoMock);
+        verifyNoMoreInteractions(mEnrollmentDaoMock);
     }
 
     @Test

@@ -25,7 +25,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -85,7 +85,7 @@ public final class ClassifierManagerTest extends AdServicesExtendedMockitoTestCa
         // Verify the topics returned are from on-device classifier.
         assertThat(classifications.get(appPackage1)).containsExactlyElementsIn(onDeviceTopics);
         // Verify mPrecomputedClassifier is not called.
-        verifyZeroInteractions(mPrecomputedClassifier);
+        verifyNoMoreInteractions(mPrecomputedClassifier);
         // Verify mOnDeviceClassifier to be called once.
         verify(mOnDeviceClassifier, times(1)).classify(eq(appPackages));
     }
@@ -108,7 +108,7 @@ public final class ClassifierManagerTest extends AdServicesExtendedMockitoTestCa
         // Verify mPrecomputedClassifier to be called once.
         verify(mPrecomputedClassifier, times(1)).classify(eq(appPackages));
         // Verify mOnDeviceClassifier is not called.
-        verifyZeroInteractions(mOnDeviceClassifier);
+        verifyNoMoreInteractions(mOnDeviceClassifier);
     }
 
     @Test
@@ -246,7 +246,7 @@ public final class ClassifierManagerTest extends AdServicesExtendedMockitoTestCa
         // Verify mPrecomputedClassifier is called once.
         verify(mPrecomputedClassifier, times(1)).classify(eq(appPackages));
         // Verify mOnDeviceClassifier is not called.
-        verifyZeroInteractions(mOnDeviceClassifier);
+        verifyNoMoreInteractions(mOnDeviceClassifier);
     }
 
     @Test
@@ -364,7 +364,7 @@ public final class ClassifierManagerTest extends AdServicesExtendedMockitoTestCa
         verify(mPrecomputedClassifier, times(1))
                 .getTopTopics(eq(appTopics), eq(numberOfTopTopics), eq(numberOfRandomTopics));
         // Verify mOnDeviceClassifier is not called.
-        verifyZeroInteractions(mOnDeviceClassifier);
+        verifyNoMoreInteractions(mOnDeviceClassifier);
     }
 
     @Test
@@ -380,7 +380,7 @@ public final class ClassifierManagerTest extends AdServicesExtendedMockitoTestCa
         // Verify the topics returned are from on-device classifier.
         assertThat(topicsTaxonomy).containsExactlyElementsIn(onDeviceTaxonomy);
         // Verify mPrecomputedClassifier is not called.
-        verifyZeroInteractions(mPrecomputedClassifier);
+        verifyNoMoreInteractions(mPrecomputedClassifier);
         // Verify mOnDeviceClassifier to be called once.
         verify(mOnDeviceClassifier, times(1)).getLabels();
     }
@@ -398,7 +398,7 @@ public final class ClassifierManagerTest extends AdServicesExtendedMockitoTestCa
         // Verify the topics returned are from on-device classifier.
         assertThat(topicsTaxonomy).containsExactlyElementsIn(precomputedTaxonomy);
         // Verify mOnDeviceClassifier is not called.
-        verifyZeroInteractions(mOnDeviceClassifier);
+        verifyNoMoreInteractions(mOnDeviceClassifier);
         // Verify mPrecomputedClassifier to be called once.
         verify(mPrecomputedClassifier, times(1)).getLabels();
     }
@@ -437,7 +437,7 @@ public final class ClassifierManagerTest extends AdServicesExtendedMockitoTestCa
         // Verify mPrecomputedClassifier is called once.
         verify(mPrecomputedClassifier, times(1)).getLabels();
         // Verify mOnDeviceClassifier is not called.
-        verifyZeroInteractions(mOnDeviceClassifier);
+        verifyNoMoreInteractions(mOnDeviceClassifier);
     }
 
     private List<Topic> createTopics(/* TopicIds */ Integer... topicIds) {

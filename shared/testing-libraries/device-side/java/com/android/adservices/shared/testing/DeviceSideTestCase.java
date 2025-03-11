@@ -17,11 +17,9 @@ package com.android.adservices.shared.testing;
 
 import android.annotation.CallSuper;
 import android.content.Context;
-import android.platform.test.ravenwood.RavenwoodRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -76,13 +74,6 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
      * android.app.Instrumentation#getContext()})
      */
     protected final String mPackageName = sPackageName;
-
-    @ClassRule
-    public static final RavenwoodRule sRavenwood =
-            new RavenwoodRule.Builder()
-                    .setProvideMainThread(true)
-                    .setPackageName(RAVENWOOD_PACKAGE_NAME)
-                    .build();
 
     // TODO(b/342639109): make sure it's the right order
     @Rule(order = 0)

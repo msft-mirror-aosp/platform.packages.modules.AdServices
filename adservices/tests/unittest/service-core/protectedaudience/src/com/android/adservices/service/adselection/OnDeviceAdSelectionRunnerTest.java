@@ -112,7 +112,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -1722,9 +1722,9 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
         verifyLogForFailurePriorPersistAdSelection(STATUS_INTERNAL_ERROR);
 
         // If there are no corresponding CAs we should not even attempt bidding
-        verifyZeroInteractions(mPerBuyerBiddingRunnerMock);
+        verifyNoMoreInteractions(mPerBuyerBiddingRunnerMock);
         // If there was no bidding then we should not even attempt to run scoring
-        verifyZeroInteractions(mMockAdsScoreGenerator);
+        verifyNoMoreInteractions(mMockAdsScoreGenerator);
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
@@ -2199,7 +2199,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
         // If the result of bidding is empty, then we should not even attempt to run scoring
-        verifyZeroInteractions(mMockAdsScoreGenerator);
+        verifyNoMoreInteractions(mMockAdsScoreGenerator);
 
         assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(

@@ -31,6 +31,7 @@ import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGIN
 import static com.android.adservices.service.Flags.DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB;
@@ -1157,6 +1158,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementCountUniqueAppAllowlist",
                 DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST,
                 Flags::getMeasurementCountUniqueAppAllowlist);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueAppSignatureAllowlist() {
+        testFlag(
+                "getMeasurementCountUniqueAppSignatureAllowlist",
+                DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST,
+                Flags::getMeasurementCountUniqueAppSignatureAllowlist);
     }
 
     @Test
