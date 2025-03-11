@@ -12568,7 +12568,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 mFetcher.fetchSource(
                         appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        verifyZeroInteractions(mCountUniqueRegistrar);
+        verifyNoMoreInteractions(mCountUniqueRegistrar);
         assertWithMessage("asyncFetchStatus.getResponseStatus()")
                 .that(asyncFetchStatus.getResponseStatus())
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
