@@ -75,6 +75,7 @@ import static com.android.adservices.service.Flags.MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS;
+import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
@@ -979,6 +980,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent",
                 MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT,
                 Flags::getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent);
+    }
+
+    @Test
+    public void testGetMeasurementAttributionJobTriggeringMaxDelayMs() {
+        testFlag(
+                "getMeasurementAttributionJobTriggeringMaxDelayMs",
+                MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS,
+                Flags::getMeasurementAttributionJobTriggeringMaxDelayMs);
     }
 
     @Test

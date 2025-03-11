@@ -70,6 +70,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ASYN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
@@ -859,13 +860,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION,
                 DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION);
-    }
-
-    @Override
-    public long getMeasurementAttributionJobTriggerDelayMs() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS,
-                DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS);
     }
 
     @Override
@@ -4350,6 +4344,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS,
                 MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS);
+    }
+
+    @Override
+    public long getMeasurementAttributionJobTriggeringMaxDelayMs() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS,
+                MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS);
     }
 
     @Override

@@ -94,7 +94,6 @@ import static com.android.adservices.service.Flags.DEFAULT_MAINLINE_TRAIN_VERSIO
 import static com.android.adservices.service.Flags.DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS;
-import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
@@ -379,6 +378,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_FALLB
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_JOB_PERSISTED;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
+import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
@@ -913,6 +913,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTR
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
@@ -2131,14 +2132,6 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                 DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                 Flags::getMeasurementMaxEventReportUploadRetryWindowMs);
-    }
-
-    @Test
-    public void testGetMeasurementAttributionJobTriggerDelayMs() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS,
-                DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS,
-                Flags::getMeasurementAttributionJobTriggerDelayMs);
     }
 
     @Test
@@ -4705,6 +4698,14 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS,
                 MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS,
                 Flags::getMeasurementAttributionJobTriggeringDelayMs);
+    }
+
+    @Test
+    public void testGetMeasurementAttributionJobMaxTriggeringDelayMs() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS,
+                MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS,
+                Flags::getMeasurementAttributionJobTriggeringMaxDelayMs);
     }
 
     @Test
