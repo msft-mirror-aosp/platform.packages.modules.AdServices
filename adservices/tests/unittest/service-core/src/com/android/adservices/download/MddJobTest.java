@@ -46,7 +46,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.app.job.JobScheduler;
@@ -222,7 +222,7 @@ public final class MddJobTest extends AdServicesJobTestCase {
 
         verify(() -> MddJobService.scheduleIfNeeded(/* forceSchedule= */ false));
         verify(() -> MddJob.logJobSchedulingLegacy(resultCode));
-        verifyZeroInteractions(mMockAdServicesJobScheduler);
+        verifyNoMoreInteractions(mMockAdServicesJobScheduler);
     }
 
     @Test

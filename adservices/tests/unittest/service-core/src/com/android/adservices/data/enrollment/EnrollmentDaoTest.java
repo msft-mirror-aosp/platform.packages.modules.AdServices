@@ -38,7 +38,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
@@ -960,7 +960,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://4test.invalid"));
         assertThat(e).isNull();
-        verifyZeroInteractions(mLogger);
+        verifyNoMoreInteractions(mLogger);
 
         EnrollmentData enrollmentData =
                 new EnrollmentData.Builder()
@@ -986,7 +986,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://4test.invalid"));
         assertThat(e1).isNull();
-        verifyZeroInteractions(mLogger);
+        verifyNoMoreInteractions(mLogger);
     }
 
     @Test
@@ -1059,7 +1059,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         assertWithMessage("Returned enrollment pair")
                 .that(mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(null))
                 .isNull();
-        verifyZeroInteractions(mLogger);
+        verifyNoMoreInteractions(mLogger);
     }
 
     @Test
@@ -1069,7 +1069,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
                                 Uri.EMPTY))
                 .isNull();
-        verifyZeroInteractions(mLogger);
+        verifyNoMoreInteractions(mLogger);
     }
 
     @Test

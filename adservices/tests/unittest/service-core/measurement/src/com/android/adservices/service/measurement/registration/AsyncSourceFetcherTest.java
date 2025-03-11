@@ -46,7 +46,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.measurement.RegistrationRequest;
@@ -12426,7 +12425,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 mFetcher.fetchSource(
                         appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        verifyZeroInteractions(mCountUniqueRegistrar);
+        verifyNoMoreInteractions(mCountUniqueRegistrar);
         assertWithMessage("asyncFetchStatus.getResponseStatus()")
                 .that(asyncFetchStatus.getResponseStatus())
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
@@ -12495,7 +12494,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 mFetcher.fetchSource(
                         appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        verifyZeroInteractions(mCountUniqueRegistrar);
+        verifyNoMoreInteractions(mCountUniqueRegistrar);
         assertWithMessage("asyncFetchStatus.getResponseStatus()")
                 .that(asyncFetchStatus.getResponseStatus())
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);

@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.stats;
 
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLoggerNoLoggingImpl;
 
@@ -47,6 +47,6 @@ public class EncodingJobRunStatsLoggerNoLoggingImplTest {
                 AdsRelevanceStatusUtils.PAS_ENCODING_SOURCE_TYPE_ENCODING_JOB_SERVICE);
         encodingJobRunStatsLoggerNoLogging.logEncodingJobRunStats();
 
-        verifyZeroInteractions(mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
     }
 }

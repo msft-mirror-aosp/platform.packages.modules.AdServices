@@ -28,7 +28,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.content.Context;
 import android.content.Intent;
@@ -70,7 +70,7 @@ public final class ProtectedSignalsServiceTest extends AdServicesExtendedMockito
         IBinder binder = protectedSignalsService.onBind(getIntentForProtectedSignalsService());
         assertNull(binder);
 
-        verifyZeroInteractions(mMockConsentManager);
+        verifyNoMoreInteractions(mMockConsentManager);
         verify(MddJob::scheduleAllMddJobs, never());
     }
 
@@ -85,7 +85,7 @@ public final class ProtectedSignalsServiceTest extends AdServicesExtendedMockito
         IBinder binder = protectedSignalsService.onBind(getIntentForProtectedSignalsService());
         assertNull(binder);
 
-        verifyZeroInteractions(mMockConsentManager);
+        verifyNoMoreInteractions(mMockConsentManager);
         verify(MddJob::scheduleAllMddJobs, never());
     }
 

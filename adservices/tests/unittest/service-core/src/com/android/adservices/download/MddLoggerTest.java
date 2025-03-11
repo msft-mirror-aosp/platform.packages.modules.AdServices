@@ -23,7 +23,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.MOBILE_DAT
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 
 import static com.google.mobiledatadownload.LogEnumsProto.MddDownloadResult.Code.SUCCESS;
 import static com.google.mobiledatadownload.LogEnumsProto.MddDownloadResult.Code.SUCCESS_VALUE;
@@ -79,7 +79,7 @@ public final class MddLoggerTest extends AdServicesExtendedMockitoTestCase {
     public void mddLoggerTest_unspecified() {
         mMddLogger.log(mMockLog, EVENT_CODE_UNSPECIFIED);
         // Unspecified event does not trigger MDD logging.
-        verifyZeroInteractions(staticMockMarker(AdServicesStatsLog.class));
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 
     @Test

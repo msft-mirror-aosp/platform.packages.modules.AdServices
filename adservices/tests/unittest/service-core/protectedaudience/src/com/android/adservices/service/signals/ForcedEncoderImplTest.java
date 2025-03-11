@@ -21,7 +21,7 @@ import static com.android.adservices.service.Flags.FLEDGE_FORCED_ENCODING_AFTER_
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import android.adservices.common.AdTechIdentifier;
@@ -94,7 +94,7 @@ public class ForcedEncoderImplTest extends AdServicesExtendedMockitoTestCase {
         when(mEncoderLogicHandlerMock.getEncoder(BUYER)).thenReturn(null);
 
         mSyncForcedEncoder.forceEncodingAndUpdateEncoderForBuyer(BUYER);
-        verifyZeroInteractions(
+        verifyNoMoreInteractions(
                 mEncodedPayloadDaoMock, mProtectedSignalsDaoMock, mEncodingJobWorkerMock);
     }
 
@@ -107,7 +107,7 @@ public class ForcedEncoderImplTest extends AdServicesExtendedMockitoTestCase {
 
         mSyncForcedEncoder.forceEncodingAndUpdateEncoderForBuyer(BUYER);
 
-        verifyZeroInteractions(mProtectedSignalsDaoMock);
+        verifyNoMoreInteractions(mProtectedSignalsDaoMock);
         verify(mEncodingJobWorkerMock)
                 .encodeProtectedSignals(PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL);
     }
@@ -123,7 +123,7 @@ public class ForcedEncoderImplTest extends AdServicesExtendedMockitoTestCase {
         // Don't need to wait for the thread completion since `mForcedEncoder`
         // is using a `directExecutor`
         mSyncForcedEncoder.forceEncodingAndUpdateEncoderForBuyer(BUYER);
-        verifyZeroInteractions(mProtectedSignalsDaoMock, mEncodingJobWorkerMock);
+        verifyNoMoreInteractions(mProtectedSignalsDaoMock, mEncodingJobWorkerMock);
     }
 
     @Test
@@ -144,6 +144,6 @@ public class ForcedEncoderImplTest extends AdServicesExtendedMockitoTestCase {
         when(mProtectedSignalsDaoMock.hasSignalsFromBuyer(BUYER)).thenReturn(false);
 
         mSyncForcedEncoder.forceEncodingAndUpdateEncoderForBuyer(BUYER);
-        verifyZeroInteractions(mEncodingJobWorkerMock);
+        verifyNoMoreInteractions(mEncodingJobWorkerMock);
     }
 }

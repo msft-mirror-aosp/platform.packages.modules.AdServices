@@ -34,7 +34,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
@@ -186,7 +186,7 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                 mDevSessionController.startDevSession(false);
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(NO_OP);
-        verifyZeroInteractions(mMockDatabaseClearer);
+        verifyNoMoreInteractions(mMockDatabaseClearer);
     }
 
     @Test
@@ -197,7 +197,7 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                 mDevSessionController.startDevSession(false);
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(NO_OP);
-        verifyZeroInteractions(mMockDatabaseClearer);
+        verifyNoMoreInteractions(mMockDatabaseClearer);
     }
 
     @Test
@@ -261,7 +261,7 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
         Future<DevSessionControllerResult> resultFuture = mDevSessionController.endDevSession();
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(NO_OP);
-        verifyZeroInteractions(mMockDatabaseClearer);
+        verifyNoMoreInteractions(mMockDatabaseClearer);
     }
 
     @Test

@@ -33,7 +33,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
@@ -134,7 +133,7 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                         mUpdateOutputArgumentCaptor.capture(),
                         any(UpdateSignalsProcessReportedLogger.class));
         assertUpdateOutputEquals(new UpdateOutput(), mUpdateOutputArgumentCaptor.getValue());
-        verifyZeroInteractions(mUpdateProcessorSelectorMock, mUpdateEncoderEventHandlerMock);
+        verifyNoMoreInteractions(mUpdateProcessorSelectorMock, mUpdateEncoderEventHandlerMock);
         verify(mProtectedSignalsDaoMock)
                 .insertAndDelete(ADTECH, NOW, Collections.emptyList(), Collections.emptyList());
         verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(ADTECH);
@@ -178,7 +177,7 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                                         mUpdateSignalsProcessReportedLoggerMock));
         assertEquals(exception, t.getCause());
         verify(mProtectedSignalsDaoMock).getSignalsByBuyer(ADTECH);
-        verifyZeroInteractions(mSignalEvictionControllerMock, mForcedEncoderMock);
+        verifyNoMoreInteractions(mSignalEvictionControllerMock, mForcedEncoderMock);
         verifyNoMoreInteractions(mProtectedSignalsDaoMock);
         assertEquals(
                 JSON_PROCESSING_STATUS_SYNTACTIC_ERROR,
@@ -391,7 +390,7 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                                 DEV_CONTEXT,
                                 mUpdateSignalsApiCalledStats,
                                 mUpdateSignalsProcessReportedLoggerMock));
-        verifyZeroInteractions(mSignalEvictionControllerMock, mForcedEncoderMock);
+        verifyNoMoreInteractions(mSignalEvictionControllerMock, mForcedEncoderMock);
         assertEquals(
                 JSON_PROCESSING_STATUS_SEMANTIC_ERROR,
                 mUpdateSignalsApiCalledStats.build().getJsonProcessingStatus());
@@ -453,7 +452,7 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                 DEV_CONTEXT,
                 mUpdateSignalsApiCalledStats,
                 mUpdateSignalsProcessReportedLoggerMock);
-        verifyZeroInteractions(mUpdateEncoderEventHandlerMock);
+        verifyNoMoreInteractions(mUpdateEncoderEventHandlerMock);
         verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(ADTECH);
     }
 
@@ -482,7 +481,7 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                 mUpdateSignalsProcessReportedLoggerMock);
         verify(mUpdateEncoderEventHandlerMock)
                 .handle(CommonFixture.VALID_BUYER_1, event, DEV_CONTEXT);
-        verifyZeroInteractions(mForcedEncoderMock);
+        verifyNoMoreInteractions(mForcedEncoderMock);
     }
 
     @Test

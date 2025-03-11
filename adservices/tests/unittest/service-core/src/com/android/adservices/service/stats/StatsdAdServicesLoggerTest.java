@@ -107,7 +107,6 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.ReportEventRequest;
@@ -302,7 +301,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         mLogger.logGetTopicsReportedStats(TOPICS_REPORTED_STATS_DATA);
 
         // No compat (and T+) logging should happen
-        verifyZeroInteractions(staticMockMarker(AdServicesStatsLog.class));
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 
     @Test
@@ -458,7 +457,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         mLogger.logEpochComputationClassifierStats(EPOCH_COMPUTATION_CLASSIFIER_STATS_DATA);
 
         // No compat (and T+) logging should happen
-        verifyZeroInteractions(staticMockMarker(AdServicesStatsLog.class));
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 
     @Test
@@ -927,7 +926,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         // Invoke logging call
         mLogger.logConsentMigrationStats(consentMigrationStats);
 
-        verifyZeroInteractions(staticMockMarker(AdServicesStatsLog.class));
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 
     @Test

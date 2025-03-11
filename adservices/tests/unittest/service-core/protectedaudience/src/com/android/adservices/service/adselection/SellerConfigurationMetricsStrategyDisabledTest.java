@@ -18,7 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats.PayloadOptimizationResult.PAYLOAD_WITHIN_REQUESTED_MAX;
 
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
@@ -40,13 +40,13 @@ public class SellerConfigurationMetricsStrategyDisabledTest extends AdServicesMo
     public void testSetSellerConfigurationMetricsCalls() {
         mSellerConfigurationMetricsStrategy.setSellerConfigurationMetrics(
                 mBuilderMock, PAYLOAD_WITHIN_REQUESTED_MAX, 3, 1, 2);
-        verifyZeroInteractions(mBuilderMock);
+        verifyNoMoreInteractions(mBuilderMock);
     }
 
     @Test
     public void testSetSellerMaxPayloadSizeKBCalls() {
         mSellerConfigurationMetricsStrategy.setSellerMaxPayloadSizeKb(mBuilderMock, 5);
-        verifyZeroInteractions(mBuilderMock);
+        verifyNoMoreInteractions(mBuilderMock);
     }
 
     @Test
@@ -54,6 +54,6 @@ public class SellerConfigurationMetricsStrategyDisabledTest extends AdServicesMo
         int inputLatencyMs = 3;
         mSellerConfigurationMetricsStrategy.setInputGenerationLatencyMsAndBuyerCreatorVersion(
                 mBuilderMock, inputLatencyMs, CompressedBuyerInputCreatorNoOptimizations.VERSION);
-        verifyZeroInteractions(mBuilderMock);
+        verifyNoMoreInteractions(mBuilderMock);
     }
 }

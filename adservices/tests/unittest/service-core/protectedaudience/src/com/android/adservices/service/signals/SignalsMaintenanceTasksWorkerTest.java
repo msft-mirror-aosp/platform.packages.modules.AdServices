@@ -19,7 +19,7 @@ package com.android.adservices.service.signals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
@@ -130,7 +130,7 @@ public final class SignalsMaintenanceTasksWorkerTest extends AdServicesMockitoTe
                 .thenReturn(List.of(buyer1));
 
         mSignalsMaintenanceTasksWorker.clearInvalidEncoders(mExpirationTime);
-        verifyZeroInteractions(mEnrollmentDaoMock);
+        verifyNoMoreInteractions(mEnrollmentDaoMock);
         verify(mEncoderLogicHandlerMock).getBuyersWithStaleEncoders(mExpirationTime);
         verify(mEncoderLogicHandlerMock).deleteEncodersForBuyers(Set.of(buyer1));
     }
@@ -157,7 +157,7 @@ public final class SignalsMaintenanceTasksWorkerTest extends AdServicesMockitoTe
         when(mMockFlags.getDisableFledgeEnrollmentCheck()).thenReturn(true);
 
         mSignalsMaintenanceTasksWorker.clearInvalidEncodedPayloads(mExpirationTime);
-        verifyZeroInteractions(mEnrollmentDaoMock);
+        verifyNoMoreInteractions(mEnrollmentDaoMock);
         verify(mEncodedPayloadDaoMock).deleteEncodedPayloadsBeforeTime(mExpirationTime);
     }
 }
