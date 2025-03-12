@@ -26,6 +26,10 @@ import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_JOB_EXECU
 import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET;
+import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW;
+import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW;
+import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_LOG_SAMPLING_INFRA;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
@@ -1188,6 +1192,38 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementCountUniqueAppSignatureAllowlist",
                 DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST,
                 Flags::getMeasurementCountUniqueAppSignatureAllowlist);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueShortWindowContributionBudget() {
+        testFlag(
+                "getMeasurementCountUniqueShortWindowContributionBudget",
+                DEFAULT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET,
+                Flags::getMeasurementCountUniqueShortWindowContributionBudget);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueLongWindowContributionBudget() {
+        testFlag(
+                "getMeasurementCountUniqueLongWindowContributionBudget",
+                DEFAULT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET,
+                Flags::getMeasurementCountUniqueLongWindowContributionBudget);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueMaxContributionShortWindow() {
+        testFlag(
+                "getMeasurementCountUniqueMaxContributionShortWindow",
+                DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW,
+                Flags::getMeasurementCountUniqueMaxContributionShortWindow);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueMaxContributionLongWindow() {
+        testFlag(
+                "getMeasurementCountUniqueMaxContributionLongWindow",
+                DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW,
+                Flags::getMeasurementCountUniqueMaxContributionLongWindow);
     }
 
     @Test
