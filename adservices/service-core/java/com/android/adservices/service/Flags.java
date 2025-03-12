@@ -5268,6 +5268,33 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS;
     }
 
+    /** Flag to enable open access for adtechs to use debug_join_key . */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS = false;
+
+    /** Returns whether open access for adtechs to use debug_join_key is enabled */
+    default boolean getMeasurementEnableDebugJoinKeysOpenAccess() {
+        return MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS;
+    }
+
+    /**
+     * List noncompiliant adtechs using debug_join_keys during open access. Example:
+     * "adtech_1,adtech_2"
+     */
+    @ConfigFlag String MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS = "";
+
+    /** Returns list noncompiliant adtechs using debug_join_keys during open access.. */
+    default String getMeasurementDebugJoinKeysNoncompliantAdtechs() {
+        return MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS;
+    }
+
+    /* Sample rate used to set debug_join_keys if Trigger side adtech is non-compliant. */
+    @ConfigFlag float MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE = 0.01f;
+
+    /** Returns sample rate to set debug_join_keys. */
+    default float getMeasurementDebugJoinKeysSampleRate() {
+        return MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE;
+    }
+
     /**
      * Default value for if events will be registered as a source of attribution in addition to
      * being reported.
