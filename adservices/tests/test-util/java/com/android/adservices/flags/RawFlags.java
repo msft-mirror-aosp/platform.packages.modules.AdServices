@@ -894,6 +894,20 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
+    public final boolean getProtectedSignalsEnablePrioritizedEviction() {
+        return mBackend.getFlag(
+                KEY_PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION,
+                PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION);
+    }
+
+    @Override
+    public final int getProtectedSignalsUpdateSchemaVersion() {
+        return mBackend.getFlag(
+                KEY_PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION,
+                PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION);
+    }
+
+    @Override
     public final int getAdSelectionMaxConcurrentBiddingCount() {
         return mBackend.getFlag(
                 KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT,

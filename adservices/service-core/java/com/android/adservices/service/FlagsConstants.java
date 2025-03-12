@@ -610,6 +610,10 @@ public final class FlagsConstants {
     public static final String
             KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES =
                     "Fledge__protected_signals_raw_signals_max_oversubscribed_size_per_buyer_bytes";
+    public static final String KEY_PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION =
+            "ProtectedSignals__enable_prioritized_eviction";
+    public static final String KEY_PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION =
+            "ProtectedSignals__update_schema_version";
 
     public static final String KEY_FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE =
             "Fledge__enable_forced_encoding_after_signals_update";

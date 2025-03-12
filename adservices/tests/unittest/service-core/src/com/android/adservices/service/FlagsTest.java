@@ -103,6 +103,7 @@ import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES;
+import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
 import static com.android.adservices.shared.testing.AndroidSdk.SC;
@@ -716,6 +717,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFlag("DEFAULT_ENABLE_RB_ATRACE", /* defaultValue */ false, Flags::getEnableRbAtrace);
     }
 
+    @Test
+    public void testGetProtectedSignalsEnablePrioritizedEviction() {
+        testFeatureFlag(
+                "PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION",
+                Flags::getProtectedSignalsEnablePrioritizedEviction);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //
@@ -1326,6 +1334,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes()",
                 PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES,
                 Flags::getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes);
+    }
+
+    @Test
+    public void testGetProtectedSignalsUpdateSchemaVersion() {
+        testFlag(
+                "getProtectedSignalsUpdateSchemaVersion",
+                PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION,
+                Flags::getProtectedSignalsUpdateSchemaVersion);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

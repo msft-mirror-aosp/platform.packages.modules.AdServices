@@ -553,6 +553,7 @@ import static com.android.adservices.service.Flags.PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.Flags.PPAPI_APP_SIGNATURE_ALLOW_LIST;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_CLEANUP_ENABLED;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_ENABLED;
+import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES;
@@ -562,6 +563,7 @@ import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_MAX_SIGNAL_
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
+import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION;
 import static com.android.adservices.service.Flags.RECORD_MANUAL_INTERACTION_ENABLED;
 import static com.android.adservices.service.Flags.SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
@@ -1129,6 +1131,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_ALLOW_
 import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES;
@@ -1138,6 +1141,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNAL
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION;
 import static com.android.adservices.service.FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
@@ -2692,6 +2696,22 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES,
                 PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES,
                 Flags::getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes);
+    }
+
+    @Test
+    public void testGetProtectedSignalsEnablePrioritizedEviction() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION,
+                PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION,
+                Flags::getProtectedSignalsEnablePrioritizedEviction);
+    }
+
+    @Test
+    public void testGetProtectedSignalsUpdateSchemaVersion() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION,
+                PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION,
+                Flags::getProtectedSignalsUpdateSchemaVersion);
     }
 
     @Test

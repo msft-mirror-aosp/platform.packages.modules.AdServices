@@ -1259,6 +1259,20 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getProtectedSignalsEnablePrioritizedEviction() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION,
+                PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION);
+    }
+
+    @Override
+    public int getProtectedSignalsUpdateSchemaVersion() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION,
+                PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION);
+    }
+
+    @Override
     public boolean getFledgeEnableForcedEncodingAfterSignalsUpdate() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE,
