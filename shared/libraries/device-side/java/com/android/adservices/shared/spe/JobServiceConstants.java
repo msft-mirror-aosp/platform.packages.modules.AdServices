@@ -168,4 +168,8 @@ public final class JobServiceConstants {
 
     public static final int SCHEDULING_RESULT_CODE_SKIPPED =
             BACKGROUND_JOB_SCHEDULING_REPORTED__RESULT_CODE__SCHEDULING_RESULT_CODE_SKIPPED;
+
+    /** The prefix of the error thrown from JobScheduler when an app schedules too many jobs. */
+    public static final String ERROR_MESSAGE_TOO_MANY_JOBS_SCHEDULED =
+            "Apps may not schedule more than";
 }

@@ -2641,6 +2641,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
 
         // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        // plus a small buffer to account for a slow device
         Exception selectAdsException =
                 assertThrows(
                         ExecutionException.class,
@@ -2648,7 +2649,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                 mAdSelectionClient
                                         .selectAds(AD_SELECTION_CONFIG)
                                         .get(
-                                                SHORT_OVERALL_AD_SELECTION_TIMEOUT_MS + 200L,
+                                                SHORT_OVERALL_AD_SELECTION_TIMEOUT_MS + 500L,
                                                 TimeUnit.MILLISECONDS));
         assertThat(selectAdsException.getCause()).isInstanceOf(TimeoutException.class);
     }

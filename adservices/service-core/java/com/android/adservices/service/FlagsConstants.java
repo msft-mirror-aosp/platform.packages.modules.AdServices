@@ -244,6 +244,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS =
             "measurement_attribution_job_triggering_delay_ms";
 
+    public static final String KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS =
+            "Measurement__attribution_job_triggering_max_delay_ms";
+
     public static final String KEY_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION =
             "measurement_max_attributions_per_invocation";
 
@@ -607,6 +610,10 @@ public final class FlagsConstants {
     public static final String
             KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES =
                     "Fledge__protected_signals_raw_signals_max_oversubscribed_size_per_buyer_bytes";
+    public static final String KEY_PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION =
+            "ProtectedSignals__enable_prioritized_eviction";
+    public static final String KEY_PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION =
+            "ProtectedSignals__update_schema_version";
 
     public static final String KEY_FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE =
             "Fledge__enable_forced_encoding_after_signals_update";
@@ -1780,4 +1787,17 @@ public final class FlagsConstants {
     /** Key for AdServices' Client error logging sampling config. */
     public static final String KEY_AD_SERVICES_CEL_SAMPLING_CONFIG =
             "ClientErrorLogging__ad_services_cel_sampling_config";
+
+    /** Key to enable debug join keys to all adtechs instead of through allow list. */
+    public static final String KEY_MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS =
+            "Measurement__enable_debug_join_keys_open_access";
+
+    /** Key for all noncompilant adtechs that misuse debug join keys. */
+    public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS =
+            "Measurement__debug_join_keys_noncompilant_adtechs";
+
+    /** Key debug join keys sample rate. */
+    public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE =
+            "Measurement__debug_join_keys_sample_rate";
 }
+

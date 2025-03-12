@@ -18,6 +18,7 @@ package com.android.adservices.shared.spe.scheduling;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_INVALID_JOB_POLICY_SYNC;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULING_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULING_FAILURE_ON_TOO_MANY_SCHEDULED_JOBS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_CHARGING;
 import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_NONE;
@@ -262,7 +263,7 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
                 .that(mPolicyJobScheduler.getJobInfoToSchedule(sContext, jobSpec, JOB_NAME_1))
                 .isEqualTo(expectedJobInfo);
         verify(mMockErrorLogger)
-                .logErrorWithExceptionInfo(
+                .logError(
                         any(),
                         eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_INVALID_JOB_POLICY_SYNC),
                         eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON));
@@ -334,7 +335,32 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
 
         callback.assertResultReceived();
         verify(mMockErrorLogger)
-                .logErrorWithExceptionInfo(
+                .logError(
+                        exception,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULING_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+        verify(mMockJobSchedulingLogger)
+                .recordOnScheduling(JOB_ID_1, SCHEDULING_RESULT_CODE_FAILED);
+    }
+
+    @Test
+    public void testAddCallbackToSchedulingFuture_onFailure_tooManyJobsScheduled()
+            throws Exception {
+        IllegalStateException exception =
+                new IllegalStateException("Apps may not schedule more than 150 distinct jobs");
+        ListenableFuture<Integer> future = Futures.immediateFailedFuture(exception);
+        ResultSyncCallback<Void> callback = syncRecordOnScheduling();
+
+        mPolicyJobScheduler.addCallbackToSchedulingFuture(future, JOB_ID_1);
+
+        callback.assertResultReceived();
+        verify(mMockErrorLogger)
+                .logError(
+                        exception,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULING_FAILURE_ON_TOO_MANY_SCHEDULED_JOBS,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+        verify(mMockErrorLogger)
+                .logError(
                         exception,
                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULING_FAILURE,
                         AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);

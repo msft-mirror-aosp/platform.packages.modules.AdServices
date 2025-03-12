@@ -641,13 +641,6 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
     }
 
-    long DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
-
-    /** Delay from trigger registration to attribution job triggering */
-    default long getMeasurementAttributionJobTriggerDelayMs() {
-        return DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
-    }
-
     int DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION = 100;
 
     /** Max number of {@link Trigger} to process per job for {@link AttributionJobService} */
@@ -1345,6 +1338,20 @@ public interface Flags extends ModuleSharedFlags {
      */
     default int getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes() {
         return PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES;
+    }
+
+    @FeatureFlag boolean PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION = false;
+
+    /** Returns {@code true} feature flag if Protected Signals `prioritized` eviction is enabled. */
+    default boolean getProtectedSignalsEnablePrioritizedEviction() {
+        return PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION;
+    }
+
+    @ConfigFlag int PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION = 0;
+
+    /** Returns the update schema version to request when downloading signal updates. */
+    default int getProtectedSignalsUpdateSchemaVersion() {
+        return PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION;
     }
 
     @FeatureFlag boolean FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE = false;
@@ -4447,9 +4454,17 @@ public interface Flags extends ModuleSharedFlags {
 
     long MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
 
-    /** Delay for attribution job triggering. */
+    /** Minimum delay for attribution job triggering. */
     default long getMeasurementAttributionJobTriggeringDelayMs() {
         return MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
+    }
+
+    @ConfigFlag
+    long MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
+
+    /** Maximum delay for attribution job triggering. */
+    default long getMeasurementAttributionJobTriggeringMaxDelayMs() {
+        return MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS;
     }
 
     boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED = true;
@@ -5251,6 +5266,33 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether measurement debug keys privacy enforcement is enabled. */
     default boolean getMeasurementEnableBothSideDebugKeysInReports() {
         return MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS;
+    }
+
+    /** Flag to enable open access for adtechs to use debug_join_key . */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS = false;
+
+    /** Returns whether open access for adtechs to use debug_join_key is enabled */
+    default boolean getMeasurementEnableDebugJoinKeysOpenAccess() {
+        return MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS;
+    }
+
+    /**
+     * List noncompiliant adtechs using debug_join_keys during open access. Example:
+     * "adtech_1,adtech_2"
+     */
+    @ConfigFlag String MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS = "";
+
+    /** Returns list noncompiliant adtechs using debug_join_keys during open access.. */
+    default String getMeasurementDebugJoinKeysNoncompliantAdtechs() {
+        return MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS;
+    }
+
+    /* Sample rate used to set debug_join_keys if Trigger side adtech is non-compliant. */
+    @ConfigFlag float MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE = 0.01f;
+
+    /** Returns sample rate to set debug_join_keys. */
+    default float getMeasurementDebugJoinKeysSampleRate() {
+        return MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE;
     }
 
     /**

@@ -18,9 +18,11 @@ package com.android.adservices.shared.spe.scheduling;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_INVALID_JOB_POLICY_SYNC;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULING_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULING_FAILURE_ON_TOO_MANY_SCHEDULED_JOBS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.shared.spe.JobErrorMessage.ERROR_MESSAGE_POLICY_JOB_SCHEDULER_INVALID_JOB_INFO;
 import static com.android.adservices.shared.spe.JobServiceConstants.ERROR_CODE_JOB_SCHEDULER_IS_UNAVAILABLE;
+import static com.android.adservices.shared.spe.JobServiceConstants.ERROR_MESSAGE_TOO_MANY_JOBS_SCHEDULED;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_FAILED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
@@ -195,7 +197,7 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
                     PolicyProcessor.mergeTwoJobPolicies(defaultJobPolicy, serverJobPolicy);
         } catch (IllegalArgumentException e) {
             LogUtil.e(e, ERROR_MESSAGE_POLICY_JOB_SCHEDULER_INVALID_JOB_INFO, jobName);
-            mErrorLogger.logErrorWithExceptionInfo(
+            mErrorLogger.logError(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_INVALID_JOB_POLICY_SYNC,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
@@ -254,7 +256,19 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
                     @Override
                     public void onFailure(Throwable t) {
                         LogUtil.e(t, "Job %d scheduling encountered an issue!", jobId);
-                        mErrorLogger.logErrorWithExceptionInfo(
+
+                        // Log the error separately that the failure dues to JobScheduler has
+                        // scheduled too many jobs for AdServices.
+                        if (t instanceof IllegalStateException e
+                                && e.getMessage()
+                                        .startsWith(ERROR_MESSAGE_TOO_MANY_JOBS_SCHEDULED)) {
+                            mErrorLogger.logError(
+                                    e,
+                                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULING_FAILURE_ON_TOO_MANY_SCHEDULED_JOBS,
+                                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+                        }
+
+                        mErrorLogger.logError(
                                 t,
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_SCHEDULING_FAILURE,
                                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
