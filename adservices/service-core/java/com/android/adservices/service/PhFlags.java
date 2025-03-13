@@ -1508,6 +1508,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getFledgeScheduleCustomAudienceUpdateBackgroundJobRequiredNetworkType() {
+        return getDeviceConfigFlag(
+                FlagsConstants
+                        .KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_NETWORK_TYPE,
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_REQUIRED_NETWORK_TYPE);
+    }
+
+    @Override
     public boolean getFledgeHttpCachingEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE, FLEDGE_HTTP_CACHE_ENABLE);
