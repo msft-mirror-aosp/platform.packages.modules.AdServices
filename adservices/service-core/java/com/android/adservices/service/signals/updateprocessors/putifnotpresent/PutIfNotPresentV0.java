@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.signals.updateprocessors;
+package com.android.adservices.service.signals.updateprocessors.putifnotpresent;
 
 import com.android.adservices.data.signals.DBProtectedSignal;
+import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,28 +29,28 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Adds a new signal, overwriting any existing signals with the same key.
+ * V0 implementation of the PutIfNotPresent update processor. Uses the following update schema:
  *
- * <p>The value for this is a JSON object where the JSON keys are base 64 strings corresponding to
- * the signal key to put for and the values are base 64 string corresponding to the value to put.
+ * <pre>
+ * {
+ *   "put_if_not_present": {
+ *     <strong>[Key]</strong>: <strong>[Value]</strong>,
+ *     ... // additional signals
+ *   }
+ * }
+ * </pre>
  */
-public class Put implements UpdateProcessor {
-
-    private static final String PUT = "put";
-
-    @Override
-    public String getName() {
-        return PUT;
-    }
+public class PutIfNotPresentV0 extends PutIfNotPresent {
 
     @Override
     public UpdateOutput processUpdates(
             Object updates, Map<ByteBuffer, Set<DBProtectedSignal>> current) throws JSONException {
         UpdateOutput toReturn = new UpdateOutput();
-        JSONObject updatesObject = UpdateProcessorUtils.castToJSONObject(PUT, updates);
+        JSONObject updatesObject =
+                UpdateProcessorUtils.castToJSONObject(PUT_IF_NOT_PRESENT, updates);
         for (Iterator<String> iter = updatesObject.keys(); iter.hasNext(); ) {
             String stringKey = iter.next();
-            ByteBuffer key = UpdateProcessorUtils.decodeKey(PUT, stringKey);
+            ByteBuffer key = UpdateProcessorUtils.decodeKey(PUT_IF_NOT_PRESENT, stringKey);
             processKey(key, updatesObject.getString(stringKey), current, toReturn);
         }
         return toReturn;
@@ -61,15 +63,13 @@ public class Put implements UpdateProcessor {
             Map<ByteBuffer, Set<DBProtectedSignal>> current,
             UpdateOutput toReturn) {
         UpdateProcessorUtils.touchKey(key, toReturn.getKeysTouched());
-        // Remove any existing signals for the key
-        if (current.containsKey(key)) {
-            toReturn.getToRemove().addAll(current.get(key));
+        // Add the new signal if nothing exists under the key
+        if (!current.containsKey(key)) {
+            DBProtectedSignal.Builder newSignalBuilder =
+                    DBProtectedSignal.builder()
+                            .setKey(UpdateProcessorUtils.getByteArrayFromBuffer(key))
+                            .setValue(UpdateProcessorUtils.decodeValue(PUT_IF_NOT_PRESENT, value));
+            toReturn.getToAdd().add(newSignalBuilder);
         }
-        // Add the new signal
-        DBProtectedSignal.Builder newSignalBuilder =
-                DBProtectedSignal.builder()
-                        .setKey(UpdateProcessorUtils.getByteArrayFromBuffer(key))
-                        .setValue(UpdateProcessorUtils.decodeValue(PUT, value));
-        toReturn.getToAdd().add(newSignalBuilder);
     }
 }

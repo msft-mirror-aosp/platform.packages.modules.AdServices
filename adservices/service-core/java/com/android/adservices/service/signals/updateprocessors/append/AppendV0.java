@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.signals.updateprocessors;
+package com.android.adservices.service.signals.updateprocessors.append;
 
 import com.android.adservices.data.signals.DBProtectedSignal;
+import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -32,30 +34,27 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Appends a new signal/signals to a time series of signals, removing the oldest signals to make
- * room for the new ones if the size of the series exceeds the given maximum.
+ * V0 implementation of the Append update processor. Uses the following update schema:
  *
- * <p>The value for this is a JSON object where the JSON keys are base 64 strings corresponding to
- * the signal key to append to and the values are objects with two fields: "values" and
- * "maxSignals". "values" is a list of base 64 strings corresponding to signal values to append to
- * the time series. "maxSignals" is the maximum number of values that are allowed in this
- * timeseries. If the current number of signals associated with the key exceeds maxSignals the
- * oldest signals will be removed. Note that you can append to a key added by put.
+ * <pre>
+ * {
+ *   "append": {
+ *     <strong>[Key]</strong>: {
+ *       "values": <strong>[Values]</strong>,
+ *       "max_signals": <strong>[Max Signals]</strong>
+ *     }
+ *     ... // additional signals
+ *   }
+ * }
+ * </pre>
  */
-public class Append implements UpdateProcessor {
+public class AppendV0 extends Append {
     @VisibleForTesting
     public static final String TOO_MANY_SIGNALS_ERROR =
             "Attempting to append %d than with a max_signals of %d";
 
     private static final String MAX_SIGNALS = "max_signals";
     private static final String VALUES = "values";
-
-    private static final String APPEND = "append";
-
-    @Override
-    public String getName() {
-        return APPEND;
-    }
 
     @Override
     public UpdateOutput processUpdates(

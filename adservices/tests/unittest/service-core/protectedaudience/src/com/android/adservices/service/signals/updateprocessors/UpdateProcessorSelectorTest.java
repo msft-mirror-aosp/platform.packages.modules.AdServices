@@ -19,6 +19,11 @@ package com.android.adservices.service.signals.updateprocessors;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.service.signals.updateprocessors.append.AppendV0;
+import com.android.adservices.service.signals.updateprocessors.put.PutV0;
+import com.android.adservices.service.signals.updateprocessors.putifnotpresent.PutIfNotPresentV0;
+import com.android.adservices.service.signals.updateprocessors.remove.RemoveV0;
+import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderV0;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
@@ -42,12 +47,16 @@ public class UpdateProcessorSelectorTest {
     @Test
     public void testValidCommands() {
         UpdateProcessor[] processors = {
-            new Append(), new Put(), new PutIfNotPresent(), new Remove(), new UpdateEncoder()
+            new AppendV0(),
+            new PutV0(),
+            new PutIfNotPresentV0(),
+            new RemoveV0(),
+            new UpdateEncoderV0()
         };
-        for (int i = 0; i < processors.length; i++) {
+        for (UpdateProcessor processor : processors) {
             UpdateProcessor fetchedProcessor =
-                    mUpdateProcessorSelector.getUpdateProcessor(processors[i].getName());
-            assertTrue(processors[i].getClass().isInstance(fetchedProcessor));
+                    mUpdateProcessorSelector.getUpdateProcessor(processor.getName());
+            assertTrue(processor.getClass().isInstance(fetchedProcessor));
         }
     }
 }

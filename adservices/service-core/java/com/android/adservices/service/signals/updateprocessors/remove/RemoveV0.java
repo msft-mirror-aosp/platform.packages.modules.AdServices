@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.signals.updateprocessors;
+package com.android.adservices.service.signals.updateprocessors.remove;
 
 import com.android.adservices.data.signals.DBProtectedSignal;
+import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,19 +28,18 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Removes the signal for a key.
+ * V0 implementation of the Remove update processor. Uses the following update schema:
  *
- * <p>The value of this is a list of base 64 strings corresponding to the keys of the signals that
- * should be deleted.
+ * <pre>
+ * {
+ *   "remove": [
+ *     <strong>[Key]</strong>,
+ *     ... // additional signals
+ *   ]
+ * }
+ * </pre>
  */
-public class Remove implements UpdateProcessor {
-
-    private static final String REMOVE = "remove";
-
-    @Override
-    public String getName() {
-        return REMOVE;
-    }
+public class RemoveV0 extends Remove {
 
     @Override
     public UpdateOutput processUpdates(
