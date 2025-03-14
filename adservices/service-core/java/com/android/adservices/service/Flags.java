@@ -533,8 +533,8 @@ public interface Flags extends ModuleSharedFlags {
 
     /** Measurement manifest file url, used for MDD download. */
     String MEASUREMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/4503"
-                    + "/fecd522d3dcfbe1b3b1f1054947be8528be43e97";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/8409"
+                    + "/61e771d6656d87e705d99f3e80d95011ae295d82"; // Generated on 2025-01-07
 
     /** Measurement manifest file url. */
     default String getMeasurementManifestFileUrl() {
