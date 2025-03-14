@@ -139,7 +139,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                         FlagsFactory.getFlags()
                                                 .getPasSignalsDownloadReadTimeoutMs(),
                                         FlagsFactory.getFlags()
-                                                .getProtectedSignalsFetchSignalUpdatesMaxSizeBytes())),
+                                                .getProtectedSignalsFetchSignalUpdatesMaxSizeBytes()),
+                                FlagsFactory.getFlags().getProtectedSignalsUpdateSchemaVersion()),
                         new UpdateProcessingOrchestrator(
                                 ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
                                 new UpdateProcessorSelector(),

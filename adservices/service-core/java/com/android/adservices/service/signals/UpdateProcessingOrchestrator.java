@@ -91,12 +91,12 @@ public class UpdateProcessingOrchestrator {
         mForcedEncoder = forcedEncoder;
     }
 
-    /** Takes a signal update JSON and adds/removes signals based on it. */
+    /** Takes a {@link SignalUpdates} and adds/removes signals based on it. */
     public void processUpdates(
             AdTechIdentifier adtech,
             String packageName,
             Instant creationTime,
-            JSONObject json,
+            SignalUpdates signalUpdates,
             DevContext devContext,
             UpdateSignalsApiCalledStats.Builder jsonProcessingStatsBuilder,
             UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
@@ -122,6 +122,7 @@ public class UpdateProcessingOrchestrator {
              * endpoint.
              */
             UpdateOutput combinedUpdates;
+            JSONObject json = signalUpdates.getUpdateJson();
             if (jsonProcessingStatsBuilder == null) {
                 combinedUpdates =
                         runProcessors(json, currentSignalsMap, jsonProcessingStatsBuilder);

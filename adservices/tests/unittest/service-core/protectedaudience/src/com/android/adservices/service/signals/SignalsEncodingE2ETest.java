@@ -267,7 +267,10 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                 .createDevContext();
 
         mUpdatesDownloader =
-                new UpdatesDownloader(mLightweightExecutorService, mAdServicesHttpsClient);
+                new UpdatesDownloader(
+                        mLightweightExecutorService,
+                        mAdServicesHttpsClient,
+                        mFakeFlags.getProtectedSignalsUpdateSchemaVersion());
 
         mUpdateSignalsOrchestrator =
                 new UpdateSignalsOrchestrator(
