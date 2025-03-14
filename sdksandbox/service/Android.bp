@@ -67,7 +67,6 @@ java_sdk_library {
         "android.app.sdksandbox",
         "com.android.sdksandbox",
         "com.android.server.sdksandbox",
-        "com.android.tools.smali.dexlib2",
     ],
     jarjar_rules: "jarjar_rules.txt",
     libs: [
