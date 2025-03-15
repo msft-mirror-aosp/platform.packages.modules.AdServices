@@ -32,7 +32,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
@@ -184,7 +183,7 @@ public class PeriodicEncodingJobRunnerTest extends AdServicesExtendedMockitoTest
                                 new byte[] {0x01, 0x02, 0x03, 0x04, 0x05, 0x06},
                                 version));
 
-        Mockito.verifyZeroInteractions(mMockEncodedPayloadDao);
+        Mockito.verifyNoMoreInteractions(mMockEncodedPayloadDao);
     }
 
     @Test
@@ -311,7 +310,7 @@ public class PeriodicEncodingJobRunnerTest extends AdServicesExtendedMockitoTest
                 .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         verify(mMockEncoderLogicHandler).deleteEncoderForBuyer(BUYER);
         verifyNoMoreInteractions(mMockEncoderLogicHandler);
-        verifyZeroInteractions(mMockScriptEngine);
+        verifyNoMoreInteractions(mMockScriptEngine);
     }
 
     @Test
@@ -389,7 +388,7 @@ public class PeriodicEncodingJobRunnerTest extends AdServicesExtendedMockitoTest
 
         verify(mMockSignalStorageManager).getSignals(BUYER);
         verifyNoMoreInteractions(mMockSignalStorageManager);
-        verifyZeroInteractions(mMockScriptEngine);
+        verifyNoMoreInteractions(mMockScriptEngine);
     }
 
     @Test
@@ -458,7 +457,7 @@ public class PeriodicEncodingJobRunnerTest extends AdServicesExtendedMockitoTest
         verify(mMockEncodedPayloadDao).getEncodedPayload(BUYER);
         verifyNoMoreInteractions(
                 mMockSignalStorageManager, mMockProtectedSignalsDao, mMockEncodedPayloadDao);
-        verifyZeroInteractions(mMockEncoderLogicHandler, mMockScriptEngine);
+        verifyNoMoreInteractions(mMockEncoderLogicHandler, mMockScriptEngine);
 
         verify(mMockEncodingJobRunStatsLogger).addOneSignalEncodingSkips();
     }

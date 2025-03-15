@@ -31,6 +31,7 @@ import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGIN
 import static com.android.adservices.service.Flags.DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB;
@@ -45,6 +46,7 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
+import static com.android.adservices.service.Flags.ENABLE_GET_BINDING_UID_IMPORTANCE;
 import static com.android.adservices.service.Flags.ENABLE_PAS_COMPONENT_ADS;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE;
@@ -74,15 +76,19 @@ import static com.android.adservices.service.Flags.MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS;
+import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
+import static com.android.adservices.service.Flags.MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS;
+import static com.android.adservices.service.Flags.MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
@@ -101,6 +107,7 @@ import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES;
+import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
 import static com.android.adservices.shared.testing.AndroidSdk.SC;
@@ -714,6 +721,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFlag("DEFAULT_ENABLE_RB_ATRACE", /* defaultValue */ false, Flags::getEnableRbAtrace);
     }
 
+    @Test
+    public void testGetProtectedSignalsEnablePrioritizedEviction() {
+        testFeatureFlag(
+                "PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION",
+                Flags::getProtectedSignalsEnablePrioritizedEviction);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //
@@ -981,6 +995,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementAttributionJobTriggeringMaxDelayMs() {
+        testFlag(
+                "getMeasurementAttributionJobTriggeringMaxDelayMs",
+                MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS,
+                Flags::getMeasurementAttributionJobTriggeringMaxDelayMs);
+    }
+
+    @Test
     public void testGetMeasurementEnableFakeReportTriggerTime() {
         testFeatureFlag(
                 "MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME",
@@ -1160,6 +1182,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementCountUniqueAppSignatureAllowlist() {
+        testFlag(
+                "getMeasurementCountUniqueAppSignatureAllowlist",
+                DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST,
+                Flags::getMeasurementCountUniqueAppSignatureAllowlist);
+    }
+
+    @Test
     public void testGetFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
         testFeatureFlag(
                 "FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS",
@@ -1310,6 +1340,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes);
     }
 
+    @Test
+    public void testGetProtectedSignalsUpdateSchemaVersion() {
+        testFlag(
+                "getProtectedSignalsUpdateSchemaVersion",
+                PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION,
+                Flags::getProtectedSignalsUpdateSchemaVersion);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Internal helpers and tests - do not add new tests for flags following this point.          //
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1397,6 +1435,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetEnableGetBindingUidImportance() {
+        testFlag(
+                "getEnableGetBindingUidImportance",
+                ENABLE_GET_BINDING_UID_IMPORTANCE,
+                Flags::getEnableGetBindingUidImportance);
+    }
+
+    @Test
     public void testGetEnableCustomAudienceComponentAds() {
         testFlag(
                 "getEnableCustomAudienceComponentAds",
@@ -1466,6 +1512,30 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getAdServicesCelSamplingConfig",
                 DEFAULT_AD_SERVICES_CEL_SAMPLING_CONFIG,
                 Flags::getAdServicesCelSamplingConfig);
+    }
+
+    @Test
+    public void testGetMeasurementEnableDebugJoinKeysOpenAccess() {
+        testFlag(
+                "getMeasurementEnableDebugJoinKeysOpenAccess",
+                MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS,
+                Flags::getMeasurementEnableDebugJoinKeysOpenAccess);
+    }
+
+    @Test
+    public void testGetMeasurementDebugJoinKeysNoncompliantAdtechs() {
+        testFlag(
+                "getMeasurementDebugJoinKeysNoncompliantAdtechs",
+                MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS,
+                Flags::getMeasurementDebugJoinKeysNoncompliantAdtechs);
+    }
+
+    @Test
+    public void testGetMeasurementDebugJoinKeysSampleRate() {
+        testFloatFlag(
+                "getMeasurementDebugJoinKeysSampleRate",
+                MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE,
+                Flags::getMeasurementDebugJoinKeysSampleRate);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {

@@ -17,8 +17,6 @@
 package com.android.adservices.service.adselection.encryption;
 
 import static android.adservices.adselection.AuctionEncryptionKeyFixture.ALLOWLIST;
-import static android.adservices.adselection.AuctionEncryptionKeyFixture.COORDINATOR_URL_AUCTION;
-import static android.adservices.adselection.AuctionEncryptionKeyFixture.COORDINATOR_URL_AUCTION_2;
 import static android.adservices.adselection.AuctionEncryptionKeyFixture.COORDINATOR_URL_AUCTION_2_URI;
 import static android.adservices.adselection.AuctionEncryptionKeyFixture.COORDINATOR_URL_AUCTION_URI;
 
@@ -89,9 +87,11 @@ public class ServerAuctionCoordinatorUriStrategyFactoryTest extends AdServicesMo
 
     @Test
     public void getListOfUrisFromCommaSeparatedAllowlist() {
-        List<Uri> result = mServerAuctionCoordinatorUriStrategyFactory
-                .getListOfUrisFromCommaSeparatedAllowlist();
+        List<Uri> result =
+                mServerAuctionCoordinatorUriStrategyFactory
+                        .getListOfUrisFromCommaSeparatedAllowlist();
 
-        assertThat(result).containsExactly(COORDINATOR_URL_AUCTION_URI, COORDINATOR_URL_AUCTION_2_URI);
+        assertThat(result)
+                .containsExactly(COORDINATOR_URL_AUCTION_URI, COORDINATOR_URL_AUCTION_2_URI);
     }
 }

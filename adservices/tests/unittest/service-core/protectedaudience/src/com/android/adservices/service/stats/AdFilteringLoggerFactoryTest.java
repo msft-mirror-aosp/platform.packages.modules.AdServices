@@ -23,7 +23,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import com.android.adservices.service.Flags;
 
@@ -177,6 +177,6 @@ public class AdFilteringLoggerFactoryTest {
                 .isInstanceOf(AdFilteringLoggerNoOp.class);
         assertThat(loggerFactory.getCustomAudienceFilteringLogger())
                 .isInstanceOf(AdFilteringLoggerNoOp.class);
-        verifyZeroInteractions(mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
     }
 }

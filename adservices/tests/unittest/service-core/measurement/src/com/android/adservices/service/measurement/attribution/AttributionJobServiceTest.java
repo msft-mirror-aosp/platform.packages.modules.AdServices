@@ -84,6 +84,7 @@ public final class AttributionJobServiceTest
         extends MeasurementJobServiceTestCase<AttributionJobService> {
     private static final long WAIT_IN_MILLIS = 1_000L;
     private static final long JOB_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+    private static final long MAX_JOB_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
     private static final int MEASUREMENT_ATTRIBUTION_JOB_ID =
             MEASUREMENT_ATTRIBUTION_JOB.getJobId();
 
@@ -95,6 +96,8 @@ public final class AttributionJobServiceTest
     @Before
     public void setUp() {
         when(mMockFlags.getMeasurementAttributionJobTriggeringDelayMs()).thenReturn(JOB_DELAY_MS);
+        when(mMockFlags.getMeasurementAttributionJobTriggeringMaxDelayMs())
+                .thenReturn(MAX_JOB_DELAY_MS);
     }
 
     @Test
@@ -428,6 +431,7 @@ public final class AttributionJobServiceTest
                                                     JobInfo.TriggerContentUri
                                                             .FLAG_NOTIFY_FOR_DESCENDANTS))
                                     .setTriggerContentUpdateDelay(JOB_DELAY_MS)
+                                    .setTriggerContentMaxDelay(MAX_JOB_DELAY_MS)
                                     .setPersisted(false) // Can't call addTriggerContentUri() on a
                                     // persisted job
                                     .build();
@@ -447,7 +451,7 @@ public final class AttributionJobServiceTest
     }
 
     @Test
-    public void scheduleIfNeeded_diffJobInfoDontForceSchedule_doesSchedule() throws Exception {
+    public void scheduleIfNeeded_diffMinDelayDontForceSchedule_doesSchedule() throws Exception {
         runWithMocks(
                 () -> {
                     // Setup
@@ -469,8 +473,49 @@ public final class AttributionJobServiceTest
                                                             .FLAG_NOTIFY_FOR_DESCENDANTS))
                                     // Difference
                                     .setTriggerContentUpdateDelay(JOB_DELAY_MS + 1)
+                                    .setTriggerContentMaxDelay(MAX_JOB_DELAY_MS)
                                     .setPersisted(false) // Can't call addTriggerContentUri() on a
                                     // persisted job
+                                    .build();
+                    doReturn(mockJobInfo)
+                            .when(mMockJobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
+
+                    // Execute
+                    AttributionJobService.scheduleIfNeeded(mockContext, /* forceSchedule= */ false);
+
+                    // Validate
+                    ExtendedMockito.verify(() -> AttributionJobService.schedule(any(), any()));
+                    verify(mMockJobScheduler, times(1))
+                            .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
+                });
+    }
+
+    @Test
+    public void scheduleIfNeeded_diffMaxDelayDontForceSchedule_doesSchedule() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+
+                    final Context mockContext = spy(ApplicationProvider.getApplicationContext());
+                    doReturn(mMockJobScheduler)
+                            .when(mockContext)
+                            .getSystemService(JobScheduler.class);
+                    final JobInfo mockJobInfo =
+                            new JobInfo.Builder(
+                                            MEASUREMENT_ATTRIBUTION_JOB_ID,
+                                            new ComponentName(
+                                                    mockContext, AttributionJobService.class))
+                                    .addTriggerContentUri(
+                                            new JobInfo.TriggerContentUri(
+                                                    TriggerContentProvider.getTriggerUri(),
+                                                    JobInfo.TriggerContentUri
+                                                            .FLAG_NOTIFY_FOR_DESCENDANTS))
+                                    .setTriggerContentUpdateDelay(JOB_DELAY_MS)
+                                    // Difference.
+                                    .setTriggerContentMaxDelay(MAX_JOB_DELAY_MS + 100)
+                                    .setPersisted(false)
                                     .build();
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)

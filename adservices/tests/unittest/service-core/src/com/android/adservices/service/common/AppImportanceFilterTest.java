@@ -33,7 +33,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdServicesStatusUtils;
@@ -98,7 +98,7 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
         mAppImportanceFilter.assertCallerIsInForeground(APP_PACKAGE_NAME, API_NAME, SDK_NAME);
 
         // Should short-circuit without invoking anything
-        verifyZeroInteractions(mActivityManager, mAdServiceLogger, mPackageManager);
+        verifyNoMoreInteractions(mActivityManager, mAdServiceLogger, mPackageManager);
     }
 
     @Test
@@ -110,7 +110,7 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
         // No exception is thrown
         mAppImportanceFilter.assertCallerIsInForeground(APP_PACKAGE_NAME, API_NAME, SDK_NAME);
 
-        verifyZeroInteractions(mAdServiceLogger, mPackageManager);
+        verifyNoMoreInteractions(mAdServiceLogger, mPackageManager);
     }
 
     @Test
@@ -122,7 +122,7 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
         // No exception is thrown
         mAppImportanceFilter.assertCallerIsInForeground(APP_PACKAGE_NAME, API_NAME, SDK_NAME);
 
-        verifyZeroInteractions(mAdServiceLogger, mPackageManager);
+        verifyNoMoreInteractions(mAdServiceLogger, mPackageManager);
     }
 
     @Test
@@ -138,7 +138,7 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
                         mAppImportanceFilter.assertCallerIsInForeground(
                                 APP_PACKAGE_NAME, API_NAME, SDK_NAME));
 
-        verifyZeroInteractions(mPackageManager);
+        verifyNoMoreInteractions(mPackageManager);
     }
 
     @Test
@@ -162,7 +162,7 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
                 .hasResultCode(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER)
                 .hasSdkPackageName(SDK_NAME)
                 .hasAppPackageName(APP_PACKAGE_NAME);
-        verifyZeroInteractions(mPackageManager);
+        verifyNoMoreInteractions(mPackageManager);
         expect.that(mApiCallStatsArgumentCaptor.getValue().getApiClass()).isEqualTo(0);
     }
 
@@ -189,7 +189,7 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
         mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME);
 
         // Should short-circuit without invoking anything
-        verifyZeroInteractions(mActivityManager, mAdServiceLogger, mPackageManager);
+        verifyNoMoreInteractions(mActivityManager, mAdServiceLogger, mPackageManager);
     }
 
     @Test
@@ -200,7 +200,7 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
         // No exception is thrown
         mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME);
 
-        verifyZeroInteractions(mAdServiceLogger);
+        verifyNoMoreInteractions(mAdServiceLogger);
     }
 
     @Test
@@ -211,7 +211,7 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
         // No exception is thrown
         mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME);
 
-        verifyZeroInteractions(mAdServiceLogger);
+        verifyNoMoreInteractions(mAdServiceLogger);
     }
 
     @Test

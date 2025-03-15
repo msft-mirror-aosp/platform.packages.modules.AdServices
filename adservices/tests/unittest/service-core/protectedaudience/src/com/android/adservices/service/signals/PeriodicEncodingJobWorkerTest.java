@@ -27,7 +27,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
@@ -341,7 +341,7 @@ public class PeriodicEncodingJobWorkerTest extends AdServicesExtendedMockitoTest
     public void testUpdatesEncodersAllUpdatedEncodersDoNotDownloadAgain() {
         when(mEncoderLogicMetadataDao.getBuyersWithEncodersBeforeTime(any()))
                 .thenReturn(Collections.emptyList());
-        verifyZeroInteractions(mEncoderLogicHandler);
+        verifyNoMoreInteractions(mEncoderLogicHandler);
     }
 
     @Test

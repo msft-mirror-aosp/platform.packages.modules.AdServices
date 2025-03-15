@@ -35,6 +35,8 @@ import com.google.common.util.concurrent.FluentFuture;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -42,47 +44,69 @@ import java.util.concurrent.Executor;
 public class UpdatesDownloader {
 
     public static final String PACKAGE_NAME_HEADER = "X-PROTECTED-SIGNALS-PACKAGE";
+    public static final String UPDATE_SCHEMA_VERSION_HEADER =
+            "X-PROTECTED-SIGNALS-UPDATE-SCHEMA-VERSION";
+    public static final int DEFAULT_UPDATE_SCHEMA_VERSION = 0;
+    public static final int MINIMUM_UPDATE_SCHEMA_VERSION = 0;
     public static final String CONVERSION_ERROR_MSG = "Error converting response body to JSON";
+    public static final String INVALID_VERSION_ERROR_MSG = "Invalid update schema version";
+    public static final String UNSUPPORTED_VERSION_ERROR_MSG = "Unsupported update schema version";
+    private static final String SUPPORTED_VERSIONS_ERROR_MSG = "Supported versions";
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final Executor mLightweightExecutor;
     @NonNull private final AdServicesHttpsClient mHttpClient;
 
+    private final int mUpdateSchemaVersion;
+
     public UpdatesDownloader(
-            @NonNull Executor lightweightExecutor, @NonNull AdServicesHttpsClient httpClient) {
+            @NonNull Executor lightweightExecutor,
+            @NonNull AdServicesHttpsClient httpClient,
+            int updateSchemaVersion) {
         Objects.requireNonNull(lightweightExecutor);
         Objects.requireNonNull(httpClient);
         mLightweightExecutor = lightweightExecutor;
         mHttpClient = httpClient;
+        mUpdateSchemaVersion = updateSchemaVersion;
     }
 
     /**
-     * Gets the JSON from the remote server.
+     * Gets the signal updates from the remote server.
      *
-     * @param validatedUri Validated Uri to fetch JSON from.
+     * @param validatedUri Validated URI from which to fetch JSON.
      * @param packageName The package name of the calling app.
-     * @param devContext Development context for testing the network call
-     * @return A future containing the fetched JSON.
+     * @param devContext Development context for testing the network call.
+     * @return A future containing the fetched {@link SignalUpdates}.
      */
-    @NonNull
-    public FluentFuture<JSONObject> getUpdateJson(
+    public FluentFuture<SignalUpdates> getSignalUpdates(
             Uri validatedUri, String packageName, DevContext devContext) {
         sLogger.v("Fetching signals from " + validatedUri);
 
         ImmutableMap<String, String> requestProperties =
-                ImmutableMap.of(PACKAGE_NAME_HEADER, packageName);
-        AdServicesHttpClientRequest request =
+                ImmutableMap.of(
+                        PACKAGE_NAME_HEADER,
+                        packageName,
+                        UPDATE_SCHEMA_VERSION_HEADER,
+                        String.valueOf(mUpdateSchemaVersion));
+        AdServicesHttpClientRequest clientRequest =
                 AdServicesHttpClientRequest.builder()
                         .setRequestProperties(requestProperties)
                         .setUri(validatedUri)
                         .setDevContext(devContext)
                         .build();
-        FluentFuture<AdServicesHttpClientResponse> response =
-                FluentFuture.from(mHttpClient.fetchPayload(request));
-        return response.transform(this::responseToJson, mLightweightExecutor);
+        FluentFuture<AdServicesHttpClientResponse> clientResponse =
+                FluentFuture.from(mHttpClient.fetchPayload(clientRequest));
+        return clientResponse.transform(
+                response ->
+                        SignalUpdates.builder()
+                                .setUpdateJson(getUpdateJsonFromResponse(response))
+                                .setUpdateSchemaVersion(
+                                        getUpdateSchemaVersionFromResponse(response))
+                                .build(),
+                mLightweightExecutor);
     }
 
-    private JSONObject responseToJson(AdServicesHttpClientResponse response) {
+    private JSONObject getUpdateJsonFromResponse(AdServicesHttpClientResponse response) {
         try {
             return new JSONObject(response.getResponseBody());
         } catch (JSONException e) {
@@ -93,5 +117,46 @@ public class UpdatesDownloader {
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
             throw new IllegalArgumentException(CONVERSION_ERROR_MSG, e);
         }
+    }
+
+    private int getUpdateSchemaVersionFromResponse(AdServicesHttpClientResponse response) {
+        int version = DEFAULT_UPDATE_SCHEMA_VERSION;
+
+        if (response.getResponseHeaders() == null) {
+            return version;
+        }
+
+        List<String> responseHeader =
+                response.getResponseHeaders().get(UPDATE_SCHEMA_VERSION_HEADER);
+        if (responseHeader == null || responseHeader.isEmpty()) {
+            return version;
+        }
+
+        String versionString = responseHeader.get(0);
+        try {
+            version = Integer.parseInt(versionString);
+        } catch (NumberFormatException e) {
+            String errorMessage =
+                    String.format(
+                            Locale.ENGLISH, "%s: %s", INVALID_VERSION_ERROR_MSG, versionString);
+            sLogger.e(errorMessage);
+            throw new IllegalArgumentException(errorMessage, e);
+        }
+
+        if (version < MINIMUM_UPDATE_SCHEMA_VERSION || version > mUpdateSchemaVersion) {
+            String errorMessage =
+                    String.format(
+                            Locale.ENGLISH,
+                            "%s: %s. %s: [%d..%d]",
+                            UNSUPPORTED_VERSION_ERROR_MSG,
+                            versionString,
+                            SUPPORTED_VERSIONS_ERROR_MSG,
+                            MINIMUM_UPDATE_SCHEMA_VERSION,
+                            mUpdateSchemaVersion);
+            sLogger.e(errorMessage);
+            throw new IllegalArgumentException(errorMessage);
+        }
+
+        return version;
     }
 }

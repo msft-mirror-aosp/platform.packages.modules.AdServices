@@ -41,12 +41,12 @@ public class ServerAuctionProdCoordinatorUriStrategy
 
     @Override
     public Uri getAuctionEncryptionKeyFetchUri(Uri coordinatorOriginUri) {
-        for (Uri allowedUri : mAllowList) {
-            if (Objects.equals(coordinatorOriginUri.getHost(), allowedUri.getHost())) {
-                return allowedUri;
-            }
-        }
-
-        return null;
+        return mAllowList.stream()
+                .filter(
+                        allowedUri ->
+                                Objects.equals(
+                                        coordinatorOriginUri.getHost(), allowedUri.getHost()))
+                .findFirst()
+                .orElse(null);
     }
 }

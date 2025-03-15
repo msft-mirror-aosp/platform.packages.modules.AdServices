@@ -137,7 +137,7 @@ public final class EncryptionKeyJobServiceTest extends AdServicesJobServiceTestC
         Thread.sleep(WAIT_IN_MILLIS);
         verify(mSpyService).jobFinished(any(), eq(false));
         verify(mMockJobScheduler).cancel(ENCRYPTION_KEY_JOB_ID);
-        ExtendedMockito.verifyZeroInteractions(
+        ExtendedMockito.verifyNoMoreInteractions(
                 ExtendedMockito.staticMockMarker(FlagsFactory.class));
     }
 

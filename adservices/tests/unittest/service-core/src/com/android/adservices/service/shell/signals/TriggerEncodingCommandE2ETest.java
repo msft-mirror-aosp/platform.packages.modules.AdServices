@@ -249,7 +249,7 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                         new EncodingJobRunStatsLoggerImpl(
                                 logger,
                                 EncodingJobRunStats.builder(),
-                                /* FledgeEnableForcedEncodingAfterSignalsUpdate = */ false),
+                                /* FledgeEnableForcedEncodingAfterSignalsUpdate= */ false),
                         mEncoderLogicMetadataDao);
         mProtectedSignalsService =
                 new ProtectedSignalsServiceImpl(
@@ -257,7 +257,9 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                         new UpdateSignalsOrchestrator(
                                 AdServicesExecutors.getBackgroundExecutor(),
                                 new UpdatesDownloader(
-                                        AdServicesExecutors.getLightWeightExecutor(), httpClient),
+                                        AdServicesExecutors.getLightWeightExecutor(),
+                                        httpClient,
+                                        mFakeFlags.getProtectedSignalsUpdateSchemaVersion()),
                                 new UpdateProcessingOrchestrator(
                                         mProtectedSignalsDao,
                                         new UpdateProcessorSelector(),

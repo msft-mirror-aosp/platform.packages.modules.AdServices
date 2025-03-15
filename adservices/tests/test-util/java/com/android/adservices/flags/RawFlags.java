@@ -482,13 +482,6 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
-    public final long getMeasurementAttributionJobTriggerDelayMs() {
-        return mBackend.getFlag(
-                KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS,
-                DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS);
-    }
-
-    @Override
     public final int getMeasurementMaxAttributionsPerInvocation() {
         return mBackend.getFlag(
                 KEY_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION,
@@ -898,6 +891,20 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
         return mBackend.getFlag(
                 KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES,
                 PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES);
+    }
+
+    @Override
+    public final boolean getProtectedSignalsEnablePrioritizedEviction() {
+        return mBackend.getFlag(
+                KEY_PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION,
+                PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION);
+    }
+
+    @Override
+    public final int getProtectedSignalsUpdateSchemaVersion() {
+        return mBackend.getFlag(
+                KEY_PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION,
+                PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION);
     }
 
     @Override
@@ -2880,6 +2887,13 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
+    public final long getMeasurementAttributionJobTriggeringMaxDelayMs() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS,
+                MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS);
+    }
+
+    @Override
     public final int getMeasurementAsyncRegistrationQueueJobRequiredNetworkType() {
         return mBackend.getFlag(
                 KEY_MEASUREMENT_ASYNC_REGISTRATION_QUEUE_JOB_REQUIRED_NETWORK_TYPE,
@@ -3658,5 +3672,39 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
         return mBackend.getFlag(
                 KEY_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST,
                 DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST);
+    }
+
+    @Override
+    public String getMeasurementCountUniqueAppSignatureAllowlist() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST,
+                DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST);
+    }
+
+    @Override
+    public boolean getMeasurementEnableDebugJoinKeysOpenAccess() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS,
+                MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS);
+    }
+
+    @Override
+    public String getMeasurementDebugJoinKeysNoncompliantAdtechs() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS,
+                MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS);
+    }
+
+    @Override
+    public float getMeasurementDebugJoinKeysSampleRate() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE,
+                MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE);
+    }
+
+    @Override
+    public boolean getEnableGetBindingUidImportance() {
+        return mBackend.getFlag(
+                KEY_ENABLE_GET_BINDING_UID_IMPORTANCE, ENABLE_GET_BINDING_UID_IMPORTANCE);
     }
 }

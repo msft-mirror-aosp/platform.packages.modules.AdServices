@@ -25,7 +25,7 @@ import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UN
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_CA_WINNER;
 
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.CommonFixture;
@@ -349,7 +349,7 @@ public final class ComponentAdsStrategyTest extends AdServicesMockitoTestCase {
 
         expect.that(result.get(0).getComponentAdRenderIds()).isEmpty();
         expect.that(result.get(1).getComponentAdRenderIds()).isEmpty();
-        verifyZeroInteractions(mCustomAudienceDaoMock);
+        verifyNoMoreInteractions(mCustomAudienceDaoMock);
     }
 
     @Test
@@ -372,7 +372,7 @@ public final class ComponentAdsStrategyTest extends AdServicesMockitoTestCase {
                         VALID_BUYER_1, unFilteredComponentAds);
 
         expect.that(componentAds).containsExactlyElementsIn(unFilteredComponentAds).inOrder();
-        verifyZeroInteractions(mComponentAdsListValidatorMock);
+        verifyNoMoreInteractions(mComponentAdsListValidatorMock);
     }
 
     @Test
@@ -422,6 +422,6 @@ public final class ComponentAdsStrategyTest extends AdServicesMockitoTestCase {
                         AUCTION_RESULT_WITH_COMPONENT_ADS, mCustomAudienceDaoMock);
 
         expect.that(result).isEmpty();
-        verifyZeroInteractions(mCustomAudienceDaoMock);
+        verifyNoMoreInteractions(mCustomAudienceDaoMock);
     }
 }
