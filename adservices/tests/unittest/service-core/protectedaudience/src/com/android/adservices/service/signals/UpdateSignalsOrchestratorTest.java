@@ -30,29 +30,27 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
-@RunWith(MockitoJUnitRunner.class)
-public class UpdateSignalsOrchestratorTest {
+@RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
+public class UpdateSignalsOrchestratorTest extends AdServicesMockitoTestCase {
 
     private static final long TEST_TIMEOUT_SECONDS = 10L;
     private static final Uri URI = Uri.parse("https://example.com");
@@ -63,9 +61,6 @@ public class UpdateSignalsOrchestratorTest {
     @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
 
     private UpdateSignalsOrchestrator mUpdateSignalsOrchestrator;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
@@ -80,10 +75,14 @@ public class UpdateSignalsOrchestratorTest {
 
     @Test
     public void testOrchestrateUpdate() throws Exception {
-        SettableFuture future = SettableFuture.create();
-        future.set(new JSONObject(JSON));
-        FluentFuture<JSONObject> returnValue = FluentFuture.from(future);
-        when(mUpdatesDownloader.getUpdateJson(URI, TEST_PACKAGE_NAME_1, DEV_CONTEXT))
+        SettableFuture<SignalUpdates> future = SettableFuture.create();
+        future.set(
+                SignalUpdates.builder()
+                        .setUpdateJson(new JSONObject(JSON))
+                        .setUpdateSchemaVersion(mFakeFlags.getProtectedSignalsUpdateSchemaVersion())
+                        .build());
+        FluentFuture<SignalUpdates> returnValue = FluentFuture.from(future);
+        when(mUpdatesDownloader.getSignalUpdates(URI, TEST_PACKAGE_NAME_1, DEV_CONTEXT))
                 .thenReturn(returnValue);
 
         mUpdateSignalsOrchestrator
@@ -96,13 +95,14 @@ public class UpdateSignalsOrchestratorTest {
                         mUpdateSignalsProcessReportedLoggerMock)
                 .get(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        verify(mUpdatesDownloader).getUpdateJson(eq(URI), eq(TEST_PACKAGE_NAME_1), eq(DEV_CONTEXT));
+        verify(mUpdatesDownloader)
+                .getSignalUpdates(eq(URI), eq(TEST_PACKAGE_NAME_1), eq(DEV_CONTEXT));
         verify(mUpdateProcessingOrchestrator)
                 .processUpdates(
                         any(AdTechIdentifier.class),
                         anyString(),
                         any(Instant.class),
-                        any(JSONObject.class),
+                        any(SignalUpdates.class),
                         any(DevContext.class),
                         any(UpdateSignalsApiCalledStats.Builder.class),
                         any(UpdateSignalsProcessReportedLogger.class));

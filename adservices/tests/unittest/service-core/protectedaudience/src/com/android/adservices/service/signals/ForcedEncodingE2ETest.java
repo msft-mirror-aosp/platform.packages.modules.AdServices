@@ -198,6 +198,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
     private UpdateSignalsOrchestrator mUpdateSignalsOrchestrator;
 
     private ProtectedSignalsServiceImpl mService;
+
     @Before
     public void setup() {
         mLegacyFakeFlags = new ForcedEncodingE2ETestFlags();
@@ -321,7 +322,11 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                 .when(mDevContextFilterMock)
                 .createDevContext();
 
-        mUpdatesDownloader = new UpdatesDownloader(mLightweightExecutor, mAdServicesHttpsClient);
+        mUpdatesDownloader =
+                new UpdatesDownloader(
+                        mLightweightExecutor,
+                        mAdServicesHttpsClient,
+                        mFakeFlags.getProtectedSignalsUpdateSchemaVersion());
 
         mAdtechUriValidator = new AdTechUriValidator("", "", "", "");
 

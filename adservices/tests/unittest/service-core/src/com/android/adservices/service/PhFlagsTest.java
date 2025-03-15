@@ -142,6 +142,7 @@ import static com.android.adservices.service.Flags.ENABLE_CUSTOM_AUDIENCE_COMPON
 import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_8;
 import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_9;
 import static com.android.adservices.service.Flags.ENABLE_ENROLLMENT_TEST_SEED;
+import static com.android.adservices.service.Flags.ENABLE_GET_BINDING_UID_IMPORTANCE;
 import static com.android.adservices.service.Flags.ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.Flags.ENABLE_MDD_ENCRYPTION_KEYS;
 import static com.android.adservices.service.Flags.ENABLE_PAS_COMPONENT_ADS;
@@ -662,6 +663,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CUSTOM_AU
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_8;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_9;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_GET_BINDING_UID_IMPORTANCE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOG_SAMPLING_INFRA;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS;
@@ -6347,6 +6349,14 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE,
                 ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE,
                 Flags::getEnforceForegroundStatusForScheduleCustomAudience);
+    }
+
+    @Test
+    public void testGetEnableGetBindingUidImportance() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_ENABLE_GET_BINDING_UID_IMPORTANCE,
+                ENABLE_GET_BINDING_UID_IMPORTANCE,
+                Flags::getEnableGetBindingUidImportance);
     }
 
     @Test

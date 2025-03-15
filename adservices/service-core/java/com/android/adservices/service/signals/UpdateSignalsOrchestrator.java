@@ -27,8 +27,6 @@ import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogg
 
 import com.google.common.util.concurrent.FluentFuture;
 
-import org.json.JSONObject;
-
 import java.time.Clock;
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -76,15 +74,15 @@ public class UpdateSignalsOrchestrator {
             UpdateSignalsApiCalledStats.Builder jsonProcessingStatsBuilder,
             UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
         mAdTechUriValidator.validate(uri);
-        FluentFuture<JSONObject> jsonFuture =
-                mUpdatesDownloader.getUpdateJson(uri, packageName, devContext);
-        return jsonFuture.transform(
-                x -> {
+        FluentFuture<SignalUpdates> updatesFuture =
+                mUpdatesDownloader.getSignalUpdates(uri, packageName, devContext);
+        return updatesFuture.transform(
+                updates -> {
                     mUpdateProcessingOrchestrator.processUpdates(
                             adtech,
                             packageName,
                             mClock.instant(),
-                            x,
+                            updates,
                             devContext,
                             jsonProcessingStatsBuilder,
                             updateSignalsProcessReportedLogger);
