@@ -23,6 +23,7 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.measurement.AggregatableNamedBudgets.BudgetAndContribution;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -80,14 +81,25 @@ public interface IMeasurementDao {
     List<String> getSourceAttributionScopes(@NonNull String sourceId) throws DatastoreException;
 
     /**
+     * Queries and returns the {@link Source}'s aggregatable named budgets.
+     *
+     * @param sourceId ID of the requested Source.
+     * @param matchedBudgetName name of the budget to retrieve.
+     * @return the budget and contribution of Source's matchedBudgetName named budget.
+     */
+    BudgetAndContribution getSourceAggregatableNamedBudgetAndContribution(
+            @NonNull String sourceId, @NonNull String matchedBudgetName) throws DatastoreException;
+
+    /**
      * Queries and returns the {@link Source}'s attribution scopes for a given source registration
      * and reporting origin.
      *
      * @param registrationId ID of the registration.
      * @param registrationOrigin source registration origin.
-     * @return a list of attribution scopes.
+     * @return an optional list of attribution scopes, empty if no source is found for the provided
+     *     registration ID and reporting origin
      */
-    Set<String> getNavigationAttributionScopesForRegistration(
+    Optional<Set<String>> getAttributionScopesForRegistration(
             @NonNull String registrationId, @NonNull String registrationOrigin)
             throws DatastoreException;
 
@@ -335,6 +347,20 @@ public interface IMeasurementDao {
      * @param source the {@link Source} object.
      */
     void updateSourceAggregateDebugContributions(@NonNull Source source) throws DatastoreException;
+
+    /**
+     * Updates the value of aggregatable named budgets for the corresponding {@link Source}.
+     *
+     * @param sourceId the id of the {@link Source} object.
+     * @param budgetName the name of the budget to update
+     * @param budgetAndContribution the object containing the information to update for the named
+     *     budget
+     */
+    void updateSourceAggregatableNamedBudgetAndContribution(
+            @NonNull String sourceId,
+            @NonNull String budgetName,
+            @NonNull BudgetAndContribution budgetAndContribution)
+            throws DatastoreException;
 
     /**
      * Returns list of all the reports associated with the {@link Source}.
@@ -920,5 +946,15 @@ public interface IMeasurementDao {
      */
     int sumAggregateDebugReportBudgetXOriginXPublisherXWindow(
             Uri publisher, @EventSurfaceType int publisherType, Uri origin, long windowStartTime)
+            throws DatastoreException;
+
+    /**
+     * Returns if there exists any sources with the same input destination.
+     *
+     * @param attributionDestinations destination to match
+     * @param eventTime to filter out expired sources
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    boolean existsActiveSourcesWithDestination(Uri attributionDestinations, long eventTime)
             throws DatastoreException;
 }

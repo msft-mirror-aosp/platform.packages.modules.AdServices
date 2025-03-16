@@ -42,6 +42,7 @@
     <string name="view">View</string>
     <string name="view_type">View Type</string>
     <string name="video_url">Video URL</string>
+    <string name="image_url">Image URL</string>
     <string name="video_app_label">This is an app video (NOT FROM SANDBOX)</string>
     <string name="behaviour">Behaviour</string>
     <string name="on_click">On Click</string>
@@ -51,4 +52,5 @@
     <string name="size">Size</string>
     <string name="ad_size">Ad Size</string>
     <string name="feature_flags">Feature Flags</string>
+    <string name="default_image_url">https://services.google.com/fh/files/misc/lilly_luzern.jpg</string>
 </resources>

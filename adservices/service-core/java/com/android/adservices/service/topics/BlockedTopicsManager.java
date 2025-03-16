@@ -57,6 +57,8 @@ import java.util.stream.Collectors;
 
 /** Class to manage blocked {@link Topic}s. */
 @RequiresApi(Build.VERSION_CODES.S)
+// TODO(b/311183933): Remove passed in Context from static method.
+@SuppressWarnings("AvoidStaticContext")
 public class BlockedTopicsManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static BlockedTopicsManager sSingleton;
@@ -381,8 +383,7 @@ public class BlockedTopicsManager {
         Objects.requireNonNull(context);
         Objects.requireNonNull(sharedPreferenceKey);
 
-        SharedPreferences sharedPreferences =
-                context.getSharedPreferences(SHARED_PREFS_BLOCKED_TOPICS, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getPrefs(context);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.remove(sharedPreferenceKey);
 
@@ -409,8 +410,7 @@ public class BlockedTopicsManager {
         Objects.requireNonNull(adServicesManager);
 
         // Exit if migration has happened.
-        SharedPreferences sharedPreferences =
-                context.getSharedPreferences(SHARED_PREFS_BLOCKED_TOPICS, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getPrefs(context);
         if (sharedPreferences.getBoolean(SHARED_PREFS_KEY_HAS_MIGRATED, /* defValue */ false)) {
             sLogger.v(
                     "Blocked topics migration has happened to user %d, skip...",
@@ -448,8 +448,7 @@ public class BlockedTopicsManager {
     @VisibleForTesting
     static void mayClearPpApiBlockedTopics(@NonNull Context context, @NonNull TopicsDao topicsDao) {
         // Exit if PPAPI blocked topics has cleared.
-        SharedPreferences sharedPreferences =
-                context.getSharedPreferences(SHARED_PREFS_BLOCKED_TOPICS, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getPrefs(context);
         if (sharedPreferences.getBoolean(
                 SHARED_PREFS_KEY_PPAPI_HAS_CLEARED, /* defValue */ false)) {
             return;
@@ -479,5 +478,10 @@ public class BlockedTopicsManager {
                 topicParcel.getTopicId(),
                 topicParcel.getTaxonomyVersion(),
                 topicParcel.getModelVersion());
+    }
+
+    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
+    private static SharedPreferences getPrefs(Context context) {
+        return context.getSharedPreferences(SHARED_PREFS_BLOCKED_TOPICS, Context.MODE_PRIVATE);
     }
 }

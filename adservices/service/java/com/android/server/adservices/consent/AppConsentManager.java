@@ -16,13 +16,12 @@
 
 package com.android.server.adservices.consent;
 
-import android.annotation.NonNull;
-
 import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 import com.android.server.adservices.errorlogging.AdServicesErrorLoggerImpl;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -59,13 +58,11 @@ public class AppConsentManager {
 
     /** Constructs the {@link AppConsentManager}. */
     @VisibleForTesting
-    public AppConsentManager(@NonNull AtomicFileDatastore datastore) {
-        Objects.requireNonNull(datastore);
-
-        mDatastore = datastore;
+    public AppConsentManager(AtomicFileDatastore datastore) {
+        mDatastore = Objects.requireNonNull(datastore, "datastore cannot be null");
     }
 
-    /** @return the singleton instance of the {@link AppConsentManager} */
+    /** Returns the singleton instance of the {@link AppConsentManager} */
     public static AppConsentManager createAppConsentManager(String baseDir, int userIdentifier)
             throws IOException {
         Objects.requireNonNull(baseDir, BASE_DIR_MUST_BE_PROVIDED_ERROR_MESSAGE);
@@ -79,8 +76,7 @@ public class AppConsentManager {
 
         AtomicFileDatastore datastore =
                 new AtomicFileDatastore(
-                        consentDataStoreDir,
-                        DATASTORE_NAME,
+                        new File(consentDataStoreDir, DATASTORE_NAME),
                         DATASTORE_VERSION,
                         VERSION_KEY,
                         AdServicesErrorLoggerImpl.getInstance());
@@ -89,9 +85,8 @@ public class AppConsentManager {
         return new AppConsentManager(datastore);
     }
 
-    /** @return a set of all known apps in the database that have not had user consent revoked */
-    @NonNull
-    public List<String> getKnownAppsWithConsent(@NonNull List<String> installedPackages) {
+    /** Returns a set of all known apps in the database that have not had user consent revoked */
+    public List<String> getKnownAppsWithConsent(List<String> installedPackages) {
         Objects.requireNonNull(installedPackages);
 
         Set<String> apps = new HashSet<>();
@@ -107,11 +102,11 @@ public class AppConsentManager {
     }
 
     /**
-     * @return a set of all known apps in the database that have had user consent revoked
+     * Returns a set of all known apps in the database that have had user consent revoked
+     *
      * @throws IOException if the operation fails
      */
-    @NonNull
-    public List<String> getAppsWithRevokedConsent(@NonNull List<String> installedPackages)
+    public List<String> getAppsWithRevokedConsent(List<String> installedPackages)
             throws IOException {
         Objects.requireNonNull(installedPackages);
 
@@ -134,8 +129,7 @@ public class AppConsentManager {
      *     application
      * @throws IOException if the operation fails
      */
-    public void setConsentForApp(
-            @NonNull String packageName, int packageUid, boolean isConsentRevoked)
+    public void setConsentForApp(String packageName, int packageUid, boolean isConsentRevoked)
             throws IllegalArgumentException, IOException {
         mDatastore.putBoolean(toDatastoreKey(packageName, packageUid), isConsentRevoked);
     }
@@ -152,7 +146,7 @@ public class AppConsentManager {
      * @throws IOException if the operation fails
      */
     public boolean setConsentForAppIfNew(
-            @NonNull String packageName, int packageUid, boolean isConsentRevoked)
+            String packageName, int packageUid, boolean isConsentRevoked)
             throws IllegalArgumentException, IOException {
         return mDatastore.putBooleanIfNew(
                 toDatastoreKey(packageName, packageUid), isConsentRevoked);
@@ -169,7 +163,7 @@ public class AppConsentManager {
      *     application
      * @throws IOException if the operation fails
      */
-    public boolean isConsentRevokedForApp(@NonNull String packageName, int packageUid)
+    public boolean isConsentRevokedForApp(String packageName, int packageUid)
             throws IllegalArgumentException, IOException {
         return Boolean.TRUE.equals(mDatastore.getBoolean(toDatastoreKey(packageName, packageUid)));
     }
@@ -199,7 +193,7 @@ public class AppConsentManager {
      * @throws IllegalArgumentException if the package name or package UID is invalid
      * @throws IOException if the operation fails
      */
-    public void clearConsentForUninstalledApp(@NonNull String packageName, int packageUid)
+    public void clearConsentForUninstalledApp(String packageName, int packageUid)
             throws IllegalArgumentException, IOException {
         // Do not check whether the application has been uninstalled; in an edge case where the app
         // may have been reinstalled, data that should have been cleared might then be persisted
@@ -214,12 +208,10 @@ public class AppConsentManager {
      * @throws IllegalArgumentException if the package UID is not valid
      */
     @VisibleForTesting
-    @NonNull
-    String toDatastoreKey(@NonNull String packageName, int packageUid)
-            throws IllegalArgumentException {
+    String toDatastoreKey(String packageName, int packageUid) throws IllegalArgumentException {
         Objects.requireNonNull(packageName, "Package name must be provided");
-        Preconditions.checkArgument(!packageName.isEmpty(), "Invalid package name");
-        Preconditions.checkArgument(packageUid > 0, "Invalid package UID");
+        Preconditions.checkArgument(!packageName.isEmpty(), "Package name cannot be empty");
+        Preconditions.checkArgument(packageUid > 0, "Invalid package UID (%d)", packageUid);
         return packageName.concat(DATASTORE_KEY_SEPARATOR).concat(Integer.toString(packageUid));
     }
 
@@ -232,12 +224,11 @@ public class AppConsentManager {
      * @throws IllegalArgumentException if the given key does not match the expected schema
      */
     @VisibleForTesting
-    @NonNull
-    String datastoreKeyToPackageName(@NonNull String datastoreKey) throws IllegalArgumentException {
-        Objects.requireNonNull(datastoreKey);
+    String datastoreKeyToPackageName(String datastoreKey) throws IllegalArgumentException {
+        Objects.requireNonNull(datastoreKey, "datastoreKey cannot be null");
         Preconditions.checkArgument(!datastoreKey.isEmpty(), "Empty input datastore key");
         int separatorIndex = datastoreKey.lastIndexOf(DATASTORE_KEY_SEPARATOR);
-        Preconditions.checkArgument(separatorIndex > 0, "Invalid datastore key");
+        Preconditions.checkArgument(separatorIndex > 0, "Invalid datastore key (%s)", datastoreKey);
         return datastoreKey.substring(0, separatorIndex);
     }
 
@@ -248,14 +239,6 @@ public class AppConsentManager {
         String prefix3 = prefix2 + DUMP_PREFIX;
 
         writer.printf("%sDatastore:\n", prefix2);
-        mDatastore.dump(writer, prefix3);
-    }
-
-    /** tearDown method used for Testing only. */
-    @VisibleForTesting
-    public void tearDownForTesting() {
-        synchronized (this) {
-            mDatastore.tearDownForTesting();
-        }
+        mDatastore.dump(writer, prefix3, /* args= */ null);
     }
 }

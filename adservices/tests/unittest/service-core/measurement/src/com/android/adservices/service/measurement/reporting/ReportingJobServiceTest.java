@@ -142,7 +142,7 @@ public final class ReportingJobServiceTest
         doReturn(MEASUREMENT_REPORTING_JOB_PERSISTED)
                 .when(mMockFlags)
                 .getMeasurementReportingJobPersisted();
-        mockGetAdServicesJobServiceLogger(mSpyLogger);
+        mocker.mockGetAdServicesJobServiceLogger(mSpyLogger);
     }
 
     @Test

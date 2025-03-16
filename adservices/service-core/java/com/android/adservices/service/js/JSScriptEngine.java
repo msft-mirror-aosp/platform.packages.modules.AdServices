@@ -184,16 +184,20 @@ public final class JSScriptEngine {
                                             if (jsSandbox == javaScriptSandbox) {
                                                 mLogger.d(
                                                         "Closing connection from JSScriptEngine to"
-                                                            + " JavaScriptSandbox as the sandbox"
-                                                            + " requested is the current instance");
+                                                                + " JavaScriptSandbox as the "
+                                                                + "sandbox"
+                                                                + " requested is the current "
+                                                                + "instance");
                                                 jsSandbox.close();
                                                 mFutureSandbox = null;
                                             } else {
                                                 mLogger.d(
                                                         "Not closing the connection from"
-                                                            + " JSScriptEngine to JavaScriptSandbox"
-                                                            + "  as this is not the same instance"
-                                                            + " as requested");
+                                                                + " JSScriptEngine to "
+                                                                + "JavaScriptSandbox"
+                                                                + "  as this is not the same "
+                                                                + "instance"
+                                                                + " as requested");
                                             }
                                             return null;
                                         }
@@ -350,6 +354,8 @@ public final class JSScriptEngine {
      * @return a new JSScriptEngine instance
      */
     @VisibleForTesting
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static JSScriptEngine createNewInstanceForTesting(
             Context context,
             JavaScriptSandboxProvider jsSandboxProvider,
@@ -765,6 +771,15 @@ public final class JSScriptEngine {
         } finally {
             isolateStopWatch.stop();
             Trace.endSection();
+        }
+    }
+
+    /**
+     * Returns {@code true} if there is an active {@link JSScriptEngine} instance, false otherwise.
+     */
+    public static boolean hasActiveInstance() {
+        synchronized (sJSScriptEngineLock) {
+            return sSingleton != null;
         }
     }
 

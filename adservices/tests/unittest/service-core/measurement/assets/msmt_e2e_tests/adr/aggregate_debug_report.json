@@ -61,7 +61,7 @@
           "url": "https://reporter1.test/register-source",
           "response": {
             "Attribution-Reporting-Register-Source": {
-              "destination": "android-app://destination.test",
+              "destination": "android-app://destination.test/path",
               "aggregation_keys": {
                 "a": "0x3"
               },
@@ -92,7 +92,7 @@
           "url": "https://reporter.test/register-source",
           "response": {
             "Attribution-Reporting-Register-Source": {
-              "destination": "android-app://destination.test",
+              "destination": "android-app://destination.test/path",
               "aggregatable_debug_reporting": {
                 "budget": 1000,
                 "key_piece": "0x3",
@@ -121,8 +121,8 @@
           "response": {
             "Attribution-Reporting-Register-Source": {
               "web_destination": [
-                "https://destination0.test",
-                "https://destination.test"
+                "https://destination0.test/path",
+                "https://destination.test/path"
               ],
               "aggregatable_debug_reporting": {
                 "budget": 1000,
@@ -478,15 +478,18 @@
             "attribution_destination": "android-app://destination.test",
             "reporting_origin": "https://reporter.test",
             "scheduled_report_time": "3611",
-            "version": "0.1",
-            "source_registration_time": "0"
+            "version": "0.1"
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x9",
               "value": 65536
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -499,15 +502,18 @@
             "attribution_destination": "android-app://destination.test",
             "reporting_origin": "https://reporter.test",
             "scheduled_report_time": "3613",
-            "version": "0.1",
-            "source_registration_time": "0"
+            "version": "0.1"
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x36",
               "value": 65536
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       }
@@ -529,7 +535,11 @@
             {
               "key": "0xd",
               "value": 123
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -549,7 +559,11 @@
             {
               "key": "0x0",
               "value": 0
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -569,7 +583,11 @@
             {
               "key": "0x1f",
               "value": 65536
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -589,7 +607,11 @@
             {
               "key": "0x7",
               "value": 666
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -609,7 +631,11 @@
             {
               "key": "0x133",
               "value": 678
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -626,10 +652,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.com",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -649,7 +676,11 @@
             {
               "key": "0x33f",
               "value": 65536
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -669,7 +700,11 @@
             {
               "key": "0x7",
               "value": 666
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       }

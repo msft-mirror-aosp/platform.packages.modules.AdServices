@@ -18,17 +18,11 @@ package com.android.adservices.service.adselection.signature;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 public class ThreadUnsafeByteArrayOutputStreamTest {
     private ThreadUnsafeByteArrayOutputStream mOutputStream;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

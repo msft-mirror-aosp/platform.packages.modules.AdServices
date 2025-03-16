@@ -31,6 +31,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -61,6 +62,16 @@ public class PackageManagerHelperUnitTest extends DeviceSupportedBaseTest {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mClientAppUid = Process.myUid();
         mPackageManagerHelper = new PackageManagerHelper(context, mClientAppUid);
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.INTERACT_ACROSS_USERS_FULL);
+    }
+
+    @After
+    public void tearDown() {
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .dropShellPermissionIdentity();
     }
 
     @Test
@@ -98,26 +109,14 @@ public class PackageManagerHelperUnitTest extends DeviceSupportedBaseTest {
 
     @Test
     public void testGetApplicationInfoForSharedLibrary() throws Exception {
-
-        try {
-            InstrumentationRegistry.getInstrumentation()
-                    .getUiAutomation()
-                    .adoptShellPermissionIdentity(Manifest.permission.INTERACT_ACROSS_USERS_FULL);
-
-            SharedLibraryInfo sharedLibraryInfo =
-                    mPackageManagerHelper.getSdkSharedLibraryInfoForSdk(
-                            TEST_PACKAGE, SDK_NAMES.get(0));
-            ApplicationInfo applicationInfo =
-                    mPackageManagerHelper.getApplicationInfoForSharedLibrary(
-                            sharedLibraryInfo,
-                            /* flags= */ PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES
-                                    | PackageManager.MATCH_ANY_USER);
-            assertThat(applicationInfo.packageName).isEqualTo(SDK_PACKAGE_NAMES.get(0));
-        } finally {
-            InstrumentationRegistry.getInstrumentation()
-                    .getUiAutomation()
-                    .dropShellPermissionIdentity();
-        }
+        SharedLibraryInfo sharedLibraryInfo =
+                mPackageManagerHelper.getSdkSharedLibraryInfoForSdk(TEST_PACKAGE, SDK_NAMES.get(0));
+        ApplicationInfo applicationInfo =
+                mPackageManagerHelper.getApplicationInfoForSharedLibrary(
+                        sharedLibraryInfo,
+                        /* flags= */ PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES
+                                | PackageManager.MATCH_ANY_USER);
+        assertThat(applicationInfo.packageName).isEqualTo(SDK_PACKAGE_NAMES.get(0));
     }
 
     @Test

@@ -19,45 +19,33 @@ package com.android.adservices.service.topics;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.content.res.Resources;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 /** Tests for {@link TopicsMapper}. */
-public class TopicMapperTest {
+public final class TopicMapperTest extends AdServicesMockitoTestCase {
     @Mock private Context mContext;
     @Mock private Resources mResources;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    /** Setup needed before every test in this class. */
-    @Before
-    public void setup() {
-        MockitoAnnotations.initMocks(this);
-    }
-
-    /** Test single {@link Topic} to Android resource id mapper.. */
+    /** Test single {@link Topic} to Android resource id mapper. */
     @Test
     public void getResourceIdByTopicTest() {
         int topicId = 1;
         long taxonomyId = 1L;
         long modelVersion = 1L;
         int expectedResourceId = 123;
-        Mockito.when(mResources.getIdentifier(any(), any(), any())).thenReturn(expectedResourceId);
-        Mockito.when(mContext.getResources()).thenReturn(mResources);
+        when(mResources.getIdentifier(any(), any(), any())).thenReturn(expectedResourceId);
+        when(mContext.getResources()).thenReturn(mResources);
 
         int resourceId =
                 TopicsMapper.getResourceIdByTopic(
@@ -77,10 +65,10 @@ public class TopicMapperTest {
         int secondTopicExpectedResourceId = 2;
         Topic firstTopic = Topic.create(firstTopicId, taxonomyId, modelVersion);
         Topic secondTopic = Topic.create(secondTopicId, taxonomyId, modelVersion);
-        Mockito.when(mResources.getIdentifier(any(), any(), any()))
+        when(mResources.getIdentifier(any(), any(), any()))
                 .thenReturn(firstTopicExpectedResourceId)
                 .thenReturn(secondTopicExpectedResourceId);
-        Mockito.when(mContext.getResources()).thenReturn(mResources);
+        when(mContext.getResources()).thenReturn(mResources);
 
         ImmutableList<Integer> topicsListContainingResourceId =
                 TopicsMapper.getResourcesIdMapByTopicsList(

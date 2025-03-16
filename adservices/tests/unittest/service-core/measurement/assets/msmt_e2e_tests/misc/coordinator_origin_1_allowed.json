@@ -111,7 +111,8 @@
                   "campaignCounts": 32768,
                   "geoValue": 1664
                 },
-                "aggregation_coordinator_origin": "https://a.test"
+                "aggregation_coordinator_origin": "https://a.test",
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -159,7 +160,10 @@
             {
               "key": "0xb85",
               "value": 1664
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "aggregation_coordinator_origin": "https://a.test"
         }

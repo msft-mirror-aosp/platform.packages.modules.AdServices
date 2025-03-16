@@ -16,105 +16,22 @@
 
 package com.android.adservices.service.devapi;
 
-import android.content.Context;
-
-import androidx.datastore.guava.GuavaDataStore;
-
-import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.service.proto.DevSession;
-import com.android.adservices.shared.common.ApplicationContextSingleton;
-import com.android.adservices.shared.datastore.ProtoSerializer;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.protobuf.ExtensionRegistryLite;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
-
-/** DataStore for {@link DevSession} state. */
-public final class DevSessionDataStore {
-
-    @VisibleForTesting static final String FILE_NAME = "dev_session.binarypb";
-
-    private static final DevSessionDataStore sInstance =
-            new DevSessionDataStore(
-                    ApplicationContextSingleton.get(),
-                    AdServicesExecutors.getBackgroundExecutor(),
-                    AdServicesExecutors.getLightWeightExecutor(),
-                    Clock.systemUTC(),
-                    FILE_NAME);
-
-    private final GuavaDataStore<DevSession> mDevSessionDataStore;
-    private final Executor mLightWeightExecutor;
-    private final Clock mClock;
-
-    @VisibleForTesting
-    DevSessionDataStore(
-            Context context,
-            Executor backgroundExecutor,
-            Executor lightWeightExecutor,
-            Clock clock,
-            String fileName) {
-        mClock = clock;
-        mDevSessionDataStore =
-                new GuavaDataStore.Builder(
-                                context,
-                                fileName,
-                                new ProtoSerializer<DevSession>(
-                                        DevSession.getDefaultInstance(),
-                                        ExtensionRegistryLite.getEmptyRegistry()))
-                        .setExecutor(backgroundExecutor)
-                        .build();
-        mLightWeightExecutor = lightWeightExecutor;
-    }
-
+/** Provides the ability to set and get {@link DevSession} status. */
+public interface DevSessionDataStore {
     /**
-     * @return The instance of {@link DevSessionDataStore}.
-     */
-    public static DevSessionDataStore getInstance() {
-        return sInstance;
-    }
-
-    /**
-     * @return {@code true} if dev session is active.
-     */
-    public Future<Boolean> isDevSessionActive() {
-        ListenableFuture<DevSession> devSessionFuture = mDevSessionDataStore.getDataAsync();
-        return Futures.transform(
-                devSessionFuture,
-                data -> Instant.ofEpochSecond(data.getExpiryTimeSec()).isAfter(mClock.instant()),
-                mLightWeightExecutor);
-    }
-
-    /**
-     * Record the beginning of a dev session.
+     * Set the dev session status.
      *
-     * @return Future for completion.
+     * @param devSession The dev session to persist.
+     * @return The persisted dev session. Should be identical to above.
      */
-    public Future<Void> startDevSession(Instant expiry) {
-        return setDevSessionExpiry(expiry);
-    }
+    ListenableFuture<DevSession> set(DevSession devSession);
 
     /**
-     * Record the ending of a dev session.
+     * Get the dev session.
      *
-     * @return Future for completion.
+     * @return An instance of {@link DevSession}.
      */
-    public Future<Void> endDevSession() {
-        return setDevSessionExpiry(Instant.EPOCH);
-    }
-
-    private Future<Void> setDevSessionExpiry(Instant expires) {
-        ListenableFuture<DevSession> updateFuture =
-                mDevSessionDataStore.updateDataAsync(
-                        data ->
-                                data.toBuilder()
-                                        .setExpiryTimeSec(expires.getEpochSecond())
-                                        .build());
-        return Futures.transform(updateFuture, input -> null, mLightWeightExecutor);
-    }
+    ListenableFuture<DevSession> get();
 }

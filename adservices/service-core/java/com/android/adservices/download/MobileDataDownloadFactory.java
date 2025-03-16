@@ -75,7 +75,6 @@ import java.util.List;
 import java.util.concurrent.Executor;
 
 /** Mobile Data Download Factory. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class MobileDataDownloadFactory {
     private static MobileDataDownload sSingletonMdd;
@@ -234,6 +233,7 @@ public class MobileDataDownloadFactory {
 
     private static DownloadMetadataStore getDownloadMetadataStore() {
         Context context = ApplicationContextSingleton.get();
+        @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
         SharedPreferences sharedPrefs =
                 context.getSharedPreferences(MDD_METADATA_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         DownloadMetadataStore downloadMetadataStore =
@@ -449,6 +449,8 @@ public class MobileDataDownloadFactory {
     }
 
     @VisibleForTesting
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     static ManifestFileGroupPopulator getEncryptionKeysManifestPopulator(
             Context context,
             Flags flags,

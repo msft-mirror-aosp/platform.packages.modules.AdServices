@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.devapi.DevSessionFixture;
 
 import org.junit.Test;
 
@@ -40,8 +41,8 @@ public final class DevContextTest extends AdServicesUnitTestCase {
                 .that(devContext.getDeviceDevOptionsEnabled())
                 .isTrue();
         expect.withMessage("devContext.getDevSessionActive()")
-                .that(devContext.getDevSessionActive())
-                .isFalse();
+                .that(devContext.getDevSession())
+                .isEqualTo(DevSession.UNKNOWN);
         expect.withMessage("devContext.getCallingAppPackageName()")
                 .that(devContext.getCallingAppPackageName())
                 .isEqualTo(PKG_NAME);
@@ -58,15 +59,17 @@ public final class DevContextTest extends AdServicesUnitTestCase {
         assertWithMessage("builder(%s)", PKG_NAME).that(builder).isNotNull();
 
         DevContext devContext =
-                builder.setDeviceDevOptionsEnabled(true).setDevSessionActive(true).build();
+                builder.setDeviceDevOptionsEnabled(true)
+                        .setDevSession(DevSessionFixture.IN_DEV)
+                        .build();
 
         assertWithMessage("builder.build()").that(devContext).isNotNull();
         expect.withMessage("devContext.getDevOptionsEnabled()")
                 .that(devContext.getDeviceDevOptionsEnabled())
                 .isTrue();
         expect.withMessage("devContext.getDevSessionActive()")
-                .that(devContext.getDevSessionActive())
-                .isTrue();
+                .that(devContext.getDevSession())
+                .isEqualTo(DevSessionFixture.IN_DEV);
         expect.withMessage("devContext.getCallingAppPackageName()")
                 .that(devContext.getCallingAppPackageName())
                 .isEqualTo(PKG_NAME);

@@ -39,6 +39,4 @@ public enum PrivacySandboxEnrollmentChannelCollection {
     PAS_RECONSENT_NOTIFICATION_CHANNEL,
 
     PAS_FIRST_CONSENT_NOTIFICATION_CHANNEL,
-
-    RVC_POST_OTA_CHANNEL,
 }

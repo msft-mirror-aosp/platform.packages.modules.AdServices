@@ -42,4 +42,10 @@ public interface CobaltOperationLogger {
      * @param reportId the Cobalt report id of the event that is being logged
      */
     void logMaxValueExceeded(int metricId, int reportId);
+
+    /** Logs the Cobalt periodic job failed to upload envelopes. */
+    void logUploadFailure();
+
+    /** Logs the Cobalt periodic job uploaded envelopes successfully. */
+    void logUploadSuccess();
 }

@@ -128,7 +128,8 @@
                     ],
                     "_lookback_window": 10
                   }
-                ]
+                ],
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -197,7 +198,8 @@
                     ],
                     "_lookback_window": 10
                   }
-                ]
+                ],
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -245,7 +247,10 @@
             {
               "key": "0xa85",
               "value": 1664
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       }

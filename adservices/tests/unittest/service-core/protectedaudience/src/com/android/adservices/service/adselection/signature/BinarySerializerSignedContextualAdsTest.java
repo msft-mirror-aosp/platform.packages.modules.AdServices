@@ -28,18 +28,16 @@ import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.KeyedFrequencyCap;
 import android.net.Uri;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -47,9 +45,6 @@ public class BinarySerializerSignedContextualAdsTest {
     public static final byte[] TEST_SIGNATURE = new byte[] {0, 1, 2};
 
     private SignedContextualAdsHashUtil mSerializer;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {
@@ -150,6 +145,7 @@ public class BinarySerializerSignedContextualAdsTest {
          */
         String expected =
                 String.format(
+                        Locale.US,
                         "buyer=%s|decision_logic_uri=%s|ads_with_bid=ad_data=ad_counter_keys=%s|"
                                 + "ad_filters=app_install_filters=package_names=%s||"
                                 + "frequency_cap_filters=keyed_frequency_caps_for_click_events="
@@ -217,9 +213,15 @@ public class BinarySerializerSignedContextualAdsTest {
 
         String expected =
                 String.format(
+                        Locale.US,
                         "buyer=%s|decision_logic_uri=%s|ads_with_bid=ad_data=ad_counter_keys=%s|"
                                 + "metadata=%s|render_uri=%s||bid=%s||",
-                        buyer, decisionLogicUri, adCounterKeys, metadata, adRenderUri, bid);
+                        buyer,
+                        decisionLogicUri,
+                        adCounterKeys,
+                        metadata,
+                        adRenderUri,
+                        bid);
         assertThat(bytesToString(serialized)).isEqualTo(expected);
     }
 

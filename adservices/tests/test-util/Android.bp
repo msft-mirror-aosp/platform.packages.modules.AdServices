@@ -45,6 +45,7 @@ filegroup {
 android_library {
     name: "adservices-test-utility",
     sdk_version: "module_current",
+    // this test util needs to be used for the RVC-specific tests
     min_sdk_version: "30",
     srcs: [
         ":adservices-test-utility-sideless-sources",
@@ -127,8 +128,10 @@ filegroup {
         "java/com/android/adservices/mockito/AdServicesMockitoJobMocker.java",
         // Flags-related - interface and implementation
         "java/com/android/adservices/mockito/AdServicesFlagsMocker.java",
+        "java/com/android/adservices/mockito/AdServicesDebugFlagsMocker.java",
         // ... and implementation
         "java/com/android/adservices/mockito/AdServicesMockitoFlagsMocker.java",
+        "java/com/android/adservices/mockito/AdServicesMockitoDebugFlagsMocker.java",
     ],
     path: "java",
     visibility: [

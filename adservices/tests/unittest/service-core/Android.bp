@@ -90,6 +90,7 @@ android_test {
     name: "AdServicesServiceCoreUnitTests",
     srcs: [
         "src/**/*.java",
+        ":adservices-shared-device-side-flags-meta-testing-sources",
     ],
     exclude_srcs: [
         // The tests below are interacting with the JsSandbox singleton and should
@@ -189,7 +190,7 @@ java_defaults {
     // configures. Add below line to address the issue.
     // See b/233124651 for details.
     compile_multilib: "both",
-    min_sdk_version: "30",
+    min_sdk_version: "31",
     max_sdk_version: "32",
     static_libs: [
         "adservices-assets",
@@ -252,6 +253,7 @@ android_test {
     defaults: ["AdExtServices-ServiceCoreUnitTest-Defaults"],
     srcs: [
         "src/**/*.java",
+        ":adservices-shared-device-side-flags-meta-testing-sources",
     ],
     exclude_srcs: [
         // The tests below are interacting with the JsSandbox singleton and should
@@ -274,7 +276,7 @@ android_test {
     defaults: ["modules-utils-testable-device-config-defaults"],
     sdk_version: "module_current",
     compile_multilib: "both",
-    min_sdk_version: "30",
+    min_sdk_version: "31",
     max_sdk_version: "32",
     static_libs: [
         "adservices-assets",
@@ -313,7 +315,7 @@ android_test {
     defaults: ["AdServices-ServiceCoreUnitTest-Defaults"],
     sdk_version: "module_current",
     compile_multilib: "both",
-    min_sdk_version: "30",
+    min_sdk_version: "31",
     max_sdk_version: "32",
     static_libs: [
         "adservices-assets",
@@ -347,7 +349,7 @@ android_test {
 
 cc_library_shared {
     name: "libacttest_jni",
-    min_sdk_version: "30",
+    min_sdk_version: "31",
     sdk_version: "current",
     stl: "libc++_static",
     cflags: [

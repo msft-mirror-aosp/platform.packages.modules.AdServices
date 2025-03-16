@@ -16,6 +16,8 @@
 
 package com.android.adservices.ui.notifications;
 
+import static android.adservices.common.AdServicesCommonManager.ACTION_ADSERVICES_NOTIFICATION_DISPLAYED;
+
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
@@ -32,13 +34,13 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.times;
 
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.adservices.AdServicesManager;
 import android.content.Intent;
 
 import androidx.annotation.NonNull;
@@ -48,6 +50,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
+import androidx.test.uiautomator.BySelector;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObject2;
@@ -71,6 +74,7 @@ import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.ui.util.ApkTestUtil;
+import com.android.adservices.ui.util.NotificationActivityTestUtil;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -87,6 +91,7 @@ import org.mockito.Mock;
 import java.io.IOException;
 
 @SpyStatic(ConsentManager.class)
+@SpyStatic(ConsentNotificationTrigger.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(NotificationManagerCompat.class)
 @SpyStatic(AdServicesLoggerImpl.class)
@@ -99,9 +104,16 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
     private static final String NOTIFICATION_CHANNEL_ID = "PRIVACY_SANDBOX_CHANNEL";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static final int MAX_UI_OBJECT_SEARCH_TRIES = 3;
-    private static UiDevice sDevice;
 
-    private AdServicesManager mAdServicesManager;
+    private static final String TEST_PRIVILEGED_APP_NAME =
+            "com.example.adservices.samples.ui.sampletestapp";
+    private static final String TEST_PRIVILEGED_APP_APK_PATH =
+            "/data/local/tmp/cts/install/" + TEST_PRIVILEGED_APP_NAME + ".apk";
+    private static final String TEST_NON_PRIVILEGED_APP_NAME =
+            "com.example.adservices.samples.ui.consenttestapp";
+    private static final String TEST_NON_PRIVILEGED_APP_APK_PATH =
+            "/data/local/tmp/cts/install/" + TEST_NON_PRIVILEGED_APP_NAME + ".apk";
+    private static UiDevice sDevice;
     private NotificationManager mNotificationManager;
 
     @Mock private AdServicesLogger mAdServicesLogger;
@@ -118,7 +130,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         mocker.mockGetFlags(mMockFlags);
         doReturn(mAdServicesLogger).when(UiStatsLogger::getAdServicesLogger);
         doReturn(mMockUxStatesManager).when(() -> UxStatesManager.getInstance());
-        doReturn(mAdServicesManager).when(mSpyContext).getSystemService(AdServicesManager.class);
         doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
         doReturn(true).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
@@ -127,9 +138,13 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_NOTIFICATION_DISMISSED_ON_CLICK);
         doReturn(false).when(mMockUxStatesManager).getFlag(KEY_PAS_UX_ENABLED);
-        doReturn(false).when(mMockFlags).getConsentNotificationActivityDebugMode();
+        doReturn(false).when(mMockDebugFlags).getConsentNotificationActivityDebugMode();
+        doReturn(false).when(mMockFlags).getAdServicesConsentBusinessLogicMigrationEnabled();
+        doReturn(false).when(mMockDebugFlags).getConsentNotificationActivityDebugMode();
         doReturn("").when(mMockFlags).getDebugUx();
         cancelAllPreviousNotifications();
+        AdservicesTestHelper.installTestApp(TEST_NON_PRIVILEGED_APP_APK_PATH);
+        AdservicesTestHelper.installTestApp(TEST_PRIVILEGED_APP_APK_PATH);
     }
 
     @After
@@ -137,6 +152,9 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + getTestName() + "_");
 
         AdservicesTestHelper.killAdservicesProcess(mSpyContext);
+
+        AdservicesTestHelper.uninstallTestApp(TEST_NON_PRIVILEGED_APP_NAME);
+        AdservicesTestHelper.uninstallTestApp(TEST_PRIVILEGED_APP_NAME);
     }
 
     @Test
@@ -167,7 +185,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         verify(mConsentManager).recordNotificationDisplayed(true);
         verify(mConsentManager).recordGaUxNotificationDisplayed(true);
 
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
+        assertActiveNotificationsCount(1);
         final Notification notification =
                 mNotificationManager.getActiveNotifications()[0].getNotification();
         assertThat(notification.getChannelId()).isEqualTo(NOTIFICATION_CHANNEL_ID);
@@ -183,20 +201,18 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
                 .isEqualTo(Notification.FLAG_AUTO_CANCEL);
 
         UiObject scroller = getNotificationTrayScroller();
+        assertWithMessage("Notification tray scroller").that(scroller.exists()).isTrue();
 
-        assertThat(scroller.exists()).isTrue();
-        UiObject notificationCard =
-                scroller.getChild(
-                        new UiSelector()
-                                .text(
-                                        mSpyContext.getString(
-                                                R.string
-                                                        .notificationUI_notification_ga_title_eu_v2)));
-        assertThat(notificationCard.exists()).isTrue();
+        String notificationCardText =
+                mSpyContext.getString(R.string.notificationUI_notification_ga_title_eu_v2);
+        UiObject notificationCard = scroller.getChild(new UiSelector().text(notificationCardText));
+        assertWithMessage("Notification card with text %s", notificationCardText)
+                .that(notificationCard.exists())
+                .isTrue();
 
         notificationCard.click();
         Thread.sleep(LAUNCH_TIMEOUT);
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(0);
+        assertActiveNotificationsCount(0);
     }
 
     @Test
@@ -227,7 +243,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         verify(mConsentManager).recordGaUxNotificationDisplayed(true);
         verify(mConsentManager).recordNotificationDisplayed(true);
 
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
+        assertActiveNotificationsCount(1);
         final Notification notification =
                 mNotificationManager.getActiveNotifications()[0].getNotification();
         assertThat(notification.getChannelId()).isEqualTo(NOTIFICATION_CHANNEL_ID);
@@ -271,7 +287,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         verify(mConsentManager).recordNotificationDisplayed(true);
         verify(mConsentManager).recordGaUxNotificationDisplayed(true);
 
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
+        assertActiveNotificationsCount(1);
         final Notification notification =
                 mNotificationManager.getActiveNotifications()[0].getNotification();
         assertThat(notification.getChannelId()).isEqualTo(NOTIFICATION_CHANNEL_ID);
@@ -309,7 +325,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
 
         notificationCard.click();
         Thread.sleep(LAUNCH_TIMEOUT);
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(0);
+        assertActiveNotificationsCount(0);
     }
 
     @Test
@@ -319,8 +335,8 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(true).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
         doReturn("GA_UX").when(mMockFlags).getDebugUx();
-        doReturn(true).when(mMockFlags).getConsentNotificationActivityDebugMode();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockDebugFlags).getConsentNotificationActivityDebugMode();
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
         doReturn(false).when(mMockUxStatesManager).getFlag(KEY_NOTIFICATION_DISMISSED_ON_CLICK);
@@ -345,7 +361,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         verify(mConsentManager).disable(mSpyContext, AdServicesApiType.MEASUREMENTS);
         verify(mConsentManager).recordGaUxNotificationDisplayed(true);
 
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
+        assertActiveNotificationsCount(1);
         final Notification notification =
                 mNotificationManager.getActiveNotifications()[0].getNotification();
         assertThat(notification.getChannelId()).isEqualTo(NOTIFICATION_CHANNEL_ID);
@@ -380,12 +396,12 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
             notificationCard = sDevice.findObject(notificationCardSelector);
         }
         notificationCard.waitForExists(LAUNCH_TIMEOUT);
-        assertThat(notificationCard.exists()).isTrue();
+        assertWithMessage("Notification card").that(notificationCard.exists()).isTrue();
 
         // click the notification and verify that notification still exists (wasn't dismissed)
         notificationCard.click();
         Thread.sleep(LAUNCH_TIMEOUT);
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(0);
+        assertActiveNotificationsCount(0);
 
         // go to confirmation page and verify that notification was dismissed
         UiObject leftControlButton =
@@ -394,12 +410,10 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         UiObject rightControlButton =
                 getPageElement(
                         sDevice, R.string.notificationUI_confirmation_right_control_button_text);
-        UiObject moreButton = getPageElement(sDevice, R.string.notificationUI_more_button_text);
-        verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
-        Thread.sleep(LAUNCH_TIMEOUT);
+        NotificationActivityTestUtil.clickMoreToBottom(sDevice);
         rightControlButton.click();
         Thread.sleep(LAUNCH_TIMEOUT);
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(0);
+        assertActiveNotificationsCount(0);
     }
 
     @Test
@@ -418,6 +432,111 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         verify(mConsentManager, times(2)).getDefaultConsent();
         verify(mConsentManager, times(2)).getDefaultAdIdState();
         verify(mConsentManager).recordNotificationDisplayed(true);
+    }
+
+    @Test
+    public void testNotificationV2ActivityIntent() throws Exception {
+        String expectedTitle =
+                mSpyContext.getString(R.string.notificationUI_pas_notification_title);
+        String expectedContent =
+                mSpyContext.getString(R.string.notificationUI_pas_notification_content);
+
+        ConsentNotificationTrigger.showConsentNotificationV2(
+                mSpyContext,
+                /* isRenotify= */ false,
+                /* isNewAdPersonalizationModuleEnabled= */ true,
+                /* isOngoingNotification= */ true);
+        Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
+
+        verify(mAdServicesLogger, times(2)).logUIStats(any());
+
+        assertActiveNotificationsCount(1);
+        Notification notification =
+                mNotificationManager.getActiveNotifications()[0].getNotification();
+        assertThat(notification.getChannelId()).isEqualTo(NOTIFICATION_CHANNEL_ID);
+        assertThat(notification.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+                .isEqualTo(expectedTitle);
+        assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
+                .isEqualTo(expectedContent);
+        assertThat(Notification.FLAG_ONGOING_EVENT & notification.flags)
+                .isEqualTo(Notification.FLAG_ONGOING_EVENT);
+        assertThat(Notification.FLAG_NO_CLEAR & notification.flags)
+                .isEqualTo(Notification.FLAG_NO_CLEAR);
+        assertThat(Notification.FLAG_AUTO_CANCEL & notification.flags)
+                .isEqualTo(Notification.FLAG_AUTO_CANCEL);
+
+        UiObject scroller = getNotificationTrayScroller();
+        assertWithMessage("Notification tray scroller").that(scroller.exists()).isTrue();
+
+        String notificationCardText =
+                mSpyContext.getString(R.string.notificationUI_pas_notification_title);
+        UiObject notificationCard = scroller.getChild(new UiSelector().text(notificationCardText));
+        assertWithMessage("Notification card with text %s", notificationCardText)
+                .that(notificationCard.exists())
+                .isTrue();
+
+        notificationCard.click();
+        Thread.sleep(LAUNCH_TIMEOUT);
+        assertActiveNotificationsCount(0);
+
+        // Sample privileged app package that has the activity for the intent.
+        BySelector titleSelector =
+                By.res(TEST_PRIVILEGED_APP_NAME + ":id/action_bar")
+                        .hasChild(By.clazz("android.widget.TextView"));
+        UiObject2 titleObject = sDevice.wait(Until.findObject(titleSelector), LAUNCH_TIMEOUT);
+        assertWithMessage("Sample privileged app title").that(titleObject).isNotNull();
+    }
+
+    @Test
+    public void testNotificationV2BroadcastIntent() throws Exception {
+        // Launch sample app to register the broadcast receiver
+        sDevice.executeShellCommand(
+                String.format("am start -n %s/.MainActivity", TEST_PRIVILEGED_APP_NAME));
+        Thread.sleep(1000);
+
+        String expectedTitle =
+                mSpyContext.getString(R.string.notificationUI_pas_notification_title);
+        String expectedContent =
+                mSpyContext.getString(R.string.notificationUI_pas_notification_content);
+
+        ConsentNotificationTrigger.showConsentNotificationV2(
+                mSpyContext,
+                /* isRenotify= */ false,
+                /* isNewAdPersonalizationModuleEnabled= */ true,
+                /* isOngoingNotification= */ true);
+        Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
+
+        verify(mAdServicesLogger, times(2)).logUIStats(any());
+
+        assertActiveNotificationsCount(1);
+        Notification notification =
+                mNotificationManager.getActiveNotifications()[0].getNotification();
+        assertThat(notification.getChannelId()).isEqualTo(NOTIFICATION_CHANNEL_ID);
+        assertThat(notification.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+                .isEqualTo(expectedTitle);
+        assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
+                .isEqualTo(expectedContent);
+        assertThat(Notification.FLAG_ONGOING_EVENT & notification.flags)
+                .isEqualTo(Notification.FLAG_ONGOING_EVENT);
+        assertThat(Notification.FLAG_NO_CLEAR & notification.flags)
+                .isEqualTo(Notification.FLAG_NO_CLEAR);
+        assertThat(Notification.FLAG_AUTO_CANCEL & notification.flags)
+                .isEqualTo(Notification.FLAG_AUTO_CANCEL);
+
+        UiObject scroller = getNotificationTrayScroller();
+        assertWithMessage("Notification tray scroller").that(scroller.exists()).isTrue();
+
+        String notificationCardText =
+                mSpyContext.getString(R.string.notificationUI_pas_notification_title);
+        UiObject notificationCard = scroller.getChild(new UiSelector().text(notificationCardText));
+        assertWithMessage("Notification card with text %s", notificationCardText)
+                .that(notificationCard.exists())
+                .isTrue();
+
+        // Check if broadcast intent is received by privileged app
+        String logcatOutput = sDevice.executeShellCommand("logcat -d -s MyBroadcastReceiver");
+        assertTrue(logcatOutput.contains(ACTION_ADSERVICES_NOTIFICATION_DISPLAYED));
+        assertTrue(logcatOutput.contains(TEST_PRIVILEGED_APP_NAME));
     }
 
     @NonNull
@@ -489,7 +608,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         verify(mConsentManager).recordMeasurementDefaultConsent(true);
         verify(mConsentManager).recordPasNotificationDisplayed(true);
 
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
+        assertActiveNotificationsCount(1);
         Notification notification =
                 mNotificationManager.getActiveNotifications()[0].getNotification();
         assertThat(notification.getChannelId()).isEqualTo(NOTIFICATION_CHANNEL_ID);
@@ -544,7 +663,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         verify(mConsentManager, times(0)).recordMeasurementDefaultConsent(true);
         verify(mConsentManager).recordPasNotificationDisplayed(true);
 
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
+        assertActiveNotificationsCount(1);
         Notification notification =
                 mNotificationManager.getActiveNotifications()[0].getNotification();
         assertThat(notification.getChannelId()).isEqualTo(NOTIFICATION_CHANNEL_ID);
@@ -565,8 +684,8 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-        doReturn(true).when(mMockFlags).getConsentNotificationActivityDebugMode();
         doReturn("GA_UX").when(mMockFlags).getDebugUx();
+        doReturn(true).when(mMockDebugFlags).getConsentNotificationActivityDebugMode();
         doReturn(false).when(mMockUxStatesManager).pasUxIsActive(anyBoolean());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
         doReturn(AdServicesApiConsent.GIVEN)
@@ -608,24 +727,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         assertNotNull(expectedNewFledgeBodyText, R.string.settingsUI_pas_apps_view_body_text);
     }
 
-    private void verifyControlsAndMoreButtonAreDisplayed(
-            UiObject leftControlButton, UiObject rightControlButton, UiObject moreButton)
-            throws UiObjectNotFoundException, InterruptedException {
-        UiObject scrollView =
-                sDevice.findObject(new UiSelector().className("android.widget.ScrollView"));
-
-        if (scrollView.isScrollable()) {
-            assertThat(leftControlButton.exists()).isFalse();
-            assertThat(rightControlButton.exists()).isFalse();
-            assertThat(moreButton.exists()).isTrue();
-
-            while (moreButton.exists()) {
-                moreButton.click();
-                Thread.sleep(2000);
-            }
-        }
-    }
-
     private void cancelAllPreviousNotifications() {
         if (mNotificationManager.getActiveNotifications().length > 0) {
             mNotificationManager.cancelAll();
@@ -636,5 +737,11 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         assertWithMessage("Button with text %s ", ApkTestUtil.getString(resId))
                 .that(object)
                 .isNotNull();
+    }
+
+    private void assertActiveNotificationsCount(int count) {
+        assertWithMessage("Number of Active notifications")
+                .that(mNotificationManager.getActiveNotifications())
+                .hasLength(count);
     }
 }

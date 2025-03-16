@@ -64,14 +64,14 @@ public class ConsentNotificationU18Fragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         setupListeners(savedInstanceState);
-        ConsentNotificationActivity.handleAction(LANDING_PAGE_DISPLAYED, getContext());
+        ConsentNotificationActivity.handleAction(LANDING_PAGE_DISPLAYED);
     }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
 
-        ConsentNotificationActivity.handleAction(LANDING_PAGE_DISMISSED, getContext());
+        ConsentNotificationActivity.handleAction(LANDING_PAGE_DISMISSED);
         if (mScrollToBottomController != null) {
             mScrollToBottomController.saveInstanceState(savedInstanceState);
         }
@@ -90,8 +90,7 @@ public class ConsentNotificationU18Fragment extends Fragment {
         Button leftControlButton = requireActivity().findViewById(R.id.leftControlButton);
         leftControlButton.setOnClickListener(
                 view -> {
-                    ConsentNotificationActivity.handleAction(
-                            LANDING_PAGE_SETTINGS_BUTTON_CLICKED, getContext());
+                    ConsentNotificationActivity.handleAction(LANDING_PAGE_SETTINGS_BUTTON_CLICKED);
 
                     // go to settings activity
                     Intent intent =
@@ -175,7 +174,7 @@ public class ConsentNotificationU18Fragment extends Fragment {
 
             if (mHasScrolledToBottom) {
 
-                ConsentNotificationActivity.handleAction(LANDING_PAGE_GOT_IT_CLICKED, getContext());
+                ConsentNotificationActivity.handleAction(LANDING_PAGE_GOT_IT_CLICKED);
 
                 if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
                     ConsentManager.getInstance()
@@ -186,8 +185,7 @@ public class ConsentNotificationU18Fragment extends Fragment {
                     requireActivity().finish();
                 }
             } else {
-                ConsentNotificationActivity.handleAction(
-                        LANDING_PAGE_MORE_BUTTON_CLICKED, getContext());
+                ConsentNotificationActivity.handleAction(LANDING_PAGE_MORE_BUTTON_CLICKED);
 
                 mScrollContainer.smoothScrollTo(
                         0,
@@ -199,14 +197,13 @@ public class ConsentNotificationU18Fragment extends Fragment {
         @Override
         public void onScrollChange(
                 View view, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-            ConsentNotificationActivity.handleAction(LANDING_PAGE_SCROLLED, getContext());
+            ConsentNotificationActivity.handleAction(LANDING_PAGE_SCROLLED);
             updateButtonsIfHasScrolledToBottom();
         }
 
         void updateButtonsIfHasScrolledToBottom() {
             if (!mScrollContainer.canScrollVertically(SCROLL_DIRECTION_DOWN)) {
-                ConsentNotificationActivity.handleAction(
-                        LANDING_PAGE_SCROLLED_TO_BOTTOM, getContext());
+                ConsentNotificationActivity.handleAction(LANDING_PAGE_SCROLLED_TO_BOTTOM);
                 mHasScrolledToBottom = true;
                 updateControlButtons();
             }

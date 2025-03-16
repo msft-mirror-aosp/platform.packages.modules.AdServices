@@ -20,22 +20,21 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
-import android.test.mock.MockContext;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.junit.Test;
 
 /** Unit tests for {@link SandboxedSdkContextUtils} */
-public final class SandboxedSdkContextUtilsTest extends AdServicesUnitTestCase {
+public final class SandboxedSdkContextUtilsTest extends AdServicesMockitoTestCase {
     @Test
     public void testGetAsSandboxedSdkContext_inputIsNotSandboxedSdkContext() {
         expect.withMessage("null context")
                 .that(SandboxedSdkContextUtils.getAsSandboxedSdkContext(null))
                 .isNull();
         expect.withMessage("mock context")
-                .that(SandboxedSdkContextUtils.getAsSandboxedSdkContext(new MockContext()))
+                .that(SandboxedSdkContextUtils.getAsSandboxedSdkContext(mMockContext))
                 .isNull();
         expect.withMessage("real context")
                 .that(SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext))

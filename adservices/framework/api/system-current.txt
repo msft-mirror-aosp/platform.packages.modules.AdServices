@@ -48,24 +48,33 @@ package android.adservices.common {
 
   public class AdServicesCommonManager {
     method @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE, android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT}) public void enableAdServices(@NonNull android.adservices.common.AdServicesStates, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Boolean,java.lang.Exception>);
-    method @Deprecated @FlaggedApi("com.android.adservices.flags.enable_adservices_api_enabled") @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE, android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT}) public void enableAdServices(@NonNull android.adservices.common.AdServicesStates, @NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<java.lang.Boolean,java.lang.Exception>);
+    method @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_outcomereceiver_r_api_deprecated") @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE, android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT}) public void enableAdServices(@NonNull android.adservices.common.AdServicesStates, @NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<java.lang.Boolean,java.lang.Exception>);
     method @NonNull public static android.adservices.common.AdServicesCommonManager get(@NonNull android.content.Context);
     method @FlaggedApi("com.android.adservices.flags.get_adservices_common_states_api_enabled") @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE, android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE_COMPAT}) public void getAdservicesCommonStates(@NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<android.adservices.common.AdServicesCommonStatesResponse,java.lang.Exception>);
     method @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE, android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE_COMPAT}) public void isAdServicesEnabled(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Boolean,java.lang.Exception>);
-    method @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_enablement_check_enabled") @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE, android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE_COMPAT}) public void isAdServicesEnabled(@NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<java.lang.Boolean,java.lang.Exception>);
+    method @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_outcomereceiver_r_api_deprecated") @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE, android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE_COMPAT}) public void isAdServicesEnabled(@NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<java.lang.Boolean,java.lang.Exception>);
+    method @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE, android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT}) public void requestAdServicesModuleOverrides(@NonNull android.adservices.common.UpdateAdServicesModuleStatesParams, @NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<java.lang.Void,java.lang.Exception>);
+    method @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE, android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT}) public void requestAdServicesModuleUserChoices(@NonNull android.adservices.common.UpdateAdServicesUserChoicesParams, @NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<java.lang.Void,java.lang.Exception>);
     method @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE, android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT}) public void setAdServicesEnabled(boolean, boolean);
-    method @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE, android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT}) public void setAdServicesModuleOverrides(@NonNull java.util.List<android.adservices.common.AdServicesModuleState>, @NonNull android.adservices.common.NotificationTypeParams, @NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<android.adservices.common.AdServicesCommonResponse,java.lang.Exception>);
-    method @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE, android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT}) public void setAdServicesModuleUserChoices(@NonNull java.util.List<android.adservices.common.AdServicesModuleUserChoice>, @NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<android.adservices.common.AdServicesCommonResponse,java.lang.Exception>);
-    method @Deprecated @FlaggedApi("com.android.adservices.flags.ad_id_cache_enabled") @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID, android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT}) public void updateAdId(@NonNull android.adservices.common.UpdateAdIdRequest, @NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<java.lang.Boolean,java.lang.Exception>);
-    method @FlaggedApi("com.android.adservices.flags.ad_id_cache_enabled") @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID, android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT}) public void updateAdId(@NonNull android.adservices.common.UpdateAdIdRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Boolean,java.lang.Exception>);
-  }
-
-  @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public final class AdServicesCommonResponse implements android.os.Parcelable {
-    method public int describeContents();
-    method @Nullable public String getErrorMessage();
-    method public int getStatusCode();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AdServicesCommonResponse> CREATOR;
+    method @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_outcomereceiver_r_api_deprecated") @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID, android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT}) public void updateAdId(@NonNull android.adservices.common.UpdateAdIdRequest, @NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<java.lang.Boolean,java.lang.Exception>);
+    method @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID, android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT}) public void updateAdId(@NonNull android.adservices.common.UpdateAdIdRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Boolean,java.lang.Exception>);
+    field @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE, android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT}) public static final String ACTION_ADSERVICES_NOTIFICATION_DISPLAYED = "android.adservices.common.action.ADSERVICES_NOTIFICATION_DISPLAYED";
+    field @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") @RequiresPermission(anyOf={android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE, android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT}) public static final String ACTION_VIEW_ADSERVICES_CONSENT_PAGE = "android.adservices.common.action.VIEW_ADSERVICES_CONSENT_PAGE";
+    field @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public static final int MODULE_ADID = 5; // 0x5
+    field @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public static final int MODULE_MEASUREMENT = 0; // 0x0
+    field @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public static final int MODULE_ON_DEVICE_PERSONALIZATION = 4; // 0x4
+    field @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public static final int MODULE_PROTECTED_APP_SIGNALS = 2; // 0x2
+    field @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public static final int MODULE_PROTECTED_AUDIENCE = 1; // 0x1
+    field @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public static final int MODULE_STATE_DISABLED = 2; // 0x2
+    field @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public static final int MODULE_STATE_ENABLED = 1; // 0x1
+    field @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public static final int MODULE_STATE_UNKNOWN = 0; // 0x0
+    field @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public static final int MODULE_TOPICS = 3; // 0x3
+    field @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public static final int NOTIFICATION_NONE = 0; // 0x0
+    field @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public static final int NOTIFICATION_ONGOING = 1; // 0x1
+    field @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public static final int NOTIFICATION_REGULAR = 2; // 0x2
+    field @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public static final int USER_CHOICE_OPTED_IN = 1; // 0x1
+    field @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public static final int USER_CHOICE_OPTED_OUT = 2; // 0x2
+    field @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public static final int USER_CHOICE_UNKNOWN = 0; // 0x0
   }
 
   @FlaggedApi("com.android.adservices.flags.get_adservices_common_states_api_enabled") public final class AdServicesCommonStates implements android.os.Parcelable {
@@ -83,42 +92,6 @@ package android.adservices.common {
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AdServicesCommonStatesResponse> CREATOR;
   }
 
-  @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public final class AdServicesModuleState implements android.os.Parcelable {
-    method public int describeContents();
-    method public int getModule();
-    method public int getModuleState();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AdServicesModuleState> CREATOR;
-    field public static final int MODULE_STATE_DISABLED = 2; // 0x2
-    field public static final int MODULE_STATE_ENABLED = 1; // 0x1
-    field public static final int MODULE_STATE_UNKNOWN = 0; // 0x0
-  }
-
-  public static final class AdServicesModuleState.Builder {
-    ctor public AdServicesModuleState.Builder();
-    method @NonNull public android.adservices.common.AdServicesModuleState build();
-    method @NonNull public android.adservices.common.AdServicesModuleState.Builder setModule(int);
-    method @NonNull public android.adservices.common.AdServicesModuleState.Builder setModuleState(int);
-  }
-
-  @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public final class AdServicesModuleUserChoice implements android.os.Parcelable {
-    method public int describeContents();
-    method public int getModule();
-    method public int getUserChoice();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AdServicesModuleUserChoice> CREATOR;
-    field public static final int USER_CHOICE_OPTED_IN = 1; // 0x1
-    field public static final int USER_CHOICE_OPTED_OUT = 2; // 0x2
-    field public static final int USER_CHOICE_UNKNOWN = 0; // 0x0
-  }
-
-  public static final class AdServicesModuleUserChoice.Builder {
-    ctor public AdServicesModuleUserChoice.Builder();
-    method @NonNull public android.adservices.common.AdServicesModuleUserChoice build();
-    method @NonNull public android.adservices.common.AdServicesModuleUserChoice.Builder setModule(int);
-    method @NonNull public android.adservices.common.AdServicesModuleUserChoice.Builder setUserChoice(int);
-  }
-
   public class AdServicesPermissions {
     field public static final String ACCESS_ADSERVICES_STATE = "android.permission.ACCESS_ADSERVICES_STATE";
     field public static final String ACCESS_ADSERVICES_STATE_COMPAT = "android.permission.ACCESS_ADSERVICES_STATE_COMPAT";
@@ -127,8 +100,8 @@ package android.adservices.common {
     field public static final String ACCESS_PRIVILEGED_APP_SET_ID = "android.permission.ACCESS_PRIVILEGED_APP_SET_ID";
     field public static final String MODIFY_ADSERVICES_STATE = "android.permission.MODIFY_ADSERVICES_STATE";
     field public static final String MODIFY_ADSERVICES_STATE_COMPAT = "android.permission.MODIFY_ADSERVICES_STATE_COMPAT";
-    field @FlaggedApi("com.android.adservices.flags.ad_id_cache_enabled") public static final String UPDATE_PRIVILEGED_AD_ID = "android.permission.UPDATE_PRIVILEGED_AD_ID";
-    field @FlaggedApi("com.android.adservices.flags.ad_id_cache_enabled") public static final String UPDATE_PRIVILEGED_AD_ID_COMPAT = "android.permission.UPDATE_PRIVILEGED_AD_ID_COMPAT";
+    field public static final String UPDATE_PRIVILEGED_AD_ID = "android.permission.UPDATE_PRIVILEGED_AD_ID";
+    field public static final String UPDATE_PRIVILEGED_AD_ID_COMPAT = "android.permission.UPDATE_PRIVILEGED_AD_ID_COMPAT";
   }
 
   public final class AdServicesStates implements android.os.Parcelable {
@@ -160,33 +133,7 @@ package android.adservices.common {
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.EnableAdServicesResponse> CREATOR;
   }
 
-  @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public final class Module {
-    field public static final int ADID = 6; // 0x6
-    field public static final int MEASUREMENT = 1; // 0x1
-    field public static final int ON_DEVICE_PERSONALIZATION = 5; // 0x5
-    field public static final int PROTECTED_APP_SIGNALS = 3; // 0x3
-    field public static final int PROTECTED_AUDIENCE = 2; // 0x2
-    field public static final int TOPICS = 4; // 0x4
-    field public static final int UNKNOWN = 0; // 0x0
-  }
-
-  @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public final class NotificationTypeParams implements android.os.Parcelable {
-    method public int describeContents();
-    method public int getNotificationType();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.NotificationTypeParams> CREATOR;
-    field public static final int NOTIFICATION_NONE = 0; // 0x0
-    field public static final int NOTIFICATION_ONGOING = 1; // 0x1
-    field public static final int NOTIFICATION_REGULAR = 2; // 0x2
-  }
-
-  public static final class NotificationTypeParams.Builder {
-    ctor public NotificationTypeParams.Builder();
-    method @NonNull public android.adservices.common.NotificationTypeParams build();
-    method @NonNull public android.adservices.common.NotificationTypeParams.Builder setNotificationType(int);
-  }
-
-  @FlaggedApi("com.android.adservices.flags.ad_id_cache_enabled") public final class UpdateAdIdRequest implements android.os.Parcelable {
+  public final class UpdateAdIdRequest implements android.os.Parcelable {
     method public int describeContents();
     method @NonNull public String getAdId();
     method public boolean isLimitAdTrackingEnabled();
@@ -198,6 +145,34 @@ package android.adservices.common {
     ctor public UpdateAdIdRequest.Builder(@NonNull String);
     method @NonNull public android.adservices.common.UpdateAdIdRequest build();
     method @NonNull public android.adservices.common.UpdateAdIdRequest.Builder setLimitAdTrackingEnabled(boolean);
+  }
+
+  @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public final class UpdateAdServicesModuleStatesParams implements android.os.Parcelable {
+    method public int describeContents();
+    method public int getModuleState(int);
+    method public int getNotificationType();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.UpdateAdServicesModuleStatesParams> CREATOR;
+  }
+
+  public static final class UpdateAdServicesModuleStatesParams.Builder {
+    ctor public UpdateAdServicesModuleStatesParams.Builder();
+    method @NonNull public android.adservices.common.UpdateAdServicesModuleStatesParams build();
+    method @NonNull public android.adservices.common.UpdateAdServicesModuleStatesParams.Builder setModuleState(int, int);
+    method @NonNull public android.adservices.common.UpdateAdServicesModuleStatesParams.Builder setNotificationType(int);
+  }
+
+  @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public final class UpdateAdServicesUserChoicesParams implements android.os.Parcelable {
+    method public int describeContents();
+    method public int getUserChoice(int);
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.UpdateAdServicesUserChoicesParams> CREATOR;
+  }
+
+  public static final class UpdateAdServicesUserChoicesParams.Builder {
+    ctor public UpdateAdServicesUserChoicesParams.Builder();
+    method @NonNull public android.adservices.common.UpdateAdServicesUserChoicesParams build();
+    method @NonNull public android.adservices.common.UpdateAdServicesUserChoicesParams.Builder setUserChoice(int, int);
   }
 
 }

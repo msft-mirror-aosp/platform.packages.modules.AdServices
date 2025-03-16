@@ -15,15 +15,22 @@
  */
 package com.android.adservices.service;
 
+import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API;
+import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED;
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED;
+import static com.android.adservices.flags.Flags.FLAG_AD_ID_CACHE_ENABLED;
+import static com.android.adservices.flags.Flags.FLAG_ENABLE_ADSERVICES_API_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_DEFAULT_PARTIAL_CUSTOM_AUDIENCES_CONSTRUCTOR;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED;
+import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_DUMP_EFFECTIVE_TARGET_SDK_VERSION;
 import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE;
+import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS;
+import static com.android.adservices.shared.meta_testing.FlagsTestLittleHelper.getAllFlagNameConstants;
 
-import android.util.Log;
 import android.util.Pair;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
@@ -31,12 +38,13 @@ import com.android.internal.util.Preconditions;
 
 import org.junit.Test;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 // NOTE: when making changes on com.android.adservices.flags.Flags, you need to install the new
@@ -46,12 +54,33 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
     private static final String ACONFIG_PREFIX = "com.android.adservices.flags.";
 
     private static final String HOW_TO_FIX_IT_MESSAGE =
-            "If this is expected, you might need to change MISSING_FLAGS_ALLOWLIST or"
+            "If this is expected, you might need to change ACONFIG_ONLY_ALLOW_LIST, "
+                    + "MISSING_FLAGS_ALLOWLIST, or"
                     + " NON_CANONICAL_FLAGS (on this file).";
+
+    private static final Pattern DEVICE_CONFIG_VALUE_WITH_DOMAIN_PREFIX =
+            Pattern.compile("^(?<domain>.*)__(?<value>.*)$");
 
     /**
      * List used by {@link #testAllAconfigFlagsAreMapped()}, it contains the name of flags that are
-     * present in the {@code aconfig} file but are missing on {@link FlagsConstants}.
+     * present in the {@code aconfig} file but are not in {@link FlagsConstants} because they are
+     * either SDK Sandbox flags, or launched aconfig flags that have been cleaned up from the java
+     * code.
+     */
+    private static final List<String> ACONFIG_ONLY_ALLOWLIST =
+            List.of(
+                    FLAG_AD_ID_CACHE_ENABLED,
+                    FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED,
+                    FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED,
+                    FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED,
+                    FLAG_ENABLE_ADSERVICES_API_ENABLED,
+                    FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE,
+                    FLAG_SDKSANDBOX_DUMP_EFFECTIVE_TARGET_SDK_VERSION);
+
+    /**
+     * List used by {@link #testAllAconfigFlagsAreMapped()}, it contains the name of flags that are
+     * present in the {@code aconfig} file but are missing on {@link FlagsConstants} and need a
+     * justification for not being present there.
      *
      * <p>Add more entries in the bottom, either explaining the reason or using a TODO(b/BUG) that
      * will add the missing {@link com.android.adservices.service.PhFlags} / {@link
@@ -59,11 +88,6 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
      */
     private static final List<String> MISSING_FLAGS_ALLOWLIST =
             List.of(
-                    // FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED guards APIs that are overloaded
-                    // to take android.adservices.common.OutcomeReceiver (instead of
-                    // android.os.OutcomeReceiver) and hence don't need to be checked at runtime.
-                    FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED,
-
                     // TODO(b/347764094): Remove from this allowlist after implementing feature and
                     //  adding matching DeviceConfig flag
                     FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API,
@@ -86,7 +110,22 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                     // This flag is to guard a feature for trunk stable purpose. The flag guards the
                     // invalidation of the effective target SDK version cache. If any regression is
                     // observed, this feature can be rolled back
-                    FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE);
+                    FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE,
+
+                    // This flag is to guard a feature for trunk stable purpose. The flag guards the
+                    // dump function to include the effective target SDK version cache. If any
+                    // regression is observed, this feature can be rolled back
+                    FLAG_SDKSANDBOX_DUMP_EFFECTIVE_TARGET_SDK_VERSION,
+
+                    // This flag is to guard a feature for trunk stable purpose. The flag guards the
+                    // using the effective target SDK version when deciding which allowlist should
+                    // be used to apply the restrictions. If any regression is observed, this
+                    // feature can be rolled back
+                    FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS,
+
+                    // This flag is used to guard a feature using an updated constructor, there are
+                    // no accompanying service changes.
+                    FLAG_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_DEFAULT_PARTIAL_CUSTOM_AUDIENCES_CONSTRUCTOR);
 
     /**
      * Map used by {@link #testAllAconfigFlagsAreMapped()} - key is the {@code aconfig} flag name,
@@ -133,7 +172,9 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
     public void testAllAconfigFlagsAreMapped() throws Exception {
         Map<String, String> reverseServiceFlags =
                 getAllFlagNameConstants(FlagsConstants.class).stream()
-                        .collect(Collectors.toMap(p -> p.second, p -> p.first));
+                        .collect(
+                                Collectors.toMap(
+                                        p -> deviceConfigFlagValueToAconfig(p), p -> p.first));
         List<String> missingFlags = new ArrayList<>();
         for (Pair<String, String> constant :
                 getAllFlagNameConstants(com.android.adservices.flags.Flags.class)) {
@@ -142,20 +183,17 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
             String expectedDeviceConfigFlag = getExpectedDeviceConfigFlag(aconfigFlag);
             String serviceConstant = reverseServiceFlags.get(expectedDeviceConfigFlag);
             if (serviceConstant == null) {
-                if (MISSING_FLAGS_ALLOWLIST.contains(aconfigFlag)) {
-                    Log.i(
-                            mTag,
-                            "Missing mapping for allowlisted flag ("
-                                    + constantName
-                                    + "="
-                                    + aconfigFlag
-                                    + ")");
+                if (ACONFIG_ONLY_ALLOWLIST.contains(aconfigFlag)
+                        || MISSING_FLAGS_ALLOWLIST.contains(aconfigFlag)) {
+                    mLog.i(
+                            "Missing mapping for allowlisted flag (%s=%s)",
+                            constantName, aconfigFlag);
                 } else {
-                    Log.e(mTag, "Missing mapping for " + constantName + "=" + aconfigFlag);
+                    mLog.e("Missing mapping for %s=%s", constantName, aconfigFlag);
                     missingFlags.add(expectedDeviceConfigFlag);
                 }
             } else {
-                Log.d(mTag, "Found mapping: " + constantName + "->" + serviceConstant);
+                mLog.d("Found mapping: %s->%s", constantName, serviceConstant);
             }
         }
         expect.withMessage(
@@ -163,6 +201,26 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                         HOW_TO_FIX_IT_MESSAGE)
                 .that(missingFlags)
                 .isEmpty();
+    }
+
+    /*
+     * More recent constants follow the DOMAIN__VALUE convention, but aconfig doesn't allow __ nor
+     * upper-case letters, so we need to convert them here
+     */
+    private String deviceConfigFlagValueToAconfig(Pair<String, String> deviceConfigConstant) {
+        String constantName = deviceConfigConstant.first;
+        String constantValue = deviceConfigConstant.second;
+        Matcher matcher = DEVICE_CONFIG_VALUE_WITH_DOMAIN_PREFIX.matcher(constantValue);
+        if (matcher.matches()) {
+            String domain = matcher.group("domain");
+            String result = domain.toLowerCase(Locale.ENGLISH) + "_" + matcher.group("value");
+            mLog.v(
+                    "deviceConfigFlagValueToAconfig(%s): value has domain prefix (%s); returning"
+                            + " %s",
+                    deviceConfigConstant, domain, result);
+            return result;
+        }
+        return constantValue;
     }
 
     private static String aconfigToDeviceConfig(String flag) {
@@ -177,27 +235,9 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
     private String getExpectedDeviceConfigFlag(String aconfigFlag) {
         String nonCanonical = NON_CANONICAL_FLAGS.get(aconfigFlag);
         if (nonCanonical != null) {
-            Log.i(mTag, "Returning non-canonical flag for " + aconfigFlag + ": " + nonCanonical);
+            mLog.i("Returning non-canonical flag for %s: %s", aconfigFlag, nonCanonical);
             return nonCanonical;
         }
         return aconfigToDeviceConfig(aconfigFlag);
-    }
-
-    private static List<Pair<String, String>> getAllFlagNameConstants(Class<?> clazz)
-            throws IllegalAccessException {
-        List<Pair<String, String>> constants = new ArrayList<>();
-        for (Field field : clazz.getDeclaredFields()) {
-            int modifiers = field.getModifiers();
-            if (Modifier.isStatic(modifiers)
-                    && Modifier.isFinal(modifiers)
-                    && (field.getType().equals(String.class))) {
-                String name = field.getName();
-                if (name.startsWith("KEY_") || name.startsWith("FLAG_")) {
-                    String value = (String) field.get(null);
-                    constants.add(new Pair<>(name, value));
-                }
-            }
-        }
-        return constants;
     }
 }

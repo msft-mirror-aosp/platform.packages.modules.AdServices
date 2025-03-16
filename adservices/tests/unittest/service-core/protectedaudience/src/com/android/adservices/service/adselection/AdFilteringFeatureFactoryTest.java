@@ -33,9 +33,7 @@ import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorNoOpImpl;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -58,9 +56,6 @@ public class AdFilteringFeatureFactoryTest {
     private boolean mAuctionServerEnabledForUpdateHistogram =
             new FlagsWithFrequencyCapFilteringDisabled()
                     .getFledgeAuctionServerEnabledForUpdateHistogram();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testGetFrequencyCapAdFiltererFilteringEnabled() {
@@ -146,6 +141,30 @@ public class AdFilteringFeatureFactoryTest {
                         null, null, new FlagsWithFrequencyCapFilteringDisabled());
         assertThat(adFilteringFeatureFactory.getFrequencyCapAdDataValidator())
                 .isInstanceOf(FrequencyCapAdDataValidatorNoOpImpl.class);
+    }
+
+    @Test
+    public void testGetFrequencyCapDataClearerFilteringEnabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        mAppInstallDao,
+                        mFrequencyCapDao,
+                        new FlagsWithFrequencyCapFilteringEnabled());
+
+        assertThat(adFilteringFeatureFactory.getFrequencyCapDataClearer())
+                .isInstanceOf(FrequencyCapDataClearerImpl.class);
+    }
+
+    @Test
+    public void testGetFrequencyCapDataClearerFilteringDisabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        mAppInstallDao,
+                        mFrequencyCapDao,
+                        new FlagsWithFrequencyCapFilteringDisabled());
+
+        assertThat(adFilteringFeatureFactory.getFrequencyCapDataClearer())
+                .isInstanceOf(FrequencyCapDataClearerNoOp.class);
     }
 
     @Test

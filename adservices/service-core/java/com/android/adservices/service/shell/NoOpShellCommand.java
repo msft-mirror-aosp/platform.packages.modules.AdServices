@@ -37,12 +37,20 @@ public final class NoOpShellCommand extends AbstractShellCommand {
         mDebugFlagKey = debugFlagKey;
     }
 
+    public NoOpShellCommand(final String commandName, @Command int metricsLoggerCommand) {
+        this(commandName, metricsLoggerCommand, /* debugFlagKey= */ "");
+    }
+
     @Override
     public ShellCommandResult run(PrintWriter out, PrintWriter err, String[] args) {
-        Log.d(
-                TAG,
-                String.format(
-                        "%s is disabled. %s cannot be executed.", mDebugFlagKey, mCommandName));
+        if (mDebugFlagKey.isEmpty()) {
+            Log.d(TAG, String.format("Command is disabled. %s cannot be executed.", mCommandName));
+        } else {
+            Log.d(
+                    TAG,
+                    String.format(
+                            "%s is disabled. %s cannot be executed.", mDebugFlagKey, mCommandName));
+        }
         err.print(String.format(RESPONSE_MSG, mCommandName));
         return toShellCommandResult(RESULT_NOT_ENABLED, mMetricsLoggerCommand);
     }

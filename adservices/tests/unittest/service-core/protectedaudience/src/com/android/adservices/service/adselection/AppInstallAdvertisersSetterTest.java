@@ -41,10 +41,13 @@ import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.os.LimitExceededException;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAppInstallPermissions;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
@@ -53,12 +56,11 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -72,7 +74,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AppInstallAdvertisersSetterTest {
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
+public class AppInstallAdvertisersSetterTest extends AdServicesExtendedMockitoTestCase {
 
     private static final int UID = 42;
 
@@ -97,19 +101,18 @@ public class AppInstallAdvertisersSetterTest {
 
     private AppInstallAdvertisersSetter mAppInstallAdvertisersSetter;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() {
         boolean filteringEnabled = true;
         Flags flags = new AppInstallAdvertisersSetterTestFlags(filteringEnabled);
+        mocker.mockGetDebugFlags(mMockDebugFlags);
         mAppInstallAdvertisersSetter =
                 new AppInstallAdvertisersSetter(
                         mAppInstallDaoMock,
                         mExecutorService,
                         mAdServicesLogger,
                         flags,
+                        mMockDebugFlags,
                         mAdSelectionServiceFilter,
                         mConsentManager,
                         UID,
@@ -143,19 +146,15 @@ public class AppInstallAdvertisersSetterTest {
     @Test
     public void testSetAppInstallAdvertisersSuccessWithUxNotificationEnforcementDisabled()
             throws Exception {
-        Flags flagsWithoutUxNotificationEnforcement =
-                new AppInstallAdvertisersSetterTestFlags(true) {
-                    @Override
-                    public boolean getConsentNotificationDebugMode() {
-                        return true;
-                    }
-                };
+        Flags flags = new AppInstallAdvertisersSetterTestFlags(true);
+        mocker.mockGetConsentNotificationDebugMode(true);
         AppInstallAdvertisersSetter appInstallAdvertisersSetter =
                 new AppInstallAdvertisersSetter(
                         mAppInstallDaoMock,
                         mExecutorService,
                         mAdServicesLogger,
-                        flagsWithoutUxNotificationEnforcement,
+                        flags,
+                        mMockDebugFlags,
                         mAdSelectionServiceFilter,
                         mConsentManager,
                         UID,
@@ -194,6 +193,7 @@ public class AppInstallAdvertisersSetterTest {
                         mExecutorService,
                         mAdServicesLogger,
                         flags,
+                        mMockDebugFlags,
                         mAdSelectionServiceFilter,
                         mConsentManager,
                         UID,
@@ -430,11 +430,6 @@ public class AppInstallAdvertisersSetterTest {
         @Override
         public boolean getFledgeAppInstallFilteringEnabled() {
             return mAppInstallFilteringEnabled;
-        }
-
-        @Override
-        public boolean getConsentNotificationDebugMode() {
-            return false;
         }
     }
 }

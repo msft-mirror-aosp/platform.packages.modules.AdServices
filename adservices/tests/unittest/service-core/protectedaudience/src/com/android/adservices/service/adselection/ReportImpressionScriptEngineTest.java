@@ -50,7 +50,6 @@ import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -68,7 +67,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
-@RequiresSdkLevelAtLeastS
 public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTestCase {
     private static final String TAG = "ReportImpressionScriptEngineTest";
     private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED =

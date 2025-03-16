@@ -16,6 +16,37 @@
 
 package android.adservices.test.scenario.adservices.utils;
 
+import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
+
 import android.Manifest;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -53,10 +84,11 @@ public class SelectAdsFlagRule implements TestRule {
     private void setupFlags() {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+                .adoptShellPermissionIdentity(
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG);
         enableAdservicesApi();
         disableApiThrottling();
-        disablePhenotypeFlagUpdates();
         extendAuctionTimeouts();
         // Disable backoff since we will be killing the process between tests
         disableBackoff();
@@ -64,13 +96,9 @@ public class SelectAdsFlagRule implements TestRule {
     }
 
     private void modifyServerAuctionFlags() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_auction_server_ad_render_id_enabled "
-                        + "true");
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_auction_server_kill_switch false");
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_auction_server_enabled true");
+        flags.setFlag(KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED, true);
+        flags.setFlag(KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH, false);
+        flags.setFlag(KEY_FLEDGE_AUCTION_SERVER_ENABLED, true);
     }
 
     private static void disableBackoff() {
@@ -80,42 +108,39 @@ public class SelectAdsFlagRule implements TestRule {
         ShellUtils.runShellCommand("am service-restart-backoff disable " + packageName);
     }
 
-    private static void extendAuctionTimeouts() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_ad_selection_bidding_timeout_per_ca_ms "
-                        + "120000");
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_ad_selection_scoring_timeout_ms 120000");
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_ad_selection_overall_timeout_ms 120000");
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_ad_selection_bidding_timeout_per_buyer_ms "
-                        + "120000");
+    private void extendAuctionTimeouts() {
+        flags.setFlag(KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS, 120000);
+        flags.setFlag(KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS, 120000);
+        flags.setFlag(KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, 120000);
+        flags.setFlag(KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS, 120000);
     }
 
-    private static void disableApiThrottling() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices sdk_request_permits_per_second 100000");
+    private void disableApiThrottling() {
+        flags.setFlag(KEY_FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND, 1000);
+        flags.setFlag(KEY_FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND, 1000);
+        flags.setFlag(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND, 1000);
+        flags.setFlag(KEY_FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND, 1000);
+        flags.setFlag(KEY_FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND, 1000);
+        flags.setFlag(KEY_FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND, 1000);
+        flags.setFlag(KEY_FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND, 1000);
+        flags.setFlag(KEY_FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND, 1000);
+        flags.setFlag(KEY_FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND, 1000);
+        flags.setFlag(KEY_FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND, 1000);
+        flags.setFlag(KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND, 1000);
+        flags.setFlag(KEY_FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND, 1000);
+        flags.setFlag(KEY_FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND, 1000);
+        flags.setFlag(KEY_SDK_REQUEST_PERMITS_PER_SECOND, 100000);
     }
 
-    private static void disablePhenotypeFlagUpdates() {
-        ShellUtils.runShellCommand("device_config set_sync_disabled_for_tests persistent");
-    }
-
-    private static void enableAdservicesApi() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices disable_fledge_enrollment_check true");
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_notification_debug_mode true");
-        ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
-        ShellUtils.runShellCommand(
-                "device_config put fledge_schedule_custom_audience_update_enabled true");
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_custom_audience_service_kill_switch false");
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_select_ads_kill_switch false");
-        ShellUtils.runShellCommand(
-                "device_config put adservices adservice_system_service_enabled true");
-        ShellUtils.runShellCommand("device_config put adservices enable_back_compat true");
+    private void enableAdservicesApi() {
+        flags.setFlag(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, true);
+        flags.setFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, true);
+        flags.setFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, true);
+        flags.setFlag(KEY_GLOBAL_KILL_SWITCH, false);
+        flags.setFlag(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED, true);
+        flags.setFlag(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, false);
+        flags.setFlag(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH, false);
+        flags.setFlag(KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED, true);
+        flags.setFlag(KEY_ENABLE_BACK_COMPAT, true);
     }
 }

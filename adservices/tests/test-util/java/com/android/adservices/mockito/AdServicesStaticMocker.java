@@ -16,6 +16,7 @@
 
 package com.android.adservices.mockito;
 
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -43,6 +44,15 @@ public interface AdServicesStaticMocker {
      *     equivalent annotations) on {@link FlagsFactory}.
      */
     void mockGetFlagsForTesting();
+
+    /**
+     * Mocks a call of {@link DebugFlags#getInstance()} to return the passed-in mocking {@link
+     * DebugFlags} object.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link DebugFlags}.
+     */
+    void mockGetDebugFlags(DebugFlags mockedDebugFlags);
 
     /**
      * Mocks a call to {@link AdServicesJobScheduler#getInstance()}.

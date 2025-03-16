@@ -15,6 +15,9 @@
  */
 package com.android.adservices.measurement;
 
+import static com.android.adservices.measurement.MeasurementManagerUtil.buildDefaultAppSourcesRegistrationRequest;
+import static com.android.adservices.measurement.MeasurementManagerUtil.buildDefaultWebSourceRegistrationRequest;
+import static com.android.adservices.measurement.MeasurementManagerUtil.buildDefaultWebTriggerRegistrationRequest;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 
@@ -32,9 +35,7 @@ import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementCompatibleManager;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.SourceRegistrationRequest;
-import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
-import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.net.Uri;
 import android.os.OutcomeReceiver;
@@ -43,14 +44,13 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.AdServicesEndToEndTestCase;
 import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.junit.SafeAndroidJUnitRunner;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
@@ -58,6 +58,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @SetMsmtApiAppAllowList
+@RunWith(SafeAndroidJUnitRunner.class)
+@SuppressWarnings("NewApi")
 public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     private static final long TIMEOUT = 5000L;
 
@@ -68,7 +70,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_executorAndCallbackCalled() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         CountDownLatch anyCountDownLatch = new CountDownLatch(1);
@@ -116,24 +117,7 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
         assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
-    private WebSourceRegistrationRequest buildDefaultWebSourceRegistrationRequest() {
-        WebSourceParams webSourceParams =
-                new WebSourceParams.Builder(Uri.parse("https://example.com"))
-                        .setDebugKeyAllowed(false)
-                        .build();
-
-        return new WebSourceRegistrationRequest.Builder(
-                Collections.singletonList(webSourceParams),
-                Uri.parse("https://example.com"))
-                .setInputEvent(null)
-                .setAppDestination(Uri.parse("android-app://com.example"))
-                .setWebDestination(Uri.parse("https://example.com"))
-                .setVerifiedDestination(null)
-                .build();
-    }
-
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterWebSource_executorAndCallbackCalled() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         CountDownLatch anyCountDownLatch = new CountDownLatch(1);
@@ -179,19 +163,7 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
         assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
-    private WebTriggerRegistrationRequest buildDefaultWebTriggerRegistrationRequest() {
-        WebTriggerParams webTriggerParams =
-                new WebTriggerParams.Builder(Uri.parse("https://example.com"))
-                        .setDebugKeyAllowed(false)
-                        .build();
-        return new WebTriggerRegistrationRequest.Builder(
-                        Collections.singletonList(webTriggerParams),
-                        Uri.parse("https://example.com"))
-                .build();
-    }
-
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterWebTrigger_executorAndCallbackCalled() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         CountDownLatch anyCountDownLatch = new CountDownLatch(1);
@@ -238,7 +210,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterTrigger_executorAndCallbackCalled() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         CountDownLatch anyCountDownLatch = new CountDownLatch(1);
@@ -285,7 +256,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_nullExecutor_throwNullPointerException() {
         MeasurementManager mm = getMeasurementManager();
         assertThrows(
@@ -313,7 +283,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_nullCallback_throwNullPointerException() {
         MeasurementManager mm = getMeasurementManager();
         assertThrows(
@@ -340,7 +309,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testGetMeasurementApiStatus() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         overrideConsentNotifiedDebugMode();
@@ -389,7 +357,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testGetMeasurementApiStatus_nullExecutor_throwNullPointerException() {
         MeasurementManager mm = getMeasurementManager();
         overrideConsentManagerDebugMode();
@@ -417,7 +384,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testGetMeasurementApiStatus_nullCallback_throwNullPointerException() {
         MeasurementManager mm = getMeasurementManager();
         overrideConsentManagerDebugMode();
@@ -462,7 +428,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -491,7 +456,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_propagatesExecutor_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -510,8 +474,7 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         Uri uri = Uri.parse("http://www.example.com");
-        AdServicesOutcomeReceiver<Object, Exception> callback =
-                mock(AdServicesOutcomeReceiver.class);
+        OutcomeReceiver<Object, Exception> callback = mock(OutcomeReceiver.class);
         mm.registerSource(uri, /* inputEvent= */ null, /* executor= */ null, callback);
 
         verify(impl).registerSource(eq(uri), isNull(), isNull(), eq(callback));
@@ -519,7 +482,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_propagatesCallback_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -527,8 +489,8 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
         OutcomeReceiver<Object, Exception> callback = mock(OutcomeReceiver.class);
         mm.registerSource(uri, /* inputEvent= */ null, /* executor= */ null, callback);
 
-        ArgumentCaptor<AdServicesOutcomeReceiver<Object, Exception>> captor =
-                ArgumentCaptor.forClass(AdServicesOutcomeReceiver.class);
+        ArgumentCaptor<OutcomeReceiver<Object, Exception>> captor =
+                ArgumentCaptor.forClass(OutcomeReceiver.class);
         verify(impl).registerSource(eq(uri), isNull(), isNull(), captor.capture());
         verifyCallback(callback, captor.getValue());
         verifyNoMoreInteractions(impl);
@@ -539,8 +501,7 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         WebSourceRegistrationRequest request = buildDefaultWebSourceRegistrationRequest();
-        AdServicesOutcomeReceiver<Object, Exception> callback =
-                mock(AdServicesOutcomeReceiver.class);
+        OutcomeReceiver<Object, Exception> callback = mock(OutcomeReceiver.class);
 
         mm.registerWebSource(request, CALLBACK_EXECUTOR, callback);
 
@@ -549,7 +510,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterWebSource_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -558,8 +518,8 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
 
         mm.registerWebSource(request, CALLBACK_EXECUTOR, callback);
 
-        ArgumentCaptor<AdServicesOutcomeReceiver<Object, Exception>> captor =
-                ArgumentCaptor.forClass(AdServicesOutcomeReceiver.class);
+        ArgumentCaptor<OutcomeReceiver<Object, Exception>> captor =
+                ArgumentCaptor.forClass(OutcomeReceiver.class);
         verify(impl).registerWebSource(eq(request), eq(CALLBACK_EXECUTOR), captor.capture());
         verifyCallback(callback, captor.getValue());
         verifyNoMoreInteractions(impl);
@@ -570,8 +530,7 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         WebTriggerRegistrationRequest request = buildDefaultWebTriggerRegistrationRequest();
-        AdServicesOutcomeReceiver<Object, Exception> callback =
-                mock(AdServicesOutcomeReceiver.class);
+        OutcomeReceiver<Object, Exception> callback = mock(OutcomeReceiver.class);
 
         mm.registerWebTrigger(request, CALLBACK_EXECUTOR, callback);
 
@@ -580,7 +539,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterWebTrigger_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -589,8 +547,8 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
 
         mm.registerWebTrigger(request, CALLBACK_EXECUTOR, callback);
 
-        ArgumentCaptor<AdServicesOutcomeReceiver<Object, Exception>> captor =
-                ArgumentCaptor.forClass(AdServicesOutcomeReceiver.class);
+        ArgumentCaptor<OutcomeReceiver<Object, Exception>> captor =
+                ArgumentCaptor.forClass(OutcomeReceiver.class);
         verify(impl).registerWebTrigger(eq(request), eq(CALLBACK_EXECUTOR), captor.capture());
         verifyCallback(callback, captor.getValue());
         verifyNoMoreInteractions(impl);
@@ -601,8 +559,7 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         Uri uri = Uri.parse("https://www.example.com");
-        AdServicesOutcomeReceiver<Object, Exception> callback =
-                mock(AdServicesOutcomeReceiver.class);
+        OutcomeReceiver<Object, Exception> callback = mock(OutcomeReceiver.class);
 
         mm.registerTrigger(uri, CALLBACK_EXECUTOR, callback);
 
@@ -611,7 +568,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterTrigger_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -620,8 +576,8 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
 
         mm.registerTrigger(uri, CALLBACK_EXECUTOR, callback);
 
-        ArgumentCaptor<AdServicesOutcomeReceiver<Object, Exception>> captor =
-                ArgumentCaptor.forClass(AdServicesOutcomeReceiver.class);
+        ArgumentCaptor<OutcomeReceiver<Object, Exception>> captor =
+                ArgumentCaptor.forClass(OutcomeReceiver.class);
         verify(impl).registerTrigger(eq(uri), eq(CALLBACK_EXECUTOR), captor.capture());
         verifyCallback(callback, captor.getValue());
         verifyNoMoreInteractions(impl);
@@ -632,8 +588,7 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         DeletionRequest request = new DeletionRequest.Builder().build();
-        AdServicesOutcomeReceiver<Object, Exception> callback =
-                mock(AdServicesOutcomeReceiver.class);
+        OutcomeReceiver<Object, Exception> callback = mock(OutcomeReceiver.class);
 
         mm.deleteRegistrations(request, CALLBACK_EXECUTOR, callback);
 
@@ -642,7 +597,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -651,8 +605,8 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
 
         mm.deleteRegistrations(request, CALLBACK_EXECUTOR, callback);
 
-        ArgumentCaptor<AdServicesOutcomeReceiver<Object, Exception>> captor =
-                ArgumentCaptor.forClass(AdServicesOutcomeReceiver.class);
+        ArgumentCaptor<OutcomeReceiver<Object, Exception>> captor =
+                ArgumentCaptor.forClass(OutcomeReceiver.class);
         verify(impl).deleteRegistrations(eq(request), eq(CALLBACK_EXECUTOR), captor.capture());
         verifyCallback(callback, captor.getValue());
         verifyNoMoreInteractions(impl);
@@ -662,8 +616,7 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     public void testGetMeasurementApiStatus_MockImpl() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
-        AdServicesOutcomeReceiver<Integer, Exception> callback =
-                mock(AdServicesOutcomeReceiver.class);
+        OutcomeReceiver<Integer, Exception> callback = mock(OutcomeReceiver.class);
 
         mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
 
@@ -672,7 +625,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testGetMeasurementApiStatus_MockImpl_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -680,11 +632,11 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
 
         mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
 
-        ArgumentCaptor<AdServicesOutcomeReceiver<Integer, Exception>> captor =
-                ArgumentCaptor.forClass(AdServicesOutcomeReceiver.class);
+        ArgumentCaptor<OutcomeReceiver<Integer, Exception>> captor =
+                ArgumentCaptor.forClass(OutcomeReceiver.class);
         verify(impl).getMeasurementApiStatus(eq(CALLBACK_EXECUTOR), captor.capture());
 
-        AdServicesOutcomeReceiver<Integer, Exception> invoked = captor.getValue();
+        OutcomeReceiver<Integer, Exception> invoked = captor.getValue();
         invoked.onResult(1);
         verify(callback).onResult(1);
 
@@ -699,8 +651,7 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         SourceRegistrationRequest request = buildDefaultAppSourcesRegistrationRequest();
-        AdServicesOutcomeReceiver<Object, Exception> callback =
-                mock(AdServicesOutcomeReceiver.class);
+        OutcomeReceiver<Object, Exception> callback = mock(OutcomeReceiver.class);
 
         mm.registerSource(request, CALLBACK_EXECUTOR, callback);
 
@@ -709,7 +660,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterSourceMultiple_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -718,20 +668,11 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
 
         mm.registerSource(request, CALLBACK_EXECUTOR, callback);
 
-        ArgumentCaptor<AdServicesOutcomeReceiver<Object, Exception>> captor =
-                ArgumentCaptor.forClass(AdServicesOutcomeReceiver.class);
+        ArgumentCaptor<OutcomeReceiver<Object, Exception>> captor =
+                ArgumentCaptor.forClass(OutcomeReceiver.class);
         verify(impl).registerSource(eq(request), eq(CALLBACK_EXECUTOR), captor.capture());
         verifyCallback(callback, captor.getValue());
         verifyNoMoreInteractions(impl);
-    }
-
-    private SourceRegistrationRequest buildDefaultAppSourcesRegistrationRequest() {
-        return new SourceRegistrationRequest.Builder(
-                        List.of(
-                                Uri.parse("https://example1.com"),
-                                Uri.parse("https://example2.com")))
-                .setInputEvent(null)
-                .build();
     }
 
     @Test
@@ -748,8 +689,7 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     // Mockito crashes on Android R if there are any methods that take unknown types, such as
     // OutcomeReceiver. So, declaring the parameter as Object and then casting to the
     // correct type.
-    private void verifyCallback(
-            Object expected, AdServicesOutcomeReceiver<Object, Exception> invoked) {
+    private void verifyCallback(Object expected, OutcomeReceiver<Object, Exception> invoked) {
         OutcomeReceiver<Object, Exception> callback = (OutcomeReceiver<Object, Exception>) expected;
         invoked.onResult("Test");
         verify(callback).onResult("Test");

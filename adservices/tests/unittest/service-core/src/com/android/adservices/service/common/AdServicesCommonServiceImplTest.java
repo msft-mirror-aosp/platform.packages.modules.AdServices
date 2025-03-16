@@ -34,6 +34,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -44,9 +45,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
-import android.adservices.common.AdServicesCommonResponse;
+import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStatesResponse;
-import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesStates;
 import android.adservices.common.CallerMetadata;
@@ -57,22 +57,28 @@ import android.adservices.common.GetAdServicesCommonStatesParams;
 import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IAdServicesCommonStatesCallback;
 import android.adservices.common.IEnableAdServicesCallback;
-import android.adservices.common.ISetAdServicesModuleOverridesCallback;
-import android.adservices.common.ISetAdServicesModuleUserChoicesCallback;
+import android.adservices.common.IRequestAdServicesModuleOverridesCallback;
+import android.adservices.common.IRequestAdServicesModuleUserChoicesCallback;
 import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
-import android.adservices.common.NotificationTypeParams;
+import android.adservices.common.Module;
+import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
+import android.adservices.common.UpdateAdServicesModuleStatesParams;
+import android.adservices.common.UpdateAdServicesUserChoicesParams;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.RemoteException;
 import android.telephony.TelephonyManager;
+import android.util.SparseIntArray;
 
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdWorker;
@@ -105,6 +111,7 @@ import java.util.List;
 @SpyStatic(ConsentNotificationJobService.class)
 @SpyStatic(ConsentManager.class)
 @SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 @SpyStatic(BackgroundJobsManager.class)
 @SpyStatic(PermissionHelper.class)
 @SpyStatic(UxStatesManager.class)
@@ -126,6 +133,12 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     @Captor private ArgumentCaptor<String> mStringArgumentCaptor;
     @Captor private ArgumentCaptor<Integer> mIntegerArgumentCaptor;
 
+    @Captor private ArgumentCaptor<SparseIntArray> mAdservicesModuleStatesArgumentCaptor;
+
+    @Captor
+    private ArgumentCaptor<List<AdServicesModuleUserChoice>>
+            mAdservicesModuleUserChoiceArgumentCaptor;
+
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
     private static final String TEST_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
@@ -144,6 +157,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new AdServicesCommonServiceImpl(
                         mMockContext,
                         mMockFlags,
+                        mMockDebugFlags,
                         mUxEngine,
                         mUxStatesManager,
                         mMockAdIdWorker,
@@ -151,6 +165,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                         mClock);
         mLogApiCallStatsCallback = mocker.mockLogApiCallStats(mAdServicesLogger);
         mocker.mockGetFlags(mMockFlags);
+        mocker.mockGetDebugFlags(mMockDebugFlags);
         doReturn(true).when(mMockFlags).getAdServicesEnabled();
 
         ExtendedMockito.doNothing()
@@ -193,6 +208,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new AdServicesCommonServiceImpl(
                         mMockContext,
                         mMockFlags,
+                        mMockDebugFlags,
                         mUxEngine,
                         mUxStatesManager,
                         mMockAdIdWorker,
@@ -216,6 +232,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new AdServicesCommonServiceImpl(
                         mMockContext,
                         mMockFlags,
+                        mMockDebugFlags,
                         mUxEngine,
                         mUxStatesManager,
                         mMockAdIdWorker,
@@ -233,6 +250,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new AdServicesCommonServiceImpl(
                         mMockContext,
                         mMockFlags,
+                        mMockDebugFlags,
                         mUxEngine,
                         mUxStatesManager,
                         mMockAdIdWorker,
@@ -259,6 +277,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new AdServicesCommonServiceImpl(
                         mMockContext,
                         mMockFlags,
+                        mMockDebugFlags,
                         mUxEngine,
                         mUxStatesManager,
                         mMockAdIdWorker,
@@ -974,7 +993,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
-    public void testSetAdServicesModuleOverrides() throws Exception {
+    public void testRequestAdServicesModuleOverrides() throws Exception {
         ExtendedMockito.doReturn(true)
                 .when(
                         () ->
@@ -983,22 +1002,54 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
 
         ExtendedMockito.doReturn(mConsentManager).when(ConsentManager::getInstance);
 
-        SetAdServicesModuleOverridesCallback callback =
-                new SetAdServicesModuleOverridesCallback(BINDER_CONNECTION_TIMEOUT_MS);
-        List<AdServicesModuleState> adServicesModuleStates =
-                List.of(
-                        new AdServicesModuleState.Builder().setModule(1).setModuleState(2).build(),
-                        new AdServicesModuleState.Builder().setModule(2).setModuleState(3).build());
-        mCommonService.setAdServicesModuleOverrides(
-                adServicesModuleStates,
-                new NotificationTypeParams.Builder()
-                        .setNotificationType(NotificationTypeParams.NOTIFICATION_ONGOING)
-                        .build(),
-                callback);
+        RequestAdServicesModuleOverridesCallback callback =
+                new RequestAdServicesModuleOverridesCallback(BINDER_CONNECTION_TIMEOUT_MS);
+        UpdateAdServicesModuleStatesParams params =
+                new UpdateAdServicesModuleStatesParams.Builder()
+                        .setModuleState(
+                                Module.PROTECTED_AUDIENCE,
+                                AdServicesCommonManager.MODULE_STATE_ENABLED)
+                        .setModuleState(
+                                Module.PROTECTED_APP_SIGNALS,
+                                AdServicesCommonManager.MODULE_STATE_DISABLED)
+                        .setNotificationType(NotificationType.NOTIFICATION_ONGOING)
+                        .build();
+        doNothing()
+                .when(
+                        () ->
+                                ConsentNotificationJobService.scheduleNotificationV2(
+                                        any(), anyBoolean(), anyBoolean(), anyBoolean()));
+        mCommonService.requestAdServicesModuleOverrides(params, callback);
 
-        AdServicesCommonResponse response = callback.assertSuccess();
-        assertThat(response.getStatusCode()).isEqualTo(STATUS_SUCCESS);
-        verify(mConsentManager, atLeastOnce()).setModuleStates(eq(adServicesModuleStates));
+        callback.assertSuccess();
+        verify(mConsentManager, atLeastOnce())
+                .setModuleStates(mAdservicesModuleStatesArgumentCaptor.capture());
+        SparseIntArray moduleStates = mAdservicesModuleStatesArgumentCaptor.getValue();
+        assertThat(moduleStates.size()).isEqualTo(2);
+        boolean isPaAvailable = false;
+        boolean isPasAvailable = false;
+        for (int i = 0; i < moduleStates.size(); i++) {
+            int key = moduleStates.keyAt(i);
+            int value = moduleStates.valueAt(i);
+            switch (key) {
+                case Module.PROTECTED_AUDIENCE:
+                    isPaAvailable = true;
+                    expect.withMessage("module: PROTECTED_AUDIENCE")
+                            .that(value)
+                            .isEqualTo(AdServicesCommonManager.MODULE_STATE_ENABLED);
+                    break;
+                case Module.PROTECTED_APP_SIGNALS:
+                    isPasAvailable = true;
+                    expect.withMessage("module: PROTECTED_APP_SIGNALS")
+                            .that(value)
+                            .isEqualTo(AdServicesCommonManager.MODULE_STATE_DISABLED);
+                    break;
+                default:
+                    break;
+            }
+        }
+        expect.withMessage("isPaAvailable").that(isPaAvailable).isTrue();
+        expect.withMessage("isPasAvailable").that(isPasAvailable).isTrue();
     }
 
     @Test
@@ -1010,22 +1061,59 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                                         any(), any()));
         ExtendedMockito.doReturn(mConsentManager).when(ConsentManager::getInstance);
 
-        SetAdServicesModuleUserChoicesCallback callback =
-                new SetAdServicesModuleUserChoicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
-        List<AdServicesModuleUserChoice> adServicesModuleUserChoices =
-                List.of(
-                        new AdServicesModuleUserChoice.Builder()
-                                .setModule(1)
-                                .setUserChoice(2)
-                                .build(),
-                        new AdServicesModuleUserChoice.Builder()
-                                .setModule(2)
-                                .setUserChoice(3)
-                                .build());
-        mCommonService.setAdServicesModuleUserChoices(adServicesModuleUserChoices, callback);
-        AdServicesCommonResponse response = callback.assertSuccess();
-        assertThat(response.getStatusCode()).isEqualTo(STATUS_SUCCESS);
-        verify(mConsentManager, atLeastOnce()).setUserChoices(eq(adServicesModuleUserChoices));
+        RequestAdServicesModuleUserChoicesCallback callback =
+                new RequestAdServicesModuleUserChoicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
+
+        UpdateAdServicesUserChoicesParams params =
+                new UpdateAdServicesUserChoicesParams.Builder()
+                        .setUserChoice(
+                                Module.PROTECTED_AUDIENCE,
+                                AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN)
+                        .setUserChoice(
+                                Module.PROTECTED_APP_SIGNALS,
+                                AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT)
+                        .build();
+        mCommonService.requestAdServicesModuleUserChoices(params, callback);
+        callback.assertSuccess();
+        verify(mConsentManager, atLeastOnce())
+                .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
+        List<AdServicesModuleUserChoice> userChoiceList =
+                mAdservicesModuleUserChoiceArgumentCaptor.getValue();
+        assertThat(userChoiceList).hasSize(2);
+        boolean isPaAvailable = false;
+        boolean isPasAvailable = false;
+        for (AdServicesModuleUserChoice userChoice : userChoiceList) {
+            switch (userChoice.getModule()) {
+                case Module.PROTECTED_AUDIENCE:
+                    isPaAvailable = true;
+                    expect.withMessage("state.getModule(): PROTECTED_AUDIENCE")
+                            .that(userChoice.getUserChoice())
+                            .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
+                    break;
+                case Module.PROTECTED_APP_SIGNALS:
+                    isPasAvailable = true;
+                    expect.withMessage("state.getModule(): PROTECTED_APP_SIGNALS")
+                            .that(userChoice.getUserChoice())
+                            .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT);
+                    break;
+                default:
+                    break;
+            }
+        }
+        expect.withMessage("isPaAvailable").that(isPaAvailable).isTrue();
+        expect.withMessage("isPasAvailable").that(isPasAvailable).isTrue();
+    }
+
+    @Test
+    public void testInvalidAdServicesEnrollmentInfo() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new UpdateAdServicesModuleStatesParams.Builder().setModuleState(6, 1));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new UpdateAdServicesModuleStatesParams.Builder().setModuleState(1, 3));
+        assertThrows(IllegalArgumentException.class, () -> new AdServicesModuleUserChoice(6, 2));
+        assertThrows(IllegalArgumentException.class, () -> new AdServicesModuleUserChoice(5, 4));
     }
 
     private IsAdServicesEnabledResult getStatusResult() throws Exception {
@@ -1075,19 +1163,29 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         }
     }
 
-    private static final class SetAdServicesModuleOverridesCallback
-            extends IntFailureSyncCallback<AdServicesCommonResponse>
-            implements ISetAdServicesModuleOverridesCallback {
-        private SetAdServicesModuleOverridesCallback(long timeoutMs) {
+    private static final class RequestAdServicesModuleOverridesCallback
+            extends IntFailureSyncCallback<Void>
+            implements IRequestAdServicesModuleOverridesCallback {
+        private RequestAdServicesModuleOverridesCallback(long timeoutMs) {
             super(timeoutMs);
+        }
+
+        @Override
+        public void onSuccess() throws RemoteException {
+            super.onResult(null);
         }
     }
 
-    private static final class SetAdServicesModuleUserChoicesCallback
-            extends IntFailureSyncCallback<AdServicesCommonResponse>
-            implements ISetAdServicesModuleUserChoicesCallback {
-        private SetAdServicesModuleUserChoicesCallback(long timeoutMs) {
+    private static final class RequestAdServicesModuleUserChoicesCallback
+            extends IntFailureSyncCallback<Void>
+            implements IRequestAdServicesModuleUserChoicesCallback {
+        private RequestAdServicesModuleUserChoicesCallback(long timeoutMs) {
             super(timeoutMs);
+        }
+
+        @Override
+        public void onSuccess() throws RemoteException {
+            super.onResult(null);
         }
     }
 

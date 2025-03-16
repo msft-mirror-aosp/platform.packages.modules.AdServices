@@ -16,14 +16,18 @@
 
 package com.android.adservices.ohttp.algorithms;
 
-import org.junit.Assert;
+import static com.google.common.truth.Truth.assertThat;
+
+import static org.junit.Assert.assertThrows;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
+
 import org.junit.Test;
 
-public class KdfAlgorithmSpecTest {
+public final class KdfAlgorithmSpecTest extends AdServicesUnitTestCase {
     @Test
     public void get_unsupportedId_throwsError() {
-        Assert.assertThrows(
-                UnsupportedHpkeAlgorithmException.class, () -> KdfAlgorithmSpec.get(100));
+        assertThrows(UnsupportedHpkeAlgorithmException.class, () -> KdfAlgorithmSpec.get(100));
     }
 
     @Test
@@ -31,7 +35,8 @@ public class KdfAlgorithmSpecTest {
         KdfAlgorithmSpec kdfAlgorithmSpec =
                 KdfAlgorithmSpec.get(KdfAlgorithmSpec.HKDF_SHA256_IDENTIFIER);
 
-        Assert.assertEquals(kdfAlgorithmSpec.extractOutputLength(), 32);
-        Assert.assertEquals(kdfAlgorithmSpec.identifier(), KdfAlgorithmSpec.HKDF_SHA256_IDENTIFIER);
+        assertThat(kdfAlgorithmSpec.extractOutputLength()).isEqualTo(32);
+        assertThat(kdfAlgorithmSpec.identifier())
+                .isEqualTo(KdfAlgorithmSpec.HKDF_SHA256_IDENTIFIER);
     }
 }

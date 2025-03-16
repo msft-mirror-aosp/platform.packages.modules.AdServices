@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service.adid;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
@@ -41,6 +42,7 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
@@ -98,6 +100,14 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
             @NonNull GetAdIdParam adIdParam,
             @NonNull CallerMetadata callerMetadata,
             @NonNull IGetAdIdCallback callback) {
+
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
+            invokeCallbackWithStatus(
+                    callback,
+                    STATUS_ADSERVICES_DISABLED,
+                    "AdServices is not supported on Android R");
+            return;
+        }
 
         if (isThrottled(adIdParam, callback)) return;
 

@@ -84,7 +84,8 @@
               "campaignCounts": 32768,
               "geoValue": 1664,
               "thirdSource": 100
-            }
+            },
+            "aggregatable_source_registration_time": "INCLUDE"
           },
           "Location": null,
           "Attribution-Reporting-Redirect": null
@@ -123,7 +124,9 @@
         "histograms": [
           {"key": "0x559", "value": 32768},
           {"key": "0xa85", "value": 1664},
-          {"key":"0x100", "value":"100"}
+          {"key":"0x100", "value":"100"},
+          {"key": "0x0", "value": 0},
+          {"key": "0x0", "value": 0}
         ]
       }
     }]

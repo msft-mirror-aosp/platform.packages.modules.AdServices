@@ -159,6 +159,26 @@ scenarios [
     after_test: STAY_IN_APP
   },
   {
+      index: 2
+      journeys [
+        {
+          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+          methodName: "registerTrigger"
+          extras [
+            {
+              key: "sdk_name"
+              value: "sdk4"
+            },
+            {
+              key: "disable_enrollments_check"
+              value: "true"
+            }
+          ]
+        }
+      ]
+      after_test: STAY_IN_APP
+  },
+  {
     index: 1
     journeys [
       {
@@ -192,6 +212,40 @@ scenarios [
     ]
     after_test: STAY_IN_APP
   },
+  {
+      index: 1
+      journeys [
+        {
+          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+          methodName: "repeatedlyRegisterTrigger"
+          extras [
+            {
+              key: "repeat_count"
+              value: "25"
+            },
+            {
+              key: "ms_delay_pre"
+              value: "500"
+            },
+            {
+              key: "sdk_name"
+              value: "sdk3"
+            }
+          ]
+        },
+        {
+          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+          methodName: "registerTrigger"
+          extras [
+            {
+              key: "sdk_name"
+              value: "sdk3"
+            }
+          ]
+        }
+      ]
+      after_test: STAY_IN_APP
+    },
   {
     index: 1
     journeys [
@@ -261,24 +315,38 @@ scenarios [
     after_test: STAY_IN_APP
   },
   {
-    index: 1
-    journeys [
-      {
-        journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.ForceRunJob"
-        methodName: "forceRunJob"
-        extras [
-          {
-            key: "job_id"
-            value: "20"
-          },
-          {
-            key: "ms_delay_post"
-            value: "5000"
-          }
-        ]
-      }
-    ]
-    after_test: STAY_IN_APP
+  index: 1
+      journeys [
+        {
+          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+          methodName: "repeatedlyRegisterTrigger"
+          extras [
+            {
+              key: "repeat_count"
+              value: "25"
+            },
+            {
+              key: "ms_delay_pre"
+              value: "500"
+            },
+            {
+              key: "sdk_name"
+              value: "sdk3"
+            }
+          ]
+        },
+        {
+          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+          methodName: "registerTrigger"
+          extras [
+            {
+              key: "sdk_name"
+              value: "sdk3"
+            }
+          ]
+        }
+      ]
+      after_test: STAY_IN_APP
   }
 ]
 repetitions: 1

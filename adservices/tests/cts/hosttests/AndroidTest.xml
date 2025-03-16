@@ -26,6 +26,9 @@
         <option name="test-file-name" value="CtsAdservicesHostTestApp.apk" />
     </target_preparer>
 
+    <!-- Needed to set TestDeviceHelper for class rules -->
+    <target_preparer class="com.android.adservices.common.AdServicesHostTestsTargetPreparer"/>
+
     <test class="com.android.compatibility.common.tradefed.testtype.JarHostTest" >
         <option name="jar" value="CtsAdServicesHostTests.jar" />
     </test>

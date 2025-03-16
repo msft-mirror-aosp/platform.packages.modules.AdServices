@@ -137,7 +137,8 @@
                   "campaignCounts": 32768,
                   "geoValue": 1664
                 },
-                "debug_key": "147982378"
+                "debug_key": "147982378",
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -189,7 +190,10 @@
             {
               "key": "0xa85",
               "value": 1664
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "347982378",
           "trigger_debug_key": "147982378",
@@ -237,7 +241,10 @@
             {
               "key": "0xa85",
               "value": 1664
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "347982378",
           "trigger_debug_key": "147982378",

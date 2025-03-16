@@ -154,6 +154,8 @@ public class AsyncRegistrationQueueJobService extends JobService {
         jobScheduler.schedule(job);
     }
 
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     @VisibleForTesting
     static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
@@ -180,6 +182,8 @@ public class AsyncRegistrationQueueJobService extends JobService {
      * @param context the context
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
         if (flags.getAsyncRegistrationJobQueueKillSwitch()) {
@@ -213,6 +217,8 @@ public class AsyncRegistrationQueueJobService extends JobService {
      *
      * @param context application context
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     private static void cancelDeprecatedAsyncRegistrationJob(Context context) {
         JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         int deprecatedAsyncRegJobId =

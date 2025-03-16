@@ -26,6 +26,7 @@ import android.util.ArrayMap;
 import com.android.internal.annotations.GuardedBy;
 import com.android.server.sdksandbox.helpers.PackageManagerHelper;
 
+import java.io.PrintWriter;
 import java.util.List;
 
 /**
@@ -113,6 +114,18 @@ class SdkSandboxRestrictionManager {
     public void clearEffectiveTargetSdkVersion(int appUid) {
         synchronized (mLock) {
             mEffectiveTargetSdkVersions.remove(appUid);
+        }
+    }
+
+    public void dump(PrintWriter writer) {
+        synchronized (mLock) {
+            writer.println(
+                    "Effective target sdk version for "
+                            + mEffectiveTargetSdkVersions.size()
+                            + " UIDs:");
+            for (int uid : mEffectiveTargetSdkVersions.keySet()) {
+                writer.println(uid + ": " + mEffectiveTargetSdkVersions.get(uid));
+            }
         }
     }
 

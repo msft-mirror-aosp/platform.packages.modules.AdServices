@@ -36,6 +36,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAppInstallPermissions;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AdTechIdentifierValidator;
@@ -75,6 +76,7 @@ public class AppInstallAdvertisersSetter {
     private final int mCallerUid;
     private DevContext mDevContext;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
     private final boolean mEnforceNotificationShown;
 
     public AppInstallAdvertisersSetter(
@@ -82,6 +84,7 @@ public class AppInstallAdvertisersSetter {
             @NonNull ExecutorService executor,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull final Flags flags,
+            @NonNull final DebugFlags debugFlags,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final ConsentManager consentManager,
             int callerUid,
@@ -102,8 +105,9 @@ public class AppInstallAdvertisersSetter {
         mConsentManager = consentManager;
         mDevContext = devContext;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mEnforceNotificationShown =
-                !BinderFlagReader.readFlag(mFlags::getConsentNotificationDebugMode);
+                !BinderFlagReader.readFlag(mDebugFlags::getConsentNotificationDebugMode);
     }
 
     /**

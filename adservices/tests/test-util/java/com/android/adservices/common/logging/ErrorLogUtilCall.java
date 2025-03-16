@@ -66,6 +66,18 @@ public final class ErrorLogUtilCall extends LogCall {
     }
 
     /**
+     * Creates {@link ErrorLogUtilCall} object to represent {@code ErrorLogUtil.e(int, int)} if
+     * throwable is null; otherwise creates {@link ErrorLogUtilCall} object to represent {@code
+     * ErrorLogUtil.e(Throwable, int, int)}
+     */
+    public static ErrorLogUtilCall createWithNullableThrowable(
+            @Nullable Throwable throwable, int errorCode, int ppapiName, int times) {
+        return throwable == null
+                ? createWithNoException(errorCode, ppapiName, times)
+                : new ErrorLogUtilCall(throwable.getClass(), errorCode, ppapiName, times);
+    }
+
+    /**
      * Creates {@link ErrorLogUtilCall} object to represent {@code ErrorLogUtil.e(int, int)} from
      * {@link ExpectErrorLogUtilCall} annotation by deriving any missing values from {@link
      * SetErrorLogUtilDefaultParams}.

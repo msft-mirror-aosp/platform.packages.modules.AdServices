@@ -22,7 +22,10 @@ public interface AdServicesErrorLogger {
     /**
      * Creates a {@link AdServicesErrorStats} value object and logs AdServices error/exceptions if
      * flag enabled.
+     *
+     * @deprecated Use {@link #logError(Throwable, int, int)} instead.
      */
+    @Deprecated
     void logError(int errorCode, int ppapiName);
 
     /**
@@ -30,4 +33,11 @@ public interface AdServicesErrorLogger {
      * logs AdServices error/exceptions if flag enabled.
      */
     void logErrorWithExceptionInfo(Throwable tr, int errorCode, int ppapiName);
+
+    /**
+     * Creates a {@link AdServicesErrorStats} value object and logs AdServices error/exceptions if
+     * flag enabled. it will log the root exception, which not necessary be the current tr, but
+     * could be its cause or even further cause.
+     */
+    void logError(Throwable tr, int errorCode, int ppapiName);
 }

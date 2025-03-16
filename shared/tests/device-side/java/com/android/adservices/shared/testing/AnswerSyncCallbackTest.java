@@ -62,7 +62,7 @@ public final class AnswerSyncCallbackTest extends SyncCallbackTestCase<AnswerSyn
         when(mockInvocation.toString()).thenReturn(methodName);
         try {
             callback.answer(mockInvocation);
-            return methodName;
+            return "answer(" + methodName + ")";
         } catch (Throwable t) {
             // Shouldn't happen
             throw new IllegalStateException("callback.answer(mMockInvocation) failed", t);
@@ -89,7 +89,9 @@ public final class AnswerSyncCallbackTest extends SyncCallbackTestCase<AnswerSyn
         mDarthVoider.voidVoid();
 
         callback.assertCalled();
-        expect.withMessage("%%s.isCalled() aftercall", callback).that(callback.isCalled()).isTrue();
+        expect.withMessage("%%s.isCalled() after call", callback)
+                .that(callback.isCalled())
+                .isTrue();
     }
 
     @Test
@@ -107,7 +109,9 @@ public final class AnswerSyncCallbackTest extends SyncCallbackTestCase<AnswerSyn
 
         expect.withMessage("toString()").that(toString).isEqualTo(ANSWER);
         callback.assertCalled();
-        expect.withMessage("%%s.isCalled() aftercall", callback).that(callback.isCalled()).isTrue();
+        expect.withMessage("%%s.isCalled() after call", callback)
+                .that(callback.isCalled())
+                .isTrue();
     }
 
     @Test
@@ -184,7 +188,9 @@ public final class AnswerSyncCallbackTest extends SyncCallbackTestCase<AnswerSyn
 
         expect.withMessage("thrown exception").that(thrown).isSameInstanceAs(mFailure);
         callback.assertCalled();
-        expect.withMessage("%%s.isCalled() aftercall", callback).that(callback.isCalled()).isTrue();
+        expect.withMessage("%%s.isCalled() after call", callback)
+                .that(callback.isCalled())
+                .isTrue();
     }
 
     @Test
@@ -201,7 +207,9 @@ public final class AnswerSyncCallbackTest extends SyncCallbackTestCase<AnswerSyn
 
         expect.withMessage("thrown exception").that(thrown).isSameInstanceAs(mFailure);
         callback.assertCalled();
-        expect.withMessage("%%s.isCalled() aftercall", callback).that(callback.isCalled()).isTrue();
+        expect.withMessage("%%s.isCalled() after call", callback)
+                .that(callback.isCalled())
+                .isTrue();
     }
 
     public interface Voider {

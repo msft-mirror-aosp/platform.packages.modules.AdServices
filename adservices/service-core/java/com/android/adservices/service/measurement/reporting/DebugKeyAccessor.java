@@ -207,7 +207,9 @@ public class DebugKeyAccessor {
                 attributionType,
                 doDebugJoinKeysMatch,
                 mAdServicesLogger);
-        return new Pair<>(sourceDebugKey, triggerDebugKey);
+        return new Pair<>(
+                getSourceDebugKey(sourceDebugKey, triggerDebugKey),
+                getTriggerDebugKey(sourceDebugKey, triggerDebugKey));
     }
 
     /** Returns DebugKey according to the permissions set */
@@ -486,5 +488,21 @@ public class DebugKeyAccessor {
                     ? AttributionType.SOURCE_APP_TRIGGER_APP
                     : AttributionType.SOURCE_WEB_TRIGGER_APP;
         }
+    }
+
+    private UnsignedLong getSourceDebugKey(
+            UnsignedLong sourceDebugKey, UnsignedLong triggerDebugKey) {
+        if (!mFlags.getMeasurementEnableBothSideDebugKeysInReports()) {
+            return sourceDebugKey;
+        }
+        return (sourceDebugKey != null && triggerDebugKey != null) ? sourceDebugKey : null;
+    }
+
+    private UnsignedLong getTriggerDebugKey(
+            UnsignedLong sourceDebugKey, UnsignedLong triggerDebugKey) {
+        if (!mFlags.getMeasurementEnableBothSideDebugKeysInReports()) {
+            return triggerDebugKey;
+        }
+        return (sourceDebugKey != null && triggerDebugKey != null) ? triggerDebugKey : null;
     }
 }

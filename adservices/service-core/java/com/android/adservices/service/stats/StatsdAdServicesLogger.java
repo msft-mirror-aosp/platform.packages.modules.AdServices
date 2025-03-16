@@ -60,6 +60,10 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BID
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SELECTION_PROCESS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_RAN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SCHEDULED_CUSTOM_AUDIENCE_UPDATE_PERFORMED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SCHEDULED_CUSTOM_AUDIENCE_UPDATE_PERFORMED_ATTEMPTED_FAILURE_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SCHEDULED_CUSTOM_AUDIENCE_UPDATE_SCHEDULE_ATTEMPTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.SELECT_ADS_FROM_OUTCOMES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUCTION_BACKGROUND_KEY_FETCH_ENABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUCTION_KEY_FETCH_CALLED;
@@ -229,7 +233,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.isPARequest(),
                 stats.getNumDeletedEntities(),
                 stats.isEventLevelEpsilonEnabled(),
-                stats.isTriggerAggregatableValueFiltersConfigured());
+                stats.isTriggerAggregatableValueFiltersConfigured(),
+                stats.isTriggerFilteringIdConfigured());
     }
 
     @Override
@@ -916,7 +921,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 ENCODING_JOB_RUN,
                 stats.getSignalEncodingSuccesses(),
                 stats.getSignalEncodingFailures(),
-                stats.getSignalEncodingSkips());
+                stats.getSignalEncodingSkips(),
+                stats.getEncodingSourceType());
     }
 
     @Override
@@ -975,6 +981,52 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getPreviousEpochJobSetting(),
                 stats.getCurrentEpochJobSetting(),
                 stats.getScheduleIfNeededEpochJobStatus());
+    }
+
+    @Override
+    public void logScheduledCustomAudienceUpdatePerformedStats(
+            ScheduledCustomAudienceUpdatePerformedStats stats) {
+        AdServicesStatsLog.write(
+                SCHEDULED_CUSTOM_AUDIENCE_UPDATE_PERFORMED,
+                stats.getNumberOfPartialCustomAudienceInRequest(),
+                stats.getNumberOfJoinCustomAudienceInResponse(),
+                stats.getNumberOfCustomAudienceJoined(),
+                stats.getNumberOfLeaveCustomAudienceInRequest(),
+                stats.getNumberOfLeaveCustomAudienceInResponse(),
+                stats.getNumberOfCustomAudienceLeft(),
+                stats.getWasInitialHop(),
+                stats.getNumberOfScheduleUpdatesInResponse(),
+                stats.getNumberOfUpdatesScheduled());
+    }
+
+    @Override
+    public void logScheduledCustomAudienceUpdateBackgroundJobStats(
+            ScheduledCustomAudienceUpdateBackgroundJobStats stats) {
+        AdServicesStatsLog.write(
+                SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_RAN,
+                stats.getNumberOfUpdatesFound(),
+                stats.getNumberOfSuccessfulUpdates());
+    }
+
+    @Override
+    public void logScheduledCustomAudienceUpdateScheduleAttemptedStats(
+            ScheduledCustomAudienceUpdateScheduleAttemptedStats stats) {
+        AdServicesStatsLog.write(
+                SCHEDULED_CUSTOM_AUDIENCE_UPDATE_SCHEDULE_ATTEMPTED,
+                stats.getNumberOfPartialCustomAudiences(),
+                stats.getMinimumDelayInMinutes(),
+                stats.getExistingUpdateStatus(),
+                stats.getNumberOfLeaveCustomAudiences(),
+                stats.isInitialHop());
+    }
+
+    @Override
+    public void logScheduledCustomAudienceUpdatePerformedFailureStats(
+            ScheduledCustomAudienceUpdatePerformedFailureStats stats) {
+        AdServicesStatsLog.write(
+                SCHEDULED_CUSTOM_AUDIENCE_UPDATE_PERFORMED_ATTEMPTED_FAILURE_REPORTED,
+                stats.getFailureType(),
+                stats.getFailureAction());
     }
 
     @NonNull
