@@ -30,7 +30,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -724,7 +724,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
                     .isTrue();
             verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(any());
         } else {
-            verifyZeroInteractions(mFrequencyCapDaoMock);
+            verifyNoMoreInteractions(mFrequencyCapDaoMock);
         }
         if (appInstallFilteringEnabled) {
             assertWithMessage("App install latch completed in time")
@@ -732,7 +732,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
                     .isTrue();
             verify(mAppInstallDaoMock).deleteByPackageName(any());
         } else {
-            verifyZeroInteractions(mAppInstallDaoMock);
+            verifyNoMoreInteractions(mAppInstallDaoMock);
         }
         if (protectedSignalsCleanupEnabled) {
             assertWithMessage("Protected signals latch completed in time")
@@ -740,7 +740,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
                     .isTrue();
             verify(mProtectedSignalsDaoMock).deleteSignalsByPackage(any());
         } else {
-            verifyZeroInteractions(mProtectedSignalsDaoMock);
+            verifyNoMoreInteractions(mProtectedSignalsDaoMock);
         }
     }
 
@@ -757,9 +757,9 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Verify no executions
         verify(spyReceiver, never()).getCustomAudienceDatabase(any());
-        verifyZeroInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
+        verifyNoMoreInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
         verify(spyReceiver, never()).getSharedStorageDatabase(any());
-        verifyZeroInteractions(
+        verifyNoMoreInteractions(
                 mSharedStorageDatabaseMock, mAppInstallDaoMock, mFrequencyCapDaoMock);
     }
 
@@ -1017,8 +1017,8 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Verify no executions
         verify(spyReceiver, never()).getCustomAudienceDatabase(any());
-        verifyZeroInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
-        verifyZeroInteractions(
+        verifyNoMoreInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
+        verifyNoMoreInteractions(
                 mSharedStorageDatabaseMock, mAppInstallDaoMock, mFrequencyCapDaoMock);
     }
 

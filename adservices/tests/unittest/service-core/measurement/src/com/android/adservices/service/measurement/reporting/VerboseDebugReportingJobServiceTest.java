@@ -212,7 +212,7 @@ public final class VerboseDebugReportingJobServiceTest
                     verify(mSpyService, times(1)).jobFinished(any(), eq(false));
                     verify(mMockJobScheduler, times(1))
                             .cancel(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
-                    ExtendedMockito.verifyZeroInteractions(
+                    ExtendedMockito.verifyNoMoreInteractions(
                             ExtendedMockito.staticMockMarker(FlagsFactory.class));
                 });
     }

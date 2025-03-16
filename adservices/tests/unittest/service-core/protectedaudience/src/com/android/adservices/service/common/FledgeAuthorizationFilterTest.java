@@ -48,7 +48,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -137,7 +136,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
 
         verify(mPackageManagerMock).getPackagesForUid(UID);
         verifyNoMoreInteractions(mPackageManagerMock);
-        verifyZeroInteractions(mAdServicesLoggerMock, mEnrollmentDaoMock);
+        verifyNoMoreInteractions(mAdServicesLoggerMock, mEnrollmentDaoMock);
     }
 
     @Test
@@ -146,7 +145,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 NullPointerException.class,
                 () -> mChecker.assertCallingPackageName(null, UID, API_NAME_LOGGING_ID));
 
-        verifyZeroInteractions(mPackageManagerMock, mAdServicesLoggerMock, mEnrollmentDaoMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mAdServicesLoggerMock, mEnrollmentDaoMock);
     }
 
     @Test
@@ -255,7 +254,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 API_NAME_LOGGING_ID,
                 AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
 
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -280,7 +279,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 API_NAME_LOGGING_ID,
                 AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS);
 
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -314,7 +313,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 AdServicesPermissions.ACCESS_ADSERVICES_AD_SELECTION,
                                 AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS)));
 
-        verifyZeroInteractions(mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
     }
 
     @Test
@@ -348,7 +347,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 AdServicesPermissions.ACCESS_ADSERVICES_AD_SELECTION,
                                 AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS)));
 
-        verifyZeroInteractions(mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
     }
 
     @Test
@@ -382,7 +381,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 AdServicesPermissions.ACCESS_ADSERVICES_AD_SELECTION,
                                 AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS)));
 
-        verifyZeroInteractions(mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
     }
 
     @Test
@@ -422,7 +421,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                         eq(STATUS_PERMISSION_NOT_REQUESTED),
                         anyInt());
         verifyNoMoreInteractions(mAdServicesLoggerMock);
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock);
     }
 
     @Test
@@ -461,7 +460,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                         eq(STATUS_PERMISSION_NOT_REQUESTED),
                         anyInt());
         verifyNoMoreInteractions(mAdServicesLoggerMock);
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock);
     }
 
     @Test
@@ -514,7 +513,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                         eq(STATUS_PERMISSION_NOT_REQUESTED),
                         anyInt());
         verifyNoMoreInteractions(mAdServicesLoggerMock);
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock);
     }
 
     @Test
@@ -555,7 +554,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                         eq(STATUS_PERMISSION_NOT_REQUESTED),
                         anyInt());
         verifyNoMoreInteractions(mAdServicesLoggerMock);
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock);
     }
 
     @Test
@@ -596,7 +595,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                         eq(STATUS_PERMISSION_NOT_REQUESTED),
                         anyInt());
         verifyNoMoreInteractions(mAdServicesLoggerMock);
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock);
     }
 
     @Test
@@ -610,7 +609,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 API_NAME_LOGGING_ID,
                                 AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE));
 
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -624,7 +623,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 API_NAME_LOGGING_ID,
                                 AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS));
 
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -649,7 +648,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
         verify(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
         verifyNoMoreInteractions(mEnrollmentDaoMock);
-        verifyZeroInteractions(mPackageManagerMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -674,7 +673,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
         verify(mEnrollmentDaoMock)
                 .getEnrollmentDataForPASByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
         verifyNoMoreInteractions(mEnrollmentDaoMock);
-        verifyZeroInteractions(mPackageManagerMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -702,7 +701,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
         verify(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
         verifyNoMoreInteractions(mEnrollmentDaoMock);
-        verifyZeroInteractions(mPackageManagerMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -732,7 +731,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
         verify(mEnrollmentDaoMock)
                 .getEnrollmentDataForPASByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
         verifyNoMoreInteractions(mEnrollmentDaoMock);
-        verifyZeroInteractions(mPackageManagerMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -802,7 +801,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE
                                         .getValue()));
         verifyNoMoreInteractions(mEnrollmentDaoMock, mAdServicesLoggerMock);
-        verifyZeroInteractions(mPackageManagerMock);
+        verifyNoMoreInteractions(mPackageManagerMock);
     }
 
     @Test
@@ -853,7 +852,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE
                                         .getValue()));
         verifyNoMoreInteractions(mEnrollmentDaoMock, mAdServicesLoggerMock);
-        verifyZeroInteractions(mPackageManagerMock);
+        verifyNoMoreInteractions(mPackageManagerMock);
     }
 
     @Test
@@ -905,7 +904,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                         eq(CommonFixture.VALID_BUYER_1.toString()),
                         eq(EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue()));
         verifyNoMoreInteractions(mEnrollmentDaoMock, mAdServicesLoggerMock);
-        verifyZeroInteractions(mPackageManagerMock);
+        verifyNoMoreInteractions(mPackageManagerMock);
     }
 
     @Test
@@ -957,7 +956,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE
                                         .getValue()));
         verifyNoMoreInteractions(mEnrollmentDaoMock, mAdServicesLoggerMock);
-        verifyZeroInteractions(mPackageManagerMock);
+        verifyNoMoreInteractions(mPackageManagerMock);
     }
 
     @Test
@@ -972,7 +971,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 API_NAME_LOGGING_ID,
                                 API_CUSTOM_AUDIENCES));
 
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -987,7 +986,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 API_NAME_LOGGING_ID,
                                 API_CUSTOM_AUDIENCES));
 
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -1002,7 +1001,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 API_NAME_LOGGING_ID,
                                 API_CUSTOM_AUDIENCES));
 
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -1098,7 +1097,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 API_NAME_LOGGING_ID,
                                 API_CUSTOM_AUDIENCES));
 
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -1114,7 +1113,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 API_NAME_LOGGING_ID,
                                 API_CUSTOM_AUDIENCES));
 
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -1129,7 +1128,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 API_NAME_LOGGING_ID,
                                 API_CUSTOM_AUDIENCES));
 
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -1172,7 +1171,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                         eq(
                                 EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE
                                         .getValue()));
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -1223,7 +1222,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                         eq(3),
                         eq(URI_FOR_AD_TECH.toString()),
                         eq(EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue()));
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -1277,7 +1276,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                         eq(
                                 EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE
                                         .getValue()));
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -1315,7 +1314,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
                                 PACKAGE_NAME, ENROLLMENT_ID));
         verify(mMockFlags).isEnrollmentBlocklisted(ENROLLMENT_ID);
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -1353,7 +1352,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                         AppManifestConfigHelper.isAllowedProtectedSignalsAccess(
                                 PACKAGE_NAME, ENROLLMENT_ID));
         verify(mMockFlags).isEnrollmentBlocklisted(ENROLLMENT_ID);
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
@@ -1388,7 +1387,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 API_NAME_LOGGING_ID,
                                 API_CUSTOM_AUDIENCES));
 
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+        verifyNoMoreInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test

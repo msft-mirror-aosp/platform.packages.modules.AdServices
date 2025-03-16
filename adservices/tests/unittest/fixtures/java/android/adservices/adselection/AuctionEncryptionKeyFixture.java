@@ -22,8 +22,6 @@ import android.net.Uri;
 
 import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.data.adselection.DBProtectedServersEncryptionConfig;
-import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
-import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 
 import com.google.auto.value.AutoValue;
@@ -110,15 +108,6 @@ public class AuctionEncryptionKeyFixture {
                     .setCoordinatorUrl(COORDINATOR_URL_AUCTION)
                     .build();
 
-    /** Creates an AdSelectionEncryptionKey using the keyId provided */
-    public static AdSelectionEncryptionKey createAdSelectionEncryptionKeyFromKeyId(String keyId) {
-        return AdSelectionEncryptionKey.builder()
-                .setKeyType(AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION)
-                .setKeyIdentifier(keyId)
-                .setPublicKey(new byte[0])
-                .build();
-    }
-
     public static String getAuctionResponseBodySingleKey() throws JSONException {
         JSONObject json = new JSONObject();
         json.put("keys", new JSONArray().put(getAuctionKeyJson(AUCTION_KEY_1)));
@@ -168,7 +157,7 @@ public class AuctionEncryptionKeyFixture {
         return json.toString();
     }
 
-    private static String getDeterministicAuctionResponseBody(AuctionKey auctionKey)
+    public static String getDeterministicAuctionResponseBody(AuctionKey auctionKey)
             throws JSONException {
         JSONObject json = new JSONObject();
         json.put("keys", new JSONArray().put(getAuctionKeyJson(auctionKey)));

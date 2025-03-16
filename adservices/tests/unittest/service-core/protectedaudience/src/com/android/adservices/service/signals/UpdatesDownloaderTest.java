@@ -17,14 +17,18 @@
 package com.android.adservices.service.signals;
 
 import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
+import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION;
 import static com.android.adservices.service.signals.SignalsFixture.DEV_CONTEXT;
+import static com.android.adservices.service.signals.UpdatesDownloader.CONVERSION_ERROR_MSG;
+import static com.android.adservices.service.signals.UpdatesDownloader.DEFAULT_UPDATE_SCHEMA_VERSION;
+import static com.android.adservices.service.signals.UpdatesDownloader.INVALID_VERSION_ERROR_MSG;
 import static com.android.adservices.service.signals.UpdatesDownloader.PACKAGE_NAME_HEADER;
+import static com.android.adservices.service.signals.UpdatesDownloader.UNSUPPORTED_VERSION_ERROR_MSG;
+import static com.android.adservices.service.signals.UpdatesDownloader.UPDATE_SCHEMA_VERSION_HEADER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_CONVERTING_UPDATE_SIGNALS_RESPONSE_TO_JSON_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.CommonFixture;
@@ -38,11 +42,14 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequ
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,6 +63,7 @@ import java.util.concurrent.ExecutionException;
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
+@SetIntegerFlag(name = KEY_PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION, value = 2)
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
 public class UpdatesDownloaderTest extends AdServicesExtendedMockitoTestCase {
 
@@ -70,64 +78,47 @@ public class UpdatesDownloaderTest extends AdServicesExtendedMockitoTestCase {
     public void setup() {
         mUpdatesDownloader =
                 new UpdatesDownloader(
-                        AdServicesExecutors.getLightWeightExecutor(), mMockAdServicesHttpsClient);
-    }
-
-    @Test
-    public void testGetValidJsonSuccess() throws Exception {
-        AdServicesHttpClientResponse response =
-                AdServicesHttpClientResponse.builder().setResponseBody(JSON).build();
-        SettableFuture<AdServicesHttpClientResponse> returnValue = SettableFuture.create();
-        returnValue.set(response);
-
-        ImmutableMap<String, String> requestProperties =
-                ImmutableMap.of(PACKAGE_NAME_HEADER, CommonFixture.TEST_PACKAGE_NAME_1);
-        AdServicesHttpClientRequest request =
-                AdServicesHttpClientRequest.builder()
-                        .setRequestProperties(requestProperties)
-                        .setUri(URI)
-                        .setDevContext(DEV_CONTEXT)
-                        .build();
-        when(mMockAdServicesHttpsClient.fetchPayload(request)).thenReturn(returnValue);
-
-        assertEquals(
-                JSON,
-                mUpdatesDownloader
-                        .getUpdateJson(URI, CommonFixture.TEST_PACKAGE_NAME_1, DEV_CONTEXT)
-                        .get()
-                        .toString());
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mMockAdServicesHttpsClient,
+                        mFakeFlags.getProtectedSignalsUpdateSchemaVersion());
     }
 
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_CONVERTING_UPDATE_SIGNALS_RESPONSE_TO_JSON_ERROR)
-    public void testInvalidJsonThrowsExecutionException() {
-        AdServicesHttpClientResponse response =
-                AdServicesHttpClientResponse.builder().setResponseBody("{abc").build();
-        SettableFuture<AdServicesHttpClientResponse> returnValue = SettableFuture.create();
-        returnValue.set(response);
-        ImmutableMap<String, String> requestProperties =
-                ImmutableMap.of(PACKAGE_NAME_HEADER, CommonFixture.TEST_PACKAGE_NAME_1);
-        AdServicesHttpClientRequest request =
-                AdServicesHttpClientRequest.builder()
-                        .setRequestProperties(requestProperties)
-                        .setUri(URI)
-                        .setDevContext(DEV_CONTEXT)
-                        .build();
-        when(mMockAdServicesHttpsClient.fetchPayload(request)).thenReturn(returnValue);
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_CONVERTING_UPDATE_SIGNALS_RESPONSE_TO_JSON_ERROR)
+    public void testGetSignalUpdates_invalidJson() {
+        String invalidJson = "{abc";
 
-        assertThrows(
-                ExecutionException.class,
-                () ->
-                        mUpdatesDownloader
-                                .getUpdateJson(URI, CommonFixture.TEST_PACKAGE_NAME_1, DEV_CONTEXT)
-                                .get());
+        Exception e =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                getSignalUpdates(
+                                        invalidJson,
+                                        String.valueOf(
+                                                mFakeFlags
+                                                        .getProtectedSignalsUpdateSchemaVersion())));
+        expect.withMessage("Exception type")
+                .that(e)
+                .hasCauseThat()
+                .hasCauseThat()
+                .isInstanceOf(JSONException.class);
+        expect.withMessage("Exception message")
+                .that(e)
+                .hasCauseThat()
+                .hasMessageThat()
+                .isEqualTo(CONVERSION_ERROR_MSG);
     }
 
     @Test
-    public void testPayloadSizeTooLargeThrowsIae() {
+    public void testGetSignalUpdates_payloadSizeTooLarge() {
         ImmutableMap<String, String> requestProperties =
-                ImmutableMap.of(PACKAGE_NAME_HEADER, CommonFixture.TEST_PACKAGE_NAME_1);
+                ImmutableMap.of(
+                        PACKAGE_NAME_HEADER,
+                        CommonFixture.TEST_PACKAGE_NAME_1,
+                        UPDATE_SCHEMA_VERSION_HEADER,
+                        String.valueOf(mFakeFlags.getProtectedSignalsUpdateSchemaVersion()));
         AdServicesHttpClientRequest request =
                 AdServicesHttpClientRequest.builder()
                         .setRequestProperties(requestProperties)
@@ -142,9 +133,123 @@ public class UpdatesDownloaderTest extends AdServicesExtendedMockitoTestCase {
                         ExecutionException.class,
                         () ->
                                 mUpdatesDownloader
-                                        .getUpdateJson(
+                                        .getSignalUpdates(
                                                 URI, CommonFixture.TEST_PACKAGE_NAME_1, DEV_CONTEXT)
                                         .get());
-        assertTrue(e.getCause() instanceof IOException);
+
+        expect.withMessage("Exception type").that(e).hasCauseThat().isInstanceOf(IOException.class);
+    }
+
+    @Test
+    public void testGetSignalUpdates_validJson_currentVersionInResponse() throws Exception {
+        SignalUpdates signalUpdates =
+                getSignalUpdates(
+                        JSON, String.valueOf(mFakeFlags.getProtectedSignalsUpdateSchemaVersion()));
+
+        expect.withMessage("updateJson")
+                .that(signalUpdates.getUpdateJson().toString())
+                .isEqualTo(JSON);
+        expect.withMessage("updateSchemaVersion")
+                .that(signalUpdates.getUpdateSchemaVersion())
+                .isEqualTo(mFakeFlags.getProtectedSignalsUpdateSchemaVersion());
+    }
+
+    @Test
+    public void testGetSignalUpdates_validJson_supportedVersionInResponse() throws Exception {
+        int updateSchemaVersion = 1;
+
+        SignalUpdates signalUpdates = getSignalUpdates(JSON, String.valueOf(updateSchemaVersion));
+
+        expect.withMessage("updateJson")
+                .that(signalUpdates.getUpdateJson().toString())
+                .isEqualTo(JSON);
+        expect.withMessage("updateSchemaVersion")
+                .that(signalUpdates.getUpdateSchemaVersion())
+                .isEqualTo(updateSchemaVersion);
+    }
+
+    @Test
+    public void testGetSignalUpdates_validJson_noVersionInResponse() throws Exception {
+        String noVersion = null;
+        SignalUpdates signalUpdates = getSignalUpdates(JSON, noVersion);
+
+        expect.withMessage("updateJson")
+                .that(signalUpdates.getUpdateJson().toString())
+                .isEqualTo(JSON);
+        expect.withMessage("updateSchemaVersion")
+                .that(signalUpdates.getUpdateSchemaVersion())
+                .isEqualTo(DEFAULT_UPDATE_SCHEMA_VERSION);
+    }
+
+    @Test
+    public void testGetSignalUpdates_validJson_invalidVersionInResponse() {
+        String invalidVersion = "NotAVersion";
+
+        Exception e =
+                assertThrows(
+                        ExecutionException.class, () -> getSignalUpdates(JSON, invalidVersion));
+
+        expect.withMessage("Exception type")
+                .that(e)
+                .hasCauseThat()
+                .isInstanceOf(IllegalArgumentException.class);
+        expect.withMessage("Exception message")
+                .that(e)
+                .hasCauseThat()
+                .hasMessageThat()
+                .contains(INVALID_VERSION_ERROR_MSG);
+    }
+
+    @Test
+    public void testGetSignalUpdates_validJson_unsupportedVersionInResponse() {
+        String unsupportedVersion = "123";
+
+        Exception e =
+                assertThrows(
+                        ExecutionException.class, () -> getSignalUpdates(JSON, unsupportedVersion));
+
+        expect.withMessage("Exception type")
+                .that(e)
+                .hasCauseThat()
+                .isInstanceOf(IllegalArgumentException.class);
+        expect.withMessage("Exception message")
+                .that(e)
+                .hasCauseThat()
+                .hasMessageThat()
+                .contains(UNSUPPORTED_VERSION_ERROR_MSG);
+    }
+
+    private SignalUpdates getSignalUpdates(String updateJson, String versionToReturn)
+            throws Exception {
+        AdServicesHttpClientResponse.Builder response =
+                AdServicesHttpClientResponse.builder().setResponseBody(updateJson);
+
+        if (versionToReturn != null) {
+            response =
+                    response.setResponseHeaders(
+                            ImmutableMap.of(
+                                    UPDATE_SCHEMA_VERSION_HEADER,
+                                    ImmutableList.of(versionToReturn)));
+        }
+        SettableFuture<AdServicesHttpClientResponse> returnValue = SettableFuture.create();
+        returnValue.set(response.build());
+
+        ImmutableMap<String, String> requestProperties =
+                ImmutableMap.of(
+                        PACKAGE_NAME_HEADER,
+                        CommonFixture.TEST_PACKAGE_NAME_1,
+                        UPDATE_SCHEMA_VERSION_HEADER,
+                        String.valueOf(mFakeFlags.getProtectedSignalsUpdateSchemaVersion()));
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder()
+                        .setRequestProperties(requestProperties)
+                        .setUri(URI)
+                        .setDevContext(DEV_CONTEXT)
+                        .build();
+        when(mMockAdServicesHttpsClient.fetchPayload(request)).thenReturn(returnValue);
+
+        return mUpdatesDownloader
+                .getSignalUpdates(URI, CommonFixture.TEST_PACKAGE_NAME_1, DEV_CONTEXT)
+                .get();
     }
 }

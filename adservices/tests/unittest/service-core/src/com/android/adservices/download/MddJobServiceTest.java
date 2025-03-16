@@ -36,7 +36,6 @@ import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import android.app.job.JobInfo;
@@ -162,7 +161,7 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
 
         ResultSyncCallback<Integer> callBack = scheduleJobInBackground(/* forceSchedule */ false);
 
-        verifyZeroInteractions(staticMockMarker(MobileDataDownloadFactory.class));
+        verifyNoMoreInteractions(staticMockMarker(MobileDataDownloadFactory.class));
         assertJobScheduled(
                 callBack, MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID, SCHEDULING_RESULT_CODE_SKIPPED);
     }

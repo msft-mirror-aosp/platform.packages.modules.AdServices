@@ -14,7 +14,7 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<configuration description="Config for Ad Services E2E tests">
+<configuration description="Config for Ad Services E2E tests in ExtServices">
     <option name="test-tag" value="AdExtServicesEndToEndTests" />
     <option name="config-descriptor:metadata" key="mainline-param"
             value="com.google.android.extservices.apex"/>

@@ -20,7 +20,7 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -53,7 +53,7 @@ public class AdvertiserSetValidatorTest {
     @Test
     public void testFailureVerifyNullAdvertiserSet() {
         assertThrows(NullPointerException.class, () -> mValidator.validate(null));
-        verifyZeroInteractions(mAdTechIdentifierValidator);
+        verifyNoMoreInteractions(mAdTechIdentifierValidator);
     }
 
     @Test
@@ -94,6 +94,6 @@ public class AdvertiserSetValidatorTest {
     @Test
     public void testSuccessVerifyEmptyAdvertiserSet() {
         mValidator.validate(Collections.emptySet());
-        verifyZeroInteractions(mAdTechIdentifierValidator);
+        verifyNoMoreInteractions(mAdTechIdentifierValidator);
     }
 }

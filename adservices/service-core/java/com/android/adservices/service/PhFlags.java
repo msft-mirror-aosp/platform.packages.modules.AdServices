@@ -70,10 +70,13 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ASYN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -82,6 +85,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S;
@@ -862,13 +866,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public long getMeasurementAttributionJobTriggerDelayMs() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS,
-                DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS);
-    }
-
-    @Override
     public int getMeasurementMaxAttributionsPerInvocation() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION,
@@ -1262,6 +1259,20 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES,
                 PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES);
+    }
+
+    @Override
+    public boolean getProtectedSignalsEnablePrioritizedEviction() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION,
+                PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION);
+    }
+
+    @Override
+    public int getProtectedSignalsUpdateSchemaVersion() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION,
+                PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION);
     }
 
     @Override
@@ -3039,6 +3050,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableGetBindingUidImportance() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENABLE_GET_BINDING_UID_IMPORTANCE,
+                ENABLE_GET_BINDING_UID_IMPORTANCE);
+    }
+
+    @Override
     public boolean getEnablePasComponentAds() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ENABLE_PAS_COMPONENT_ADS, ENABLE_PAS_COMPONENT_ADS);
@@ -3952,6 +3970,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public String getMeasurementCountUniqueAppSignatureAllowlist() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST,
+                DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST);
+    }
+
+    @Override
     public boolean getNotificationDismissedOnClick() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK,
@@ -4343,6 +4368,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS,
                 MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS);
+    }
+
+    @Override
+    public long getMeasurementAttributionJobTriggeringMaxDelayMs() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS,
+                MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_MAX_DELAY_MS);
     }
 
     @Override
@@ -5237,5 +5269,26 @@ public final class PhFlags implements Flags {
     public String getAdServicesCelSamplingConfig() {
         return getDeviceConfigFlag(
                 KEY_AD_SERVICES_CEL_SAMPLING_CONFIG, DEFAULT_AD_SERVICES_CEL_SAMPLING_CONFIG);
+    }
+
+    @Override
+    public boolean getMeasurementEnableDebugJoinKeysOpenAccess() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS,
+                MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS);
+    }
+
+    @Override
+    public String getMeasurementDebugJoinKeysNoncompliantAdtechs() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS,
+                MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS);
+    }
+
+    @Override
+    public float getMeasurementDebugJoinKeysSampleRate() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE,
+                MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE);
     }
 }

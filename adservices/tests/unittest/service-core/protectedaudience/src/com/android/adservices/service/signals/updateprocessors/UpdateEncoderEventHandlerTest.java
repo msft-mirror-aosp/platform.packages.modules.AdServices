@@ -23,7 +23,7 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
@@ -89,7 +89,7 @@ public class UpdateEncoderEventHandlerTest {
                 () -> {
                     mHandler.handle(buyer, null, DEV_CONTEXT);
                 });
-        verifyZeroInteractions(
+        verifyNoMoreInteractions(
                 mEncoderEndpointsDaoMock, mEncoderLogicHandlerMock, mForcedEncoderMock);
     }
 
@@ -146,7 +146,7 @@ public class UpdateEncoderEventHandlerTest {
         verify(mContextMock, never()).sendBroadcast(any());
         assertEquals(uri, mEndpointCaptor.getValue().getDownloadUri());
         assertEquals(buyer, mEndpointCaptor.getValue().getBuyer());
-        verifyZeroInteractions(mEncoderLogicHandlerMock);
+        verifyNoMoreInteractions(mEncoderLogicHandlerMock);
     }
 
     @Test
@@ -162,7 +162,7 @@ public class UpdateEncoderEventHandlerTest {
                                     .build(),
                             DEV_CONTEXT);
                 });
-        verifyZeroInteractions(
+        verifyNoMoreInteractions(
                 mEncoderEndpointsDaoMock, mEncoderLogicHandlerMock, mForcedEncoderMock);
     }
 }
