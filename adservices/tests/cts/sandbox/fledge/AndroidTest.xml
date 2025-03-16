@@ -38,11 +38,13 @@
         <option name="run-command" value="device_config put adservices fledge_custom_audience_service_kill_switch false" />
         <!-- Override Consent Manager to debug mode to grant user consent -->
         <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
+        <option name="run-command" value="setprop debug.adservices.consent_notification_debug_mode true" />
         <option name="run-command" value="device_config put adservices sdk_request_permits_per_second 1000" />
         <!-- Disable SDK sandbox killswitch to ignore the effect of actual PH values. -->
         <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />
 
         <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
+        <option name="teardown-command" value="setprop debug.adservices.consent_notification_debug_mode false"/>
         <option name="teardown-command" value="device_config put adservices sdk_request_permits_per_second 1" />
         <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
 
