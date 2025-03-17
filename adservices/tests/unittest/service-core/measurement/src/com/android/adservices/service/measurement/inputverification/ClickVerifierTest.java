@@ -71,7 +71,8 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
         when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs()).thenReturn(100L);
         when(mMockFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(false);
         when(mMockFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(false);
-        mClickVerifier = new ClickVerifier(mInputManager, mMockFlags, mAdServicesLogger);
+        mClickVerifier =
+                ClickVerifier.createInstanceForTest(mInputManager, mMockFlags, mAdServicesLogger);
     }
 
     @Test
