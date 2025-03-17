@@ -19,6 +19,7 @@ package com.android.adservices.service.signals.updateprocessors;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.data.signals.DBProtectedSignal;
+import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEvent;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;

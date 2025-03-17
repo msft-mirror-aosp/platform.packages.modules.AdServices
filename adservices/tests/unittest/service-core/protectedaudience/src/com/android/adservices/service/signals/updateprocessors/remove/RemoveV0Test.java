@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.signals.updateprocessors;
+package com.android.adservices.service.signals.updateprocessors.remove;
 
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_KEY_1;
 import static com.android.adservices.service.signals.SignalsFixture.BB_KEY_1;
@@ -27,11 +27,12 @@ import static com.android.adservices.service.signals.SignalsFixture.createSignal
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.signals.DBProtectedSignal;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.json.JSONArray;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
@@ -42,7 +43,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class RemoveTest {
+@RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
+public class RemoveV0Test extends AdServicesUnitTestCase {
 
     /*
      * I feel that hardcoding the names here is appropriate here since the JSON names are an
@@ -50,14 +52,11 @@ public class RemoveTest {
      */
     private static final String REMOVE = "remove";
 
-    private Remove mRemove = new Remove();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
+    private final RemoveV0 mRemoveV0 = new RemoveV0();
 
     @Test
     public void testGetName() {
-        assertEquals(REMOVE, mRemove.getName());
+        assertEquals(REMOVE, mRemoveV0.getName());
     }
 
     @Test
@@ -65,7 +64,7 @@ public class RemoveTest {
         JSONArray updatesJson = new JSONArray();
         updatesJson.put(BASE64_KEY_1);
 
-        UpdateOutput output = mRemove.processUpdates(updatesJson, Collections.emptyMap());
+        UpdateOutput output = mRemoveV0.processUpdates(updatesJson, Collections.emptyMap());
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
@@ -81,7 +80,7 @@ public class RemoveTest {
         DBProtectedSignal toRemove = createSignal(KEY_1, VALUE_1, ID_1, NOW);
         existingSignals.put(BB_KEY_1, new HashSet<>(Arrays.asList(toRemove)));
 
-        UpdateOutput output = mRemove.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output = mRemoveV0.processUpdates(updatesJson, existingSignals);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertEquals(Arrays.asList(toRemove), output.getToRemove());
@@ -97,7 +96,7 @@ public class RemoveTest {
         DBProtectedSignal toRemove = createSignal(KEY_1, VALUE_1, ID_1, NOW);
         existingSignals.put(BB_KEY_1, new HashSet<>(Arrays.asList(toRemove)));
 
-        UpdateOutput output = mRemove.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output = mRemoveV0.processUpdates(updatesJson, existingSignals);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertEquals(Arrays.asList(toRemove), output.getToRemove());

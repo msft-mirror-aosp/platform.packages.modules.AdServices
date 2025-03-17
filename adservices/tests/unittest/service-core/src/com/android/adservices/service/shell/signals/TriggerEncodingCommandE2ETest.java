@@ -27,7 +27,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROU
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
-import static com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler.ACTION_REGISTER_ENCODER_LOGIC_COMPLETE;
+import static com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEventHandler.ACTION_REGISTER_ENCODER_LOGIC_COMPLETE;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -89,8 +89,8 @@ import com.android.adservices.service.signals.UpdateProcessingOrchestrator;
 import com.android.adservices.service.signals.UpdateSignalsOrchestrator;
 import com.android.adservices.service.signals.UpdatesDownloader;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
-import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
+import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEventHandler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.NoOpLoggerImpl;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelperImpl;

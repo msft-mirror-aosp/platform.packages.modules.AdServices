@@ -16,6 +16,12 @@
 
 package com.android.adservices.service.signals.updateprocessors;
 
+import com.android.adservices.service.signals.updateprocessors.append.AppendV0;
+import com.android.adservices.service.signals.updateprocessors.put.PutV0;
+import com.android.adservices.service.signals.updateprocessors.putifnotpresent.PutIfNotPresentV0;
+import com.android.adservices.service.signals.updateprocessors.remove.RemoveV0;
+import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderV0;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -26,11 +32,11 @@ public class UpdateProcessorSelector {
 
     private static final List<UpdateProcessor> PROCESSORS =
             Arrays.asList(
-                    new Append(),
-                    new Put(),
-                    new PutIfNotPresent(),
-                    new Remove(),
-                    new UpdateEncoder());
+                    new AppendV0(),
+                    new PutV0(),
+                    new PutIfNotPresentV0(),
+                    new RemoveV0(),
+                    new UpdateEncoderV0());
     private final Map<String, UpdateProcessor> mProcessorMap;
 
     public UpdateProcessorSelector() {

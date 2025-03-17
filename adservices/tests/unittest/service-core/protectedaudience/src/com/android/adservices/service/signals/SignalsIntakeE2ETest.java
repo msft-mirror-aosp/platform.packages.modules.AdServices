@@ -28,7 +28,7 @@ import static com.android.adservices.service.signals.UpdateProcessingOrchestrato
 import static com.android.adservices.service.signals.UpdatesDownloader.CONVERSION_ERROR_MSG;
 import static com.android.adservices.service.signals.UpdatesDownloader.PACKAGE_NAME_HEADER;
 import static com.android.adservices.service.signals.UpdatesDownloader.UPDATE_SCHEMA_VERSION_HEADER;
-import static com.android.adservices.service.signals.updateprocessors.Append.TOO_MANY_SIGNALS_ERROR;
+import static com.android.adservices.service.signals.updateprocessors.append.AppendV0.TOO_MANY_SIGNALS_ERROR;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
@@ -91,8 +91,8 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
-import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
+import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEventHandler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;

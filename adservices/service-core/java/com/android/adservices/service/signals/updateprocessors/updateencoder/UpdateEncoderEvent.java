@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.signals.updateprocessors;
+package com.android.adservices.service.signals.updateprocessors.updateencoder;
 
 import android.net.Uri;
 
