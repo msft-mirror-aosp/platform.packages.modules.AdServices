@@ -164,9 +164,10 @@ public class RbATraceProvider {
         public static final String MEASUREMENT_API = "MeasurementApi";
         public static final String TOPICS_API = "TopicsApi";
         public static final String AD_ID_API = "AdIdApi";
+        public static final String CONSENT_MANAGER = "ConsentManager";
 
         private static final Set<String> VALID_FEATURE_NAMES =
-                Set.of(MEASUREMENT_API, TOPICS_API, AD_ID_API);
+                Set.of(MEASUREMENT_API, TOPICS_API, AD_ID_API, CONSENT_MANAGER);
 
         private FeatureNames() {}
 
