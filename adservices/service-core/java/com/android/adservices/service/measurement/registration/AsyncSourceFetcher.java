@@ -1356,13 +1356,11 @@ public class AsyncSourceFetcher {
                 List<String> eventHeader =
                         headers.get(CountUniqueHeaderContract.HEADER_COUNT_UNIQUE_EVENT);
                 if (eventHeader != null) {
-                    mCountUniqueRegistrar.registerCountUniqueEvent(
-                            asyncRegistration, eventHeader, enrollmentId.get());
+                    mCountUniqueRegistrar.registerCountUniqueEvent(asyncRegistration, eventHeader);
                 }
             }
         } catch (Exception e) {
             // Catching generic exception to not fail ARA source registration flow
-            // TODO(402862565) Add CEL logging
             LoggerFactory.getMeasurementLogger()
                     .e(e, "AsyncSourceFetcher: Failure when handling count unique header");
         }

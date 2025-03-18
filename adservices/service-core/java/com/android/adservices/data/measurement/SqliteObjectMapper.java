@@ -595,22 +595,6 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.CountUniqueReportingContract.CONTEXT_ID,
                 builder::setContextId);
-        setIntColumn(
-                cursor,
-                MeasurementTables.CountUniqueReportingContract.DEBUG_REPORT_STATUS,
-                builder::setDebugReportStatus);
-        setTextColumn(
-                cursor,
-                MeasurementTables.CountUniqueReportingContract.ENROLLMENT_ID,
-                builder::setEnrollmentId);
-        setIntColumn(
-                cursor,
-                MeasurementTables.CountUniqueReportingContract.CONTRIBUTION_VALUE,
-                builder::setContributionValue);
-        setLongColumn(
-                cursor,
-                MeasurementTables.CountUniqueReportingContract.CONTRIBUTION_TIME,
-                builder::setContributionTime);
         return builder.build();
     }
 

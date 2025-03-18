@@ -26,10 +26,8 @@ public interface ICountUniqueRegistrar {
      *
      * @param asyncRegistration async registration for the event
      * @param eventHeader event header in the response
-     * @param enrollmentId enrollment id associated to the event
      */
-    void registerCountUniqueEvent(
-            AsyncRegistration asyncRegistration, List<String> eventHeader, String enrollmentId);
+    void registerCountUniqueEvent(AsyncRegistration asyncRegistration, List<String> eventHeader);
 
     /**
      * Register count unique metadata.

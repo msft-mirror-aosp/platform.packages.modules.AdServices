@@ -3366,15 +3366,11 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         String reportId = "reportId";
         String payload = "payload";
         Uri reportingOrigin = Uri.parse("https://test.foo");
-        int status = CountUniqueReport.ReportDeliveryStatus.PENDING;
-        int debugStatus = CountUniqueReport.ReportDeliveryStatus.PENDING;
+        int status = CountUniqueReport.Status.PENDING;
         Long scheduledReportTime = 1726874188124L;
         String version = "0.1";
         String debugKey = "asadsadsa=";
         String contextId = "testContextId";
-        String enrollmentId = "test-id";
-        int contributionValue = 5;
-        long contributionTime = 1726874188232L;
 
         CountUniqueReport report =
                 createCountUniqueReport(
@@ -3382,14 +3378,10 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         payload,
                         reportingOrigin,
                         status,
-                        debugStatus,
                         scheduledReportTime,
                         version,
                         debugKey,
-                        contextId,
-                        enrollmentId,
-                        contributionValue,
-                        contributionTime);
+                        contextId);
 
         boolean result =
                 mDatastoreManager.runInTransaction(
@@ -3423,14 +3415,10 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                 assertThat(r.getPayload()).isEqualTo(payload);
                 assertThat(r.getReportingOrigin()).isEqualTo(reportingOrigin);
                 assertThat(r.getStatus()).isEqualTo(status);
-                assertThat(r.getDebugReportStatus()).isEqualTo(debugStatus);
                 assertThat(r.getScheduledReportTime()).isEqualTo(scheduledReportTime);
                 assertThat(r.getApiVersion()).isEqualTo(version);
                 assertThat(r.getDebugKey()).isEqualTo(debugKey);
                 assertThat(r.getContextId()).isEqualTo(contextId);
-                assertThat(r.getEnrollmentId()).isEqualTo(enrollmentId);
-                assertThat(r.getContributionValue()).isEqualTo(contributionValue);
-                assertThat(r.getContributionTime()).isEqualTo(contributionTime);
             }
         }
     }
@@ -15100,27 +15088,19 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
             String payload,
             Uri reportingOrigin,
             int status,
-            int debugStatus,
             Long scheduledReportTime,
             String version,
             String debugKey,
-            String contextId,
-            String enrollmentId,
-            int contributionValue,
-            long contributionTime) {
+            String contextId) {
         CountUniqueReport.Builder builder = new CountUniqueReport.Builder();
         builder.setReportId(reportId);
         builder.setPayload(payload);
         builder.setReportingOrigin(reportingOrigin);
         builder.setStatus(status);
-        builder.setDebugReportStatus(debugStatus);
         builder.setScheduledReportTime(scheduledReportTime);
         builder.setApiVersion(version);
         builder.setDebugKey(debugKey);
         builder.setContextId(contextId);
-        builder.setEnrollmentId(enrollmentId);
-        builder.setContributionValue(contributionValue);
-        builder.setContributionTime(contributionTime);
         return builder.build();
     }
 }
