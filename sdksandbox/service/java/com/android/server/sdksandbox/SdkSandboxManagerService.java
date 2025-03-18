@@ -113,7 +113,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -2282,25 +2281,21 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             contentProviderAuthoritiesAllowlist.add(curWebViewPackageName + '.' + webViewAuthority);
         }
 
-        synchronized (mLock) {
-            if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
-                    && mSdkSandboxSettingsListener.getNextContentProviderAllowlist() != null) {
-                contentProviderAuthoritiesAllowlist.addAll(
-                        mSdkSandboxSettingsListener.getNextContentProviderAllowlist());
-                return contentProviderAuthoritiesAllowlist;
-            }
+        if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
+                && mSdkSandboxSettingsListener.getNextContentProviderAllowlist() != null) {
+            contentProviderAuthoritiesAllowlist.addAll(
+                    mSdkSandboxSettingsListener.getNextContentProviderAllowlist());
+            return contentProviderAuthoritiesAllowlist;
+        }
 
-            ArraySet<String> contentProviderAllowlistForTargetSdkVersion =
-                    mSdkSandboxSettingsListener
-                            .getContentProviderAllowlistPerTargetSdkVersion()
-                            .get(getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
-            if (contentProviderAllowlistForTargetSdkVersion != null) {
-                contentProviderAuthoritiesAllowlist.addAll(
-                        contentProviderAllowlistForTargetSdkVersion);
-            } else {
-                contentProviderAuthoritiesAllowlist.addAll(
-                        DEFAULT_CONTENTPROVIDER_ALLOWED_AUTHORITIES);
-            }
+        ArraySet<String> contentProviderAllowlistForTargetSdkVersion =
+                mSdkSandboxSettingsListener
+                        .getContentProviderAllowlistPerTargetSdkVersion()
+                        .get(getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
+        if (contentProviderAllowlistForTargetSdkVersion != null) {
+            contentProviderAuthoritiesAllowlist.addAll(contentProviderAllowlistForTargetSdkVersion);
+        } else {
+            contentProviderAuthoritiesAllowlist.addAll(DEFAULT_CONTENTPROVIDER_ALLOWED_AUTHORITIES);
         }
         return contentProviderAuthoritiesAllowlist;
     }
@@ -2308,49 +2303,43 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     // Returns null if an allowlist was not set at all.
     @Nullable
     private ArraySet<String> getBroadcastReceiverAllowlist(int sdkSandboxUid) {
-        synchronized (mLock) {
-            if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()) {
-                return mSdkSandboxSettingsListener.getNextBroadcastReceiverAllowlist();
-            }
-
-            ArrayMap<Integer, ArraySet<String>> broadcastReceiverAllowlist =
-                    mSdkSandboxSettingsListener.getBroadcastReceiverAllowlistPerTargetSdkVersion();
-
-            if (broadcastReceiverAllowlist == null) {
-                return null;
-            }
-            // TODO(b/271547387): Filter out the allowlist based on targetSdkVersion.
-            return broadcastReceiverAllowlist.get(
-                    getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
+        if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()) {
+            return mSdkSandboxSettingsListener.getNextBroadcastReceiverAllowlist();
         }
+
+        ArrayMap<Integer, ArraySet<String>> broadcastReceiverAllowlist =
+                mSdkSandboxSettingsListener.getBroadcastReceiverAllowlistPerTargetSdkVersion();
+
+        if (broadcastReceiverAllowlist == null) {
+            return null;
+        }
+        // TODO(b/271547387): Filter out the allowlist based on targetSdkVersion.
+        return broadcastReceiverAllowlist.get(
+                getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
     }
 
     @NonNull
     private ArraySet<String> getActivityAllowlist(int sdkSandboxUid) {
-        synchronized (mLock) {
-            if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
-                    && mSdkSandboxSettingsListener.getNextActivityAllowlist() != null) {
-                return mSdkSandboxSettingsListener.getNextActivityAllowlist();
-            }
-            return getActivityAllowlistForTargetSdk(sdkSandboxUid);
+        if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
+                && mSdkSandboxSettingsListener.getNextActivityAllowlist() != null) {
+            return mSdkSandboxSettingsListener.getNextActivityAllowlist();
         }
+        return getActivityAllowlistForTargetSdk(sdkSandboxUid);
     }
 
     @NonNull
     private ArraySet<String> getActivityAllowlistForTargetSdk(int sdkSandboxUid) {
-        synchronized (mLock) {
-            ArrayMap<Integer, ArraySet<String>> allowlistPerTargetSdkVersion =
-                    mSdkSandboxSettingsListener.getActivityAllowlistPerTargetSdkVersion();
-            if (allowlistPerTargetSdkVersion == null) {
-                return DEFAULT_ACTIVITY_ALLOWED_ACTIONS;
-            }
-            ArraySet<String> activityAllowlistPerTargetSdkVersion =
-                    allowlistPerTargetSdkVersion.get(
-                            getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
-            return activityAllowlistPerTargetSdkVersion == null
-                    ? DEFAULT_ACTIVITY_ALLOWED_ACTIONS
-                    : activityAllowlistPerTargetSdkVersion;
+        ArrayMap<Integer, ArraySet<String>> allowlistPerTargetSdkVersion =
+                mSdkSandboxSettingsListener.getActivityAllowlistPerTargetSdkVersion();
+        if (allowlistPerTargetSdkVersion == null) {
+            return DEFAULT_ACTIVITY_ALLOWED_ACTIONS;
         }
+        ArraySet<String> activityAllowlistPerTargetSdkVersion =
+                allowlistPerTargetSdkVersion.get(
+                        getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
+        return activityAllowlistPerTargetSdkVersion == null
+                ? DEFAULT_ACTIVITY_ALLOWED_ACTIONS
+                : activityAllowlistPerTargetSdkVersion;
     }
 
     private boolean isIntentAllowedPerAllowList(Intent intent) {
