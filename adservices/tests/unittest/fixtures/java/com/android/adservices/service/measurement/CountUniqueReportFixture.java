@@ -29,7 +29,8 @@ public final class CountUniqueReportFixture {
     public static CountUniqueReport.Builder getValidCountUniqueReportBuilder() {
         return new CountUniqueReport.Builder()
                 .setReportId(UUID.randomUUID().toString())
-                .setStatus(CountUniqueReport.Status.PENDING)
+                .setStatus(CountUniqueReport.ReportDeliveryStatus.PENDING)
+                .setDebugReportStatus(CountUniqueReport.ReportDeliveryStatus.PENDING)
                 .setScheduledReportTime(ValidCountUniqueParams.SCHEDULED_REPORT_TIME)
                 .setReportingOrigin(ValidCountUniqueParams.REPORTING_ORIGIN)
                 .setDebugKey(ValidCountUniqueParams.DEBUG_KEY.toString())

@@ -21,6 +21,7 @@ import android.net.Uri;
 
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.service.measurement.CountUniqueReport;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
@@ -419,6 +420,24 @@ public class ContentValueFixtures {
         public static final KeyValueData.DataType DR_DATATYPE =
                 KeyValueData.DataType.DEBUG_REPORT_RETRY_COUNT;
         public static final String DR_VALUE = "1";
+    }
+
+    public static class CountUniqueMetadataValues {
+
+        public static final Uri REPORTING_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
+        public static final String KEY = "test_key";
+        public static final long VALUE = 678L;
+        public static final long EXPIRATION_TIME = 8640000200L;
+    }
+
+    public static class CountUniqueReportValues {
+        public static final String PAYLOAD = "{bucket:'a',value:21L,filteringId:32}";
+        public static final Uri REPORTING_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
+        public static final int STATUS = CountUniqueReport.ReportDeliveryStatus.PENDING;
+        public static final long SCHEDULED_REPORT_TIME = 8640000200L;
+        public static final String API_VERSION = "1.0";
+        public static final String DEBUG_KEY = "debug_key";
+        public static final String CONTEXT_ID = "contextId";
     }
 
     public static ContentValues generateAsyncRegistrationContentValuesV1() {
@@ -1877,5 +1896,54 @@ public class ContentValueFixtures {
         list.add(erValues);
 
         return list;
+    }
+
+    /**
+     * @return Count Unique Metadata for V47
+     */
+    public static ContentValues generateCountUniqueMetadataV47() {
+        ContentValues metadata = new ContentValues();
+
+        metadata.put(
+                MeasurementTables.CountUniqueMetadataContract.KEY, CountUniqueMetadataValues.KEY);
+        metadata.put(
+                MeasurementTables.CountUniqueMetadataContract.VALUE,
+                CountUniqueMetadataValues.VALUE);
+        metadata.put(
+                MeasurementTables.CountUniqueMetadataContract.REPORTING_ORIGIN,
+                CountUniqueMetadataValues.REPORTING_ORIGIN.toString());
+        metadata.put(
+                MeasurementTables.CountUniqueMetadataContract.EXPIRATION_TIME,
+                CountUniqueMetadataValues.EXPIRATION_TIME);
+        return metadata;
+    }
+
+    /**
+     * @return Count Unique Report for V46
+     */
+    public static ContentValues generateCountUniqueReportingV46() {
+        ContentValues countUniqueReport = new ContentValues();
+        countUniqueReport.put(
+                MeasurementTables.CountUniqueReportingContract.PAYLOAD,
+                CountUniqueReportValues.PAYLOAD);
+        countUniqueReport.put(
+                MeasurementTables.CountUniqueReportingContract.REPORTING_ORIGIN,
+                CountUniqueReportValues.REPORTING_ORIGIN.toString());
+        countUniqueReport.put(
+                MeasurementTables.CountUniqueReportingContract.STATUS,
+                CountUniqueReportValues.STATUS);
+        countUniqueReport.put(
+                MeasurementTables.CountUniqueReportingContract.SCHEDULED_REPORT_TIME,
+                CountUniqueReportValues.SCHEDULED_REPORT_TIME);
+        countUniqueReport.put(
+                MeasurementTables.CountUniqueReportingContract.API_VERSION,
+                CountUniqueReportValues.API_VERSION);
+        countUniqueReport.put(
+                MeasurementTables.CountUniqueReportingContract.DEBUG_KEY,
+                CountUniqueReportValues.DEBUG_KEY);
+        countUniqueReport.put(
+                MeasurementTables.CountUniqueReportingContract.CONTEXT_ID,
+                CountUniqueReportValues.CONTEXT_ID);
+        return countUniqueReport;
     }
 }
