@@ -322,8 +322,6 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                 devContext,
                                 adsRelevanceExecutionLogger,
                                 mUpdateSignalsProcessReportedLogger));
-
-        mUpdateSignalsProcessReportedLogger.logUpdateSignalsProcessReportedStats();
     }
 
     private void doUpdateSignals(
@@ -457,6 +455,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
             if (shouldLog) {
                 adsRelevanceExecutionLogger.endAdsRelevanceApi(resultCode);
                 updateSignalsProcessReportedLogger.setAdservicesApiStatusCode(resultCode);
+                updateSignalsProcessReportedLogger.logUpdateSignalsProcessReportedStats();
             }
             if (jsonProcessingStatsBuilder != null) {
                 if (jsonProcessingStatsBuilder.build().getJsonProcessingStatus()
