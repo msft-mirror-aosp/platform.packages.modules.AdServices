@@ -4434,6 +4434,77 @@ class MeasurementDao implements IMeasurementDao {
                         new String[] {origin.toString(), String.valueOf(windowStartTime)});
     }
 
+    @Override
+    // TODO(402197747): Add similar method for debug reports.
+    public List<String> getPendingCountUniqueReportIds() throws DatastoreException {
+        List<String> pendingCountUniqueReportIds = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                CountUniqueReportingContract.TABLE,
+                                /* columns= */ new String[] {
+                                    CountUniqueReportingContract.REPORT_ID,
+                                },
+                                CountUniqueReportingContract.STATUS + " = ? ",
+                                new String[] {String.valueOf(CountUniqueReport.Status.PENDING)},
+                                /* groupBy= */ null,
+                                /* having= */ null,
+                                /* orderBy= */ "RANDOM()",
+                                /* limit= */ null)) {
+            while (cursor.moveToNext()) {
+                pendingCountUniqueReportIds.add(
+                        cursor.getString(
+                                cursor.getColumnIndex(CountUniqueReportingContract.REPORT_ID)));
+            }
+        }
+        return pendingCountUniqueReportIds;
+    }
+
+    @Override
+    public CountUniqueReport getCountUniqueReport(@NonNull String countUniqueReportId)
+            throws DatastoreException {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                CountUniqueReportingContract.TABLE,
+                                null,
+                                CountUniqueReportingContract.REPORT_ID + " = ? ",
+                                new String[] {countUniqueReportId},
+                                null,
+                                null,
+                                null,
+                                null)) {
+            if (cursor.getCount() == 0) {
+                throw new DatastoreException(
+                        "CountUniqueReport retrieval failed. Id: " + countUniqueReportId);
+            }
+            cursor.moveToNext();
+            return SqliteObjectMapper.constructCountUniqueReport(cursor);
+        }
+    }
+
+    @Override
+    // TODO(402197747): Add similar method for debug reports.
+    public void markCountUniqueReportStatus(
+            String countUniqueReportId, @CountUniqueReport.Status int status)
+            throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.CountUniqueReportingContract.STATUS, status);
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .update(
+                                MeasurementTables.CountUniqueReportingContract.TABLE,
+                                values,
+                                MeasurementTables.CountUniqueReportingContract.REPORT_ID + " = ? ",
+                                new String[] {countUniqueReportId});
+        if (rows != 1) {
+            throw new DatastoreException("Count Unique report update failed");
+        }
+    }
+
     private <T> List<T> fetchRecordsMatchingWithParameters(
             String tableName,
             String sourceColumnName,

@@ -26,6 +26,7 @@ import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Attribution;
+import com.android.adservices.service.measurement.CountUniqueReport;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.Source;
@@ -628,6 +629,37 @@ public abstract class AbstractDbIntegrationTest extends AdServicesExtendedMockit
         long row = db.insert(MeasurementTables.AggregateEncryptionKey.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("AggregateEncryptionKey insertion failed.");
+        }
+    }
+
+    /** Inserts a Count Unique Report into the given database. */
+    public static void insertToDb(CountUniqueReport countUniqueReport, SQLiteDatabase db)
+            throws SQLiteException {
+        ContentValues values = new ContentValues();
+        values.put(
+                MeasurementTables.CountUniqueReportingContract.REPORT_ID,
+                countUniqueReport.getReportId());
+        values.put(
+                MeasurementTables.CountUniqueReportingContract.DEBUG_KEY,
+                countUniqueReport.getDebugKey());
+        values.put(
+                MeasurementTables.CountUniqueReportingContract.API_VERSION,
+                countUniqueReport.getApiVersion());
+        values.put(
+                MeasurementTables.CountUniqueReportingContract.STATUS,
+                countUniqueReport.getStatus());
+        values.put(
+                MeasurementTables.CountUniqueReportingContract.PAYLOAD,
+                countUniqueReport.getPayload());
+        values.put(
+                MeasurementTables.CountUniqueReportingContract.REPORTING_ORIGIN,
+                countUniqueReport.getReportingOrigin().toString());
+        values.put(
+                MeasurementTables.CountUniqueReportingContract.SCHEDULED_REPORT_TIME,
+                countUniqueReport.getScheduledReportTime());
+        long row = db.insert(MeasurementTables.CountUniqueReportingContract.TABLE, null, values);
+        if (row == -1) {
+            throw new SQLiteException("CountUniqueReport insertion failed.");
         }
     }
 
