@@ -1766,7 +1766,7 @@ public final class FlagsConstants {
             "Fledge__enable_prod_debug_in_auction_server";
 
     /** Key to enable the AdServices latency metrics {@code RbATrace}. */
-    public static final String KEY_ENABLE_RB_ATRACE = "enable_rb_atrace";
+    public static final String KEY_ENABLE_RB_ATRACE = "CrystalballMetrics__enable_rb_atrace";
 
     /** Key to enable the package deny list for source registration */
     public static final String KEY_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST =
@@ -1800,4 +1800,3 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE =
             "Measurement__debug_join_keys_sample_rate";
 }
-
