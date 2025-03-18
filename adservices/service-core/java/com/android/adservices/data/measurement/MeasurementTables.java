@@ -357,10 +357,6 @@ public final class MeasurementTables {
         String API_VERSION = "api_version";
         String DEBUG_KEY = "debug_key";
         String CONTEXT_ID = "context_id";
-        String DEBUG_REPORT_STATUS = "debug_report_status";
-        String ENROLLMENT_ID = "enrollment_id";
-        String CONTRIBUTION_VALUE = "contribution_value";
-        String CONTRIBUTION_TIME = "contribution_time";
     }
 
     /** Contract for Count Unique API Metadata */
@@ -1565,14 +1561,6 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + CountUniqueReportingContract.CONTEXT_ID
                     + " TEXT, "
-                    + CountUniqueReportingContract.DEBUG_REPORT_STATUS
-                    + " INTEGER, "
-                    + CountUniqueReportingContract.ENROLLMENT_ID
-                    + " TEXT, "
-                    + CountUniqueReportingContract.CONTRIBUTION_VALUE
-                    + " INTEGER, "
-                    + CountUniqueReportingContract.CONTRIBUTION_TIME
-                    + " INTEGER, "
                     + "PRIMARY KEY("
                     + CountUniqueReportingContract.REPORT_ID
                     + "))";

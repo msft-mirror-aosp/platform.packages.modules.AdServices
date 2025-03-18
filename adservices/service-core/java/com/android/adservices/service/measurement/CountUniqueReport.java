@@ -31,44 +31,30 @@ public class CountUniqueReport {
     private String mPayload;
     private Uri mReportingOrigin;
 
-    @ReportDeliveryStatus private int mStatus;
-    @ReportDeliveryStatus private int mDebugReportStatus;
+    @Status private int mStatus;
     private Long mScheduledReportTime; // async registration time + random([0min, 10 min])
 
     private String mApiVersion;
 
     private String mDebugKey;
     private String mContextId;
-    private String mEnrollmentId;
-    private Integer mContributionValue;
-    private Long mContributionTime;
 
-    @IntDef(
-            value = {
-                ReportDeliveryStatus.NONE,
-                ReportDeliveryStatus.PENDING,
-                ReportDeliveryStatus.DELIVERED
-            })
+    @IntDef(value = {CountUniqueReport.Status.PENDING, CountUniqueReport.Status.DELIVERED})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface ReportDeliveryStatus {
-        int NONE = 0;
-        int PENDING = 1;
-        int DELIVERED = 2;
+    public @interface Status {
+        int PENDING = 0;
+        int DELIVERED = 1;
     }
 
     private CountUniqueReport() {
         mReportId = null;
         mPayload = null;
         mReportingOrigin = null;
-        mStatus = ReportDeliveryStatus.PENDING;
-        mDebugReportStatus = ReportDeliveryStatus.NONE;
+        mStatus = CountUniqueReport.Status.PENDING;
         mScheduledReportTime = null;
         mApiVersion = null;
         mDebugKey = null;
         mContextId = null;
-        mEnrollmentId = null;
-        mContributionValue = null;
-        mContributionTime = null;
     }
 
     @Override
@@ -83,11 +69,7 @@ public class CountUniqueReport {
                 && mScheduledReportTime.equals(countUniqueReport.mScheduledReportTime)
                 && Objects.equals(mApiVersion, countUniqueReport.mApiVersion)
                 && Objects.equals(mDebugKey, countUniqueReport.mDebugKey)
-                && Objects.equals(mContextId, countUniqueReport.mContextId)
-                && mDebugReportStatus == countUniqueReport.mDebugReportStatus
-                && Objects.equals(mEnrollmentId, countUniqueReport.mEnrollmentId)
-                && Objects.equals(mContributionValue, countUniqueReport.mContributionValue)
-                && Objects.equals(mContributionTime, countUniqueReport.mContributionTime);
+                && Objects.equals(mContextId, countUniqueReport.mContextId);
     }
 
     @Override
@@ -100,11 +82,7 @@ public class CountUniqueReport {
                 mScheduledReportTime,
                 mApiVersion,
                 mDebugKey,
-                mContextId,
-                mDebugReportStatus,
-                mEnrollmentId,
-                mContributionValue,
-                mContributionTime);
+                mContextId);
     }
 
     /** Report id for the report */
@@ -147,26 +125,6 @@ public class CountUniqueReport {
         return mContextId;
     }
 
-    /** Debug Report Status of the report */
-    public int getDebugReportStatus() {
-        return mDebugReportStatus;
-    }
-
-    /** EnrollmentId for the report */
-    public String getEnrollmentId() {
-        return mEnrollmentId;
-    }
-
-    /** Contributionvalue for the histogram in report */
-    public Integer getContributionValue() {
-        return mContributionValue;
-    }
-
-    /** Timestamp at which contribution is made */
-    public Long getContributionTime() {
-        return mContributionTime;
-    }
-
     public static class Builder {
 
         private final CountUniqueReport mReport;
@@ -194,7 +152,7 @@ public class CountUniqueReport {
         }
 
         /** See {@link CountUniqueReport#getStatus()} */
-        public Builder setStatus(@ReportDeliveryStatus int status) {
+        public Builder setStatus(@Status int status) {
             mReport.mStatus = status;
             return this;
         }
@@ -217,33 +175,9 @@ public class CountUniqueReport {
             return this;
         }
 
-        /** See {@link CountUniqueReport#getContextId()} */
+        /** See {@link CountUniqueReport#getContextId()} ()} */
         public Builder setContextId(String contextId) {
             mReport.mContextId = contextId;
-            return this;
-        }
-
-        /** See {@link CountUniqueReport#getDebugReportStatus()} */
-        public Builder setDebugReportStatus(@ReportDeliveryStatus int debugReportStatus) {
-            mReport.mDebugReportStatus = debugReportStatus;
-            return this;
-        }
-
-        /** See {@link CountUniqueReport#getEnrollmentId()} */
-        public Builder setEnrollmentId(String enrollmentId) {
-            mReport.mEnrollmentId = enrollmentId;
-            return this;
-        }
-
-        /** See {@link CountUniqueReport#getContributionValue()} */
-        public Builder setContributionValue(int contributionValue) {
-            mReport.mContributionValue = contributionValue;
-            return this;
-        }
-
-        /** See {@link CountUniqueReport#getContributionTime()} */
-        public Builder setContributionTime(long contributionTime) {
-            mReport.mContributionTime = contributionTime;
             return this;
         }
 
