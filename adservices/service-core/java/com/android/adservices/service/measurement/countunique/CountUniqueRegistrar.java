@@ -51,7 +51,7 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
 
     @Override
     public void registerCountUniqueEvent(
-            AsyncRegistration asyncRegistration, List<String> eventHeader) {
+            AsyncRegistration asyncRegistration, List<String> eventHeader, String enrollmentId) {
         if (asyncRegistration == null || eventHeader == null) {
             LoggerFactory.getMeasurementLogger()
                     .d(
@@ -81,7 +81,10 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
                             try {
                                 Optional<CountUniqueReport> report =
                                         createCountUniqueReport(
-                                                dao, eventHeaderStr, asyncRegistration);
+                                                dao,
+                                                eventHeaderStr,
+                                                asyncRegistration,
+                                                enrollmentId);
                                 if (report.isPresent()) {
                                     dao.insertCountUniqueReport(report.get());
                                 }
@@ -199,7 +202,10 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
     }
 
     private Optional<CountUniqueReport> createCountUniqueReport(
-            IMeasurementDao dao, String eventHeader, AsyncRegistration asyncRegistration)
+            IMeasurementDao dao,
+            String eventHeader,
+            AsyncRegistration asyncRegistration,
+            String enrollmentId)
             throws JSONException, DatastoreException {
 
         JSONObject eventHeaderJson = new JSONObject(eventHeader);
@@ -217,6 +223,8 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
 
         BigInteger key = getKey(dao, eventHeaderJson, registrationUriOrigin.get());
         int value = getValue(eventHeaderJson);
+        builder.setContributionValue(value);
+        builder.setContributionTime(asyncRegistration.getRequestTime());
         builder.setPayload(
                 createHistogramContribution(key, value, getFilteringId(eventHeaderJson))
                         .toJSONObject()
@@ -228,13 +236,17 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
             builder.setContextId(eventHeaderJson.getString(CountUniqueHeaderContract.CONTEXT_ID));
         }
 
-        builder.setStatus(CountUniqueReport.Status.PENDING);
+        builder.setStatus(CountUniqueReport.ReportDeliveryStatus.PENDING);
         builder.setScheduledReportTime(asyncRegistration.getRequestTime());
         builder.setApiVersion(AggregatePayloadGenerator.getApiVersion(FlagsFactory.getFlags()));
         if (asyncRegistration.hasAdIdPermission()
                 && !eventHeaderJson.isNull(CountUniqueHeaderContract.DEBUG_KEY)) {
             builder.setDebugKey(eventHeaderJson.getString(CountUniqueHeaderContract.DEBUG_KEY));
+            builder.setDebugReportStatus(CountUniqueReport.ReportDeliveryStatus.PENDING);
+        } else {
+            builder.setDebugReportStatus(CountUniqueReport.ReportDeliveryStatus.NONE);
         }
+        builder.setEnrollmentId(enrollmentId);
         return Optional.of(builder.build());
     }
 

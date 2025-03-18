@@ -12358,7 +12358,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 mFetcher.fetchSource(
                         appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        verify(mCountUniqueRegistrar).registerCountUniqueEvent(any(), any());
+        verify(mCountUniqueRegistrar).registerCountUniqueEvent(any(), any(), any());
 
         assertWithMessage("asyncFetchStatus.getResponseStatus()")
                 .that(asyncFetchStatus.getResponseStatus())
@@ -12427,7 +12427,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 mFetcher.fetchSource(
                         appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        verify(mCountUniqueRegistrar).registerCountUniqueEvent(any(), any());
+        verify(mCountUniqueRegistrar).registerCountUniqueEvent(any(), any(), anyString());
 
         assertWithMessage("asyncFetchStatus.getResponseStatus()")
                 .that(asyncFetchStatus.getResponseStatus())

@@ -4177,6 +4177,10 @@ class MeasurementDao implements IMeasurementDao {
                 CountUniqueReportingContract.REPORTING_ORIGIN,
                 report.getReportingOrigin().toString());
         values.put(CountUniqueReportingContract.STATUS, report.getStatus());
+        values.put(CountUniqueReportingContract.DEBUG_REPORT_STATUS, report.getDebugReportStatus());
+        values.put(CountUniqueReportingContract.CONTRIBUTION_VALUE, report.getContributionValue());
+        values.put(CountUniqueReportingContract.CONTRIBUTION_TIME, report.getContributionTime());
+        values.put(CountUniqueReportingContract.ENROLLMENT_ID, report.getEnrollmentId());
         values.put(
                 CountUniqueReportingContract.SCHEDULED_REPORT_TIME,
                 report.getScheduledReportTime());
