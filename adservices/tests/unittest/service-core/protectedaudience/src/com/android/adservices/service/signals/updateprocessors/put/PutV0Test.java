@@ -67,11 +67,6 @@ public class PutV0Test extends AdServicesUnitTestCase {
     private final PutV0 mPutV0 = new PutV0();
 
     @Test
-    public void testGetName() {
-        assertEquals(PUT, mPutV0.getName());
-    }
-
-    @Test
     public void testPutSingle() throws Exception {
         JSONObject updatesJson = new JSONObject();
         updatesJson.put(BASE64_KEY_1, BASE64_VALUE_1);

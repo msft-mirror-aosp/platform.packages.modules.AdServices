@@ -25,10 +25,5 @@ import com.android.adservices.service.signals.updateprocessors.UpdateProcessor;
  * the signal key to put for and the values are base 64 string corresponding to the value to put.
  */
 public abstract class Put implements UpdateProcessor {
-    protected static final String PUT = "put";
-
-    @Override
-    public String getName() {
-        return PUT;
-    }
+    public static final String PUT = "put";
 }

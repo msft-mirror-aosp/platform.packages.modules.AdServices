@@ -28,6 +28,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequ
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.signals.SignalUpdates.UpdateSchemaVersion;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
@@ -46,8 +47,10 @@ public class UpdatesDownloader {
     public static final String PACKAGE_NAME_HEADER = "X-PROTECTED-SIGNALS-PACKAGE";
     public static final String UPDATE_SCHEMA_VERSION_HEADER =
             "X-PROTECTED-SIGNALS-UPDATE-SCHEMA-VERSION";
-    public static final int DEFAULT_UPDATE_SCHEMA_VERSION = 0;
-    public static final int MINIMUM_UPDATE_SCHEMA_VERSION = 0;
+    public static final @UpdateSchemaVersion int DEFAULT_UPDATE_SCHEMA_VERSION =
+            UpdateSchemaVersion.V0;
+    public static final @UpdateSchemaVersion int MINIMUM_UPDATE_SCHEMA_VERSION =
+            UpdateSchemaVersion.V0;
     public static final String CONVERSION_ERROR_MSG = "Error converting response body to JSON";
     public static final String INVALID_VERSION_ERROR_MSG = "Invalid update schema version";
     public static final String UNSUPPORTED_VERSION_ERROR_MSG = "Unsupported update schema version";
@@ -120,7 +123,7 @@ public class UpdatesDownloader {
     }
 
     private int getUpdateSchemaVersionFromResponse(AdServicesHttpClientResponse response) {
-        int version = DEFAULT_UPDATE_SCHEMA_VERSION;
+        @UpdateSchemaVersion int version = DEFAULT_UPDATE_SCHEMA_VERSION;
 
         if (response.getResponseHeaders() == null) {
             return version;
