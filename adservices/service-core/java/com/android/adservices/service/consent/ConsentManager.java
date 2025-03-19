@@ -2627,6 +2627,31 @@ public final class ConsentManager {
         setModuleEnrollmentData(EnrollmentData.serialize(data));
     }
 
+    /**
+     * Get pending module state for desired module.
+     *
+     * @param apiModule desired module
+     * @return pending module state
+     */
+    @ModuleState
+    public int getPendingModuleState(@ModuleCode int apiModule) {
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
+        return data.getPendingModuleState(apiModule);
+    }
+
+    /**
+     * Sets pending module state for a module.
+     *
+     * @param modulesStates object to set
+     */
+    public void setPendingModuleStates(SparseIntArray modulesStates) {
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
+        for (int i = 0; i < modulesStates.size(); i++) {
+            data.putPendingModuleState(modulesStates.keyAt(i), modulesStates.valueAt(i));
+        }
+        setModuleEnrollmentData(EnrollmentData.serialize(data));
+    }
+
     private AdServicesApiConsent getUserChoice(AdServicesApiType apiType) {
         int apiModule = -1;
         switch (apiType) {
@@ -2672,15 +2697,18 @@ public final class ConsentManager {
     }
 
     /**
-     * Aligns user choices to module states by setting user choice to unknown if a module state is
-     * not enabled.
+     * Updates module states with pending module states. Also aligns user choices to module states
+     * by setting user choice to unknown if a module state is not enabled.
      *
      * <p>This method should only be called specifically after a notification is shown to ensure the
      * user choices are erased if a module state is now disabled or unknown. This method is also a
      * safeguard, since a request to set user choices to unknown can also be made instead.
      */
-    public void alignUserChoicesIfNeeded() {
+    public void alignEnrollmentData() {
         EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
+
+        setModuleStates(data.getPendingModuleStates());
+
         List<AdServicesModuleUserChoice> userChoices = new ArrayList<>();
         SparseIntArray moduleStates = data.getModuleStates();
         for (int i = 0; i < moduleStates.size(); i++) {
