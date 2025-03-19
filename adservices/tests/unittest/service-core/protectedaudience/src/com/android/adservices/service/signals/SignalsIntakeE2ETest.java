@@ -98,6 +98,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.util.Clock;
 import com.android.adservices.testutils.DevSessionHelper;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -154,6 +155,7 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
     @Mock private DevContextFilter mDevContextFilterMock;
     @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
     @Mock private DatastoreManager mDatastoreManager;
+    @Mock private Clock mMockClock;
 
     @Spy
     private FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
@@ -200,7 +202,8 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
                         .build()
                         .getEncodedPayloadDao();
         mEnrollmentDao =
-                new EnrollmentDao(mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mFakeFlags);
+                new EnrollmentDao(
+                        mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mFakeFlags, mMockClock);
         mEnrollmentDao.insert(
                 new EnrollmentData.Builder()
                         .setEnrollmentId("123")

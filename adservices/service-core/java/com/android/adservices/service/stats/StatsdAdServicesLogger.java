@@ -575,7 +575,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.queryResultCount(),
                 stats.dataSourceRecordCountPre(),
                 stats.dataSourceRecordCountPost(),
-                stats.enrollmentFileBuildId());
+                stats.enrollmentFileBuildId(),
+                stats.latencyMs());
     }
 
     /** Logs encryption key fetch stats. */

@@ -164,6 +164,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
     private AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     @Mock private AdServicesLoggerImpl mAdServicesLoggerImplMock;
+    @Mock private Clock mMockClock;
 
     @Mock
     private UpdateSignalsProcessReportedLoggerImpl mUpdateSignalsProcessReportedLoggerImplMock;
@@ -221,7 +222,10 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                         .getEncodedPayloadDao();
         mEnrollmentDao =
                 new EnrollmentDao(
-                        mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mLegacyFakeFlags);
+                        mSpyContext,
+                        DbTestUtil.getSharedDbHelperForTest(),
+                        mLegacyFakeFlags,
+                        mMockClock);
         mEncoderPersistenceDao = EncoderPersistenceDao.getInstance();
 
         mLightweightExecutor = AdServicesExecutors.getLightWeightExecutor();

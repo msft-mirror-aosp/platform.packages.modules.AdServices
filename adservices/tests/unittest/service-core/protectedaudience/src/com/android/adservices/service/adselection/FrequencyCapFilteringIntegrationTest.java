@@ -205,6 +205,7 @@ public final class FrequencyCapFilteringIntegrationTest extends AdServicesExtend
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
     @Mock private FledgeAllowListsFilter mFledgeAllowListsFilterMock;
     @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
+    @Mock private Clock mMockClock;
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private CustomAudienceDao mCustomAudienceDao;
     private EncodedPayloadDao mEncodedPayloadDao;
@@ -268,7 +269,8 @@ public final class FrequencyCapFilteringIntegrationTest extends AdServicesExtend
                                 new EnrollmentDao(
                                         mSpyContext,
                                         DbTestUtil.getSharedDbHelperForTest(),
-                                        mFakeFlags),
+                                        mFakeFlags,
+                                        mMockClock),
                                 mAdServicesLoggerMock));
 
         mAdFilteringFeatureFactory =
