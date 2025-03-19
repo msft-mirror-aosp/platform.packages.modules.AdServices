@@ -21,8 +21,14 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.PER_B
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_UNSET;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.computeSize;
 
+import com.android.adservices.service.signals.evict.EvictionPriority;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils.SignalEvictorType;
 import com.android.adservices.shared.util.Clock;
+
+import com.google.common.collect.ImmutableList;
+
+import java.util.List;
 
 public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProcessReportedLogger {
 
@@ -37,6 +43,12 @@ public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProc
     private int mPerBuyerSignalSize;
     private float mMaxRawProtectedSignalsSizeBytes;
     private float mMinRawProtectedSignalsSizeBytes;
+    private ImmutableList<Integer> mSignalEvictorsUsed;
+    private ImmutableList<EvictionPriority> mUpdatedSignalEvictionPriorities;
+    private ImmutableList<EvictionPriority> mEvictedSignalEvictionPriorities;
+    private int mPerBuyerEvictedSignalSize;
+    private int mUpdatedSignalsWithEvictionPriorityCount;
+    private int mSignalUpdateSchemaVersion;
 
     /** Constructs a {@link UpdateSignalsProcessReportedLoggerImpl} instance. */
     public UpdateSignalsProcessReportedLoggerImpl(AdServicesLogger adServicesLogger, Clock clock) {
@@ -45,6 +57,12 @@ public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProc
         mAdservicesApiStatusCode = FIELD_UNSET;
         mSignalsWrittenCount = SIZE_UNSET;
         mPerBuyerSignalSize = SIZE_UNSET;
+        mSignalEvictorsUsed = ImmutableList.of();
+        mUpdatedSignalEvictionPriorities = ImmutableList.of();
+        mEvictedSignalEvictionPriorities = ImmutableList.of();
+        mPerBuyerEvictedSignalSize = SIZE_UNSET;
+        mUpdatedSignalsWithEvictionPriorityCount = SIZE_UNSET;
+        mSignalUpdateSchemaVersion = FIELD_UNSET;
     }
 
     @Override
@@ -61,7 +79,10 @@ public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProc
                 mPerBuyerSignalSize == SIZE_UNSET
                         ? SIZE_UNSET
                         : computeSize(mPerBuyerSignalSize, PER_BUYER_SIGNAL_SIZE_BUCKETS);
-
+        int bucketedPerBuyerEvictedSignalSize =
+                mPerBuyerEvictedSignalSize == SIZE_UNSET
+                        ? SIZE_UNSET
+                        : computeSize(mPerBuyerEvictedSignalSize, PER_BUYER_SIGNAL_SIZE_BUCKETS);
         mAdServicesLogger.logUpdateSignalsProcessReportedStats(
                 UpdateSignalsProcessReportedStats.builder()
                         .setUpdateSignalsProcessLatencyMillis(updateSignalsProcessLatencyMillis)
@@ -74,6 +95,13 @@ public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProc
                         .setMeanRawProtectedSignalsSizeBytes(meanRawProtectedSignalsSizeBytes)
                         .setMaxRawProtectedSignalsSizeBytes(mMaxRawProtectedSignalsSizeBytes)
                         .setMinRawProtectedSignalsSizeBytes(mMinRawProtectedSignalsSizeBytes)
+                        .setSignalEvictorsUsed(mSignalEvictorsUsed)
+                        .setUpdatedSignalEvictionPriorities(mUpdatedSignalEvictionPriorities)
+                        .setEvictedSignalEvictionPriorities(mEvictedSignalEvictionPriorities)
+                        .setPerBuyerEvictedSignalSize(bucketedPerBuyerEvictedSignalSize)
+                        .setUpdatedSignalsWithEvictionPriorityCount(
+                                mUpdatedSignalsWithEvictionPriorityCount)
+                        .setSignalUpdateSchemaVersion(mSignalUpdateSchemaVersion)
                         .build());
     }
 
@@ -118,5 +146,35 @@ public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProc
     @Override
     public void setMinRawProtectedSignalsSizeBytes(float minRawProtectedSignalsSizeBytes) {
         mMinRawProtectedSignalsSizeBytes = minRawProtectedSignalsSizeBytes;
+    }
+
+    @Override
+    public void setSignalEvictorsUsed(List<@SignalEvictorType Integer> evictorTypes) {
+        mSignalEvictorsUsed = ImmutableList.copyOf(evictorTypes);
+    }
+
+    @Override
+    public void setUpdatedSignalEvictionPriorities(List<EvictionPriority> evictionPriorities) {
+        mUpdatedSignalEvictionPriorities = ImmutableList.copyOf(evictionPriorities);
+    }
+
+    @Override
+    public void setEvictedSignalEvictionPriorities(List<EvictionPriority> evictionPriorities) {
+        mEvictedSignalEvictionPriorities = ImmutableList.copyOf(evictionPriorities);
+    }
+
+    @Override
+    public void setPerBuyerEvictedSignalSize(int evictedSignalSize) {
+        mPerBuyerEvictedSignalSize = evictedSignalSize;
+    }
+
+    @Override
+    public void setUpdatedSignalsWithEvictionPriorityCount(int evictionPriorityCount) {
+        mUpdatedSignalsWithEvictionPriorityCount = evictionPriorityCount;
+    }
+
+    @Override
+    public void setSignalUpdateSchemaVersion(int updateSchemaVersion) {
+        mSignalUpdateSchemaVersion = updateSchemaVersion;
     }
 }

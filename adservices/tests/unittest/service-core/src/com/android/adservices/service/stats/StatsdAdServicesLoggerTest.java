@@ -19,6 +19,8 @@ package com.android.adservices.service.stats;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
+import static com.android.adservices.service.signals.evict.EvictionPriority.EVICT_LATER;
+import static com.android.adservices.service.signals.evict.EvictionPriority.EVICT_SOONER;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus.INSERT_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionType.WRITE_TRANSACTION_TYPE;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.MethodName.INSERT_KEY;
@@ -89,6 +91,8 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHED
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_FIFO;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_PRIORITIZED_FIFO;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_LARGE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_SMALL;
@@ -102,6 +106,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -2394,6 +2399,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testLogUpdateSignalsProcessReportedStats_success() {
+        mockIsAtLeastT(true);
         UpdateSignalsProcessReportedStats stats =
                 UpdateSignalsProcessReportedStats.builder()
                         .setUpdateSignalsProcessLatencyMillis(200)
@@ -2406,12 +2412,35 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setMeanRawProtectedSignalsSizeBytes(123.4F)
                         .setMaxRawProtectedSignalsSizeBytes(345.67F)
                         .setMinRawProtectedSignalsSizeBytes(0.0001F)
+                        .setSignalEvictorsUsed(
+                                ImmutableList.of(
+                                        SIGNAL_EVICTOR_FIFO, SIGNAL_EVICTOR_PRIORITIZED_FIFO))
+                        .setUpdatedSignalEvictionPriorities(ImmutableList.of(EVICT_LATER))
+                        .setEvictedSignalEvictionPriorities(ImmutableList.of(EVICT_SOONER))
+                        .setPerBuyerEvictedSignalSize(SIZE_LARGE)
+                        .setUpdatedSignalsWithEvictionPriorityCount(11)
+                        .setSignalUpdateSchemaVersion(0)
                         .build();
         doNothing()
                 .when(
                         () ->
                                 AdServicesStatsLog.write(
-                                        anyInt(), anyInt(), anyInt(), anyInt(), anyInt(), anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyFloat(),
+                                        anyFloat(),
+                                        anyFloat(),
+                                        any(int[].class),
+                                        any(int[].class),
+                                        any(int[].class),
+                                        anyInt(),
+                                        anyInt(),
                                         anyInt()));
 
         // Invoke logging call.
@@ -2431,7 +2460,13 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(SIZE_MEDIUM),
                                 eq(123.4F),
                                 eq(345.67F),
-                                eq(0.0001F));
+                                eq(0.0001F),
+                                eq(new int[] {1, 2}),
+                                eq(new int[] {EVICT_LATER.getValue()}),
+                                eq(new int[] {EVICT_SOONER.getValue()}),
+                                eq(SIZE_LARGE),
+                                eq(11),
+                                eq(0));
         verify(writeInvocation);
 
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
@@ -2595,9 +2630,9 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         MockedVoidMethod writeInvocation =
                 () ->
                         AdServicesStatsLog.write(
-                            SCHEDULED_CUSTOM_AUDIENCE_UPDATE_PERFORMED_ATTEMPTED_FAILURE_REPORTED,
-                            stats.getFailureType(),
-                            stats.getFailureAction());
+                                SCHEDULED_CUSTOM_AUDIENCE_UPDATE_PERFORMED_ATTEMPTED_FAILURE_REPORTED,
+                                stats.getFailureType(),
+                                stats.getFailureAction());
         verify(writeInvocation);
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }

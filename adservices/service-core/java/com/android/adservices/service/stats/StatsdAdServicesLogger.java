@@ -86,6 +86,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.adservices.service.common.BinderFlagReader;
+import com.android.adservices.service.signals.evict.EvictionPriority;
 import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusStats;
@@ -965,18 +966,30 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
 
     @Override
     public void logUpdateSignalsProcessReportedStats(UpdateSignalsProcessReportedStats stats) {
-        AdServicesStatsLog.write(
-                UPDATE_SIGNALS_PROCESS_REPORTED,
-                stats.getUpdateSignalsProcessLatencyMillis(),
-                stats.getAdservicesApiStatusCode(),
-                stats.getSignalsWrittenCount(),
-                stats.getKeysStoredCount(),
-                stats.getValuesStoredCount(),
-                stats.getEvictionRulesCount(),
-                stats.getPerBuyerSignalSize(),
-                stats.getMeanRawProtectedSignalsSizeBytes(),
-                stats.getMaxRawProtectedSignalsSizeBytes(),
-                stats.getMinRawProtectedSignalsSizeBytes());
+        if (SdkLevel.isAtLeastT()) {
+            AdServicesStatsLog.write(
+                    UPDATE_SIGNALS_PROCESS_REPORTED,
+                    stats.getUpdateSignalsProcessLatencyMillis(),
+                    stats.getAdservicesApiStatusCode(),
+                    stats.getSignalsWrittenCount(),
+                    stats.getKeysStoredCount(),
+                    stats.getValuesStoredCount(),
+                    stats.getEvictionRulesCount(),
+                    stats.getPerBuyerSignalSize(),
+                    stats.getMeanRawProtectedSignalsSizeBytes(),
+                    stats.getMaxRawProtectedSignalsSizeBytes(),
+                    stats.getMinRawProtectedSignalsSizeBytes(),
+                    stats.getSignalEvictorsUsed().stream().mapToInt(Integer::intValue).toArray(),
+                    stats.getUpdatedSignalEvictionPriorities().stream()
+                            .mapToInt(EvictionPriority::getValue)
+                            .toArray(),
+                    stats.getEvictedSignalEvictionPriorities().stream()
+                            .mapToInt(EvictionPriority::getValue)
+                            .toArray(),
+                    stats.getPerBuyerEvictedSignalSize(),
+                    stats.getUpdatedSignalsWithEvictionPriorityCount(),
+                    stats.getSignalUpdateSchemaVersion());
+        }
     }
 
     @Override

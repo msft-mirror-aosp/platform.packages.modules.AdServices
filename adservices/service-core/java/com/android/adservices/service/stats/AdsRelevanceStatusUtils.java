@@ -38,6 +38,10 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.ElementType.TYPE_USE;
+
 import android.annotation.IntDef;
 import android.os.Binder;
 
@@ -45,6 +49,7 @@ import com.android.adservices.errorlogging.ErrorLogUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Utility class containing status enum types and functions used by various stats objects.
@@ -303,6 +308,11 @@ public class AdsRelevanceStatusUtils {
     public static final int REPORTING_API_UNSET = 0;
     public static final int REPORTING_API_REPORT_IMPRESSION = 1;
     public static final int REPORTING_API_REPORT_EVENT = 2;
+
+    /* Constants for Evictor types used in the UpdateSignalsProcessReportedStats. */
+    public static final int SIGNAL_EVICTOR_UNSPECIFIED = 0;
+    public static final int SIGNAL_EVICTOR_FIFO = 1;
+    public static final int SIGNAL_EVICTOR_PRIORITIZED_FIFO = 2;
 
     /** The kind of winner did the beacon come from. */
     @IntDef(
@@ -568,6 +578,17 @@ public class AdsRelevanceStatusUtils {
                 REPORTING_API_REPORT_EVENT,
             })
     public @interface ReportingApiType {}
+
+    /** The types of Signal Evictors */
+    @IntDef(
+            prefix = {"SIGNAL_EVICTOR_"},
+            value = {
+                SIGNAL_EVICTOR_UNSPECIFIED,
+                SIGNAL_EVICTOR_FIFO,
+                SIGNAL_EVICTOR_PRIORITIZED_FIFO,
+            })
+    @Target({TYPE_USE, PARAMETER, FIELD})
+    public @interface SignalEvictorType {}
 
     /**
      * Returns the Cel PP API name ID from AdServices API name ID.
