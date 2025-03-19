@@ -17,7 +17,6 @@
 package android.adservices.cts;
 
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -26,14 +25,12 @@ import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.UpdateAdIdRequest;
-import android.util.Log;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
-import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -53,13 +50,6 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
         // Initialize the manager before tests instead of in class member to allow overriding the
         // binder timeout.
         mCommonManager = AdServicesCommonManager.get(sContext);
-
-        Log.d(
-                mTag,
-                "Relevant flags @Before: "
-                        + KEY_AD_ID_CACHE_ENABLED
-                        + "="
-                        + flags.getFlag(KEY_AD_ID_CACHE_ENABLED));
     }
 
     @Test
@@ -110,7 +100,6 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "uses OutcomeReceiver, which is only available on T")
-    @SetFlagTrue(KEY_AD_ID_CACHE_ENABLED)
     public void testUpdateAdIdCache_notAuthorized_sPlus() throws Exception {
         UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(AdId.ZERO_OUT).build();
         OutcomeReceiverForTests<Boolean> receiver = new OutcomeReceiverForTests<>();
@@ -121,19 +110,6 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS(reason = "uses OutcomeReceiver, which is only available on T")
-    @SetFlagFalse(KEY_AD_ID_CACHE_ENABLED)
-    public void testUpdateAdIdCache_notEnabled_sPlus() throws Exception {
-        UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(AdId.ZERO_OUT).build();
-
-        OutcomeReceiverForTests<Boolean> receiver = new OutcomeReceiverForTests<>();
-        mCommonManager.updateAdId(request, CALLBACK_EXECUTOR, receiver);
-
-        receiver.assertFailure(IllegalStateException.class);
-    }
-
-    @Test
-    @SetFlagTrue(KEY_AD_ID_CACHE_ENABLED)
     public void testUpdateAdIdCache_notAuthorized_rPlus() throws Exception {
         AdServicesOutcomeReceiverForTests<Boolean> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
@@ -142,18 +118,6 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
                 new UpdateAdIdRequest.Builder(AdId.ZERO_OUT).build(), CALLBACK_EXECUTOR, receiver);
 
         receiver.assertFailure(SecurityException.class);
-    }
-
-    @Test
-    @SetFlagFalse(KEY_AD_ID_CACHE_ENABLED)
-    public void testUpdateAdIdCache_notEnabled_rPlus() throws Exception {
-        AdServicesOutcomeReceiverForTests<Boolean> receiver =
-                new AdServicesOutcomeReceiverForTests<>();
-
-        mCommonManager.updateAdId(
-                new UpdateAdIdRequest.Builder(AdId.ZERO_OUT).build(), CALLBACK_EXECUTOR, receiver);
-
-        receiver.assertFailure(IllegalStateException.class);
     }
 
     @Test
