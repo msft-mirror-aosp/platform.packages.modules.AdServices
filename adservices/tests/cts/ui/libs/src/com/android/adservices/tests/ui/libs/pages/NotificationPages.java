@@ -273,23 +273,17 @@ public class NotificationPages {
         UiObject2 moreButton =
                 getElement(context, device, R.string.notificationUI_more_button_text);
         UiObject2 scrollView = device.findObject(By.clazz("android.widget.ScrollView"));
-        if (scrollView.isScrollable()) {
-            assertThat(leftControlButton).isNull();
-            assertThat(rightControlButton).isNull();
-            assertThat(moreButton).isNotNull();
-            int clickCount = 10;
-            while (moreButton != null && clickCount-- > 0) {
-                moreButton.click();
-                Thread.sleep(SCROLL_WAIT_TIME);
-                moreButton = getElement(context, device, R.string.notificationUI_more_button_text);
-            }
-        } else {
-            leftControlButton = getElement(context, device, leftButtonResId);
-            rightControlButton = getElement(context, device, rightButtonResId);
-            assertThat(leftControlButton).isNotNull();
-            assertThat(rightControlButton).isNotNull();
-            assertThat(moreButton).isNull();
+        int clickCount = 10;
+        while (moreButton != null && clickCount-- > 0) {
+            moreButton.click();
+            Thread.sleep(SCROLL_WAIT_TIME);
+            moreButton = getElement(context, device, R.string.notificationUI_more_button_text);
         }
+        leftControlButton = getElement(context, device, leftButtonResId);
+        rightControlButton = getElement(context, device, rightButtonResId);
+        assertThat(leftControlButton).isNotNull();
+        assertThat(rightControlButton).isNotNull();
+        assertThat(moreButton).isNull();
     }
 
     /**

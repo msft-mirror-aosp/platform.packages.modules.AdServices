@@ -80,6 +80,10 @@ public final class AdServicesCommon {
     public static final String ACTION_SHELL_COMMAND_SERVICE =
             "android.adservices.SHELL_COMMAND_SERVICE";
 
+    /** Intent action to discover OnDevicePersonalization on the device. */
+    public static final String ACTION_ON_DEVICE_PERSONALIZATION_SERVICE =
+            "android.OnDevicePersonalizationService";
+
     // Used to differentiate between AdServices APK package name and AdExtServices APK package name.
     // The AdExtServices APK package name suffix is android.ext.services.
     public static final String ADSERVICES_APK_PACKAGE_NAME_SUFFIX = "android.adservices.api";

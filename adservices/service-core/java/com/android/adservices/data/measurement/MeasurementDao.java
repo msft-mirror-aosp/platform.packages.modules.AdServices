@@ -4180,6 +4180,10 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 CountUniqueReportingContract.SCHEDULED_REPORT_TIME,
                 report.getScheduledReportTime());
+        values.put(CountUniqueReportingContract.DEBUG_REPORT_STATUS, report.getDebugReportStatus());
+        values.put(CountUniqueReportingContract.CONTRIBUTION_VALUE, report.getContributionValue());
+        values.put(CountUniqueReportingContract.CONTRIBUTION_TIME, report.getContributionTime());
+        values.put(CountUniqueReportingContract.ENROLLMENT_ID, report.getEnrollmentId());
         values.put(CountUniqueReportingContract.API_VERSION, report.getApiVersion());
         values.put(CountUniqueReportingContract.DEBUG_KEY, report.getDebugKey());
         values.put(CountUniqueReportingContract.CONTEXT_ID, report.getContextId());
@@ -4447,7 +4451,9 @@ class MeasurementDao implements IMeasurementDao {
                                     CountUniqueReportingContract.REPORT_ID,
                                 },
                                 CountUniqueReportingContract.STATUS + " = ? ",
-                                new String[] {String.valueOf(CountUniqueReport.Status.PENDING)},
+                                new String[] {
+                                    String.valueOf(CountUniqueReport.ReportDeliveryStatus.PENDING)
+                                },
                                 /* groupBy= */ null,
                                 /* having= */ null,
                                 /* orderBy= */ "RANDOM()",
@@ -4488,7 +4494,7 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     // TODO(402197747): Add similar method for debug reports.
     public void markCountUniqueReportStatus(
-            String countUniqueReportId, @CountUniqueReport.Status int status)
+            String countUniqueReportId, @CountUniqueReport.ReportDeliveryStatus int status)
             throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.CountUniqueReportingContract.STATUS, status);

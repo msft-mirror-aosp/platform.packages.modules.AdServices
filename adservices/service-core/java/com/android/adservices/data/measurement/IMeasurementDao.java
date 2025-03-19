@@ -1039,7 +1039,7 @@ public interface IMeasurementDao {
 
     /**
      * Get the report Ids of all Count Unique reports with a status of {@link
-     * CountUniqueReport.Status#PENDING}
+     * CountUniqueReport.ReportDeliveryStatus#PENDING}
      *
      * @return List of ids of pending reports
      * @throws DatastoreException when SQLite issue occurs
@@ -1054,7 +1054,7 @@ public interface IMeasurementDao {
      * @throws DatastoreException when SQLite issue occurs
      */
     void markCountUniqueReportStatus(
-            String countUniqueReportId, @CountUniqueReport.Status int status)
+            String countUniqueReportId, @CountUniqueReport.ReportDeliveryStatus int status)
             throws DatastoreException;
 
     /**
