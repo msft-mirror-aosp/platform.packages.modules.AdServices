@@ -113,7 +113,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -248,6 +247,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         private SdkSandboxManagerLocal mLocalManager;
         private final SdkSandboxServiceProvider mServiceProvider;
         private final @Nullable String mAdServicesPackageName;
+        private final @Nullable String mOnDevicePersonalizationPackageName;
         private final SdkSandboxStatsdLogger mSdkSandboxStatsdLogger;
         private final SdkSandboxRestrictionManager mSdkSandboxRestrictionManager;
 
@@ -255,6 +255,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             mContext = context;
             mServiceProvider = new SdkSandboxServiceProviderImpl(mContext);
             mAdServicesPackageName = resolveAdServicesPackage(mContext);
+            mOnDevicePersonalizationPackageName = resolveOnDevicePersonalizationPackage(mContext);
             mSdkSandboxStatsdLogger = new SdkSandboxStatsdLogger();
             mSdkSandboxRestrictionManager = new SdkSandboxRestrictionManager(mContext);
         }
@@ -263,19 +264,33 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 SystemProperties.getBoolean("ro.boot.qemu", false);
 
         private static String resolveAdServicesPackage(Context context) {
-            PackageManager pm = context.getPackageManager();
             Intent serviceIntent = new Intent(AdServicesCommon.ACTION_TOPICS_SERVICE);
             List<ResolveInfo> resolveInfos =
-                    pm.queryIntentServices(
-                            serviceIntent,
-                            PackageManager.GET_SERVICES
-                                    | PackageManager.MATCH_SYSTEM_ONLY
-                                    | PackageManager.MATCH_DIRECT_BOOT_AWARE
-                                    | PackageManager.MATCH_DIRECT_BOOT_UNAWARE);
+                    querySystemServices(context.getPackageManager(), serviceIntent);
             ServiceInfo serviceInfo =
                     AdServicesCommon.resolveAdServicesService(
                             resolveInfos, serviceIntent.getAction());
             return serviceInfo != null ? serviceInfo.packageName : null;
+        }
+
+        private static String resolveOnDevicePersonalizationPackage(Context context) {
+            Intent serviceIntent =
+                    new Intent(AdServicesCommon.ACTION_ON_DEVICE_PERSONALIZATION_SERVICE);
+            List<ResolveInfo> resolveInfos =
+                    querySystemServices(context.getPackageManager(), serviceIntent);
+            return resolveInfos == null || resolveInfos.size() != 1
+                    ? null
+                    : resolveInfos.get(0).serviceInfo.packageName;
+        }
+
+        private static List<ResolveInfo> querySystemServices(
+                PackageManager pm, Intent serviceIntent) {
+            return pm.queryIntentServices(
+                    serviceIntent,
+                    PackageManager.GET_SERVICES
+                            | PackageManager.MATCH_SYSTEM_ONLY
+                            | PackageManager.MATCH_DIRECT_BOOT_AWARE
+                            | PackageManager.MATCH_DIRECT_BOOT_UNAWARE);
         }
 
         long elapsedRealtime() {
@@ -319,6 +334,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         String getAdServicesPackageName() {
             return mAdServicesPackageName;
+        }
+
+        String getOnDevicePersonalizationPackageName() {
+            return mOnDevicePersonalizationPackageName;
         }
 
         boolean isAdServiceApkPresent() {
@@ -1828,10 +1847,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         if (component != null) {
             String componentPackageName = component.getPackageName();
-            if ((componentPackageName != null)
-                    && (componentPackageName.equals(
-                                    WebViewUpdateService.getCurrentWebViewPackageName())
-                            || componentPackageName.equals(mInjector.getAdServicesPackageName()))) {
+            if (componentPackageName != null
+                    && isComponentAllowedToStartOrBind(componentPackageName)) {
                 return;
             }
         }
@@ -1842,6 +1859,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         // Default disallow.
         failStartOrBindService(intent);
+    }
+
+    private boolean isComponentAllowedToStartOrBind(String componentPackageName) {
+        return componentPackageName.equals(WebViewUpdateService.getCurrentWebViewPackageName())
+                || componentPackageName.equals(mInjector.getAdServicesPackageName())
+                || componentPackageName.equals(mInjector.getOnDevicePersonalizationPackageName());
     }
 
     @Override
