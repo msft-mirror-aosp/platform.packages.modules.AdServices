@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.signals.updateprocessors;
+package com.android.adservices.service.signals.updateprocessors.updateencoder;
 
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.signals.DBProtectedSignal;
+import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,27 +31,21 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Updates the encoder for a buyer based on updateSignals call The value for this is a JSON object
- * with key "update_encoder"
+ * V0 implementation of the UpdateEncoder update processor. Uses the following update schema:
  *
- * <p>Inside the JSON object the buyer need to provide a valid action from supported choices. The
- * action for update is provided with the key "action" and so far we support "DELETE" & "REGISTER"
- * actions. In case of "REGISTER" the Uri for update is provided in the key "endpoint"
+ * <pre>
+ * {
+ *   "update_encoder": {
+ *     "action": <strong>[Action]</strong>,
+ *     "endpoint": <strong>[Endpoint</strong>
+ *   }
+ * }
+ * </pre>
  */
-public class UpdateEncoder implements UpdateProcessor {
-
+public class UpdateEncoderV0 extends UpdateEncoder {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private static final String UPDATE_ENCODER = "update_encoder";
     private static final String ACTION = "action";
     private static final String ENDPOINT = "endpoint";
-
-    /**
-     * @return name for this {@link UpdateProcessor}
-     */
-    @Override
-    public String getName() {
-        return UPDATE_ENCODER;
-    }
 
     @Override
     public UpdateOutput processUpdates(

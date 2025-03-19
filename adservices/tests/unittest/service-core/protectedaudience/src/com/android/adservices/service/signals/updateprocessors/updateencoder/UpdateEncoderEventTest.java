@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.signals.updateprocessors;
+package com.android.adservices.service.signals.updateprocessors.updateencoder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -23,17 +23,15 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public class UpdateEncoderEventTest {
+@RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
+public class UpdateEncoderEventTest extends AdServicesUnitTestCase {
 
     private final Uri mUri = CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/encoder");
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Test
     public void testUpdateEncoderEventBuild() {
