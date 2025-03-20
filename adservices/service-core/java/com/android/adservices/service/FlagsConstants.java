@@ -1507,6 +1507,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW_MS =
             "MeasurementCountUnique__max_contribution_long_window_ms";
 
+    public static final String KEY_MEASUREMENT_COUNT_UNIQUE_AGGREGATION_COORDINATOR_ORIGIN =
+            "MeasurementCountUnique__aggregation_coordinator_origin";
+
     public static final String KEY_MEASUREMENT_COUNT_UNIQUE_REPORT_EXPIRY_MS =
             "MeasurementCountUnique__report_expiry_ms";
 
