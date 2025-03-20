@@ -114,6 +114,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     @Mock private AdSelectionEntryDao mAdSelectionEntryDao;
     @Mock private DevSessionController mDevSessionController;
     @Mock private DevSessionDataStore mDevSessionDataStore;
+    @Mock private com.android.adservices.shared.util.Clock mMockClock;
 
     private ShellCommandServiceImpl mShellCommandService;
     private final SyncIShellCommandCallback mSyncIShellCommandCallback =
@@ -148,7 +149,10 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         appInstallDao,
                         mContext.getPackageManager(),
                         new EnrollmentDao(
-                                mContext, DbTestUtil.getSharedDbHelperForTest(), mFakeFlags),
+                                mContext,
+                                DbTestUtil.getSharedDbHelperForTest(),
+                                mFakeFlags,
+                                mMockClock),
                         mFakeFlags,
                         CustomAudienceLoggerFactory.getNoOpInstance());
         AuctionServerDataCompressor auctionServerDataCompressor =

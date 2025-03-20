@@ -132,7 +132,8 @@ public class EnrollmentUtil {
             AdServicesEnrollmentTransactionStats.TransactionStatus status,
             int queryResultCount,
             int transactionResultCount,
-            int dataSourceRecordCount) {
+            int dataSourceRecordCount,
+            int latencyMs) {
         statsBuilder.setDataSourceRecordCountPost(dataSourceRecordCount);
         logger.logEnrollmentTransactionStats(
                 statsBuilder
@@ -140,6 +141,7 @@ public class EnrollmentUtil {
                         .setEnrollmentFileBuildId(getBuildId())
                         .setQueryResultCount(queryResultCount)
                         .setTransactionResultCount(transactionResultCount)
+                        .setLatencyMs(latencyMs)
                         .build());
     }
 
@@ -151,8 +153,16 @@ public class EnrollmentUtil {
             AdServicesLogger logger,
             AdServicesEnrollmentTransactionStats.Builder statsBuilder,
             AdServicesEnrollmentTransactionStats.TransactionStatus status,
-            int dataSourceRecordCount) {
-        logTransactionStats(logger, statsBuilder, status, 0, 0, dataSourceRecordCount);
+            int dataSourceRecordCount,
+            int latencyMs) {
+        logTransactionStats(
+                logger,
+                statsBuilder,
+                status,
+                /* queryResultCount= */ 0,
+                /* transactionResultCount= */ 0,
+                dataSourceRecordCount,
+                latencyMs);
     }
 
     @SuppressWarnings("AvoidSharedPreferences") // Legacy usage

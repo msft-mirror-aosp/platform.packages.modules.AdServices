@@ -200,7 +200,8 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                 new EnrollmentDao(
                         mSpyContext,
                         DbTestUtil.getSharedDbHelperForTest(),
-                        mFlagsWithProtectedSignalsAndEncodingEnabled);
+                        mFlagsWithProtectedSignalsAndEncodingEnabled,
+                        mClock);
 
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();

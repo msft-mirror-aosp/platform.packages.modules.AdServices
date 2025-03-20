@@ -238,6 +238,11 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         }
 
         @Override
+        public void mockIsAtLeastV(boolean isIt) {
+            mAndroidStaticMocker.mockIsAtLeastV(isIt);
+        }
+
+        @Override
         public void mockSdkLevelR() {
             mAndroidStaticMocker.mockSdkLevelR();
         }
