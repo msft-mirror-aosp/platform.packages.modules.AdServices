@@ -2606,6 +2606,15 @@ public final class ConsentManager {
     }
 
     /**
+     * Gets enrollmentdata.
+     *
+     * @return enrollment data.
+     */
+    public EnrollmentData getEnrollmentData() {
+        return EnrollmentData.deserialize(getModuleEnrollmentState());
+    }
+
+    /**
      * Sets module state for a module.
      *
      * @param modulesStates object to set

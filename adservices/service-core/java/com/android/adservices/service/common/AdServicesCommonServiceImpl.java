@@ -113,6 +113,7 @@ import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.ui.UxEngine;
 import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.util.EnrollmentData;
 import com.android.adservices.shared.util.Clock;
 
 import java.util.ArrayList;
@@ -588,12 +589,13 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         boolean isVisibleNotificationType = notificationType != NOTIFICATION_NONE;
         boolean isOngoingNotificationType = notificationType == NOTIFICATION_ONGOING;
 
+        EnrollmentData enrollmentData = consentManager.getEnrollmentData();
         // 1. determine conditions
         for (int i = 0; i < moduleStates.size(); i++) {
             int module = moduleStates.keyAt(i);
             int desiredState = moduleStates.valueAt(i);
-            int curState = consentManager.getModuleState(module);
-            int curUserChoice = consentManager.getUserChoice(module);
+            int curState = enrollmentData.getModuleState(module);
+            int curUserChoice = enrollmentData.getUserChoice(module);
 
             if (curState != desiredState
                     && desiredState == MODULE_STATE_ENABLED
@@ -606,7 +608,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             if (curUserChoice != USER_CHOICE_UNKNOWN) {
                 anyUserChoicesKnown = true;
             }
-            if (isAnyToggleOnForNewModule(consentManager, module, curState, desiredState)) {
+            if (isAnyToggleOnForNewModule(enrollmentData, module, curState, desiredState)) {
                 isAnyToggleOnForAnyNewModule = true;
             }
             if (module != MODULE_MEASUREMENT && curState == MODULE_STATE_ENABLED) {
@@ -661,7 +663,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     }
 
     private static boolean isAnyToggleOnForNewModule(
-            ConsentManager consentManager, int module, int curState, int desiredState) {
+            EnrollmentData enrollmentData, int module, int curState, int desiredState) {
         if (desiredState == curState || desiredState != MODULE_STATE_ENABLED) {
             // same state OR not being enabled, therefore is not a new module being introduced
             return false;
@@ -675,7 +677,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         MODULE_ON_DEVICE_PERSONALIZATION,
                                 new int[] {MODULE_PROTECTED_AUDIENCE, MODULE_MEASUREMENT});
         return Arrays.stream(moduleToToggleMap.getOrDefault(module, new int[] {}))
-                .anyMatch(toggle -> consentManager.getUserChoice(toggle) == USER_CHOICE_OPTED_IN);
+                .anyMatch(toggle -> enrollmentData.getUserChoice(toggle) == USER_CHOICE_OPTED_IN);
     }
 
     /** Sets AdServices feature user choices. */
