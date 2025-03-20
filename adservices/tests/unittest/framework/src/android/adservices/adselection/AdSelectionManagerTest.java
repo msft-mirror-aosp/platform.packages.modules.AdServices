@@ -28,7 +28,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 
 import android.adservices.adid.AdId;
-import android.adservices.adid.AdIdCompatibleManager;
+import android.adservices.adid.AdIdManager;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.CallerMetadata;
@@ -326,7 +326,7 @@ public final class AdSelectionManagerTest extends AdServicesUnitTestCase {
     }
 
     // TODO(b/296886238): Remove this mock once Mockito issue is resolved.
-    private static class MockAdIdManager extends AdIdCompatibleManager {
+    private static class MockAdIdManager extends AdIdManager {
         private AdId mAdId;
         private Exception mException;
 
