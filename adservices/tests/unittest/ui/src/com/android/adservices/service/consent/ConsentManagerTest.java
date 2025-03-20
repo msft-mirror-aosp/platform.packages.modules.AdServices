@@ -183,6 +183,7 @@ import com.android.adservices.service.ui.util.EnrollmentData;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.storage.AtomicFileDatastore;
+import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -273,6 +274,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Mock private UxStatesDao mUxStatesDaoMock;
     @Mock private StatsdAdServicesLogger mStatsdAdServicesLoggerMock;
     @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
+    @Mock private Clock mMockClock;
     @Mock private Supplier<TopicsWorker> mTopicsWorksSupplierMock;
     @Mock private Supplier<AppConsentDao> mAppConsentDaoSupplierMock;
     @Mock private Supplier<EnrollmentDao> mEnrollmentDaoSupplierMock;
@@ -302,7 +304,10 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         mEnrollmentDaoSpy =
                 spy(
                         new EnrollmentDao(
-                                mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mMockFlags));
+                                mSpyContext,
+                                DbTestUtil.getSharedDbHelperForTest(),
+                                mMockFlags,
+                                mMockClock));
         mAdServicesManager = new AdServicesManager(mMockIAdServicesManager);
         doReturn(mAdServicesManager).when(mSpyContext).getSystemService(AdServicesManager.class);
 
