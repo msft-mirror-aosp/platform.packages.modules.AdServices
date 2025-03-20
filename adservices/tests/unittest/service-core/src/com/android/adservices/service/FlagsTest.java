@@ -82,7 +82,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS;
-import static com.android.adservices.service.Flags.MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE;
+import static com.android.adservices.service.Flags.MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT;
@@ -1531,11 +1531,11 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testGetMeasurementDebugJoinKeysSampleRate() {
+    public void testGetMeasurementDebugJoinKeysNoncompliantAdtechsSampleRate() {
         testFloatFlag(
-                "getMeasurementDebugJoinKeysSampleRate",
-                MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE,
-                Flags::getMeasurementDebugJoinKeysSampleRate);
+                "getMeasurementDebugJoinKeysNoncompliantAdtechsSampleRate",
+                MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE,
+                Flags::getMeasurementDebugJoinKeysNoncompliantAdtechsSampleRate);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {

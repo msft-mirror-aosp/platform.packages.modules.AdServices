@@ -3696,10 +3696,10 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
-    public float getMeasurementDebugJoinKeysSampleRate() {
+    public float getMeasurementDebugJoinKeysNoncompliantAdtechsSampleRate() {
         return mBackend.getFlag(
-                KEY_MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE,
-                MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE);
+                KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE,
+                MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE);
     }
 
     @Override
