@@ -275,4 +275,10 @@ public class NoOpLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logProdDebugEnabledStats(ProdDebugEnabledStats stats) {}
+
+    @Override
+    public void logMsmtNumUniqueReportingOriginPerEnrollment(int count) {}
+
+    @Override
+    public void logMsmtNumUniqueReportingOriginPerEnrollmentXDestination(int count) {}
 }

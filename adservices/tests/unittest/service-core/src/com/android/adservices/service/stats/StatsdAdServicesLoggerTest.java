@@ -26,6 +26,8 @@ import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTran
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.MethodName.INSERT_KEY;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchStatus.IO_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.ADSERVICES_MEASUREMENT_REPORTING_ORIGINS_PER_ENRLL_X_DEST_COUNTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.ADSERVICES_MEASUREMENT_REPORTING_ORIGINS_PER_ENROLLMENT_COUNTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.ADSERVICES_SHELL_COMMAND_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_COUNTER_HISTOGRAM_UPDATER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_FILTERING_PROCESS_AD_SELECTION_REPORTED;
@@ -2267,6 +2269,39 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         AdServicesStatsLog.write(
                                 PROD_DEBUG_ENABLED_REPORTED, stats.isProdDebugEnabled());
         verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogMsmtNumUniqueReportingOriginPerEnrollment() {
+        int count = 5;
+
+        // Invoke logging call
+        mLogger.logMsmtNumUniqueReportingOriginPerEnrollment(count);
+
+        // Verify logging
+        verify(
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(ADSERVICES_MEASUREMENT_REPORTING_ORIGINS_PER_ENROLLMENT_COUNTED),
+                                eq(count)));
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogMsmtNumUniqueReportingOriginPerEnrollmentXDestination() {
+        int count = 5;
+
+        // Invoke logging call
+        mLogger.logMsmtNumUniqueReportingOriginPerEnrollmentXDestination(count);
+
+        // Verify logging
+        verify(
+                () -> AdServicesStatsLog.write(
+                            eq(ADSERVICES_MEASUREMENT_REPORTING_ORIGINS_PER_ENRLL_X_DEST_COUNTED),
+                            eq(count)));
+
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 

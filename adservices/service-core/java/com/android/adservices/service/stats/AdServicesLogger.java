@@ -303,4 +303,16 @@ public interface AdServicesLogger {
 
     /** Logs prod debug enabled stats. */
     void logProdDebugEnabledStats(ProdDebugEnabledStats stats);
+
+    /**
+     * Logs count of unique reporting origins per enrollment for source registrations in the last
+     * day.
+     */
+    void logMsmtNumUniqueReportingOriginPerEnrollment(int count);
+
+    /**
+     * Logs count of unique reporting origins per source enrollment id per destination for source
+     * registrations in the last day.
+     */
+    void logMsmtNumUniqueReportingOriginPerEnrollmentXDestination(int count);
 }
