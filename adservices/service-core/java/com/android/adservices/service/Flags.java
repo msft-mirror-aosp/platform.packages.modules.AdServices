@@ -1605,6 +1605,14 @@ public interface Flags extends ModuleSharedFlags {
 
     @ConfigFlag int FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES = 100 * 1024;
 
+    @ConfigFlag
+    int FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_REQUIRED_NETWORK_TYPE =
+            JobInfo.NETWORK_TYPE_UNMETERED;
+
+    default int getFledgeScheduleCustomAudienceUpdateBackgroundJobRequiredNetworkType() {
+        return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
     default boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
         return !getGlobalKillSwitch() && FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
     }

@@ -1086,6 +1086,13 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
+    public final int getFledgeScheduleCustomAudienceUpdateBackgroundJobRequiredNetworkType() {
+        return mBackend.getFlag(
+                KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_NETWORK_TYPE,
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_REQUIRED_NETWORK_TYPE);
+    }
+
+    @Override
     public final boolean getFledgeHttpCachingEnabled() {
         return mBackend.getFlag(KEY_FLEDGE_HTTP_CACHE_ENABLE, FLEDGE_HTTP_CACHE_ENABLE);
     }

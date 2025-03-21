@@ -170,8 +170,12 @@ public class ScheduleCustomAudienceUpdateJobService extends JobService {
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
-        if ((jobScheduler.getPendingJob(SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID) == null)
-                || forceSchedule) {
+        JobInfo job = jobScheduler.getPendingJob(SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID);
+        int requiredNetworkType =
+                flags.getFledgeScheduleCustomAudienceUpdateBackgroundJobRequiredNetworkType();
+        if ((job == null)
+                || forceSchedule
+                || !doesJobHaveExpectedNetworkConstraint(job, requiredNetworkType)) {
             schedule(context, flags);
         } else {
             LoggerFactory.getFledgeLogger()
@@ -199,6 +203,9 @@ public class ScheduleCustomAudienceUpdateJobService extends JobService {
             return;
         }
 
+        int requiredNetworkType =
+                flags.getFledgeScheduleCustomAudienceUpdateBackgroundJobRequiredNetworkType();
+
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         final JobInfo job =
                 new JobInfo.Builder(
@@ -206,7 +213,7 @@ public class ScheduleCustomAudienceUpdateJobService extends JobService {
                                 new ComponentName(
                                         context, ScheduleCustomAudienceUpdateJobService.class))
                         .setRequiresBatteryNotLow(true)
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                        .setRequiredNetworkType(requiredNetworkType)
                         .setPeriodic(
                                 flags.getFledgeScheduleCustomAudienceUpdateJobPeriodMs(),
                                 flags.getFledgeScheduleCustomAudienceUpdateJobFlexMs())
@@ -230,5 +237,10 @@ public class ScheduleCustomAudienceUpdateJobService extends JobService {
 
         jobFinished(params, false);
         return false;
+    }
+
+    @VisibleForTesting
+    static boolean doesJobHaveExpectedNetworkConstraint(JobInfo jobInfo, int requiredNetwork) {
+        return jobInfo.getNetworkType() == requiredNetwork;
     }
 }

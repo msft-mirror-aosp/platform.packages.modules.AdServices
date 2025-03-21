@@ -63,6 +63,7 @@ import static com.android.adservices.service.Flags.FLEDGE_LEAVE_CUSTOM_AUDIENCE_
 import static com.android.adservices.service.Flags.FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES;
 import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND;
@@ -1202,6 +1203,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getFledgeScheduleCustomAudienceUpdateMaxBytes()",
                 FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES,
                 Flags::getFledgeScheduleCustomAudienceUpdateMaxBytes);
+    }
+
+    @Test
+    public void testGetFledgeScheduleCustomAudienceUpdateBackgroundJobRequiredNetworkType() {
+        testFlag(
+                "getFledgeScheduleCustomAudienceUpdateBackgroundJobRequiredNetworkType()",
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_REQUIRED_NETWORK_TYPE,
+                Flags::getFledgeScheduleCustomAudienceUpdateBackgroundJobRequiredNetworkType);
     }
 
     @Test

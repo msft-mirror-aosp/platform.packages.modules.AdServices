@@ -687,6 +687,9 @@ public final class FlagsConstants {
             "fledge_schedule_custom_audience_update_min_delay_mins_override";
     public static final String KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES =
             "Fledge__schedule_custom_audience_update_max_bytes";
+    public static final String
+            KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_NETWORK_TYPE =
+                    "Fledge__schedule_custom_audience_update_background_job_network_type";
 
     // FLEDGE Ad Counter Histogram keys
     public static final String KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT =
