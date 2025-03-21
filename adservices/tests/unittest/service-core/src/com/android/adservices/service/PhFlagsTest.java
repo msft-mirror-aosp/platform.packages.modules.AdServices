@@ -388,7 +388,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE
 import static com.android.adservices.service.Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DB_SIZE_LIMIT;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS;
-import static com.android.adservices.service.Flags.MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE;
+import static com.android.adservices.service.Flags.MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_REQUIRED_NETWORK_TYPE;
@@ -933,7 +933,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DB_SIZE_LIMIT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST;
@@ -6464,11 +6464,11 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetMeasurementDebugJoinKeysSampleRate() {
+    public void testGetMeasurementDebugJoinKeysNoncompliantAdtechsSampleRate() {
         mFlagsTestHelper.testConfigFlag(
-                KEY_MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE,
-                MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE,
-                Flags::getMeasurementDebugJoinKeysSampleRate);
+                KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE,
+                MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE,
+                Flags::getMeasurementDebugJoinKeysNoncompliantAdtechsSampleRate);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

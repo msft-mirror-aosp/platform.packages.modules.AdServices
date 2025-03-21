@@ -5302,11 +5302,11 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /* Sample rate used to set debug_join_keys if Trigger side adtech is non-compliant. */
-    @ConfigFlag float MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE = 0.01f;
+    @ConfigFlag float MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE = 1.0f;
 
-    /** Returns sample rate to set debug_join_keys. */
-    default float getMeasurementDebugJoinKeysSampleRate() {
-        return MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE;
+    /** Returns sample rate to set debug_join_keys on non-compliant adtechs. */
+    default float getMeasurementDebugJoinKeysNoncompliantAdtechsSampleRate() {
+        return MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE;
     }
 
     /**
