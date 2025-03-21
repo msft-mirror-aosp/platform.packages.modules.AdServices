@@ -44,7 +44,7 @@ public final class AdServicesHostSideFlagsSetterRule
         return TestDeviceHelper.getApiLevel();
     }
 
-    private AdServicesHostSideFlagsSetterRule() {
+    public AdServicesHostSideFlagsSetterRule() {
         super(
                 ConsoleLogger.getInstance(),
                 namespace -> new HostSideDeviceConfigHelper(namespace),

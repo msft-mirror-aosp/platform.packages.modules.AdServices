@@ -159,8 +159,9 @@ public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
                                 new SdkSandboxStorageManager(
                                         context,
                                         new FakeSdkSandboxManagerLocal(),
+                                        Mockito.mock(SdkSandboxSettingsListener.class),
                                         Mockito.spy(PackageManagerLocal.class),
-                                        /*rootDir=*/ context.getDir(
+                                        /* rootDir= */ context.getDir(
                                                         "test_dir", Context.MODE_PRIVATE)
                                                 .getPath()),
                                 new FakeSdkSandboxProvider(

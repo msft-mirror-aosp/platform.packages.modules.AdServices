@@ -28,7 +28,6 @@ import android.os.UserHandle;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.pm.PackageManagerLocal;
 import com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
 import com.android.server.sdksandbox.SdkSandboxStorageManager.SubDirectories;
@@ -69,6 +68,7 @@ public class SdkSandboxStorageManagerUnitTest extends DeviceSupportedBaseTest {
     private PackageManager mPmMock;
     private Context mSpyContext;
     private SdkSandboxStorageManagerUtility mSdkSandboxStorageManagerUtility;
+    private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
 
     @Before
     public void setup() throws Exception {
@@ -85,9 +85,14 @@ public class SdkSandboxStorageManagerUnitTest extends DeviceSupportedBaseTest {
         PackageManagerLocal packageManagerLocal = Mockito.mock(PackageManagerLocal.class);
 
         mSdkSandboxManagerLocal = new FakeSdkSandboxManagerLocal();
+        mSdkSandboxSettingsListener = Mockito.mock(SdkSandboxSettingsListener.class);
         mSdkSandboxStorageManager =
                 new SdkSandboxStorageManager(
-                        mSpyContext, mSdkSandboxManagerLocal, packageManagerLocal, mTestDir);
+                        mSpyContext,
+                        mSdkSandboxManagerLocal,
+                        mSdkSandboxSettingsListener,
+                        packageManagerLocal,
+                        mTestDir);
         mSdkSandboxStorageManagerUtility =
                 new SdkSandboxStorageManagerUtility(mSdkSandboxStorageManager);
     }
