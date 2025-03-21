@@ -113,7 +113,7 @@ scenarios [
         ]
       },
       {
-        journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.StressCpuUtilization"
+        journey: "android.adservices.test.longevity.concurrent.StressCpuUtilization"
         methodName: "startCpuStress"
       }
     ]
@@ -207,7 +207,7 @@ scenarios [
           ]
         },
         {
-          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.StressCpuUtilization"
+          journey: "android.adservices.test.longevity.concurrent.StressCpuUtilization"
           methodName: "startCpuStress"
         }
       ]
