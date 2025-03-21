@@ -30,7 +30,8 @@ import android.adservices.common.IAdServicesCommonStatesCallback;
 import android.adservices.common.IEnableAdServicesCallback;
 import android.adservices.common.IRequestAdServicesModuleOverridesCallback;
 import android.adservices.common.IRequestAdServicesModuleUserChoicesCallback;
-
+import android.adservices.common.IGetAdServicesModuleStatesCallback;
+import android.adservices.common.IGetAdServicesUserChoicesCallback;
 import android.adservices.common.IUpdateAdIdCallback;
 
 import android.adservices.common.UpdateAdIdRequest;
@@ -68,4 +69,10 @@ interface IAdServicesCommonService {
     void setAdsPersonalizationStatus(
         in AdsPersonalizationStatusParams params,
         in IAdsPersonalizationCallback callback);
+
+    void getAdServicesModuleStates(
+        in IGetAdServicesModuleStatesCallback callback);
+
+    void getAdServicesModuleUserChoices(
+        in IGetAdServicesUserChoicesCallback callback);
 }
