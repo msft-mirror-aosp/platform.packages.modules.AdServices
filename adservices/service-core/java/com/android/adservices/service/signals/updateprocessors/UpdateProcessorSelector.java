@@ -16,48 +16,52 @@
 
 package com.android.adservices.service.signals.updateprocessors;
 
-import com.android.adservices.service.signals.updateprocessors.append.AppendV0;
-import com.android.adservices.service.signals.updateprocessors.put.PutV0;
-import com.android.adservices.service.signals.updateprocessors.putifnotpresent.PutIfNotPresentV0;
-import com.android.adservices.service.signals.updateprocessors.remove.RemoveV0;
-import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderV0;
+import static com.android.adservices.service.signals.updateprocessors.append.Append.APPEND;
+import static com.android.adservices.service.signals.updateprocessors.put.Put.PUT;
+import static com.android.adservices.service.signals.updateprocessors.putifnotpresent.PutIfNotPresent.PUT_IF_NOT_PRESENT;
+import static com.android.adservices.service.signals.updateprocessors.remove.Remove.REMOVE;
+import static com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoder.UPDATE_ENCODER;
 
-import java.util.Arrays;
-import java.util.List;
+import com.android.adservices.service.signals.SignalUpdates.UpdateSchemaVersion;
+import com.android.adservices.service.signals.updateprocessors.append.AppendFactory;
+import com.android.adservices.service.signals.updateprocessors.put.PutFactory;
+import com.android.adservices.service.signals.updateprocessors.putifnotpresent.PutIfNotPresentFactory;
+import com.android.adservices.service.signals.updateprocessors.remove.RemoveFactory;
+import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderFactory;
+
+import com.google.common.collect.ImmutableMap;
+
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /** Selector class for getting the appropriate update processor */
 public class UpdateProcessorSelector {
 
-    private static final List<UpdateProcessor> PROCESSORS =
-            Arrays.asList(
-                    new AppendV0(),
-                    new PutV0(),
-                    new PutIfNotPresentV0(),
-                    new RemoveV0(),
-                    new UpdateEncoderV0());
-    private final Map<String, UpdateProcessor> mProcessorMap;
+    private final Map<String, UpdateProcessorFactory> mProcessorFactoryMap;
 
     public UpdateProcessorSelector() {
-        mProcessorMap =
-                PROCESSORS.stream().collect(Collectors.toMap(UpdateProcessor::getName, p -> p));
+        mProcessorFactoryMap =
+                ImmutableMap.of(
+                        APPEND, new AppendFactory(),
+                        PUT, new PutFactory(),
+                        PUT_IF_NOT_PRESENT, new PutIfNotPresentFactory(),
+                        REMOVE, new RemoveFactory(),
+                        UPDATE_ENCODER, new UpdateEncoderFactory());
     }
 
     /**
-     * Get the appropriate processor given a String taken from the signals update JSON top level
-     * keys.
+     * Get the appropriate update processor given a String taken from the signals update JSON top
+     * level keys.
      *
-     * @param key The key representing the processor
-     * @return The appropriate processor.
+     * @param key The JSON key representing the update type.
+     * @return The appropriate update processor.
      */
-    public UpdateProcessor getUpdateProcessor(String key) {
-        if (!mProcessorMap.containsKey(key)) {
+    public UpdateProcessor getUpdateProcessor(String key, @UpdateSchemaVersion int version) {
+        if (!mProcessorFactoryMap.containsKey(key)) {
             throw new IllegalArgumentException(
                     String.format(
                             "Invalid signal update command, valid commands are %s",
-                            mProcessorMap.keySet()));
+                            mProcessorFactoryMap.keySet()));
         }
-        return mProcessorMap.get(key);
+        return mProcessorFactoryMap.get(key).getUpdateProcessor(version);
     }
 }

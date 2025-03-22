@@ -25,10 +25,5 @@ import com.android.adservices.service.signals.updateprocessors.UpdateProcessor;
  * the signal key to put for and the values are base 64 string corresponding to the value to put.
  */
 public abstract class PutIfNotPresent implements UpdateProcessor {
-    protected static final String PUT_IF_NOT_PRESENT = "put_if_not_present";
-
-    @Override
-    public String getName() {
-        return PUT_IF_NOT_PRESENT;
-    }
+    public static final String PUT_IF_NOT_PRESENT = "put_if_not_present";
 }

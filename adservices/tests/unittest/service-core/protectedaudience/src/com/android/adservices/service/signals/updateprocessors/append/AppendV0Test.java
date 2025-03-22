@@ -62,19 +62,13 @@ import java.util.Set;
 public class AppendV0Test extends AdServicesUnitTestCase {
 
     /*
-     * I feel that hardcoding the names here is appropriate here since the JSON names are an
-     * external contract and changing them should require test changes.
+     * Hardcoding names here since JSON keys are an external
+     * contract and changing them should require test changes.
      */
     private static final String MAX_SIGNALS = "max_signals";
     private static final String VALUES = "values";
-    private static final String APPEND = "append";
 
     private final AppendV0 mAppendV0 = new AppendV0();
-
-    @Test
-    public void testGetName() {
-        assertEquals(APPEND, mAppendV0.getName());
-    }
 
     @Test
     public void testAppendSingle() throws Exception {

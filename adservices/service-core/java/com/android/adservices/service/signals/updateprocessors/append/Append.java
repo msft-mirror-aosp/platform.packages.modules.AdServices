@@ -30,10 +30,5 @@ import com.android.adservices.service.signals.updateprocessors.UpdateProcessor;
  * oldest signals will be removed. Note that you can append to a key added by put.
  */
 public abstract class Append implements UpdateProcessor {
-    protected static final String APPEND = "append";
-
-    @Override
-    public String getName() {
-        return APPEND;
-    }
+    public static final String APPEND = "append";
 }

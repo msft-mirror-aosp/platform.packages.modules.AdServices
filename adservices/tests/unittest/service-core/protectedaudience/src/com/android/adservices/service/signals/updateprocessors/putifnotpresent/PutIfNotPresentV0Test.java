@@ -55,18 +55,7 @@ import java.util.Set;
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
 public class PutIfNotPresentV0Test extends AdServicesUnitTestCase {
 
-    /*
-     * I feel that hardcoding the names here is appropriate here since the JSON names are an
-     * external contract and changing them should require test changes.
-     */
-    private static final String PUT_IF_NOT_PRESENT = "put_if_not_present";
-
     private final PutIfNotPresentV0 mPutIfNotPresentV0 = new PutIfNotPresentV0();
-
-    @Test
-    public void testGetName() {
-        assertEquals(PUT_IF_NOT_PRESENT, mPutIfNotPresentV0.getName());
-    }
 
     @Test
     public void testPutSingle() throws Exception {
