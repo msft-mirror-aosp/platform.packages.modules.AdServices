@@ -81,7 +81,6 @@ import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService.TargetUser;
 import com.android.server.am.ActivityManagerLocal;
 import com.android.server.pm.PackageManagerLocal;
-import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
 import com.android.server.sdksandbox.testutils.FakeSdkSandboxProvider;
 import com.android.server.wm.ActivityInterceptorCallback;
@@ -213,7 +212,11 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
         String testDir = context.getDir("test_dir", Context.MODE_PRIVATE).getPath();
         mSdkSandboxStorageManager =
                 new SdkSandboxStorageManager(
-                        mSpyContext, new FakeSdkSandboxManagerLocal(), mPmLocal, testDir);
+                        mSpyContext,
+                        new FakeSdkSandboxManagerLocal(),
+                        Mockito.mock(SdkSandboxSettingsListener.class),
+                        mPmLocal,
+                        testDir);
         mSdkSandboxStorageManagerUtility =
                 new SdkSandboxStorageManagerUtility(mSdkSandboxStorageManager);
         mSdkSandboxRestrictionManager = new SdkSandboxRestrictionManager(mSpyContext);

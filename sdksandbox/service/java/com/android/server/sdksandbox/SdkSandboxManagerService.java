@@ -223,6 +223,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @GuardedBy("mPackageAddedBroadcastReceiverLock")
     private BroadcastReceiver mPackageAddedBroadcastReceiver;
 
+    private int mCurrentUserId;
+
     // If AdServices register itself as binder service, dump() will ignore the --AdServices option
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     static final String DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_AD_SERVICES_ITSELF =
@@ -245,6 +247,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     static class Injector {
         private final Context mContext;
         private SdkSandboxManagerLocal mLocalManager;
+        private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
         private final SdkSandboxServiceProvider mServiceProvider;
         private final @Nullable String mAdServicesPackageName;
         private final @Nullable String mOnDevicePersonalizationPackageName;
@@ -321,7 +324,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         SdkSandboxStorageManager getSdkSandboxStorageManager() {
-            return new SdkSandboxStorageManager(mContext, mLocalManager, getPackageManagerLocal());
+            return new SdkSandboxStorageManager(
+                    mContext,
+                    mLocalManager,
+                    getSdkSandboxSettingsListener(),
+                    getPackageManagerLocal());
         }
 
         void setLocalManager(SdkSandboxManagerLocal localManager) {
@@ -330,6 +337,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         SdkSandboxManagerLocal getLocalManager() {
             return mLocalManager;
+        }
+
+        public void setSdkSandboxSettingsListener(
+                SdkSandboxSettingsListener sdkSandboxSettingsListener) {
+            mSdkSandboxSettingsListener = sdkSandboxSettingsListener;
+        }
+
+        public SdkSandboxSettingsListener getSdkSandboxSettingsListener() {
+            return mSdkSandboxSettingsListener;
         }
 
         String getAdServicesPackageName() {
@@ -362,10 +378,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mContext = context;
         mInjector = injector;
         mInjector.setLocalManager(new LocalImpl());
+        // Setter is needed to break the cyclic dependency between Injector and
+        // SdkSandboxManagerService.
+        mInjector.setSdkSandboxSettingsListener(new SdkSandboxSettingsListener(mContext, this));
         mServiceProvider = mInjector.getSdkSandboxServiceProvider();
         mActivityManager = mContext.getSystemService(ActivityManager.class);
         mActivityManagerLocal = LocalManagerRegistry.getManager(ActivityManagerLocal.class);
         mSdkSandboxPulledAtoms = mInjector.getSdkSandboxPulledAtoms();
+        mSdkSandboxSettingsListener = mInjector.getSdkSandboxSettingsListener();
         mSdkSandboxStorageManager = mInjector.getSdkSandboxStorageManager();
         mSdkSandboxStatsdLogger = mInjector.getSdkSandboxStatsdLogger();
         mSdkSandboxRestrictionManager = mInjector.getSdkSandboxRestrictionManager();
@@ -375,7 +395,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         handlerThread.start();
         mHandler = new Handler(handlerThread.getLooper());
 
-        mSdkSandboxSettingsListener = new SdkSandboxSettingsListener(mContext, this);
         registerBroadcastReceivers();
 
         mSdkSandboxPulledAtoms.initialize(mContext);
@@ -1213,12 +1232,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 hostToken, displayId, width, height, sandboxLatencyInfo, params, callback);
     }
 
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     void onUserUnlocking(int userId) {
         Log.i(TAG, "onUserUnlocking " + userId);
-        // using postDelayed to wait for other volumes to mount
-        BackgroundThread.getHandler()
-                .postDelayed(() -> mSdkSandboxStorageManager.onUserUnlocking(userId), 20000);
+        mCurrentUserId = userId;
+        if (getSdkSandboxSettingsListener().reconcileOnVolumeMount()) {
+            BackgroundThread.getHandler()
+                    .post(() -> mSdkSandboxStorageManager.onUserUnlocking(userId));
+        } else {
+            // using postDelayed to wait for other volumes to mount
+            BackgroundThread.getHandler()
+                    .postDelayed(() -> mSdkSandboxStorageManager.onUserUnlocking(userId), 20000);
+        }
     }
 
     @Override
@@ -1661,6 +1685,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
             return getSdkSandboxSettingsListener().isKillSwitchEnabled();
         }
+    }
+
+    int getCurrentUserId() {
+        return mCurrentUserId;
     }
 
     /**
@@ -2305,25 +2333,21 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             contentProviderAuthoritiesAllowlist.add(curWebViewPackageName + '.' + webViewAuthority);
         }
 
-        synchronized (mLock) {
-            if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
-                    && mSdkSandboxSettingsListener.getNextContentProviderAllowlist() != null) {
-                contentProviderAuthoritiesAllowlist.addAll(
-                        mSdkSandboxSettingsListener.getNextContentProviderAllowlist());
-                return contentProviderAuthoritiesAllowlist;
-            }
+        if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
+                && mSdkSandboxSettingsListener.getNextContentProviderAllowlist() != null) {
+            contentProviderAuthoritiesAllowlist.addAll(
+                    mSdkSandboxSettingsListener.getNextContentProviderAllowlist());
+            return contentProviderAuthoritiesAllowlist;
+        }
 
-            ArraySet<String> contentProviderAllowlistForTargetSdkVersion =
-                    mSdkSandboxSettingsListener
-                            .getContentProviderAllowlistPerTargetSdkVersion()
-                            .get(getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
-            if (contentProviderAllowlistForTargetSdkVersion != null) {
-                contentProviderAuthoritiesAllowlist.addAll(
-                        contentProviderAllowlistForTargetSdkVersion);
-            } else {
-                contentProviderAuthoritiesAllowlist.addAll(
-                        DEFAULT_CONTENTPROVIDER_ALLOWED_AUTHORITIES);
-            }
+        ArraySet<String> contentProviderAllowlistForTargetSdkVersion =
+                mSdkSandboxSettingsListener
+                        .getContentProviderAllowlistPerTargetSdkVersion()
+                        .get(getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
+        if (contentProviderAllowlistForTargetSdkVersion != null) {
+            contentProviderAuthoritiesAllowlist.addAll(contentProviderAllowlistForTargetSdkVersion);
+        } else {
+            contentProviderAuthoritiesAllowlist.addAll(DEFAULT_CONTENTPROVIDER_ALLOWED_AUTHORITIES);
         }
         return contentProviderAuthoritiesAllowlist;
     }
@@ -2331,49 +2355,43 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     // Returns null if an allowlist was not set at all.
     @Nullable
     private ArraySet<String> getBroadcastReceiverAllowlist(int sdkSandboxUid) {
-        synchronized (mLock) {
-            if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()) {
-                return mSdkSandboxSettingsListener.getNextBroadcastReceiverAllowlist();
-            }
-
-            ArrayMap<Integer, ArraySet<String>> broadcastReceiverAllowlist =
-                    mSdkSandboxSettingsListener.getBroadcastReceiverAllowlistPerTargetSdkVersion();
-
-            if (broadcastReceiverAllowlist == null) {
-                return null;
-            }
-            // TODO(b/271547387): Filter out the allowlist based on targetSdkVersion.
-            return broadcastReceiverAllowlist.get(
-                    getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
+        if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()) {
+            return mSdkSandboxSettingsListener.getNextBroadcastReceiverAllowlist();
         }
+
+        ArrayMap<Integer, ArraySet<String>> broadcastReceiverAllowlist =
+                mSdkSandboxSettingsListener.getBroadcastReceiverAllowlistPerTargetSdkVersion();
+
+        if (broadcastReceiverAllowlist == null) {
+            return null;
+        }
+        // TODO(b/271547387): Filter out the allowlist based on targetSdkVersion.
+        return broadcastReceiverAllowlist.get(
+                getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
     }
 
     @NonNull
     private ArraySet<String> getActivityAllowlist(int sdkSandboxUid) {
-        synchronized (mLock) {
-            if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
-                    && mSdkSandboxSettingsListener.getNextActivityAllowlist() != null) {
-                return mSdkSandboxSettingsListener.getNextActivityAllowlist();
-            }
-            return getActivityAllowlistForTargetSdk(sdkSandboxUid);
+        if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
+                && mSdkSandboxSettingsListener.getNextActivityAllowlist() != null) {
+            return mSdkSandboxSettingsListener.getNextActivityAllowlist();
         }
+        return getActivityAllowlistForTargetSdk(sdkSandboxUid);
     }
 
     @NonNull
     private ArraySet<String> getActivityAllowlistForTargetSdk(int sdkSandboxUid) {
-        synchronized (mLock) {
-            ArrayMap<Integer, ArraySet<String>> allowlistPerTargetSdkVersion =
-                    mSdkSandboxSettingsListener.getActivityAllowlistPerTargetSdkVersion();
-            if (allowlistPerTargetSdkVersion == null) {
-                return DEFAULT_ACTIVITY_ALLOWED_ACTIONS;
-            }
-            ArraySet<String> activityAllowlistPerTargetSdkVersion =
-                    allowlistPerTargetSdkVersion.get(
-                            getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
-            return activityAllowlistPerTargetSdkVersion == null
-                    ? DEFAULT_ACTIVITY_ALLOWED_ACTIONS
-                    : activityAllowlistPerTargetSdkVersion;
+        ArrayMap<Integer, ArraySet<String>> allowlistPerTargetSdkVersion =
+                mSdkSandboxSettingsListener.getActivityAllowlistPerTargetSdkVersion();
+        if (allowlistPerTargetSdkVersion == null) {
+            return DEFAULT_ACTIVITY_ALLOWED_ACTIONS;
         }
+        ArraySet<String> activityAllowlistPerTargetSdkVersion =
+                allowlistPerTargetSdkVersion.get(
+                        getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
+        return activityAllowlistPerTargetSdkVersion == null
+                ? DEFAULT_ACTIVITY_ALLOWED_ACTIONS
+                : activityAllowlistPerTargetSdkVersion;
     }
 
     private boolean isIntentAllowedPerAllowList(Intent intent) {

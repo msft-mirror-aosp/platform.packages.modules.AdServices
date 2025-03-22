@@ -58,7 +58,6 @@ import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
 import com.android.server.pm.PackageManagerLocal;
-import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.sdksandbox.testutils.FakeSdkSandboxProvider;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
@@ -198,8 +197,9 @@ public class SdkSandboxStatsdMetricsUnitTest extends DeviceSupportedBaseTest {
                                 new SdkSandboxStorageManager(
                                         mSpyContext,
                                         new FakeSdkSandboxManagerLocal(),
+                                        Mockito.mock(SdkSandboxSettingsListener.class),
                                         Mockito.spy(PackageManagerLocal.class),
-                                        /*rootDir=*/ context.getDir(
+                                        /* rootDir= */ context.getDir(
                                                         "test_dir", Context.MODE_PRIVATE)
                                                 .getPath()),
                                 sProvider,

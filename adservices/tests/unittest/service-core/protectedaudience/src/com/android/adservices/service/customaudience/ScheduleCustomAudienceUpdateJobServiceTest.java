@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateJobService.doesJobHaveExpectedNetworkConstraint;
 import static com.android.adservices.spe.AdServicesJobInfo.SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
@@ -520,6 +521,12 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                     public boolean getGlobalKillSwitch() {
                         return false;
                     }
+
+                    @Override
+                    public int
+                            getFledgeScheduleCustomAudienceUpdateBackgroundJobRequiredNetworkType() {
+                        return JobInfo.NETWORK_TYPE_UNMETERED;
+                    }
                 };
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
@@ -527,6 +534,7 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                                 new ComponentName(
                                         sContext, ScheduleCustomAudienceUpdateJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
         assertNotNull(
@@ -564,6 +572,12 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                     public boolean getGlobalKillSwitch() {
                         return false;
                     }
+
+                    @Override
+                    public int
+                            getFledgeScheduleCustomAudienceUpdateBackgroundJobRequiredNetworkType() {
+                        return JobInfo.NETWORK_TYPE_UNMETERED;
+                    }
                 };
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
@@ -571,6 +585,7 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                                 new ComponentName(
                                         sContext, ScheduleCustomAudienceUpdateJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
         assertNotNull(
@@ -587,6 +602,213 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                 sContext, flagsEnabledScheduleUpdate, true);
 
         ExtendedMockito.verify(() -> ScheduleCustomAudienceUpdateJobService.schedule(any(), any()));
+        verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
+    }
+
+    @Test
+    public void testScheduleIfNeededGetsRescheduledIfJobHasAnyNetworkTypeWithFlagSetToUnmetered() {
+        Flags flagsEnabledScheduleUpdate =
+                new Flags() {
+                    @Override
+                    public boolean getGaUxFeatureEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getGlobalKillSwitch() {
+                        return false;
+                    }
+
+                    @Override
+                    public int
+                            getFledgeScheduleCustomAudienceUpdateBackgroundJobRequiredNetworkType() {
+                        return JobInfo.NETWORK_TYPE_UNMETERED;
+                    }
+                };
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID,
+                                new ComponentName(
+                                        sContext, ScheduleCustomAudienceUpdateJobService.class))
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertNotNull(
+                JOB_SCHEDULER.getPendingJob(SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID));
+
+        doCallRealMethod()
+                .when(
+                        () ->
+                                ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                                        any(), any(), eq(true)));
+        doNothing().when(() -> ScheduleCustomAudienceUpdateJobService.schedule(any(), any()));
+
+        ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                sContext, flagsEnabledScheduleUpdate, /* forceSchedule= */ false);
+
+        ExtendedMockito.verify(() -> ScheduleCustomAudienceUpdateJobService.schedule(any(), any()));
+        verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
+    }
+
+    @Test
+    public void testScheduleIfNeededDoesNotGetRescheduledIfJobHasAnyNetworkTypeWithFlagSetToAny() {
+        Flags flagsEnabledScheduleUpdate =
+                new Flags() {
+                    @Override
+                    public boolean getGaUxFeatureEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getGlobalKillSwitch() {
+                        return false;
+                    }
+
+                    @Override
+                    public int
+                            getFledgeScheduleCustomAudienceUpdateBackgroundJobRequiredNetworkType() {
+                        return JobInfo.NETWORK_TYPE_ANY;
+                    }
+                };
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID,
+                                new ComponentName(
+                                        sContext, ScheduleCustomAudienceUpdateJobService.class))
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertNotNull(
+                JOB_SCHEDULER.getPendingJob(SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID));
+
+        doCallRealMethod()
+                .when(
+                        () ->
+                                ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                                        any(), any(), eq(true)));
+        doNothing().when(() -> ScheduleCustomAudienceUpdateJobService.schedule(any(), any()));
+
+        ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                sContext, flagsEnabledScheduleUpdate, /* forceSchedule= */ false);
+
+        ExtendedMockito.verify(
+                () -> ScheduleCustomAudienceUpdateJobService.schedule(any(), any()), never());
+        verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
+    }
+
+    @Test
+    public void testScheduleIfNeededGetsRescheduledIfJobHasUnMeteredNetworkTypeWithFlagSetToAny() {
+        Flags flagsEnabledScheduleUpdate =
+                new Flags() {
+                    @Override
+                    public boolean getGaUxFeatureEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getGlobalKillSwitch() {
+                        return false;
+                    }
+
+                    @Override
+                    public int
+                            getFledgeScheduleCustomAudienceUpdateBackgroundJobRequiredNetworkType() {
+                        return JobInfo.NETWORK_TYPE_ANY;
+                    }
+                };
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID,
+                                new ComponentName(
+                                        sContext, ScheduleCustomAudienceUpdateJobService.class))
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertNotNull(
+                JOB_SCHEDULER.getPendingJob(SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID));
+
+        doCallRealMethod()
+                .when(
+                        () ->
+                                ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                                        any(), any(), eq(true)));
+        doNothing().when(() -> ScheduleCustomAudienceUpdateJobService.schedule(any(), any()));
+
+        ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                sContext, flagsEnabledScheduleUpdate, /* forceSchedule= */ false);
+
+        ExtendedMockito.verify(() -> ScheduleCustomAudienceUpdateJobService.schedule(any(), any()));
+        verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
+    }
+
+    @Test
+    public void
+            testScheduleIfNeededDoesNotGetRescheduledIfJobHasUnMeteredNetworkTypeWithFlagSetToUnmetered() {
+        Flags flagsEnabledScheduleUpdate =
+                new Flags() {
+                    @Override
+                    public boolean getGaUxFeatureEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getGlobalKillSwitch() {
+                        return false;
+                    }
+
+                    @Override
+                    public int
+                            getFledgeScheduleCustomAudienceUpdateBackgroundJobRequiredNetworkType() {
+                        return JobInfo.NETWORK_TYPE_UNMETERED;
+                    }
+                };
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID,
+                                new ComponentName(
+                                        sContext, ScheduleCustomAudienceUpdateJobService.class))
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertNotNull(
+                JOB_SCHEDULER.getPendingJob(SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID));
+
+        doCallRealMethod()
+                .when(
+                        () ->
+                                ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                                        any(), any(), eq(true)));
+        doNothing().when(() -> ScheduleCustomAudienceUpdateJobService.schedule(any(), any()));
+
+        ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                sContext, flagsEnabledScheduleUpdate, /* forceSchedule= */ false);
+
+        ExtendedMockito.verify(
+                () -> ScheduleCustomAudienceUpdateJobService.schedule(any(), any()), never());
         verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
     }
 
@@ -751,5 +973,71 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
         verify(mUpdateWorker, never()).updateCustomAudience();
         verify(mUpdateServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
+    }
+
+    @Test
+    public void doesJobHaveExpectedConstraintReturnsTrueWithMatching() {
+        JobInfo jobInfoWithUnmetered =
+                new JobInfo.Builder(
+                                SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID,
+                                new ComponentName(
+                                        sContext, ScheduleCustomAudienceUpdateJobService.class))
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                        .build();
+
+        JobInfo jobInfoWithAny =
+                new JobInfo.Builder(
+                                SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID,
+                                new ComponentName(
+                                        sContext, ScheduleCustomAudienceUpdateJobService.class))
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                        .build();
+
+        expect.withMessage("Unmetered")
+                .that(
+                        doesJobHaveExpectedNetworkConstraint(
+                                jobInfoWithUnmetered, JobInfo.NETWORK_TYPE_UNMETERED))
+                .isTrue();
+
+        expect.withMessage("Any")
+                .that(
+                        doesJobHaveExpectedNetworkConstraint(
+                                jobInfoWithAny, JobInfo.NETWORK_TYPE_ANY))
+                .isTrue();
+    }
+
+    @Test
+    public void doesJobHaveExpectedConstraintReturnsFalseWithMismatch() {
+        JobInfo jobInfoWithUnmetered =
+                new JobInfo.Builder(
+                                SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID,
+                                new ComponentName(
+                                        sContext, ScheduleCustomAudienceUpdateJobService.class))
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                        .build();
+
+        JobInfo jobInfoWithAny =
+                new JobInfo.Builder(
+                                SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID,
+                                new ComponentName(
+                                        sContext, ScheduleCustomAudienceUpdateJobService.class))
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                        .build();
+
+        expect.withMessage("Unmetered")
+                .that(
+                        doesJobHaveExpectedNetworkConstraint(
+                                jobInfoWithAny, JobInfo.NETWORK_TYPE_UNMETERED))
+                .isFalse();
+
+        expect.withMessage("Any")
+                .that(
+                        doesJobHaveExpectedNetworkConstraint(
+                                jobInfoWithUnmetered, JobInfo.NETWORK_TYPE_ANY))
+                .isFalse();
     }
 }
