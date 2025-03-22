@@ -222,6 +222,7 @@ public final class OnDeviceAdSelectionFailureIntegrationTest
     @Mock private KAnonSignJoinFactory mMockUnusedKAnonSignJoinFactory;
     @Mock private AdSelectionServiceFilter mMockAdSelectionServiceFilter;
     @Mock private ObliviousHttpEncryptor mMockObliviousHttpEncryptor;
+    @Mock private com.android.adservices.shared.util.Clock mMockClock;
 
     private Flags mLegacyFakeFlags;
     private FledgeAuthorizationFilter mFledgeAuthorizationFilter;
@@ -286,7 +287,7 @@ public final class OnDeviceAdSelectionFailureIntegrationTest
 
         SharedDbHelper dbHelper = DbTestUtil.getSharedDbHelperForTest();
         mEncryptionKeyDao = new EncryptionKeyDao(dbHelper, mAdServicesLogger);
-        mEnrollmentDao = new EnrollmentDao(mSpyContext, dbHelper, mLegacyFakeFlags);
+        mEnrollmentDao = new EnrollmentDao(mSpyContext, dbHelper, mLegacyFakeFlags, mMockClock);
         mFledgeAuthorizationFilter =
                 new FledgeAuthorizationFilter(
                         mSpyContext.getPackageManager(), mEnrollmentDao, mAdServicesLogger);

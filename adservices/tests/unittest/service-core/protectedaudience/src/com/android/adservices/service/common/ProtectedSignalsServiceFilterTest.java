@@ -46,6 +46,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
@@ -71,12 +72,17 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
     private FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
             new FledgeAllowListsFilter(mFakeFlags, mAdServicesLoggerMock);
 
+    @Mock private Clock mMockClock;
+
     @Spy
     private FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
             new FledgeAuthorizationFilter(
                     mSpyContext.getPackageManager(),
                     new EnrollmentDao(
-                            mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mFakeFlags),
+                            mSpyContext,
+                            DbTestUtil.getSharedDbHelperForTest(),
+                            mFakeFlags,
+                            mMockClock),
                     mAdServicesLoggerMock);
 
     @Mock private FledgeApiThrottleFilter mFledgeApiThrottleFilterMock;

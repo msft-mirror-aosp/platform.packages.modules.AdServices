@@ -16,38 +16,81 @@
 
 package com.android.adservices.service.signals.updateprocessors;
 
+import static com.android.adservices.service.signals.updateprocessors.append.Append.APPEND;
+import static com.android.adservices.service.signals.updateprocessors.put.Put.PUT;
+import static com.android.adservices.service.signals.updateprocessors.putifnotpresent.PutIfNotPresent.PUT_IF_NOT_PRESENT;
+import static com.android.adservices.service.signals.updateprocessors.remove.Remove.REMOVE;
+import static com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoder.UPDATE_ENCODER;
+
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.service.signals.updateprocessors.append.Append;
+import com.android.adservices.service.signals.updateprocessors.put.Put;
+import com.android.adservices.service.signals.updateprocessors.putifnotpresent.PutIfNotPresent;
+import com.android.adservices.service.signals.updateprocessors.remove.Remove;
+import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoder;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public class UpdateProcessorSelectorTest {
+@RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
+public class UpdateProcessorSelectorTest extends AdServicesUnitTestCase {
 
+    private static final String VALID_KEY = "append";
     public UpdateProcessorSelector mUpdateProcessorSelector = new UpdateProcessorSelector();
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
-
     @Test
-    public void testInvalid() {
+    public void testInvalidKey() {
         assertThrows(
-                "Selector should throw an exception when given an invalid processor name",
+                "Selector should throw an exception when given an invalid JSON key",
                 IllegalArgumentException.class,
-                () -> mUpdateProcessorSelector.getUpdateProcessor("Not a valid command"));
+                () ->
+                        mUpdateProcessorSelector.getUpdateProcessor(
+                                "Not a valid update type",
+                                mFakeFlags.getProtectedSignalsUpdateSchemaVersion()));
     }
 
     @Test
-    public void testValidCommands() {
-        UpdateProcessor[] processors = {
-            new Append(), new Put(), new PutIfNotPresent(), new Remove(), new UpdateEncoder()
-        };
-        for (int i = 0; i < processors.length; i++) {
-            UpdateProcessor fetchedProcessor =
-                    mUpdateProcessorSelector.getUpdateProcessor(processors[i].getName());
-            assertTrue(processors[i].getClass().isInstance(fetchedProcessor));
-        }
+    public void testInvalidVersion() {
+        assertThrows(
+                "Selector should throw an exception when given an invalid update schema version",
+                IllegalArgumentException.class,
+                () -> mUpdateProcessorSelector.getUpdateProcessor(VALID_KEY, -1));
+    }
+
+    @Test
+    public void testValidInputs() {
+        expect.withMessage(APPEND)
+                .that(
+                        mUpdateProcessorSelector.getUpdateProcessor(
+                                APPEND, mFakeFlags.getProtectedSignalsUpdateSchemaVersion()))
+                .isInstanceOf(Append.class);
+
+        expect.withMessage(PUT)
+                .that(
+                        mUpdateProcessorSelector.getUpdateProcessor(
+                                PUT, mFakeFlags.getProtectedSignalsUpdateSchemaVersion()))
+                .isInstanceOf(Put.class);
+
+        expect.withMessage(PUT_IF_NOT_PRESENT)
+                .that(
+                        mUpdateProcessorSelector.getUpdateProcessor(
+                                PUT_IF_NOT_PRESENT,
+                                mFakeFlags.getProtectedSignalsUpdateSchemaVersion()))
+                .isInstanceOf(PutIfNotPresent.class);
+
+        expect.withMessage(REMOVE)
+                .that(
+                        mUpdateProcessorSelector.getUpdateProcessor(
+                                REMOVE, mFakeFlags.getProtectedSignalsUpdateSchemaVersion()))
+                .isInstanceOf(Remove.class);
+
+        expect.withMessage(UPDATE_ENCODER)
+                .that(
+                        mUpdateProcessorSelector.getUpdateProcessor(
+                                UPDATE_ENCODER,
+                                mFakeFlags.getProtectedSignalsUpdateSchemaVersion()))
+                .isInstanceOf(UpdateEncoder.class);
     }
 }

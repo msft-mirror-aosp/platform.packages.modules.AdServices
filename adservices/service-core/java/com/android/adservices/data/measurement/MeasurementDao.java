@@ -4180,6 +4180,10 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 CountUniqueReportingContract.SCHEDULED_REPORT_TIME,
                 report.getScheduledReportTime());
+        values.put(CountUniqueReportingContract.DEBUG_REPORT_STATUS, report.getDebugReportStatus());
+        values.put(CountUniqueReportingContract.CONTRIBUTION_VALUE, report.getContributionValue());
+        values.put(CountUniqueReportingContract.CONTRIBUTION_TIME, report.getContributionTime());
+        values.put(CountUniqueReportingContract.ENROLLMENT_ID, report.getEnrollmentId());
         values.put(CountUniqueReportingContract.API_VERSION, report.getApiVersion());
         values.put(CountUniqueReportingContract.DEBUG_KEY, report.getDebugKey());
         values.put(CountUniqueReportingContract.CONTEXT_ID, report.getContextId());
@@ -4432,6 +4436,79 @@ class MeasurementDao implements IMeasurementDao {
                         mSQLTransaction.getDatabase(),
                         query,
                         new String[] {origin.toString(), String.valueOf(windowStartTime)});
+    }
+
+    @Override
+    // TODO(402197747): Add similar method for debug reports.
+    public List<String> getPendingCountUniqueReportIds() throws DatastoreException {
+        List<String> pendingCountUniqueReportIds = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                CountUniqueReportingContract.TABLE,
+                                /* columns= */ new String[] {
+                                    CountUniqueReportingContract.REPORT_ID,
+                                },
+                                CountUniqueReportingContract.STATUS + " = ? ",
+                                new String[] {
+                                    String.valueOf(CountUniqueReport.ReportDeliveryStatus.PENDING)
+                                },
+                                /* groupBy= */ null,
+                                /* having= */ null,
+                                /* orderBy= */ "RANDOM()",
+                                /* limit= */ null)) {
+            while (cursor.moveToNext()) {
+                pendingCountUniqueReportIds.add(
+                        cursor.getString(
+                                cursor.getColumnIndex(CountUniqueReportingContract.REPORT_ID)));
+            }
+        }
+        return pendingCountUniqueReportIds;
+    }
+
+    @Override
+    public CountUniqueReport getCountUniqueReport(@NonNull String countUniqueReportId)
+            throws DatastoreException {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                CountUniqueReportingContract.TABLE,
+                                null,
+                                CountUniqueReportingContract.REPORT_ID + " = ? ",
+                                new String[] {countUniqueReportId},
+                                null,
+                                null,
+                                null,
+                                null)) {
+            if (cursor.getCount() == 0) {
+                throw new DatastoreException(
+                        "CountUniqueReport retrieval failed. Id: " + countUniqueReportId);
+            }
+            cursor.moveToNext();
+            return SqliteObjectMapper.constructCountUniqueReport(cursor);
+        }
+    }
+
+    @Override
+    // TODO(402197747): Add similar method for debug reports.
+    public void markCountUniqueReportStatus(
+            String countUniqueReportId, @CountUniqueReport.ReportDeliveryStatus int status)
+            throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.CountUniqueReportingContract.STATUS, status);
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .update(
+                                MeasurementTables.CountUniqueReportingContract.TABLE,
+                                values,
+                                MeasurementTables.CountUniqueReportingContract.REPORT_ID + " = ? ",
+                                new String[] {countUniqueReportId});
+        if (rows != 1) {
+            throw new DatastoreException("Count Unique report update failed");
+        }
     }
 
     private <T> List<T> fetchRecordsMatchingWithParameters(

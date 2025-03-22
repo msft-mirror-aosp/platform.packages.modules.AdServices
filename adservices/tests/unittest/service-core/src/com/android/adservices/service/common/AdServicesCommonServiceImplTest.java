@@ -65,6 +65,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
@@ -116,6 +117,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.ui.UxEngine;
 import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.util.EnrollmentData;
 import com.android.adservices.shared.testing.IntFailureSyncCallback;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
@@ -1329,16 +1331,18 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                                 ConsentNotificationJobService.scheduleNotificationV2(
                                         any(), anyBoolean(), anyBoolean(), anyBoolean()));
 
+        EnrollmentData enrollmentDataMock = mock(EnrollmentData.class);
+        doReturn(enrollmentDataMock).when(mConsentManager).getEnrollmentData();
         // specific setup
         for (int i = 0; i < userChoices.size(); i++) {
             int module = userChoices.keyAt(i);
             int userChoice = userChoices.valueAt(i);
-            doReturn(userChoice).when(mConsentManager).getUserChoice(module);
+            doReturn(userChoice).when(enrollmentDataMock).getUserChoice(module);
         }
         for (int i = 0; i < curStates.size(); i++) {
             int module = curStates.keyAt(i);
             int state = curStates.valueAt(i);
-            doReturn(state).when(mConsentManager).getModuleState(module);
+            doReturn(state).when(enrollmentDataMock).getModuleState(module);
         }
 
         // specific inputs

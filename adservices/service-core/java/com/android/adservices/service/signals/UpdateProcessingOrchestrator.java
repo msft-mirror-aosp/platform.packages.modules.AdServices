@@ -34,10 +34,10 @@ import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
-import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEvent;
-import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
+import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEvent;
+import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEventHandler;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -122,16 +122,18 @@ public class UpdateProcessingOrchestrator {
              * endpoint.
              */
             UpdateOutput combinedUpdates;
-            JSONObject json = signalUpdates.getUpdateJson();
             if (jsonProcessingStatsBuilder == null) {
                 combinedUpdates =
-                        runProcessors(json, currentSignalsMap, jsonProcessingStatsBuilder);
+                        runProcessors(signalUpdates, currentSignalsMap, jsonProcessingStatsBuilder);
             } else {
                 jsonProcessingStatsBuilder.setJsonSize(
-                        computeSize(json.toString().getBytes().length, JSON_SIZE_BUCKETS));
+                        computeSize(
+                                signalUpdates.getUpdateJson().toString().getBytes().length,
+                                JSON_SIZE_BUCKETS));
                 try {
                     combinedUpdates =
-                            runProcessors(json, currentSignalsMap, jsonProcessingStatsBuilder);
+                            runProcessors(
+                                    signalUpdates, currentSignalsMap, jsonProcessingStatsBuilder);
                 } catch (IllegalArgumentException e) {
                     jsonProcessingStatsBuilder.setJsonProcessingStatus(
                             JSON_PROCESSING_STATUS_SEMANTIC_ERROR);
@@ -218,21 +220,22 @@ public class UpdateProcessingOrchestrator {
     }
 
     private UpdateOutput runProcessors(
-            JSONObject json,
+            SignalUpdates signalUpdates,
             Map<ByteBuffer, Set<DBProtectedSignal>> currentSignalsMap,
             UpdateSignalsApiCalledStats.Builder jsonProcessingStatsBuilder)
             throws JSONException {
 
         UpdateOutput combinedUpdates = new UpdateOutput();
+        JSONObject updateJson = signalUpdates.getUpdateJson();
         sLogger.v("Running update processors");
         // Run each of the update processors
-        for (Iterator<String> iter = json.keys(); iter.hasNext(); ) {
+        for (Iterator<String> iter = updateJson.keys(); iter.hasNext(); ) {
             String key = iter.next();
             sLogger.v("Running update processor %s", key);
             UpdateOutput output =
                     mUpdateProcessorSelector
-                            .getUpdateProcessor(key)
-                            .processUpdates(json.get(key), currentSignalsMap);
+                            .getUpdateProcessor(key, signalUpdates.getUpdateSchemaVersion())
+                            .processUpdates(updateJson.get(key), currentSignalsMap);
             combinedUpdates.getToAdd().addAll(output.getToAdd());
             combinedUpdates.getToRemove().addAll(output.getToRemove());
             if (!Collections.disjoint(combinedUpdates.getKeysTouched(), output.getKeysTouched())) {

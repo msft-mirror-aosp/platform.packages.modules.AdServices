@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.signals.updateprocessors;
+package com.android.adservices.service.signals.updateprocessors.put;
 
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_KEY_1;
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_KEY_2;
@@ -23,6 +23,7 @@ import static com.android.adservices.service.signals.SignalsFixture.BASE64_VALUE
 import static com.android.adservices.service.signals.SignalsFixture.BB_KEY_1;
 import static com.android.adservices.service.signals.SignalsFixture.BB_KEY_2;
 import static com.android.adservices.service.signals.SignalsFixture.ID_1;
+import static com.android.adservices.service.signals.SignalsFixture.ID_2;
 import static com.android.adservices.service.signals.SignalsFixture.KEY_1;
 import static com.android.adservices.service.signals.SignalsFixture.KEY_2;
 import static com.android.adservices.service.signals.SignalsFixture.NOW;
@@ -31,14 +32,17 @@ import static com.android.adservices.service.signals.SignalsFixture.VALUE_2;
 import static com.android.adservices.service.signals.SignalsFixture.assertSignalsBuilderUnorderedListEquals;
 import static com.android.adservices.service.signals.SignalsFixture.createSignal;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.signals.DBProtectedSignal;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.json.JSONObject;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
@@ -51,30 +55,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class PutIfNotPresentTest {
+@RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
+public class PutV0Test extends AdServicesUnitTestCase {
 
     /*
      * I feel that hardcoding the names here is appropriate here since the JSON names are an
      * external contract and changing them should require test changes.
      */
-    private static final String PUT_IF_NOT_PRESENT = "put_if_not_present";
+    private static final String PUT = "put";
 
-    private PutIfNotPresent mPutIfNotPresent = new PutIfNotPresent();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
-
-    @Test
-    public void testGetName() {
-        assertEquals(PUT_IF_NOT_PRESENT, mPutIfNotPresent.getName());
-    }
+    private final PutV0 mPutV0 = new PutV0();
 
     @Test
     public void testPutSingle() throws Exception {
         JSONObject updatesJson = new JSONObject();
         updatesJson.put(BASE64_KEY_1, BASE64_VALUE_1);
 
-        UpdateOutput output = mPutIfNotPresent.processUpdates(updatesJson, Collections.emptyMap());
+        UpdateOutput output = mPutV0.processUpdates(updatesJson, Collections.emptyMap());
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
@@ -89,7 +86,7 @@ public class PutIfNotPresentTest {
         updatesJson.put(BASE64_KEY_1, BASE64_VALUE_1);
         updatesJson.put(BASE64_KEY_2, BASE64_VALUE_2);
 
-        UpdateOutput output = mPutIfNotPresent.processUpdates(updatesJson, Collections.emptyMap());
+        UpdateOutput output = mPutV0.processUpdates(updatesJson, Collections.emptyMap());
 
         assertEquals(new HashSet<>(Arrays.asList(BB_KEY_1, BB_KEY_2)), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
@@ -101,20 +98,44 @@ public class PutIfNotPresentTest {
     }
 
     @Test
-    public void testKeepExisting() throws Exception {
+    public void testOverwriteExisting() throws Exception {
+        JSONObject updatesJson = new JSONObject();
+        updatesJson.put(BASE64_KEY_1, BASE64_VALUE_1);
+
+        Map<ByteBuffer, Set<DBProtectedSignal>> existingSignals = new HashMap<>();
+        DBProtectedSignal toOverwrite =
+                createSignal(KEY_1, VALUE_1, ID_1, NOW.minus(Duration.ofDays(1)));
+        existingSignals.put(BB_KEY_1, new HashSet<>(Arrays.asList(toOverwrite)));
+
+        UpdateOutput output = mPutV0.processUpdates(updatesJson, existingSignals);
+
+        assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
+        assertEquals(Arrays.asList(toOverwrite), output.getToRemove());
+        List<DBProtectedSignal.Builder> expected =
+                Arrays.asList(DBProtectedSignal.builder().setKey(KEY_1).setValue(VALUE_1));
+        assertSignalsBuilderUnorderedListEquals(expected, output.getToAdd());
+    }
+
+    @Test
+    public void testOverwriteMultipleExisting() throws Exception {
 
         JSONObject updatesJson = new JSONObject();
         updatesJson.put(BASE64_KEY_1, BASE64_VALUE_1);
 
         Map<ByteBuffer, Set<DBProtectedSignal>> existingSignals = new HashMap<>();
-        DBProtectedSignal toKeep =
+        DBProtectedSignal toOverwrite1 =
                 createSignal(KEY_1, VALUE_1, ID_1, NOW.minus(Duration.ofDays(1)));
-        existingSignals.put(BB_KEY_1, new HashSet<>(Arrays.asList(toKeep)));
+        DBProtectedSignal toOverwrite2 =
+                createSignal(KEY_1, VALUE_2, ID_2, NOW.minus(Duration.ofDays(1)));
+        existingSignals.put(BB_KEY_1, new HashSet<>(Arrays.asList(toOverwrite1, toOverwrite2)));
 
-        UpdateOutput output = mPutIfNotPresent.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output = mPutV0.processUpdates(updatesJson, existingSignals);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
-        assertTrue(output.getToRemove().isEmpty());
-        assertTrue(output.getToAdd().isEmpty());
+        assertThat(Arrays.asList(toOverwrite1, toOverwrite2))
+                .containsExactlyElementsIn(output.getToRemove());
+        List<DBProtectedSignal.Builder> expected =
+                Arrays.asList(DBProtectedSignal.builder().setKey(KEY_1).setValue(VALUE_1));
+        assertSignalsBuilderUnorderedListEquals(expected, output.getToAdd());
     }
 }

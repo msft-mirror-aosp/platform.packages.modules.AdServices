@@ -31,6 +31,7 @@ java_test_host {
         "modules-utils-build-testing",
         "cts-install-lib-host",
         "SdkSandboxHostTestUtils",
+        "adservices-host-side-test-utility",
     ],
     test_suites: ["general-tests"],
     device_common_data: [

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.signals.updateprocessors;
+package com.android.adservices.service.signals.updateprocessors.updateencoder;
 
 import android.adservices.common.AdTechIdentifier;
 import android.content.Context;
@@ -48,7 +48,7 @@ public class UpdateEncoderEventHandler {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final EncoderEndpointsDao mEncoderEndpointsDao;
     @NonNull private final EncoderLogicHandler mEncoderLogicHandler;
-    private List<Observer> mUpdatesObserver;
+    private final List<Observer> mUpdatesObserver;
     private final Executor mBackgroundExecutor;
     private final Context mContext;
     @NonNull private final ForcedEncoder mForcedEncoder;
@@ -70,12 +70,12 @@ public class UpdateEncoderEventHandler {
 
     @VisibleForTesting
     public UpdateEncoderEventHandler(
-            EncoderEndpointsDao encoderEndpointsDao,
-            EncoderLogicHandler encoderLogicHandler,
+            @NonNull EncoderEndpointsDao encoderEndpointsDao,
+            @NonNull EncoderLogicHandler encoderLogicHandler,
             Context context,
             Executor backgroundExecutor,
             boolean isEncoderLogicRegisteredCompletionBroadcastEnabled,
-            ForcedEncoder forcedEncoder,
+            @NonNull ForcedEncoder forcedEncoder,
             boolean isForcedEncodingCompletionBroadcastEnabled) {
         Objects.requireNonNull(encoderEndpointsDao, "encoderEndpointsDao cannot be null");
         Objects.requireNonNull(encoderLogicHandler, "encoderLogicHandler cannot be null");

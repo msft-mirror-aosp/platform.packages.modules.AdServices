@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.signals;
 
+import android.annotation.IntDef;
+
 import androidx.annotation.NonNull;
 
 import com.android.internal.annotations.Immutable;
@@ -23,6 +25,9 @@ import com.android.internal.annotations.Immutable;
 import com.google.auto.value.AutoValue;
 
 import org.json.JSONObject;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /** POJO Represents a set of signal updates bundled with related metadata. */
 @Immutable
@@ -33,8 +38,16 @@ public abstract class SignalUpdates {
     @NonNull
     public abstract JSONObject getUpdateJson();
 
+    @IntDef(
+            flag = true,
+            value = {UpdateSchemaVersion.V0})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface UpdateSchemaVersion {
+        int V0 = 0;
+    }
+
     /** The signal update schema version. */
-    public abstract int getUpdateSchemaVersion();
+    public abstract @UpdateSchemaVersion int getUpdateSchemaVersion();
 
     /**
      * @return a builder to create an instance of {@link SignalUpdates}
@@ -51,7 +64,8 @@ public abstract class SignalUpdates {
 
         /** For more details see {@link #getUpdateSchemaVersion()}. */
         @NonNull
-        public abstract Builder setUpdateSchemaVersion(int updateSchemaVersion);
+        public abstract Builder setUpdateSchemaVersion(
+                @UpdateSchemaVersion int updateSchemaVersion);
 
         /**
          * @return an instance of {@link SignalUpdates}.

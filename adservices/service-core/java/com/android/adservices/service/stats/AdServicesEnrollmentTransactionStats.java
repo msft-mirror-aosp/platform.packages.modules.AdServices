@@ -18,7 +18,7 @@ package com.android.adservices.service.stats;
 
 import com.google.auto.value.AutoValue;
 
-/** Class for AdServicesEncryptionKeyFetched atom. */
+/** Class for AdServicesEnrollmentTransactionStats atom. */
 @AutoValue
 public abstract class AdServicesEnrollmentTransactionStats {
     /**
@@ -62,6 +62,11 @@ public abstract class AdServicesEnrollmentTransactionStats {
     public abstract int enrollmentFileBuildId();
 
     /**
+     * @return Enrollment Transaction latency.
+     */
+    public abstract int latencyMs();
+
+    /**
      * @return generic builder.
      */
     public static AdServicesEnrollmentTransactionStats.Builder builder() {
@@ -94,6 +99,9 @@ public abstract class AdServicesEnrollmentTransactionStats {
 
         /** Set Enrollment Transaction Status. */
         public abstract Builder setTransactionStatus(TransactionStatus value);
+
+        /** Set Enrollment Transaction Latency. */
+        public abstract Builder setLatencyMs(int value);
 
         /** Build AdServicesEnrollmentTransactionStats */
         public abstract AdServicesEnrollmentTransactionStats build();

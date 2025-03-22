@@ -63,6 +63,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Supplier;
@@ -88,6 +89,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                                 ApplicationContextSingleton.get(),
                                 SharedDbHelper.getInstance(),
                                 flags,
+                                Clock.getInstance(),
                                 flags.isEnableEnrollmentTestSeed(),
                                 AdServicesLoggerImpl.getInstance(),
                                 EnrollmentUtil.getInstance());
@@ -96,6 +98,7 @@ public class EnrollmentDao implements IEnrollmentDao {
     private final SharedDbHelper mDbHelper;
     private final Context mContext;
     private final Flags mFlags;
+    private final Clock mClock;
     private final AdServicesLogger mLogger;
     private final EnrollmentUtil mEnrollmentUtil;
     @VisibleForTesting static final String IS_SEEDED = "is_seeded";
@@ -104,11 +107,12 @@ public class EnrollmentDao implements IEnrollmentDao {
             EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue();
 
     @VisibleForTesting
-    public EnrollmentDao(Context context, SharedDbHelper dbHelper, Flags flags) {
+    public EnrollmentDao(Context context, SharedDbHelper dbHelper, Flags flags, Clock clock) {
         this(
                 context,
                 dbHelper,
                 flags,
+                clock,
                 flags.isEnableEnrollmentTestSeed(),
                 AdServicesLoggerImpl.getInstance(),
                 EnrollmentUtil.getInstance());
@@ -119,6 +123,7 @@ public class EnrollmentDao implements IEnrollmentDao {
             Context context,
             SharedDbHelper dbHelper,
             Flags flags,
+            Clock clock,
             boolean enableTestSeed,
             AdServicesLogger logger,
             EnrollmentUtil enrollmentUtil) {
@@ -126,6 +131,7 @@ public class EnrollmentDao implements IEnrollmentDao {
         mContext = context;
         mDbHelper = dbHelper;
         mFlags = flags;
+        mClock = clock;
         mLogger = logger;
         mEnrollmentUtil = enrollmentUtil;
         if (enableTestSeed) {
@@ -209,6 +215,7 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @Override
     public List<EnrollmentData> getAllEnrollmentData() {
+        final long startTime = mClock.currentTimeMillis();
         Builder stats =
                 getEnrollmentStatsBuilder(
                         TransactionType.GET_ALL_ENROLLMENT_DATA,
@@ -221,7 +228,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DB_NOT_FOUND,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return enrollmentDataList;
         }
         try (Cursor cursor =
@@ -239,7 +247,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                         mLogger,
                         stats,
                         TransactionStatus.MATCH_NOT_FOUND,
-                        getEnrollmentRecordCountForLogging());
+                        getEnrollmentRecordCountForLogging(),
+                        getLatencyMs(startTime));
                 LogUtil.d("Can't get all enrollment data from DB.");
                 return enrollmentDataList;
             }
@@ -253,14 +262,16 @@ public class EnrollmentDao implements IEnrollmentDao {
                     TransactionStatus.SUCCESS,
                     cursor.getCount(),
                     enrollmentDataList.size(),
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return enrollmentDataList;
         } catch (SQLException e) {
             mEnrollmentUtil.logTransactionStatsNoResult(
                     mLogger,
                     stats,
                     TransactionStatus.DATASTORE_EXCEPTION,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             LogUtil.e(e, "Failed to get all enrollment data from DB.");
         }
         return enrollmentDataList;
@@ -269,6 +280,7 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Override
     @Nullable
     public EnrollmentData getEnrollmentData(String enrollmentId) {
+        final long startTime = mClock.currentTimeMillis();
         Builder stats =
                 getEnrollmentStatsBuilder(
                         TransactionType.GET_ENROLLMENT_DATA, /* transactionParameterCount= */ 1);
@@ -278,7 +290,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DB_NOT_FOUND,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return null;
         }
         try (Cursor cursor =
@@ -297,7 +310,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                         mLogger,
                         stats,
                         TransactionStatus.MATCH_NOT_FOUND,
-                        getEnrollmentRecordCountForLogging());
+                        getEnrollmentRecordCountForLogging(),
+                        getLatencyMs(startTime));
                 return null;
             }
             cursor.moveToNext();
@@ -307,14 +321,16 @@ public class EnrollmentDao implements IEnrollmentDao {
                     TransactionStatus.SUCCESS,
                     cursor.getCount(),
                     /* transactionResultCount= */ 1,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
         } catch (SQLException e) {
             mEnrollmentUtil.logTransactionStatsNoResult(
                     mLogger,
                     stats,
                     TransactionStatus.DATASTORE_EXCEPTION,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             LogUtil.e(e, "Failed to get all enrollment data from DB.");
             return null;
         }
@@ -323,6 +339,7 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Override
     @Nullable
     public EnrollmentData getEnrollmentDataFromMeasurementUrl(Uri url) {
+        final long startTime = mClock.currentTimeMillis();
         Builder stats =
                 getEnrollmentStatsBuilder(
                         TransactionType.GET_ENROLLMENT_DATA_FROM_MEASUREMENT_URL,
@@ -348,7 +365,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DB_NOT_FOUND,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, false, buildId);
             return null;
         }
@@ -380,7 +398,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                         mLogger,
                         stats,
                         TransactionStatus.MATCH_NOT_FOUND,
-                        getEnrollmentRecordCountForLogging());
+                        getEnrollmentRecordCountForLogging(),
+                        getLatencyMs(startTime));
                 mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
                 return null;
             }
@@ -397,7 +416,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                             TransactionStatus.SUCCESS,
                             cursor.getCount(),
                             /* transactionResultCount= */ 1,
-                            getEnrollmentRecordCountForLogging());
+                            getEnrollmentRecordCountForLogging(),
+                            getLatencyMs(startTime));
                     mEnrollmentUtil.logEnrollmentMatchStats(mLogger, true, buildId);
                     return data;
                 }
@@ -406,7 +426,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.INVALID_OUTPUT,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
             return null;
         } catch (SQLException e) {
@@ -414,7 +435,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DATASTORE_EXCEPTION,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             LogUtil.e(e, "Failed to get measurement enrollment data from DB.");
             return null;
         }
@@ -469,6 +491,7 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Nullable
     public EnrollmentData getEnrollmentDataForFledgeByAdTechIdentifier(
             AdTechIdentifier adTechIdentifier) {
+        final long startTime = mClock.currentTimeMillis();
         Builder stats =
                 getEnrollmentStatsBuilder(
                         TransactionType.GET_ENROLLMENT_DATA_FOR_FLEDGE_BY_ADTECH_IDENTIFIER,
@@ -485,7 +508,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DB_NOT_FOUND,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return null;
         }
 
@@ -512,7 +536,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                         mLogger,
                         stats,
                         TransactionStatus.MATCH_NOT_FOUND,
-                        getEnrollmentRecordCountForLogging());
+                        getEnrollmentRecordCountForLogging(),
+                        getLatencyMs(startTime));
                 mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
                 return null;
             }
@@ -540,7 +565,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                                     TransactionStatus.SUCCESS,
                                     cursor.getCount(),
                                     /* transactionResultCount= */ 1,
-                                    getEnrollmentRecordCountForLogging());
+                                    getEnrollmentRecordCountForLogging(),
+                                    getLatencyMs(startTime));
                             mEnrollmentUtil.logEnrollmentMatchStats(mLogger, true, buildId);
 
                             return potentialMatch;
@@ -559,7 +585,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     TransactionStatus.INVALID_OUTPUT,
                     cursor.getCount(),
                     /* transactionResultCount= */ 0,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
             return null;
         } catch (SQLException e) {
@@ -567,7 +594,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DATASTORE_EXCEPTION,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             LogUtil.e(e, "Failed to get fledge enrollment data from DB.");
             return null;
         }
@@ -575,6 +603,7 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @Override
     public Set<AdTechIdentifier> getAllFledgeEnrolledAdTechs() {
+        final long startTime = mClock.currentTimeMillis();
         Builder stats =
                 getEnrollmentStatsBuilder(
                         TransactionType.GET_ALL_FLEDGE_ENROLLED_ADTECHS,
@@ -595,7 +624,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DB_NOT_FOUND,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return enrolledAdTechIdentifiers;
         }
 
@@ -621,7 +651,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                         mLogger,
                         stats,
                         TransactionStatus.MATCH_NOT_FOUND,
-                        getEnrollmentRecordCountForLogging());
+                        getEnrollmentRecordCountForLogging(),
+                        getLatencyMs(startTime));
                 return enrolledAdTechIdentifiers;
             }
 
@@ -641,14 +672,16 @@ public class EnrollmentDao implements IEnrollmentDao {
                     TransactionStatus.SUCCESS,
                     cursor.getCount(),
                     enrolledAdTechIdentifiers.size(),
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return enrolledAdTechIdentifiers;
         } catch (SQLException e) {
             mEnrollmentUtil.logTransactionStatsNoResult(
                     mLogger,
                     stats,
                     TransactionStatus.DATASTORE_EXCEPTION,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             LogUtil.e(e, "Failed to get fledge enrollment data from DB.");
             return null;
         }
@@ -658,6 +691,7 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Nullable
     public Pair<AdTechIdentifier, EnrollmentData>
             getEnrollmentDataForFledgeByMatchingAdTechIdentifier(Uri originalUri) {
+        final long startTime = mClock.currentTimeMillis();
         Builder stats =
                 getEnrollmentStatsBuilder(
                         TransactionType
@@ -669,7 +703,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.INVALID_INPUT,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return null;
         }
 
@@ -686,7 +721,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.INVALID_INPUT,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return null;
         }
 
@@ -698,7 +734,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.INVALID_INPUT,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return null;
         }
 
@@ -711,7 +748,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DB_NOT_FOUND,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return null;
         }
 
@@ -738,7 +776,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                         mLogger,
                         stats,
                         TransactionStatus.MATCH_NOT_FOUND,
-                        getEnrollmentRecordCountForLogging());
+                        getEnrollmentRecordCountForLogging(),
+                        getLatencyMs(startTime));
                 mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
                 return null;
             }
@@ -768,7 +807,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                                     TransactionStatus.SUCCESS,
                                     cursor.getCount(),
                                     /* transactionResultCount= */ 1,
-                                    getEnrollmentRecordCountForLogging());
+                                    getEnrollmentRecordCountForLogging(),
+                                    getLatencyMs(startTime));
                             mEnrollmentUtil.logEnrollmentMatchStats(mLogger, true, buildId);
 
                             // AdTechIdentifiers are currently expected to only contain eTLD+1
@@ -789,7 +829,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     TransactionStatus.INVALID_OUTPUT,
                     cursor.getCount(),
                     /* transactionResultCount= */ 0,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
             return null;
         } catch (SQLException e) {
@@ -797,7 +838,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DATASTORE_EXCEPTION,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             LogUtil.e(e, "Failed to get fledge enrollment data from DB.");
             ErrorLogUtil.e(
                     e,
@@ -810,6 +852,7 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Override
     @Nullable
     public EnrollmentData getEnrollmentDataFromSdkName(String sdkName) {
+        final long startTime = mClock.currentTimeMillis();
         Builder stats =
                 getEnrollmentStatsBuilder(
                         TransactionType.GET_ENROLLMENT_DATA_FROM_SDK_NAME,
@@ -819,7 +862,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.INVALID_INPUT,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return null;
         }
         int buildId = mEnrollmentUtil.getBuildId();
@@ -829,7 +873,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DB_NOT_FOUND,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return null;
         }
 
@@ -853,7 +898,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                         mLogger,
                         stats,
                         TransactionStatus.MATCH_NOT_FOUND,
-                        getEnrollmentRecordCountForLogging());
+                        getEnrollmentRecordCountForLogging(),
+                        getLatencyMs(startTime));
                 mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
                 return null;
             }
@@ -863,7 +909,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     TransactionStatus.SUCCESS,
                     cursor.getCount(),
                     /* transactionResultCount= */ 1,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             mEnrollmentUtil.logEnrollmentMatchStats(mLogger, true, buildId);
             cursor.moveToNext();
             return SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
@@ -872,7 +919,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DATASTORE_EXCEPTION,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             LogUtil.e(e, "Failed to get enrollment data from DB.");
             ErrorLogUtil.e(
                     e,
@@ -886,6 +934,7 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Nullable
     public Pair<AdTechIdentifier, EnrollmentData> getEnrollmentDataForPASByMatchingAdTechIdentifier(
             Uri originalUri) {
+        final long startTime = mClock.currentTimeMillis();
         Builder stats =
                 getEnrollmentStatsBuilder(
                         TransactionType.GET_ENROLLMENT_DATA_FOR_PAS_BY_MATCHING_ADTECH_IDENTIFIER,
@@ -895,7 +944,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.INVALID_INPUT,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return null;
         }
 
@@ -913,7 +963,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.INVALID_INPUT,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return null;
         }
         String originalUriHost = topDomainUri.get().getHost();
@@ -925,7 +976,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DB_NOT_FOUND,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return null;
         }
 
@@ -954,7 +1006,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                         mLogger,
                         stats,
                         TransactionStatus.MATCH_NOT_FOUND,
-                        getEnrollmentRecordCountForLogging());
+                        getEnrollmentRecordCountForLogging(),
+                        getLatencyMs(startTime));
                 mEnrollmentUtil.logEnrollmentMatchStats(
                         mLogger, /* isSuccessful= */ false, buildId);
                 return null;
@@ -985,7 +1038,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                                 TransactionStatus.SUCCESS,
                                 cursor.getCount(),
                                 /* transactionResultCount= */ 1,
-                                getEnrollmentRecordCountForLogging());
+                                getEnrollmentRecordCountForLogging(),
+                                getLatencyMs(startTime));
                         mEnrollmentUtil.logEnrollmentMatchStats(mLogger, true, buildId);
 
                         // AdTechIdentifiers are currently expected to only contain eTLD+1
@@ -1005,7 +1059,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     TransactionStatus.INVALID_OUTPUT,
                     cursor.getCount(),
                     /* transactionResultCount= */ 0,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             mEnrollmentUtil.logEnrollmentMatchStats(mLogger, /* isSuccessful= */ false, buildId);
             return null;
         } catch (SQLException e) {
@@ -1013,7 +1068,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DATASTORE_EXCEPTION,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             LogUtil.e(e, "Failed to get enrollment data from DB.");
             return null;
         }
@@ -1023,6 +1079,7 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Nullable
     public EnrollmentData getEnrollmentDataForPASByAdTechIdentifier(
             AdTechIdentifier adTechIdentifier) {
+        final long startTime = mClock.currentTimeMillis();
         Builder stats =
                 getEnrollmentStatsBuilder(
                         TransactionType.GET_ENROLLMENT_DATA_FOR_PAS_BY_ADTECH_IDENTIFIER,
@@ -1040,7 +1097,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DB_NOT_FOUND,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return null;
         }
 
@@ -1071,7 +1129,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                         mLogger,
                         stats,
                         TransactionStatus.MATCH_NOT_FOUND,
-                        getEnrollmentRecordCountForLogging());
+                        getEnrollmentRecordCountForLogging(),
+                        getLatencyMs(startTime));
                 mEnrollmentUtil.logEnrollmentMatchStats(
                         mLogger, /* isSuccessful= */ false, buildId);
                 return null;
@@ -1102,7 +1161,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                                 TransactionStatus.SUCCESS,
                                 cursor.getCount(),
                                 /* transactionResultCount= */ 1,
-                                getEnrollmentRecordCountForLogging());
+                                getEnrollmentRecordCountForLogging(),
+                                getLatencyMs(startTime));
                         return potentialMatch;
                     }
                 } catch (IllegalArgumentException exception) {
@@ -1118,7 +1178,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     TransactionStatus.INVALID_OUTPUT,
                     cursor.getCount(),
                     /* transactionResultCount= */ 0,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             mEnrollmentUtil.logEnrollmentMatchStats(mLogger, /* isSuccessful= */ false, buildId);
             return null;
         } catch (SQLException e) {
@@ -1126,7 +1187,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DATASTORE_EXCEPTION,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             LogUtil.e(e, "Failed to get enrollment data from DB.");
             return null;
         }
@@ -1134,6 +1196,7 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @Override
     public Set<AdTechIdentifier> getAllPASEnrolledAdTechs() {
+        final long startTime = mClock.currentTimeMillis();
         Builder stats =
                 getEnrollmentStatsBuilder(
                         TransactionType.GET_ALL_PAS_ENROLLED_ADTECHS,
@@ -1153,7 +1216,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DB_NOT_FOUND,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return enrolledAdTechIdentifiers;
         }
 
@@ -1179,7 +1243,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                         mLogger,
                         stats,
                         TransactionStatus.MATCH_NOT_FOUND,
-                        getEnrollmentRecordCountForLogging());
+                        getEnrollmentRecordCountForLogging(),
+                        getLatencyMs(startTime));
                 LogUtil.d("Failed to find any PAS-enrolled ad techs");
                 return enrolledAdTechIdentifiers;
             }
@@ -1199,7 +1264,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     TransactionStatus.SUCCESS,
                     cursor.getCount(),
                     enrolledAdTechIdentifiers.size(),
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return enrolledAdTechIdentifiers;
         }
     }
@@ -1242,6 +1308,7 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @Override
     public boolean insert(EnrollmentData enrollmentData) {
+        final long startTime = mClock.currentTimeMillis();
         Builder stats =
                 getEnrollmentStatsBuilder(
                         TransactionType.INSERT, /* transactionParameterCount= */ 1);
@@ -1252,7 +1319,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DB_NOT_FOUND,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, false, buildId);
             return false;
         }
@@ -1263,12 +1331,17 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DATASTORE_EXCEPTION,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             LogUtil.e(e, "Failed to insert EnrollmentData.");
             return false;
         }
         mEnrollmentUtil.logTransactionStatsNoResult(
-                mLogger, stats, TransactionStatus.SUCCESS, getEnrollmentRecordCountForLogging());
+                mLogger,
+                stats,
+                TransactionStatus.SUCCESS,
+                getEnrollmentRecordCountForLogging(),
+                getLatencyMs(startTime));
         return true;
     }
 
@@ -1329,6 +1402,7 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @Override
     public boolean delete(String enrollmentId) {
+        final long startTime = mClock.currentTimeMillis();
         Builder stats =
                 getEnrollmentStatsBuilder(
                         TransactionType.DELETE, /* transactionParameterCount= */ 1);
@@ -1340,7 +1414,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DB_NOT_FOUND,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, false, buildId);
             return false;
         }
@@ -1360,12 +1435,17 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DATASTORE_EXCEPTION,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, false, buildId);
             return false;
         }
         mEnrollmentUtil.logTransactionStatsNoResult(
-                mLogger, stats, TransactionStatus.SUCCESS, getEnrollmentRecordCountForLogging());
+                mLogger,
+                stats,
+                TransactionStatus.SUCCESS,
+                getEnrollmentRecordCountForLogging(),
+                getLatencyMs(startTime));
         mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, true, buildId);
         return true;
     }
@@ -1373,6 +1453,7 @@ public class EnrollmentDao implements IEnrollmentDao {
     /** Deletes the whole EnrollmentData table. */
     @Override
     public boolean deleteAll() {
+        final long startTime = mClock.currentTimeMillis();
         Builder stats =
                 getEnrollmentStatsBuilder(
                         TransactionType.DELETE_ALL, /* transactionParameterCount= */ 0);
@@ -1384,7 +1465,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DB_NOT_FOUND,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, success, buildId);
             return success;
         }
@@ -1407,7 +1489,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DATASTORE_EXCEPTION,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, success, buildId);
         } finally {
             db.endTransaction();
@@ -1416,13 +1499,15 @@ public class EnrollmentDao implements IEnrollmentDao {
                 mLogger,
                 stats,
                 success ? TransactionStatus.SUCCESS : TransactionStatus.DATASTORE_EXCEPTION,
-                getEnrollmentRecordCountForLogging());
+                getEnrollmentRecordCountForLogging(),
+                getLatencyMs(startTime));
         mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, success, buildId);
         return success;
     }
 
     @Override
     public boolean overwriteData(List<EnrollmentData> newEnrollments) {
+        final long startTime = mClock.currentTimeMillis();
         Builder stats =
                 getEnrollmentStatsBuilder(TransactionType.OVERWRITE_DATA, newEnrollments.size());
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
@@ -1431,7 +1516,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                     mLogger,
                     stats,
                     TransactionStatus.DB_NOT_FOUND,
-                    getEnrollmentRecordCountForLogging());
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return false;
         }
 
@@ -1477,7 +1563,8 @@ public class EnrollmentDao implements IEnrollmentDao {
                 mLogger,
                 stats,
                 success ? TransactionStatus.SUCCESS : TransactionStatus.DATASTORE_EXCEPTION,
-                getEnrollmentRecordCountForLogging());
+                getEnrollmentRecordCountForLogging(),
+                getLatencyMs(startTime));
         return success;
     }
 
@@ -1787,5 +1874,9 @@ public class EnrollmentDao implements IEnrollmentDao {
             }
         }
         AdsRelevanceStatusUtils.checkPpapiNameAndLogCel(null, errorCode, celPpapiName);
+    }
+
+    private int getLatencyMs(long startTime) {
+        return (int) (mClock.currentTimeMillis() - startTime);
     }
 }

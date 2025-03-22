@@ -32,7 +32,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class AbstractTestAction {
+public abstract class AbstractTestAction {
     protected static final String TAG = "MeasurementLoadAction";
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     protected static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();

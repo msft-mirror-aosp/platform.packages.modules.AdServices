@@ -76,6 +76,7 @@ import com.android.adservices.service.measurement.AttributedTrigger;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.CountUniqueMetadata;
 import com.android.adservices.service.measurement.CountUniqueReport;
+import com.android.adservices.service.measurement.CountUniqueReportFixture;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventReportFixture;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -3365,11 +3366,15 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         String reportId = "reportId";
         String payload = "payload";
         Uri reportingOrigin = Uri.parse("https://test.foo");
-        int status = CountUniqueReport.Status.PENDING;
+        int status = CountUniqueReport.ReportDeliveryStatus.PENDING;
+        int debugStatus = CountUniqueReport.ReportDeliveryStatus.PENDING;
         Long scheduledReportTime = 1726874188124L;
         String version = "0.1";
         String debugKey = "asadsadsa=";
         String contextId = "testContextId";
+        String enrollmentId = "test-id";
+        int contributionValue = 5;
+        long contributionTime = 1726874188232L;
 
         CountUniqueReport report =
                 createCountUniqueReport(
@@ -3377,10 +3382,14 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         payload,
                         reportingOrigin,
                         status,
+                        debugStatus,
                         scheduledReportTime,
                         version,
                         debugKey,
-                        contextId);
+                        contextId,
+                        enrollmentId,
+                        contributionValue,
+                        contributionTime);
 
         boolean result =
                 mDatastoreManager.runInTransaction(
@@ -3414,10 +3423,14 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                 assertThat(r.getPayload()).isEqualTo(payload);
                 assertThat(r.getReportingOrigin()).isEqualTo(reportingOrigin);
                 assertThat(r.getStatus()).isEqualTo(status);
+                assertThat(r.getDebugReportStatus()).isEqualTo(debugStatus);
                 assertThat(r.getScheduledReportTime()).isEqualTo(scheduledReportTime);
                 assertThat(r.getApiVersion()).isEqualTo(version);
                 assertThat(r.getDebugKey()).isEqualTo(debugKey);
                 assertThat(r.getContextId()).isEqualTo(contextId);
+                assertThat(r.getEnrollmentId()).isEqualTo(enrollmentId);
+                assertThat(r.getContributionValue()).isEqualTo(contributionValue);
+                assertThat(r.getContributionTime()).isEqualTo(contributionTime);
             }
         }
     }
@@ -14081,6 +14094,66 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         assertThat(fetchedAllDebugReports.get(1)).isEqualTo(debugReport2);
     }
 
+    @Test
+    public void testGetPendingCountUniqueReportIds_getsPendingReports() {
+        CountUniqueReport report1 =
+                CountUniqueReportFixture.getValidCountUniqueReportBuilder()
+                        .setReportId("CU1")
+                        .setStatus(CountUniqueReport.ReportDeliveryStatus.PENDING)
+                        .build();
+        CountUniqueReport report2 =
+                CountUniqueReportFixture.getValidCountUniqueReportBuilder()
+                        .setReportId("CU2")
+                        .setStatus(CountUniqueReport.ReportDeliveryStatus.PENDING)
+                        .build();
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
+
+        AbstractDbIntegrationTest.insertToDb(report1, db);
+        AbstractDbIntegrationTest.insertToDb(report2, db);
+
+        Optional<List<String>> idsOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getPendingCountUniqueReportIds());
+
+        assertThat(idsOpt.isPresent()).isTrue();
+        List<String> ids = idsOpt.get();
+        assertThat(ids.size()).isEqualTo(2);
+
+        assertThat(ids.contains(report1.getReportId())).isTrue();
+        assertThat(ids.contains(report2.getReportId())).isTrue();
+    }
+
+    @Test
+    public void testGetPendingCountUniqueReportIds_ignoresDeliveredReports() {
+        CountUniqueReport report1 =
+                CountUniqueReportFixture.getValidCountUniqueReportBuilder()
+                        .setReportId("CU1")
+                        .setStatus(CountUniqueReport.ReportDeliveryStatus.DELIVERED)
+                        .build();
+        CountUniqueReport report2 =
+                CountUniqueReportFixture.getValidCountUniqueReportBuilder()
+                        .setReportId("CU2")
+                        .setStatus(CountUniqueReport.ReportDeliveryStatus.PENDING)
+                        .build();
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
+
+        AbstractDbIntegrationTest.insertToDb(report1, db);
+        AbstractDbIntegrationTest.insertToDb(report2, db);
+
+        Optional<List<String>> idsOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getPendingCountUniqueReportIds());
+
+        assertThat(idsOpt.isPresent()).isTrue();
+        List<String> ids = idsOpt.get();
+        assertThat(ids.size()).isEqualTo(1);
+
+        assertThat(ids.contains(report1.getReportId())).isFalse();
+        assertThat(ids.contains(report2.getReportId())).isTrue();
+    }
+
     private Source getFirstSourceFromDb() {
         return mDatastoreManager
                 .runInTransactionWithResult(
@@ -15027,19 +15100,27 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
             String payload,
             Uri reportingOrigin,
             int status,
+            int debugStatus,
             Long scheduledReportTime,
             String version,
             String debugKey,
-            String contextId) {
+            String contextId,
+            String enrollmentId,
+            int contributionValue,
+            long contributionTime) {
         CountUniqueReport.Builder builder = new CountUniqueReport.Builder();
         builder.setReportId(reportId);
         builder.setPayload(payload);
         builder.setReportingOrigin(reportingOrigin);
         builder.setStatus(status);
+        builder.setDebugReportStatus(debugStatus);
         builder.setScheduledReportTime(scheduledReportTime);
         builder.setApiVersion(version);
         builder.setDebugKey(debugKey);
         builder.setContextId(contextId);
+        builder.setEnrollmentId(enrollmentId);
+        builder.setContributionValue(contributionValue);
+        builder.setContributionTime(contributionTime);
         return builder.build();
     }
 }

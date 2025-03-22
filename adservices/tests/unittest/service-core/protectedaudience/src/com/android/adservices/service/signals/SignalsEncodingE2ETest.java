@@ -73,8 +73,8 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
-import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
+import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEventHandler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
@@ -200,7 +200,8 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                 new EnrollmentDao(
                         mSpyContext,
                         DbTestUtil.getSharedDbHelperForTest(),
-                        mFlagsWithProtectedSignalsAndEncodingEnabled);
+                        mFlagsWithProtectedSignalsAndEncodingEnabled,
+                        mClock);
 
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();

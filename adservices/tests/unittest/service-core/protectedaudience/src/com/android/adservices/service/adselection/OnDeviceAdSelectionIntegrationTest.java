@@ -190,6 +190,7 @@ import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.adservices.shared.testing.annotations.SetFloatFlag;
 import com.android.adservices.shared.testing.annotations.SetLongFlag;
+import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -729,13 +730,17 @@ public final class OnDeviceAdSelectionIntegrationTest extends AdServicesExtended
     @Mock private File mMockDBAdSelectionFile;
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
+    @Mock private Clock mMockClock;
 
     private FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
             spy(
                     new FledgeAuthorizationFilter(
                             mSpyContext.getPackageManager(),
                             new EnrollmentDao(
-                                    mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mFakeFlags),
+                                mSpyContext,
+                                DbTestUtil.getSharedDbHelperForTest(),
+                                mFakeFlags,
+                                mMockClock),
                             mAdServicesLoggerMock));
 
     private ExecutorService mLightweightExecutorService;

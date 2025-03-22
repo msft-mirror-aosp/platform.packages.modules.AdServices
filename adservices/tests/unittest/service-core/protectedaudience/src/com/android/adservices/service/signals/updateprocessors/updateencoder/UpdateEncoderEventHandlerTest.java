@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.signals.updateprocessors;
+package com.android.adservices.service.signals.updateprocessors.updateencoder;
 
 import static com.android.adservices.service.signals.SignalsFixture.DEV_CONTEXT;
 
@@ -28,45 +28,37 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
-import android.content.Context;
 import android.net.Uri;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.signals.DBEncoderEndpoint;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.signals.ForcedEncoder;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.time.Instant;
 
-public class UpdateEncoderEventHandlerTest {
-
-    @Rule public MockitoRule mRule = MockitoJUnit.rule();
+@RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
+public class UpdateEncoderEventHandlerTest extends AdServicesMockitoTestCase {
     @Mock private EncoderEndpointsDao mEncoderEndpointsDaoMock;
 
     @Mock private EncoderLogicHandler mEncoderLogicHandlerMock;
-    @Mock private Context mContextMock;
     @Mock private ForcedEncoder mForcedEncoderMock;
     @Captor private ArgumentCaptor<DBEncoderEndpoint> mEndpointCaptor;
 
     private UpdateEncoderEventHandler mHandler;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
@@ -74,7 +66,7 @@ public class UpdateEncoderEventHandlerTest {
                 new UpdateEncoderEventHandler(
                         mEncoderEndpointsDaoMock,
                         mEncoderLogicHandlerMock,
-                        mContextMock,
+                        mMockContext,
                         MoreExecutors.newDirectExecutorService(),
                         false,
                         mForcedEncoderMock,
@@ -115,7 +107,7 @@ public class UpdateEncoderEventHandlerTest {
                 .downloadAndUpdate(buyer, DevContext.createForDevOptionsDisabled());
         verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(buyer);
         // Verify no broadcasts were sent since broadcast flags are disabled
-        verify(mContextMock, never()).sendBroadcast(any());
+        verify(mMockContext, never()).sendBroadcast(any());
         assertEquals(uri, mEndpointCaptor.getValue().getDownloadUri());
         assertEquals(buyer, mEndpointCaptor.getValue().getBuyer());
     }
@@ -143,7 +135,7 @@ public class UpdateEncoderEventHandlerTest {
         verify(mEncoderEndpointsDaoMock).registerEndpoint(mEndpointCaptor.capture());
         verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(buyer);
         // Verify no broadcasts were sent since broadcast flags are disabled
-        verify(mContextMock, never()).sendBroadcast(any());
+        verify(mMockContext, never()).sendBroadcast(any());
         assertEquals(uri, mEndpointCaptor.getValue().getDownloadUri());
         assertEquals(buyer, mEndpointCaptor.getValue().getBuyer());
         verifyNoMoreInteractions(mEncoderLogicHandlerMock);

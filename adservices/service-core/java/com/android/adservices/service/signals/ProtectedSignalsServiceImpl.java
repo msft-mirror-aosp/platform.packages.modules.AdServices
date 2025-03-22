@@ -80,8 +80,8 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
-import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
+import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEventHandler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -322,8 +322,6 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                 devContext,
                                 adsRelevanceExecutionLogger,
                                 mUpdateSignalsProcessReportedLogger));
-
-        mUpdateSignalsProcessReportedLogger.logUpdateSignalsProcessReportedStats();
     }
 
     private void doUpdateSignals(
@@ -457,6 +455,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
             if (shouldLog) {
                 adsRelevanceExecutionLogger.endAdsRelevanceApi(resultCode);
                 updateSignalsProcessReportedLogger.setAdservicesApiStatusCode(resultCode);
+                updateSignalsProcessReportedLogger.logUpdateSignalsProcessReportedStats();
             }
             if (jsonProcessingStatsBuilder != null) {
                 if (jsonProcessingStatsBuilder.build().getJsonProcessingStatus()

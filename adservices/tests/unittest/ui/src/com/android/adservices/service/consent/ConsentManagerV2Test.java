@@ -160,6 +160,7 @@ import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnr
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.storage.AtomicFileDatastore;
+import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -256,6 +257,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
 
     @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
 
+    @Mock private Clock mMockClock;
+
     @Before
     public void setup() throws Exception {
         doReturn(mStatsdAdServicesLoggerMock).when(StatsdAdServicesLogger::getInstance);
@@ -276,7 +279,10 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         mEnrollmentDaoSpy =
                 spy(
                         new EnrollmentDao(
-                                mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mMockFlags));
+                                mSpyContext,
+                                DbTestUtil.getSharedDbHelperForTest(),
+                                mMockFlags,
+                                mMockClock));
         mAppConsentStorageManager =
                 spy(
                         new AppConsentStorageManager(
