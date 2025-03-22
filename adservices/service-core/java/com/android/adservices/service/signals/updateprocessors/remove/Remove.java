@@ -25,10 +25,5 @@ import com.android.adservices.service.signals.updateprocessors.UpdateProcessor;
  * should be deleted.
  */
 public abstract class Remove implements UpdateProcessor {
-    protected static final String REMOVE = "remove";
-
-    @Override
-    public String getName() {
-        return REMOVE;
-    }
+    public static final String REMOVE = "remove";
 }

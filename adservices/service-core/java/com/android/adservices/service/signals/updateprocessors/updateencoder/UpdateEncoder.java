@@ -27,13 +27,5 @@ import com.android.adservices.service.signals.updateprocessors.UpdateProcessor;
  * actions. In case of "REGISTER" the Uri for update is provided in the key "endpoint"
  */
 public abstract class UpdateEncoder implements UpdateProcessor {
-    protected static final String UPDATE_ENCODER = "update_encoder";
-
-    /**
-     * @return name for this {@link UpdateProcessor}
-     */
-    @Override
-    public String getName() {
-        return UPDATE_ENCODER;
-    }
+    public static final String UPDATE_ENCODER = "update_encoder";
 }

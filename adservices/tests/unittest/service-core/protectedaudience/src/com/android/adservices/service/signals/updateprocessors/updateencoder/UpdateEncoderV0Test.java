@@ -35,18 +35,12 @@ import java.util.Collections;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
 public class UpdateEncoderV0Test extends AdServicesUnitTestCase {
-    private static final String UPDATE_ENCODER = "update_encoder";
     private static final String ACTION = "action";
     private static final String ENDPOINT = "endpoint";
 
     private final Uri mEndpointUri = CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/encoder");
 
     private final UpdateEncoderV0 mUpdateEncoderV0 = new UpdateEncoderV0();
-
-    @Test
-    public void testGetName() {
-        assertEquals(UPDATE_ENCODER, mUpdateEncoderV0.getName());
-    }
 
     @Test
     public void testUpdateEmptyEvent() throws JSONException {

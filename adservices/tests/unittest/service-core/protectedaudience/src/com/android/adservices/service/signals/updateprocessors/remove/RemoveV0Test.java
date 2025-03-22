@@ -45,19 +45,7 @@ import java.util.Set;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
 public class RemoveV0Test extends AdServicesUnitTestCase {
-
-    /*
-     * I feel that hardcoding the names here is appropriate here since the JSON names are an
-     * external contract and changing them should require test changes.
-     */
-    private static final String REMOVE = "remove";
-
     private final RemoveV0 mRemoveV0 = new RemoveV0();
-
-    @Test
-    public void testGetName() {
-        assertEquals(REMOVE, mRemoveV0.getName());
-    }
 
     @Test
     public void testRemoveSingleNotPresent() throws Exception {
