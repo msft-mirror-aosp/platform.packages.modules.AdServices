@@ -7530,6 +7530,48 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    public void fetchWebTriggers_withDebugJoinKeyEnrollmentNoncompliantAdtech_joinKeyDropped()
+            throws IOException, JSONException {
+        // Setup
+        when(mMockFlags.getMeasurementEnableDebugJoinKeysOpenAccess()).thenReturn(true);
+        when(mMockFlags.getMeasurementDebugJoinKeysNoncompliantAdtechs()).thenReturn(ENROLLMENT_ID);
+        WebTriggerRegistrationRequest request =
+                buildWebTriggerRegistrationRequest(
+                        Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
+        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection1.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
+        when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("");
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of(
+                        "{"
+                                + "\"event_trigger_data\": "
+                                + EVENT_TRIGGERS_1
+                                + ", \"debug_join_key\": \""
+                                + DEBUG_JOIN_KEY
+                                + "\""
+                                + "}"));
+        when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        webTriggerRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        Trigger result = fetch.get();
+        assertThat(result.getDebugJoinKey()).isNull();
+        verify(mUrlConnection1).setRequestMethod("POST");
+    }
+
+    @Test
     public void fetchTrigger_basicWithDebugJoinKey_getsParsed() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
@@ -7604,6 +7646,43 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertEquals(DEBUG_KEY, result.getDebugKey());
         assertNull(result.getDebugJoinKey());
         assertEquals(TRIGGER_URI, result.getRegistrationOrigin().toString());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchTrigger_basicWithDebugJoinKeyNoncompliantAdtech_joinKeyDropped()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableDebugJoinKeysOpenAccess()).thenReturn(true);
+        when(mMockFlags.getMeasurementDebugJoinKeysNoncompliantAdtechs()).thenReturn(ENROLLMENT_ID);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of(
+                        "{\"event_trigger_data\":"
+                                + EVENT_TRIGGERS_1
+                                + ",\"debug_key\":\""
+                                + DEBUG_KEY
+                                + "\" ,\"debug_join_key\":\""
+                                + DEBUG_JOIN_KEY
+                                + "\"}"));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isTrue();
+        Trigger result = fetch.get();
+        assertThat(result.getDebugJoinKey()).isNull();
         verify(mUrlConnection).setRequestMethod("POST");
     }
 

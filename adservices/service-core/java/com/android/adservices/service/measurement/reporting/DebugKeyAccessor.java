@@ -43,25 +43,33 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 /** Util class for DebugKeys */
 public class DebugKeyAccessor {
     @NonNull private final Flags mFlags;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final IMeasurementDao mMeasurementDao;
+    @NonNull private final ThreadLocalRandom mThreadLocalRandom;
 
     public DebugKeyAccessor(IMeasurementDao measurementDao) {
-        this(FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance(), measurementDao);
+        this(
+                FlagsFactory.getFlags(),
+                AdServicesLoggerImpl.getInstance(),
+                measurementDao,
+                ThreadLocalRandom.current());
     }
 
     @VisibleForTesting
     DebugKeyAccessor(
             @NonNull Flags flags,
             @NonNull AdServicesLogger adServicesLogger,
-            @NonNull IMeasurementDao measurementDao) {
+            @NonNull IMeasurementDao measurementDao,
+            @NonNull ThreadLocalRandom threadLocalRandom) {
         mFlags = flags;
         mAdServicesLogger = adServicesLogger;
         mMeasurementDao = measurementDao;
+        mThreadLocalRandom = threadLocalRandom;
     }
 
     /**
@@ -123,10 +131,6 @@ public class DebugKeyAccessor {
                 return new Pair<>(null, null);
             }
         }
-        Set<String> allowedEnrollmentsString =
-                new HashSet<>(
-                        AllowLists.splitAllowList(
-                                mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()));
         UnsignedLong sourceDebugKey = null;
         UnsignedLong triggerDebugKey = null;
         Long joinKeyHash = null;
@@ -310,18 +314,24 @@ public class DebugKeyAccessor {
     }
 
     private boolean canMatchJoinKeys(Source source, Trigger trigger, int attributionType) {
+        boolean isJoinKeyMatchingAllowedToEnrollment = false;
         if (mFlags.getMeasurementEnableDebugJoinKeysOpenAccess()) {
             if (!checkSourceAndTriggerPermissions(source, trigger, attributionType)) {
                 return false;
             }
+            isJoinKeyMatchingAllowedToEnrollment =
+                    isAdTechAllowedToUseJoinKey(trigger.getEnrollmentId());
+        } else {
+            Set<String> allowedEnrollmentsString =
+                    new HashSet<>(
+                            AllowLists.splitAllowList(
+                                    mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()));
+            isJoinKeyMatchingAllowedToEnrollment =
+                    allowedEnrollmentsString.contains(trigger.getEnrollmentId())
+                            && allowedEnrollmentsString.contains(source.getEnrollmentId());
         }
-        Set<String> allowedEnrollmentsString =
-                new HashSet<>(
-                        AllowLists.splitAllowList(
-                                mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()));
         return source.getParentId() == null
-                && allowedEnrollmentsString.contains(trigger.getEnrollmentId())
-                && allowedEnrollmentsString.contains(source.getEnrollmentId())
+                && isJoinKeyMatchingAllowedToEnrollment
                 && Objects.nonNull(source.getDebugJoinKey())
                 && Objects.nonNull(trigger.getDebugJoinKey());
     }
@@ -463,5 +473,18 @@ public class DebugKeyAccessor {
             return triggerDebugKey;
         }
         return (sourceDebugKey != null && triggerDebugKey != null) ? triggerDebugKey : null;
+    }
+
+    /**
+     * If adtech is malicious during open enrollment for debug_join_key usage, use a sampling rate
+     * to set debug_join_key.
+     */
+    private boolean isAdTechAllowedToUseJoinKey(String enrollmentId) {
+        if (AllowLists.isItemAllowListed(
+                mFlags.getMeasurementDebugJoinKeysNoncompliantAdtechs(), enrollmentId)) {
+            return (mThreadLocalRandom.nextDouble()
+                    <= mFlags.getMeasurementDebugJoinKeysNoncompliantAdtechsSampleRate());
+        }
+        return true;
     }
 }
