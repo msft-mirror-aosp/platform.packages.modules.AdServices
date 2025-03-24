@@ -38,7 +38,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.AsyncRegistrationFixture;
 import com.android.adservices.service.measurement.CountUniqueMetadata;
 import com.android.adservices.service.measurement.CountUniqueReport;
-import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
@@ -65,6 +64,7 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
     private static final String FILTERING_ID_MAX_BYTES = "6";
     private static final String DEBUG_KEY = "shdau231sbchsc=";
     private static final Uri REGISTRATION_URI = Uri.parse("https://subdomain.private-domain.com");
+    private static final String ENROLLMENT_ID = "enrollment_id";
 
     private CountUniqueRegistrar mCountUniqueRegistrar;
 
@@ -117,7 +117,8 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
         // Test
         mCountUniqueRegistrar.registerCountUniqueEvent(
                 asyncRegistration,
-                createEventHeader(METADATA_KEY, VALUE, FILTERING_ID, CONTEXT_ID, DEBUG_KEY));
+                createEventHeader(METADATA_KEY, VALUE, FILTERING_ID, CONTEXT_ID, DEBUG_KEY),
+                ENROLLMENT_ID);
 
         // Assert in db
         try (Cursor cursor =
@@ -145,7 +146,7 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
 
             assertWithMessage("r.getStatus()")
                     .that(r.getStatus())
-                    .isEqualTo(AggregateReport.Status.PENDING);
+                    .isEqualTo(CountUniqueReport.ReportDeliveryStatus.PENDING);
 
             assertWithMessage("r.getScheduledReportTime()")
                     .that(r.getScheduledReportTime())
@@ -155,7 +156,21 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
 
             assertWithMessage("r.getDebugKey()").that(r.getDebugKey()).isEqualTo(DEBUG_KEY);
 
+            assertWithMessage("r.getDebugReportStatus()")
+                    .that(r.getDebugReportStatus())
+                    .isEqualTo(CountUniqueReport.ReportDeliveryStatus.PENDING);
             assertWithMessage("r.getContextId()").that(r.getContextId()).isEqualTo(CONTEXT_ID);
+            assertWithMessage("r.getEnrollmentId()")
+                    .that(r.getEnrollmentId())
+                    .isEqualTo(ENROLLMENT_ID);
+
+            assertWithMessage("r.getContributionValue()")
+                    .that(r.getContributionValue())
+                    .isEqualTo(VALUE);
+
+            assertWithMessage("r.getContributionTime()")
+                    .that(r.getContributionTime())
+                    .isEqualTo(asyncRegistration.getRequestTime());
         }
     }
 
@@ -189,7 +204,8 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
         // Test
         mCountUniqueRegistrar.registerCountUniqueEvent(
                 asyncRegistration,
-                createEventHeader(METADATA_KEY, VALUE, FILTERING_ID, CONTEXT_ID, DEBUG_KEY));
+                createEventHeader(METADATA_KEY, VALUE, FILTERING_ID, CONTEXT_ID, DEBUG_KEY),
+                ENROLLMENT_ID);
 
         // Assert in db
         try (Cursor cursor =
@@ -217,7 +233,7 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
 
             assertWithMessage("r.getStatus()")
                     .that(r.getStatus())
-                    .isEqualTo(AggregateReport.Status.PENDING);
+                    .isEqualTo(CountUniqueReport.ReportDeliveryStatus.PENDING);
 
             assertWithMessage("r.getScheduledReportTime()")
                     .that(r.getScheduledReportTime())
@@ -228,6 +244,16 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
             assertWithMessage("r.getDebugKey()").that(r.getDebugKey()).isEqualTo(DEBUG_KEY);
 
             assertWithMessage("r.getContextId()").that(r.getContextId()).isEqualTo(CONTEXT_ID);
+            assertWithMessage("r.getEnrollmentId()")
+                    .that(r.getEnrollmentId())
+                    .isEqualTo(ENROLLMENT_ID);
+            assertWithMessage("r.getContributionValue()")
+                    .that(r.getContributionValue())
+                    .isEqualTo(VALUE);
+
+            assertWithMessage("r.getContributionTime()")
+                    .that(r.getContributionTime())
+                    .isEqualTo(asyncRegistration.getRequestTime());
         }
     }
 
@@ -249,7 +275,8 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
         mCountUniqueRegistrar.registerCountUniqueEvent(
                 asyncRegistration,
                 createEventHeader(
-                        "not-present-metadata-key", VALUE, FILTERING_ID, CONTEXT_ID, DEBUG_KEY));
+                        "not-present-metadata-key", VALUE, FILTERING_ID, CONTEXT_ID, DEBUG_KEY),
+                ENROLLMENT_ID);
 
         // Assert in db
         try (Cursor cursor =
@@ -285,7 +312,8 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
         // Test
         mCountUniqueRegistrar.registerCountUniqueEvent(
                 asyncRegistration,
-                createEventHeader(null, VALUE, FILTERING_ID, CONTEXT_ID, DEBUG_KEY));
+                createEventHeader(null, VALUE, FILTERING_ID, CONTEXT_ID, DEBUG_KEY),
+                ENROLLMENT_ID);
 
         // Assert in db
         try (Cursor cursor =
@@ -321,7 +349,8 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
         // Test
         mCountUniqueRegistrar.registerCountUniqueEvent(
                 asyncRegistration,
-                createEventHeader(METADATA_KEY, VALUE, FILTERING_ID, null, DEBUG_KEY));
+                createEventHeader(METADATA_KEY, VALUE, FILTERING_ID, null, DEBUG_KEY),
+                ENROLLMENT_ID);
 
         // Assert in db
         try (Cursor cursor =
@@ -349,7 +378,7 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
 
             assertWithMessage("r.getStatus()")
                     .that(r.getStatus())
-                    .isEqualTo(AggregateReport.Status.PENDING);
+                    .isEqualTo(CountUniqueReport.ReportDeliveryStatus.PENDING);
 
             assertWithMessage("r.getScheduledReportTime()")
                     .that(r.getScheduledReportTime())
@@ -359,7 +388,20 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
 
             assertWithMessage("r.getDebugKey()").that(r.getDebugKey()).isEqualTo(DEBUG_KEY);
 
+            assertWithMessage("r.getDebugReportStatus()")
+                    .that(r.getDebugReportStatus())
+                    .isEqualTo(CountUniqueReport.ReportDeliveryStatus.PENDING);
             assertWithMessage("r.getContextId()").that(r.getContextId()).isNull();
+            assertWithMessage("r.getEnrollmentId()")
+                    .that(r.getEnrollmentId())
+                    .isEqualTo(ENROLLMENT_ID);
+            assertWithMessage("r.getContributionValue()")
+                    .that(r.getContributionValue())
+                    .isEqualTo(VALUE);
+
+            assertWithMessage("r.getContributionTime()")
+                    .that(r.getContributionTime())
+                    .isEqualTo(asyncRegistration.getRequestTime());
         }
     }
 
@@ -380,7 +422,8 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
         // Test
         mCountUniqueRegistrar.registerCountUniqueEvent(
                 asyncRegistration,
-                createEventHeader(METADATA_KEY, null, FILTERING_ID, CONTEXT_ID, DEBUG_KEY));
+                createEventHeader(METADATA_KEY, null, FILTERING_ID, CONTEXT_ID, DEBUG_KEY),
+                ENROLLMENT_ID);
 
         // Assert in db
         try (Cursor cursor =
@@ -422,7 +465,8 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
         // Test
         mCountUniqueRegistrar.registerCountUniqueEvent(
                 asyncRegistration,
-                createEventHeader(METADATA_KEY, VALUE, null, CONTEXT_ID, DEBUG_KEY));
+                createEventHeader(METADATA_KEY, VALUE, null, CONTEXT_ID, DEBUG_KEY),
+                ENROLLMENT_ID);
 
         // Assert in db
         try (Cursor cursor =
@@ -450,7 +494,7 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
 
             assertWithMessage("r.getStatus()")
                     .that(r.getStatus())
-                    .isEqualTo(AggregateReport.Status.PENDING);
+                    .isEqualTo(CountUniqueReport.ReportDeliveryStatus.PENDING);
 
             assertWithMessage("r.getScheduledReportTime()")
                     .that(r.getScheduledReportTime())
@@ -460,12 +504,25 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
 
             assertWithMessage("r.getDebugKey()").that(r.getDebugKey()).isEqualTo(DEBUG_KEY);
 
+            assertWithMessage("r.getDebugReportStatus()")
+                    .that(r.getDebugReportStatus())
+                    .isEqualTo(CountUniqueReport.ReportDeliveryStatus.PENDING);
             assertWithMessage("r.getContextId()").that(r.getContextId()).isEqualTo(CONTEXT_ID);
+            assertWithMessage("r.getEnrollmentId()")
+                    .that(r.getEnrollmentId())
+                    .isEqualTo(ENROLLMENT_ID);
+            assertWithMessage("r.getContributionValue()")
+                    .that(r.getContributionValue())
+                    .isEqualTo(VALUE);
+
+            assertWithMessage("r.getContributionTime()")
+                    .that(r.getContributionTime())
+                    .isEqualTo(asyncRegistration.getRequestTime());
         }
     }
 
     @Test
-    public void registerCountUniqueEvent_forNoAdidPermission_DoesNotStoreDebugKey()
+    public void registerCountUniqueEvent_forNoAdidPermission_DoesNotStoreDebugKeyAndDebugReport()
             throws JSONException {
         // Setup
         AsyncRegistration asyncRegistration =
@@ -489,7 +546,8 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
         // Test
         mCountUniqueRegistrar.registerCountUniqueEvent(
                 asyncRegistration,
-                createEventHeader(METADATA_KEY, VALUE, FILTERING_ID, CONTEXT_ID, DEBUG_KEY));
+                createEventHeader(METADATA_KEY, VALUE, FILTERING_ID, CONTEXT_ID, DEBUG_KEY),
+                ENROLLMENT_ID);
 
         // Assert in db
         try (Cursor cursor =
@@ -508,6 +566,9 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
             cursor.moveToNext();
             CountUniqueReport r = SqliteObjectMapper.constructCountUniqueReport(cursor);
             assertWithMessage("r.getDebugKey()").that(r.getDebugKey()).isNull();
+            assertWithMessage("r.getDebugReportStatus()")
+                    .that(r.getDebugReportStatus())
+                    .isEqualTo(CountUniqueReport.ReportDeliveryStatus.NONE);
             assertWithMessage("r.getReportId()").that(r.getReportId()).isNotNull();
             assertWithMessage("r.getPayload()")
                     .that(r.getPayload())
@@ -515,14 +576,24 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
             assertWithMessage("r.getReportingOrigin()")
                     .that(r.getReportingOrigin())
                     .isEqualTo(REGISTRATION_URI);
-            assertWithMessage("r.getStatus()")
-                    .that(r.getStatus())
-                    .isEqualTo(AggregateReport.Status.PENDING);
+            assertWithMessage("r.getDebugReportStatus()")
+                    .that(r.getDebugReportStatus())
+                    .isEqualTo(CountUniqueReport.ReportDeliveryStatus.NONE);
             assertWithMessage("r.getScheduledReportTime()")
                     .that(r.getScheduledReportTime())
                     .isEqualTo(asyncRegistration.getRequestTime());
             assertWithMessage("r.getApiVersion()").that(r.getApiVersion()).isEqualTo("1.0");
             assertWithMessage("r.getContextId()").that(r.getContextId()).isEqualTo(CONTEXT_ID);
+            assertWithMessage("r.getEnrollmentId()")
+                    .that(r.getEnrollmentId())
+                    .isEqualTo(ENROLLMENT_ID);
+            assertWithMessage("r.getContributionValue()")
+                    .that(r.getContributionValue())
+                    .isEqualTo(VALUE);
+
+            assertWithMessage("r.getContributionTime()")
+                    .that(r.getContributionTime())
+                    .isEqualTo(asyncRegistration.getRequestTime());
         }
     }
 
@@ -541,7 +612,8 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
         // Test
         mCountUniqueRegistrar.registerCountUniqueEvent(
                 asyncRegistration,
-                createEventHeader(METADATA_KEY, VALUE, FILTERING_ID, CONTEXT_ID, null));
+                createEventHeader(METADATA_KEY, VALUE, FILTERING_ID, CONTEXT_ID, null),
+                ENROLLMENT_ID);
         // Assert in db
         try (Cursor cursor =
                 DbTestUtil.getMeasurementDbHelperForTest()
@@ -568,14 +640,26 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
 
             assertWithMessage("r.getStatus()")
                     .that(r.getStatus())
-                    .isEqualTo(AggregateReport.Status.PENDING);
-
+                    .isEqualTo(CountUniqueReport.ReportDeliveryStatus.PENDING);
             assertWithMessage("r.getScheduledReportTime()")
                     .that(r.getScheduledReportTime())
                     .isEqualTo(asyncRegistration.getRequestTime());
             assertWithMessage("r.getApiVersion()").that(r.getApiVersion()).isEqualTo("1.0");
             assertWithMessage("r.getDebugKey()").that(r.getDebugKey()).isNull();
+            assertWithMessage("r.getDebugReportStatus()")
+                    .that(r.getDebugReportStatus())
+                    .isEqualTo(CountUniqueReport.ReportDeliveryStatus.NONE);
             assertWithMessage("r.getContextId()").that(r.getContextId()).isEqualTo(CONTEXT_ID);
+            assertWithMessage("r.getEnrollmentId()")
+                    .that(r.getEnrollmentId())
+                    .isEqualTo(ENROLLMENT_ID);
+            assertWithMessage("r.getContributionValue()")
+                    .that(r.getContributionValue())
+                    .isEqualTo(VALUE);
+
+            assertWithMessage("r.getContributionTime()")
+                    .that(r.getContributionTime())
+                    .isEqualTo(asyncRegistration.getRequestTime());
         }
     }
 

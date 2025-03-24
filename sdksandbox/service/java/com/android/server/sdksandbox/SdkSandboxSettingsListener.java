@@ -100,6 +100,11 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
     // Trivial bug fix. Enabled by default.
     private static final boolean DEFAULT_VALUE_ENABLE_HSUM_SUPPORT_FOR_SDK_STORAGE = true;
 
+    static final String PROPERTY_RECONCILE_ON_VOLUME_MOUNT =
+            "SdkSandboxStorage__reconcile_on_volume_mount";
+
+    private static final boolean DEFAULT_VALUE_RECONCILE_ON_VOLUME_MOUNT = false;
+
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     static final String PROPERTY_FIX_STOP_SANDBOX_DEADLOCK =
             "SdkSandbox__fix_deadlock_bug_398296192";
@@ -145,6 +150,13 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
                     DeviceConfig.NAMESPACE_ADSERVICES,
                     PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
                     DEFAULT_VALUE_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
+
+    @GuardedBy("mLock")
+    private boolean mReconcileOnVolumeMount =
+            DeviceConfig.getBoolean(
+                    DeviceConfig.NAMESPACE_ADSERVICES,
+                    PROPERTY_RECONCILE_ON_VOLUME_MOUNT,
+                    DEFAULT_VALUE_RECONCILE_ON_VOLUME_MOUNT);
 
     @GuardedBy("mLock")
     private Map<Integer, AllowedServices> mServiceAllowlistPerTargetSdkVersion =
@@ -327,6 +339,17 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
                                 properties.getBoolean(
                                         PROPERTY_FIX_STOP_SANDBOX_DEADLOCK,
                                         DEFAULT_VALUE_FIX_STOP_SANDBOX_DEADLOCK);
+                        break;
+                    case PROPERTY_RECONCILE_ON_VOLUME_MOUNT:
+                        boolean previousValueOfReconcileOnVolumeMount = mReconcileOnVolumeMount;
+                        mReconcileOnVolumeMount =
+                                properties.getBoolean(
+                                        PROPERTY_RECONCILE_ON_VOLUME_MOUNT,
+                                        DEFAULT_VALUE_RECONCILE_ON_VOLUME_MOUNT);
+                        if (mReconcileOnVolumeMount != previousValueOfReconcileOnVolumeMount) {
+                            mSdkSandboxManagerService.onUserUnlocking(
+                                    mSdkSandboxManagerService.getCurrentUserId());
+                        }
                     default:
                 }
                 if (propertyIsLogged) {
@@ -367,6 +390,12 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
     public boolean applySdkSandboxRestrictionsNext() {
         synchronized (mLock) {
             return mSdkSandboxApplyRestrictionsNext;
+        }
+    }
+
+    public boolean reconcileOnVolumeMount() {
+        synchronized (mLock) {
+            return mReconcileOnVolumeMount;
         }
     }
 

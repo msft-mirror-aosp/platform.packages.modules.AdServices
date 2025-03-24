@@ -89,6 +89,7 @@ import com.android.adservices.service.measurement.reporting.EventReportingJobHan
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.NoOpLoggerImpl;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.util.Clock;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -208,12 +209,13 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                 new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         extendedMockito = E2EMockStatic.newE2EMockStaticRule(paramsProvider);
         mMeasurementDataDeleter = spy(new MeasurementDataDeleter(mDatastoreManager, mFlags));
-
+        Clock mMockClock = mock(Clock.class);
         mEnrollmentDao =
                 new EnrollmentDao(
                         ApplicationProvider.getApplicationContext(),
                         DbTestUtil.getSharedDbHelperForTest(),
                         mFlags,
+                        mMockClock,
                         /* enable seed */ true,
                         new NoOpLoggerImpl(),
                         EnrollmentUtil.getInstance());

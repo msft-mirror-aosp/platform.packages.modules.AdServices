@@ -48,7 +48,6 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.server.pm.PackageManagerLocal;
-import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.sdksandbox.testutils.FakeSdkSandboxProvider;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
@@ -160,8 +159,9 @@ public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
                                 new SdkSandboxStorageManager(
                                         context,
                                         new FakeSdkSandboxManagerLocal(),
+                                        Mockito.mock(SdkSandboxSettingsListener.class),
                                         Mockito.spy(PackageManagerLocal.class),
-                                        /*rootDir=*/ context.getDir(
+                                        /* rootDir= */ context.getDir(
                                                         "test_dir", Context.MODE_PRIVATE)
                                                 .getPath()),
                                 new FakeSdkSandboxProvider(
@@ -358,11 +358,27 @@ public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
-    public void testEnforceAllowedToStartOrBindService_allowedPackages() throws Exception {
+    public void testEnforceAllowedToStartOrBindService_OnDevicePersonalizationNotPresent() {
+        Mockito.when(mInjector.getOnDevicePersonalizationPackageName()).thenReturn(null);
+        Intent intent = new Intent().setComponent(new ComponentName(PACKAGE_NAME, "test"));
+        assertThrows(
+                SecurityException.class,
+                () -> mSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent));
+    }
+
+    @Test
+    public void testEnforceAllowedToStartOrBindService_allowedAdServicesPackages() {
         Intent intent =
                 new Intent()
                         .setComponent(
                                 new ComponentName(mInjector.getAdServicesPackageName(), "test"));
+        mSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent);
+    }
+
+    @Test
+    public void testEnforceAllowedToStartOrBindService_allowedOnDevicePersonalizationPackage() {
+        Mockito.when(mInjector.getOnDevicePersonalizationPackageName()).thenReturn(PACKAGE_NAME);
+        Intent intent = new Intent().setComponent(new ComponentName(PACKAGE_NAME, "test"));
         mSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent);
     }
 

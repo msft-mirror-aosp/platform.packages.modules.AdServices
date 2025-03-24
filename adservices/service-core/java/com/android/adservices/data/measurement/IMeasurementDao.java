@@ -1036,4 +1036,34 @@ public interface IMeasurementDao {
      */
     boolean existsActiveSourcesWithDestination(Uri attributionDestinations, long eventTime)
             throws DatastoreException;
+
+    /**
+     * Get the report Ids of all Count Unique reports with a status of {@link
+     * CountUniqueReport.ReportDeliveryStatus#PENDING}
+     *
+     * @return List of ids of pending reports
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    List<String> getPendingCountUniqueReportIds() throws DatastoreException;
+
+    /**
+     * Update the status of a specific Count Unique report.
+     *
+     * @param countUniqueReportId Id of the report to update.
+     * @param status Status to update to.
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    void markCountUniqueReportStatus(
+            String countUniqueReportId, @CountUniqueReport.ReportDeliveryStatus int status)
+            throws DatastoreException;
+
+    /**
+     * Get the Count Unique report with a specific Id.
+     *
+     * @param countUniqueReportId Id of the report to get.
+     * @return The CountUnique report.
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    CountUniqueReport getCountUniqueReport(@NonNull String countUniqueReportId)
+            throws DatastoreException;
 }

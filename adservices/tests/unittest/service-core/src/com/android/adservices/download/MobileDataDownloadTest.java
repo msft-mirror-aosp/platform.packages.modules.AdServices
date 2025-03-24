@@ -1069,7 +1069,8 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     }
 
     private EnrollmentDao setupEnrollmentDaoForTest() {
-        EnrollmentDao enrollmentDao = new EnrollmentDao(mContext, mDbHelper, mMockFlags);
+        EnrollmentDao enrollmentDao =
+                new EnrollmentDao(mContext, mDbHelper, mMockFlags, mMockClock);
         doReturn(enrollmentDao).when(EnrollmentDao::getInstance);
         return enrollmentDao;
     }

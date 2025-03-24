@@ -35,6 +35,16 @@ import static android.adservices.common.Module.PROTECTED_AUDIENCE;
 import static android.adservices.common.Module.TOPICS;
 
 import static com.android.adservices.AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX;
+import static com.android.adservices.service.profiling.RbATraceProvider.FeatureNames.CONSENT_MANAGER;
+import static com.android.adservices.service.profiling.TracingNames.CLASS_NAME_CONSENT_MANAGER;
+import static com.android.adservices.service.profiling.TracingNames.METHOD_NAME_CONSTRUCTOR;
+import static com.android.adservices.service.profiling.TracingNames.METHOD_NAME_CREATE_AND_INIT_DATASTORE;
+import static com.android.adservices.service.profiling.TracingNames.METHOD_NAME_GET_AD_SERVICES_MANAGER;
+import static com.android.adservices.service.profiling.TracingNames.METHOD_NAME_GET_CONSENT;
+import static com.android.adservices.service.profiling.TracingNames.METHOD_NAME_MIGRATION_ENROLLMENT_DATA;
+import static com.android.adservices.service.profiling.TracingNames.METHOD_NAME_MIGRATION_FROM_APP_SEARCH;
+import static com.android.adservices.service.profiling.TracingNames.METHOD_NAME_MIGRATION_FROM_PPAPI;
+import static com.android.adservices.service.profiling.TracingNames.METHOD_NAME_SET_CONSENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_SEARCH_DATA_MIGRATION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_DEFAULT_CONSENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_MANUAL_CONSENT_INTERACTION;
@@ -68,7 +78,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.SystemClock;
-import android.os.Trace;
 import android.util.SparseIntArray;
 
 import androidx.annotation.RequiresApi;
@@ -101,6 +110,7 @@ import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.consent.ConsentConstants.EndUserUx;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.WipeoutStatus;
+import com.android.adservices.service.profiling.RbATraceProvider;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ConsentMigrationStats;
 import com.android.adservices.service.stats.MeasurementWipeoutStats;
@@ -257,18 +267,28 @@ public final class ConsentManager {
     public static ConsentManager getInstance() {
         Context context = ApplicationContextSingleton.get();
 
-        Trace.beginSection("ConsentManager#Initialization");
+        Flags flags = FlagsFactory.getFlags();
+        RbATraceProvider.beginSection(
+                CONSENT_MANAGER, CLASS_NAME_CONSENT_MANAGER, METHOD_NAME_CONSTRUCTOR, flags);
         if (sConsentManager == null) {
             synchronized (LOCK) {
                 if (sConsentManager == null) {
                     long startedTime = SystemClock.uptimeMillis();
                     // Execute one-time consent migration if needed.
                     LogUtil.d("start consent manager initialization");
-                    int consentSourceOfTruth = FlagsFactory.getFlags().getConsentSourceOfTruth();
+                    int consentSourceOfTruth = flags.getConsentSourceOfTruth();
                     AtomicFileDatastore datastore =
                             createAndInitializeDataStore(
                                     context, AdServicesErrorLoggerImpl.getInstance());
+
+                    RbATraceProvider.beginSection(
+                            CONSENT_MANAGER,
+                            CLASS_NAME_CONSENT_MANAGER,
+                            METHOD_NAME_GET_AD_SERVICES_MANAGER,
+                            flags);
                     AdServicesManager adServicesManager = AdServicesManager.getInstance(context);
+                    RbATraceProvider.endSection(flags);
+
                     Supplier<AppConsentDao> appConsentDaoSupplier =
                             AppConsentDao.getSingletonSupplier();
 
@@ -283,8 +303,7 @@ public final class ConsentManager {
                             StatsdAdServicesLogger.getInstance();
                     // Flag enable_appsearch_consent_data is true on S- and T+ only when we want to
                     // use AppSearch to write to or read from.
-                    boolean enableAppsearchConsentData =
-                            FlagsFactory.getFlags().getEnableAppsearchConsentData();
+                    boolean enableAppsearchConsentData = flags.getEnableAppsearchConsentData();
                     if (enableAppsearchConsentData) {
                         appSearchConsentManager = AppSearchConsentManager.getInstance();
                         handleConsentMigrationFromAppSearchIfNeeded(
@@ -322,17 +341,22 @@ public final class ConsentManager {
                                     UserProfileIdManager.getInstance(),
                                     // TODO(b/260601944): Remove Flag Instance.
                                     UxStatesDao.getInstance(),
-                                    FlagsFactory.getFlags(),
+                                    flags,
                                     DebugFlags.getInstance(),
                                     consentSourceOfTruth,
                                     enableAppsearchConsentData);
 
                     boolean businessLogicMigrationEnabled =
-                            FlagsFactory.getFlags()
-                                    .getAdServicesConsentBusinessLogicMigrationEnabled();
+                            flags.getAdServicesConsentBusinessLogicMigrationEnabled();
                     if (businessLogicMigrationEnabled) {
+                        RbATraceProvider.beginSection(
+                                CONSENT_MANAGER,
+                                CLASS_NAME_CONSENT_MANAGER,
+                                METHOD_NAME_MIGRATION_ENROLLMENT_DATA,
+                                flags);
                         // Attempt to migrate old enrollment data to new format
                         handleEnrollmentDataMigrationIfNeeded(sConsentManager);
+                        RbATraceProvider.endSection(flags);
                     }
 
                     sInstantiationDurationMs =
@@ -344,7 +368,8 @@ public final class ConsentManager {
                 }
             }
         }
-        Trace.endSection();
+        RbATraceProvider.endSection(flags);
+
         return sConsentManager;
     }
 
@@ -1529,6 +1554,13 @@ public final class ConsentManager {
     @SuppressWarnings("AvoidStaticContext")
     static AtomicFileDatastore createAndInitializeDataStore(
             Context context, AdServicesErrorLogger adServicesErrorLogger) {
+        Flags flags = FlagsFactory.getFlags();
+
+        RbATraceProvider.beginSection(
+                CONSENT_MANAGER,
+                CLASS_NAME_CONSENT_MANAGER,
+                METHOD_NAME_CREATE_AND_INIT_DATASTORE,
+                flags);
         @SuppressWarnings("deprecation")
         AtomicFileDatastore atomicFileDatastore =
                 LegacyAtomicFileDatastoreFactory.createAtomicFileDatastore(
@@ -1542,7 +1574,7 @@ public final class ConsentManager {
             // TODO(b/259607624): implement a method in the datastore which would support
             // this exact scenario - if the value is null, return default value provided
             // in the parameter (similar to SP apply etc.)
-            if (FlagsFactory.getFlags().getEnableAtomicFileDatastoreBatchUpdateApi()) {
+            if (flags.getEnableAtomicFileDatastoreBatchUpdateApi()) {
                 atomicFileDatastore.update(
                         updateOperation -> {
                             updateOperation.putBooleanIfNew(
@@ -1583,6 +1615,8 @@ public final class ConsentManager {
             }
         } catch (IOException | IllegalArgumentException | NullPointerException e) {
             throw new RuntimeException("Failed to initialize the File Datastore!", e);
+        } finally {
+            RbATraceProvider.endSection(flags);
         }
 
         return atomicFileDatastore;
@@ -1760,6 +1794,13 @@ public final class ConsentManager {
             AtomicFileDatastore datastore,
             AdServicesManager adServicesManager,
             StatsdAdServicesLogger statsdAdServicesLogger) {
+        Flags flags = FlagsFactory.getFlags();
+        RbATraceProvider.beginSection(
+                CONSENT_MANAGER,
+                CLASS_NAME_CONSENT_MANAGER,
+                METHOD_NAME_MIGRATION_FROM_PPAPI,
+                flags);
+
         Objects.requireNonNull(context, "context cannot be null");
         Objects.requireNonNull(datastore, "datastore cannot be null");
         Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
@@ -1852,6 +1893,8 @@ public final class ConsentManager {
                             ConsentMigrationStats.MigrationStatus.FAILURE,
                             ConsentMigrationStats.MigrationType.PPAPI_TO_SYSTEM_SERVICE,
                             context));
+        } finally {
+            RbATraceProvider.endSection(flags);
         }
     }
 
@@ -2073,6 +2116,13 @@ public final class ConsentManager {
             AppSearchConsentManager appSearchConsentManager,
             AdServicesManager adServicesManager,
             StatsdAdServicesLogger statsdAdServicesLogger) {
+        Flags flags = FlagsFactory.getFlags();
+        RbATraceProvider.beginSection(
+                CONSENT_MANAGER,
+                CLASS_NAME_CONSENT_MANAGER,
+                METHOD_NAME_MIGRATION_FROM_APP_SEARCH,
+                flags);
+
         Objects.requireNonNull(context, "context cannot be null");
         Objects.requireNonNull(appSearchConsentManager, "appSearchConsentManager cannot be null");
         LogUtil.d("Check migrating Consent from AppSearch to PPAPI and System Service");
@@ -2155,6 +2205,8 @@ public final class ConsentManager {
                             ConsentMigrationStats.MigrationStatus.FAILURE,
                             ConsentMigrationStats.MigrationType.APPSEARCH_TO_SYSTEM_SERVICE,
                             context));
+        } finally {
+            RbATraceProvider.endSection(flags);
         }
     }
 
@@ -2554,6 +2606,15 @@ public final class ConsentManager {
     }
 
     /**
+     * Gets enrollmentdata.
+     *
+     * @return enrollment data.
+     */
+    public EnrollmentData getEnrollmentData() {
+        return EnrollmentData.deserialize(getModuleEnrollmentState());
+    }
+
+    /**
      * Sets module state for a module.
      *
      * @param modulesStates object to set
@@ -2924,7 +2985,9 @@ public final class ConsentManager {
             ThrowableSetter appSearchSetter, /* MUST pass lambdas instead of method references
             for back compat. */
             ErrorLogger errorLogger) {
-        Trace.beginSection("ConsentManager#WriteOperation");
+        RbATraceProvider.beginSection(
+                CONSENT_MANAGER, CLASS_NAME_CONSENT_MANAGER, METHOD_NAME_SET_CONSENT, mFlags);
+
         mReadWriteLock.writeLock().lock();
         try {
             switch (mConsentSourceOfTruth) {
@@ -2955,7 +3018,7 @@ public final class ConsentManager {
                     getClass().getSimpleName() + " failed. " + e.getMessage(), e);
         } finally {
             mReadWriteLock.writeLock().unlock();
-            Trace.endSection();
+            RbATraceProvider.endSection(mFlags);
         }
     }
 
@@ -2982,7 +3045,9 @@ public final class ConsentManager {
             ThrowableGetter<T> appSearchGetter, /* MUST pass lambdas instead of method references
             for back compat. */
             ErrorLogger errorLogger) {
-        Trace.beginSection("ConsentManager#ReadOperation");
+        RbATraceProvider.beginSection(
+                CONSENT_MANAGER, CLASS_NAME_CONSENT_MANAGER, METHOD_NAME_GET_CONSENT, mFlags);
+
         mReadWriteLock.readLock().lock();
         try {
             switch (mConsentSourceOfTruth) {
@@ -3008,7 +3073,7 @@ public final class ConsentManager {
             LogUtil.e(getClass().getSimpleName() + " failed. " + e.getMessage());
         } finally {
             mReadWriteLock.readLock().unlock();
-            Trace.endSection();
+            RbATraceProvider.endSection(mFlags);
         }
 
         return defaultReturn;

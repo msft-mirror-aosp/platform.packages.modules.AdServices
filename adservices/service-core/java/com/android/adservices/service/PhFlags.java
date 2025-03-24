@@ -76,7 +76,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTR
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -1505,6 +1505,14 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES,
                 FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES);
+    }
+
+    @Override
+    public int getFledgeScheduleCustomAudienceUpdateBackgroundJobRequiredNetworkType() {
+        return getDeviceConfigFlag(
+                FlagsConstants
+                        .KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_NETWORK_TYPE,
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_REQUIRED_NETWORK_TYPE);
     }
 
     @Override
@@ -5286,9 +5294,9 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public float getMeasurementDebugJoinKeysSampleRate() {
+    public float getMeasurementDebugJoinKeysNoncompliantAdtechsSampleRate() {
         return getDeviceConfigFlag(
-                KEY_MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE,
-                MEASUREMENT_DEBUG_JOIN_KEYS_SAMPLE_RATE);
+                KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE,
+                MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE);
     }
 }

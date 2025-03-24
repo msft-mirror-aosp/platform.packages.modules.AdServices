@@ -46,13 +46,25 @@ public class CountUniqueReportTest {
                 .isEqualTo(234L);
         assertWithMessage("countUniqueReport.getStatus()")
                 .that(countUniqueReport.getStatus())
-                .isEqualTo(CountUniqueReport.Status.PENDING);
+                .isEqualTo(CountUniqueReport.ReportDeliveryStatus.PENDING);
+        assertWithMessage("countUniqueReport.getDebugReportStatus()")
+                .that(countUniqueReport.getDebugReportStatus())
+                .isEqualTo(CountUniqueReport.ReportDeliveryStatus.PENDING);
         assertWithMessage("countUniqueReport.getPayload()")
                 .that(countUniqueReport.getPayload())
                 .isEqualTo("{bucket: 5678n, value: 16, filteringId: 33n}");
         assertWithMessage("countUniqueReport.getContextId()")
                 .that(countUniqueReport.getContextId())
                 .isEqualTo("test-context-id");
+        assertWithMessage("countUniqueReport.getEnrollmentId()")
+                .that(countUniqueReport.getEnrollmentId())
+                .isEqualTo("test-enrollment-id");
+        assertWithMessage("countUniqueReport.getContributionValue()")
+                .that(countUniqueReport.getContributionValue())
+                .isEqualTo(5);
+        assertWithMessage("countUniqueReport.getContributionTime()")
+                .that(countUniqueReport.getContributionTime())
+                .isEqualTo(555L);
     }
 
     @Test
@@ -76,7 +88,11 @@ public class CountUniqueReportTest {
 
         assertWithMessage("countUniqueReport.getStatus()")
                 .that(countUniqueReport.getStatus())
-                .isEqualTo(CountUniqueReport.Status.PENDING);
+                .isEqualTo(CountUniqueReport.ReportDeliveryStatus.PENDING);
+
+        assertWithMessage("countUniqueReport.getDebugReportStatus()")
+                .that(countUniqueReport.getDebugReportStatus())
+                .isEqualTo(CountUniqueReport.ReportDeliveryStatus.NONE);
 
         assertWithMessage("countUniqueReport.getPayload()")
                 .that(countUniqueReport.getPayload())
@@ -84,6 +100,15 @@ public class CountUniqueReportTest {
 
         assertWithMessage("countUniqueReport.getContextId()")
                 .that(countUniqueReport.getContextId())
+                .isNull();
+        assertWithMessage("countUniqueReport.getEnrollmentId()")
+                .that(countUniqueReport.getEnrollmentId())
+                .isNull();
+        assertWithMessage("countUniqueReport.getContributionValue()")
+                .that(countUniqueReport.getContributionValue())
+                .isNull();
+        assertWithMessage("countUniqueReport.getContributionTime()")
+                .that(countUniqueReport.getContributionTime())
                 .isNull();
     }
 
@@ -114,9 +139,13 @@ public class CountUniqueReportTest {
                         .setApiVersion("0.1")
                         .setDebugKey("123")
                         .setScheduledReportTime(211L)
-                        .setStatus(CountUniqueReport.Status.PENDING)
+                        .setStatus(CountUniqueReport.ReportDeliveryStatus.PENDING)
+                        .setDebugReportStatus(CountUniqueReport.ReportDeliveryStatus.PENDING)
                         .setPayload("{bucket: 1238n, value: 22, filteringId: 44n}")
                         .setContextId("test-context-id")
+                        .setEnrollmentId("different-enrollment")
+                        .setContributionValue(4)
+                        .setContributionTime(444L)
                         .build();
         Set<CountUniqueReport> countUniqueReportSet1 = Set.of(countUniqueReport1);
         Set<CountUniqueReport> countUniqueReportSet2 = Set.of(countUniqueReport2);
@@ -139,9 +168,13 @@ public class CountUniqueReportTest {
                 .setApiVersion("0.1")
                 .setDebugKey("123")
                 .setScheduledReportTime(234L)
-                .setStatus(CountUniqueReport.Status.PENDING)
+                .setStatus(CountUniqueReport.ReportDeliveryStatus.PENDING)
+                .setDebugReportStatus(CountUniqueReport.ReportDeliveryStatus.PENDING)
                 .setPayload("{bucket: 5678n, value: 16, filteringId: 33n}")
                 .setContextId("test-context-id")
+                .setEnrollmentId("test-enrollment-id")
+                .setContributionValue(5)
+                .setContributionTime(555L)
                 .build();
     }
 }

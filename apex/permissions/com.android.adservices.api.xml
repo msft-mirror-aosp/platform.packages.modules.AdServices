@@ -20,5 +20,6 @@
         <permission name="android.permission.READ_DEVICE_CONFIG" />
         <!-- Permission required for checking the importance of caller process -->
         <permission name="android.permission.PACKAGE_USAGE_STATS" />
+        <permission name="android.permission.GET_BINDING_UID_IMPORTANCE"/>
     </privapp-permissions>
 </permissions>

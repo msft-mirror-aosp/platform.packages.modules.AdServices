@@ -22,9 +22,9 @@ import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 import static com.android.adservices.service.signals.SignalsFixture.assertSignalsUnorderedListEqualsExceptIdAndTime;
 import static com.android.adservices.service.signals.SignalsFixture.intToBase64;
 import static com.android.adservices.service.signals.SignalsFixture.intToBytes;
-import static com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler.ACTION_REGISTER_ENCODER_LOGIC_COMPLETE;
-import static com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler.FORCED_ENCODING_COMPLETED_ENCODING_ATTEMPTED;
-import static com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler.FORCED_ENCODING_COMPLETED_ENCODING_NOT_ATTEMPTED;
+import static com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEventHandler.ACTION_REGISTER_ENCODER_LOGIC_COMPLETE;
+import static com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEventHandler.FORCED_ENCODING_COMPLETED_ENCODING_ATTEMPTED;
+import static com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEventHandler.FORCED_ENCODING_COMPLETED_ENCODING_NOT_ATTEMPTED;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
@@ -82,8 +82,8 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
-import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
+import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEventHandler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerImpl;
@@ -164,6 +164,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
     private AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     @Mock private AdServicesLoggerImpl mAdServicesLoggerImplMock;
+    @Mock private Clock mMockClock;
 
     @Mock
     private UpdateSignalsProcessReportedLoggerImpl mUpdateSignalsProcessReportedLoggerImplMock;
@@ -221,7 +222,10 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                         .getEncodedPayloadDao();
         mEnrollmentDao =
                 new EnrollmentDao(
-                        mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mLegacyFakeFlags);
+                        mSpyContext,
+                        DbTestUtil.getSharedDbHelperForTest(),
+                        mLegacyFakeFlags,
+                        mMockClock);
         mEncoderPersistenceDao = EncoderPersistenceDao.getInstance();
 
         mLightweightExecutor = AdServicesExecutors.getLightWeightExecutor();

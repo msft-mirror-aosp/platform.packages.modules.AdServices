@@ -28,13 +28,6 @@ import java.util.Set;
 public interface UpdateProcessor {
 
     /**
-     * Gets the name of the processor, should match the key for it in the JSON.
-     *
-     * @return A string key for this processor to be used in parsing the update JSON.
-     */
-    String getName();
-
-    /**
      * @param updates A JSONObject or JSONArray describing the updates to be made by this processor.
      * @param current A map from keys to signals currently under those keys. Note that byte buffers
      *     must have been generated with .wrap().

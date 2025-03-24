@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.signals.updateprocessors;
+package com.android.adservices.service.signals.updateprocessors.append;
 
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_KEY_1;
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_KEY_2;
@@ -39,12 +39,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.signals.DBProtectedSignal;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
@@ -57,25 +58,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class AppendTest {
+@RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
+public class AppendV0Test extends AdServicesUnitTestCase {
 
     /*
-     * I feel that hardcoding the names here is appropriate here since the JSON names are an
-     * external contract and changing them should require test changes.
+     * Hardcoding names here since JSON keys are an external
+     * contract and changing them should require test changes.
      */
     private static final String MAX_SIGNALS = "max_signals";
     private static final String VALUES = "values";
-    private static final String APPEND = "append";
 
-    private Append mAppend = new Append();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
-
-    @Test
-    public void testGetName() {
-        assertEquals(APPEND, mAppend.getName());
-    }
+    private final AppendV0 mAppendV0 = new AppendV0();
 
     @Test
     public void testAppendSingle() throws Exception {
@@ -89,7 +82,7 @@ public class AppendTest {
         JSONObject updatesJson = new JSONObject();
         updatesJson.put(BASE64_KEY_1, appendJson);
 
-        UpdateOutput output = mAppend.processUpdates(updatesJson, Collections.emptyMap());
+        UpdateOutput output = mAppendV0.processUpdates(updatesJson, Collections.emptyMap());
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
@@ -111,7 +104,7 @@ public class AppendTest {
         JSONObject updatesJson = new JSONObject();
         updatesJson.put(BASE64_KEY_1, appendJson);
 
-        UpdateOutput output = mAppend.processUpdates(updatesJson, Collections.emptyMap());
+        UpdateOutput output = mAppendV0.processUpdates(updatesJson, Collections.emptyMap());
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
@@ -143,7 +136,7 @@ public class AppendTest {
         updatesJson.put(BASE64_KEY_1, appendJson1);
         updatesJson.put(BASE64_KEY_2, appendJson2);
 
-        UpdateOutput output = mAppend.processUpdates(updatesJson, Collections.emptyMap());
+        UpdateOutput output = mAppendV0.processUpdates(updatesJson, Collections.emptyMap());
 
         assertEquals(new HashSet<>(Arrays.asList(BB_KEY_1, BB_KEY_2)), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
@@ -173,7 +166,7 @@ public class AppendTest {
         DBProtectedSignal toKeep = createSignal(KEY_1, VALUE_2, ID_2, NOW);
         existingSignals.put(BB_KEY_1, new HashSet<>(Arrays.asList(toOverwrite, toKeep)));
 
-        UpdateOutput output = mAppend.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output = mAppendV0.processUpdates(updatesJson, existingSignals);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertEquals(Arrays.asList(toOverwrite), output.getToRemove());
@@ -203,7 +196,7 @@ public class AppendTest {
         existingSignals.put(
                 BB_KEY_1, new HashSet<>(Arrays.asList(toOverwrite1, toOverwrite2, toKeep)));
 
-        UpdateOutput output = mAppend.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output = mAppendV0.processUpdates(updatesJson, existingSignals);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertThat(Arrays.asList(toOverwrite1, toOverwrite2))
@@ -231,7 +224,7 @@ public class AppendTest {
         DBProtectedSignal existing2 = createSignal(KEY_1, VALUE_2, ID_1, NOW);
         existingSignals.put(BB_KEY_1, new HashSet<>(Arrays.asList(existing1, existing2)));
 
-        UpdateOutput output = mAppend.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output = mAppendV0.processUpdates(updatesJson, existingSignals);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
@@ -255,6 +248,6 @@ public class AppendTest {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> mAppend.processUpdates(updatesJson, Collections.emptyMap()));
+                () -> mAppendV0.processUpdates(updatesJson, Collections.emptyMap()));
     }
 }

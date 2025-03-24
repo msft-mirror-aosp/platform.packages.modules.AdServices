@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.signals.updateprocessors;
+package com.android.adservices.service.signals.updateprocessors.updateencoder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -23,38 +23,30 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Collections;
 
-public class UpdateEncoderTest {
-
-    private static final String UPDATE_ENCODER = "update_encoder";
+@RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
+public class UpdateEncoderV0Test extends AdServicesUnitTestCase {
     private static final String ACTION = "action";
     private static final String ENDPOINT = "endpoint";
 
     private final Uri mEndpointUri = CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/encoder");
 
-    private UpdateEncoder mUpdateEncoder = new UpdateEncoder();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
-
-    @Test
-    public void testGetName() {
-        assertEquals(UPDATE_ENCODER, mUpdateEncoder.getName());
-    }
+    private final UpdateEncoderV0 mUpdateEncoderV0 = new UpdateEncoderV0();
 
     @Test
     public void testUpdateEmptyEvent() throws JSONException {
         JSONObject updateJson = new JSONObject();
 
-        UpdateOutput output = mUpdateEncoder.processUpdates(updateJson, Collections.emptyMap());
+        UpdateOutput output = mUpdateEncoderV0.processUpdates(updateJson, Collections.emptyMap());
         assertNull(
                 "Update event should have been skipped due to empty JSON",
                 output.getUpdateEncoderEvent());
@@ -70,7 +62,7 @@ public class UpdateEncoderTest {
                 "Non-recognized update event should've lead to this exception",
                 IllegalArgumentException.class,
                 () -> {
-                    mUpdateEncoder.processUpdates(updateJson, Collections.emptyMap());
+                    mUpdateEncoderV0.processUpdates(updateJson, Collections.emptyMap());
                 });
     }
 
@@ -80,7 +72,7 @@ public class UpdateEncoderTest {
         updateJson.put(ACTION, "REGISTER");
         updateJson.put(ENDPOINT, mEndpointUri);
 
-        UpdateOutput output = mUpdateEncoder.processUpdates(updateJson, Collections.emptyMap());
+        UpdateOutput output = mUpdateEncoderV0.processUpdates(updateJson, Collections.emptyMap());
         UpdateEncoderEvent event =
                 UpdateEncoderEvent.builder()
                         .setUpdateType(UpdateEncoderEvent.UpdateType.REGISTER)

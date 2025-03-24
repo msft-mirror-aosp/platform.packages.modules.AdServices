@@ -64,7 +64,7 @@ public class MeasurementDbMigratorV46Test extends MeasurementDbMigratorTestBase 
         builder.setReportId("report_id");
         builder.setPayload("{bucket: 5678n, value: 16, filteringId: 33n}");
         builder.setReportingOrigin(Uri.parse("https://test.bar/count-unique-reporting"));
-        builder.setStatus(CountUniqueReport.Status.PENDING);
+        builder.setStatus(CountUniqueReport.ReportDeliveryStatus.PENDING);
         builder.setScheduledReportTime(1726874188156L);
         builder.setApiVersion("1.0");
         builder.setDebugKey("dfsdadsadsa");

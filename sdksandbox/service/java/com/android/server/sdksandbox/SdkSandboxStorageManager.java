@@ -24,8 +24,11 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.SharedLibraryInfo;
+import android.os.Environment;
 import android.os.UserHandle;
 import android.os.UserManager;
+import android.os.storage.StorageManager;
+import android.os.storage.StorageVolume;
 import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.ArraySet;
@@ -34,6 +37,7 @@ import android.util.Log;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.BackgroundThread;
 import com.android.server.pm.PackageManagerLocal;
 
 import java.io.File;
@@ -59,6 +63,10 @@ import java.util.UUID;
 public class SdkSandboxStorageManager {
     private static final String TAG = "SdkSandboxManager";
 
+    @GuardedBy("mUserReconciliationCallbackMap")
+    private final ArrayMap<Integer, StorageManager.StorageVolumeCallback>
+            mUserReconciliationCallbackMap = new ArrayMap<>();
+
     private final Context mContext;
     private final Object mLock = new Object();
 
@@ -67,23 +75,34 @@ public class SdkSandboxStorageManager {
 
     private final SdkSandboxManagerLocal mSdkSandboxManagerLocal;
     private final PackageManagerLocal mPackageManagerLocal;
+    private final StorageManager mStorageManager;
+    private final SdkSandboxSettingsListener mSdkSandboxSettingsListener;
 
     SdkSandboxStorageManager(
             Context context,
             SdkSandboxManagerLocal sdkSandboxManagerLocal,
+            SdkSandboxSettingsListener sdkSandboxSettingsListener,
             PackageManagerLocal packageManagerLocal) {
-        this(context, sdkSandboxManagerLocal, packageManagerLocal, /*rootDir=*/ "");
+        this(
+                context,
+                sdkSandboxManagerLocal,
+                sdkSandboxSettingsListener,
+                packageManagerLocal,
+                /* rootDir= */ "");
     }
 
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     SdkSandboxStorageManager(
             Context context,
             SdkSandboxManagerLocal sdkSandboxManagerLocal,
+            SdkSandboxSettingsListener sdkSandboxSettingsListener,
             PackageManagerLocal packageManagerLocal,
             String rootDir) {
         mContext = context;
         mSdkSandboxManagerLocal = sdkSandboxManagerLocal;
+        mSdkSandboxSettingsListener = sdkSandboxSettingsListener;
         mPackageManagerLocal = packageManagerLocal;
+        mStorageManager = context.getSystemService(StorageManager.class);
         mRootDir = rootDir;
     }
 
@@ -116,6 +135,33 @@ public class SdkSandboxStorageManager {
         synchronized (mLock) {
             reconcileSdkDataPackageDirs(userId);
         }
+
+        if (!mSdkSandboxSettingsListener.reconcileOnVolumeMount()) {
+            return;
+        }
+
+        StorageManager.StorageVolumeCallback volumeMountedCallback =
+                new StorageManager.StorageVolumeCallback() {
+                    @Override
+                    public void onStateChanged(@NonNull StorageVolume volume) {
+                        if (mSdkSandboxSettingsListener.reconcileOnVolumeMount()) {
+                            if (volume.getState() == Environment.MEDIA_MOUNTED) {
+                                synchronized (mLock) {
+                                    // TODO(b/371541287): Reconcile only the mounted volume.
+                                    reconcileSdkDataPackageDirs(userId);
+                                }
+                            }
+                        }
+                    }
+                };
+        synchronized (mUserReconciliationCallbackMap) {
+            if (mUserReconciliationCallbackMap.containsKey(userId)) {
+                return;
+            }
+            mUserReconciliationCallbackMap.put(userId, volumeMountedCallback);
+        }
+        mStorageManager.registerStorageVolumeCallback(
+                BackgroundThread.getExecutor(), volumeMountedCallback);
     }
 
     public void prepareSdkDataOnLoad(CallingInfo callingInfo) {

@@ -50,6 +50,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
@@ -79,7 +80,10 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
             new FledgeAuthorizationFilter(
                     mSpyContext.getPackageManager(),
                     new EnrollmentDao(
-                            mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mFakeFlags),
+                            mSpyContext,
+                            DbTestUtil.getSharedDbHelperForTest(),
+                            mFakeFlags,
+                            Clock.getInstance()),
                     mAdServicesLoggerMock);
 
     @Mock private FledgeApiThrottleFilter mFledgeApiThrottleFilterMock;

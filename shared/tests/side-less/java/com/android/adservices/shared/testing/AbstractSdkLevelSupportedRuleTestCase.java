@@ -25,6 +25,7 @@ import static com.android.adservices.shared.testing.AndroidSdk.Level.S;
 import static com.android.adservices.shared.testing.AndroidSdk.Level.S2;
 import static com.android.adservices.shared.testing.AndroidSdk.Level.T;
 import static com.android.adservices.shared.testing.AndroidSdk.Level.U;
+import static com.android.adservices.shared.testing.AndroidSdk.Level.V;
 
 import static org.junit.Assert.assertThrows;
 
@@ -94,6 +95,7 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase extends SharedSidele
         expect.withMessage("rule.atLeastS2()").that(rule.isAtLeastS2()).isFalse();
         expect.withMessage("rule.atLeastT()").that(rule.isAtLeastT()).isFalse();
         expect.withMessage("rule.atLeastU()").that(rule.isAtLeastU()).isFalse();
+        expect.withMessage("rule.atLeastV()").that(rule.isAtLeastV()).isFalse();
     }
 
     @Test
@@ -105,6 +107,7 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase extends SharedSidele
         expect.withMessage("rule.atLeastS2()").that(rule.isAtLeastS2()).isFalse();
         expect.withMessage("rule.atLeastT()").that(rule.isAtLeastT()).isFalse();
         expect.withMessage("rule.atLeastU()").that(rule.isAtLeastU()).isFalse();
+        expect.withMessage("rule.atLeastV()").that(rule.isAtLeastV()).isFalse();
     }
 
     @Test
@@ -116,6 +119,7 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase extends SharedSidele
         expect.withMessage("rule.atLeastS2()").that(rule.isAtLeastS2()).isTrue();
         expect.withMessage("rule.atLeastT()").that(rule.isAtLeastT()).isFalse();
         expect.withMessage("rule.atLeastU()").that(rule.isAtLeastU()).isFalse();
+        expect.withMessage("rule.atLeastV()").that(rule.isAtLeastV()).isFalse();
     }
 
     @Test
@@ -127,6 +131,7 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase extends SharedSidele
         expect.withMessage("rule.atLeastS2()").that(rule.isAtLeastS2()).isTrue();
         expect.withMessage("rule.atLeastT()").that(rule.isAtLeastT()).isTrue();
         expect.withMessage("rule.atLeastU()").that(rule.isAtLeastU()).isFalse();
+        expect.withMessage("rule.atLeastV()").that(rule.isAtLeastV()).isFalse();
     }
 
     @Test
@@ -138,6 +143,19 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase extends SharedSidele
         expect.withMessage("rule.atLeastS2()").that(rule.isAtLeastS2()).isTrue();
         expect.withMessage("rule.atLeastT()").that(rule.isAtLeastT()).isTrue();
         expect.withMessage("rule.atLeastU()").that(rule.isAtLeastU()).isTrue();
+        expect.withMessage("rule.atLeastV()").that(rule.isAtLeastV()).isFalse();
+    }
+
+    @Test
+    public final void testRuleIsAtLeastMethods_deviceIsV() throws Exception {
+        var rule = newRule(/* ruleLevel= */ ANY, /* deviceLevel= */ V);
+
+        expect.withMessage("rule.atLeastR()").that(rule.isAtLeastR()).isTrue();
+        expect.withMessage("rule.atLeastS()").that(rule.isAtLeastS()).isTrue();
+        expect.withMessage("rule.atLeastS2()").that(rule.isAtLeastS2()).isTrue();
+        expect.withMessage("rule.atLeastT()").that(rule.isAtLeastT()).isTrue();
+        expect.withMessage("rule.atLeastU()").that(rule.isAtLeastU()).isTrue();
+        expect.withMessage("rule.atLeastV()").that(rule.isAtLeastV()).isTrue();
     }
 
     @Test

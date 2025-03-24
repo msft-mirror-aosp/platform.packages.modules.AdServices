@@ -31,7 +31,13 @@ import android.app.sdksandbox.hosttestutils.SdkSandboxDeviceSupportedHostRule;
 import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
 import android.platform.test.annotations.LargeTest;
 
+import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
+import com.android.adservices.shared.testing.TestDeviceHelper;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
+import com.android.tradefed.testtype.IDeviceTest;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 import org.junit.After;
@@ -50,11 +56,14 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 @RunWith(DeviceJUnit4ClassRunner.class)
-public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
+public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test implements IDeviceTest {
 
     @Rule(order = 0)
     public final SdkSandboxDeviceSupportedHostRule deviceSupportRule =
             new SdkSandboxDeviceSupportedHostRule(this);
+
+    @Rule
+    public final AdServicesHostSideFlagsSetterRule flags = new AdServicesHostSideFlagsSetterRule();
 
     private static final String TEST_APP_STORAGE_PACKAGE = "com.android.tests.sdksandbox";
     private static final String TEST_APP_STORAGE_APK = "SdkSandboxStorageTestApp.apk";
@@ -71,7 +80,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     // Needs to be at least 20s since that's how long we delay reconcile on SdkSandboxManagerService
     private static final long WAIT_FOR_RECONCILE_MS = 30000;
-
+    private static final String PROPERTY_RECONCILE_ON_VOLUME_MOUNT =
+            "SdkSandboxStorage__reconcile_on_volume_mount";
     private final SecondaryUserUtils mUserUtils = new SecondaryUserUtils(this);
     private final AdoptableStorageUtils mAdoptableUtils = new AdoptableStorageUtils(this);
     private final DeviceLockUtils mDeviceLockUtils = new DeviceLockUtils(this);
@@ -91,6 +101,11 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                                 TEST_APP_STORAGE_PACKAGE + ".SdkSandboxStorageTestApp",
                                 phase))
                 .isTrue();
+    }
+
+    @Override
+    public void setDevice(ITestDevice device) {
+        TestDeviceHelper.setTestDevice(device);
     }
 
     @Before
@@ -376,6 +391,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Test
     @LargeTest // Device reboot
+    @SetFlagDisabled(PROPERTY_RECONCILE_ON_VOLUME_MOUNT)
     public void testSdkDataPackageDirectory_IsReconciled_InvalidAndMissingPackage()
             throws Exception {
 
@@ -408,6 +424,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Test
     @LargeTest // Device reboot
+    @SetFlagDisabled(PROPERTY_RECONCILE_ON_VOLUME_MOUNT)
     public void testSdkDataPackageDirectory_IsReconciled_IncludesDifferentVolumes()
             throws Exception {
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
@@ -465,6 +482,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Test
     @LargeTest // Create new volume
+    @SetFlagDisabled(PROPERTY_RECONCILE_ON_VOLUME_MOUNT)
     public void testSdkDataPackageDirectory_IsReconciled_ChecksForPackageOnWrongVolume()
             throws Exception {
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
@@ -473,7 +491,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             installPackage(TEST_APP_STORAGE_APK);
             waitForSdkDirectoryCreatedForUser(mCurrentUser);
 
-            final String newVolumeUuid = mAdoptableUtils.createNewVolume();
+            String newVolumeUuid = mAdoptableUtils.createNewVolume();
 
             assertSuccess(
                     getDevice()
@@ -506,7 +524,86 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @SetFlagEnabled(PROPERTY_RECONCILE_ON_VOLUME_MOUNT)
+    public void testSdkDataPackageDirectory_IsReconciledWhenReconcileOnVolumeMountEnabled()
+            throws Exception {
+        installPackage(TEST_APP_STORAGE_APK);
+        waitForSdkDirectoryCreatedForUser(mCurrentUser);
+
+        String ceSdkDataPackagePath =
+                getSdkDataPackagePath(mCurrentUser, TEST_APP_STORAGE_PACKAGE, /* isCeData= */ true);
+        String deSdkDataPackagePath =
+                getSdkDataPackagePath(
+                        mCurrentUser, TEST_APP_STORAGE_PACKAGE, /* isCeData= */ false);
+
+        final List<String> ceSdkDirsBeforeVolumeMount =
+                getSubDirs(ceSdkDataPackagePath, /* includeRandomSuffix= */ true);
+        final List<String> deSdkDirsBeforeVolumeMount =
+                getSubDirs(deSdkDataPackagePath, /* includeRandomSuffix= */ true);
+
+        // Force the reconciliation on mounting volume by deleting the sdk sub directory
+        getDevice().deleteFile(ceSdkDataPackagePath + "/" + SHARED_DIR);
+        getDevice().deleteFile(deSdkDataPackagePath + "/" + SHARED_DIR);
+
+        getDevice().executeShellCommand(String.format("sm unmount 'emulated;%d'", mCurrentUser));
+
+        getDevice().executeShellCommand(String.format("sm mount 'emulated;%d'", mCurrentUser));
+
+        // Reconciliation on mounting takes some time. It does not involve rebooting, hence
+        // takes almost one tenth of the reconciliation on reboot time
+        Thread.sleep(WAIT_FOR_RECONCILE_MS / 10);
+
+        final List<String> ceSdkDirsAfterVolumeMount =
+                getSubDirs(ceSdkDataPackagePath, /* includeRandomSuffix= */ false);
+        final List<String> deSdkDirsAfterVolumeMount =
+                getSubDirs(deSdkDataPackagePath, /* includeRandomSuffix= */ false);
+
+        assertThat(ceSdkDirsAfterVolumeMount).contains(SHARED_DIR);
+        assertThat(deSdkDirsAfterVolumeMount).contains(SHARED_DIR);
+    }
+
+    @Test
+    @SetFlagDisabled(PROPERTY_RECONCILE_ON_VOLUME_MOUNT)
+    public void testSdkDataPackageDirectory_IsNotReconciledWhenReconcileOnVolumeMountDisabled()
+            throws Exception {
+        installPackage(TEST_APP_STORAGE_APK);
+        waitForSdkDirectoryCreatedForUser(mCurrentUser);
+
+        String ceSdkDataPackagePath =
+                getSdkDataPackagePath(mCurrentUser, TEST_APP_STORAGE_PACKAGE, /* isCeData= */ true);
+        String deSdkDataPackagePath =
+                getSdkDataPackagePath(
+                        mCurrentUser, TEST_APP_STORAGE_PACKAGE, /* isCeData= */ false);
+
+        final List<String> ceSdkDirsBeforeVolumeMount =
+                getSubDirs(ceSdkDataPackagePath, /* includeRandomSuffix= */ true);
+        final List<String> deSdkDirsBeforeVolumeMount =
+                getSubDirs(deSdkDataPackagePath, /* includeRandomSuffix= */ true);
+
+        // Force the reconciliation on mounting volume by deleting the sdk sub directory
+        getDevice().deleteFile(ceSdkDataPackagePath + "/" + SHARED_DIR);
+        getDevice().deleteFile(deSdkDataPackagePath + "/" + SHARED_DIR);
+
+        getDevice().executeShellCommand(String.format("sm unmount 'emulated;%d'", mCurrentUser));
+
+        getDevice().executeShellCommand(String.format("sm mount 'emulated;%d'", mCurrentUser));
+
+        // Reconciliation on mounting takes some time. It does not involve rebooting, hence
+        // takes almost one tenth of the reconciliation on reboot time
+        Thread.sleep(WAIT_FOR_RECONCILE_MS / 10);
+
+        final List<String> ceSdkDirsAfterVolumeMount =
+                getSubDirs(ceSdkDataPackagePath, /* includeRandomSuffix= */ false);
+        final List<String> deSdkDirsAfterVolumeMount =
+                getSubDirs(deSdkDataPackagePath, /* includeRandomSuffix= */ false);
+
+        assertThat(ceSdkDirsAfterVolumeMount).doesNotContain(SHARED_DIR);
+        assertThat(deSdkDirsAfterVolumeMount).doesNotContain(SHARED_DIR);
+    }
+
+    @Test
     @LargeTest // Device reboot
+    @SetFlagDisabled(PROPERTY_RECONCILE_ON_VOLUME_MOUNT)
     public void testSdkDataPackageDirectory_IsReconciled_MissingSubDirs() throws Exception {
 
         installPackage(TEST_APP_STORAGE_APK);
@@ -529,6 +626,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Test
     @LargeTest // Device reboot
+    @SetFlagDisabled(PROPERTY_RECONCILE_ON_VOLUME_MOUNT)
     public void testSdkDataPackageDirectory_IsReconciled_DeleteKeepData() throws Exception {
 
         installPackage(TEST_APP_STORAGE_APK);
@@ -557,6 +655,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Test
     @LargeTest // Device reboot
+    @SetFlagDisabled(PROPERTY_RECONCILE_ON_VOLUME_MOUNT)
     public void testSdkDataPackageDirectory_IsReconciled_DeleteKeepNewVolumeData()
             throws Exception {
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
@@ -1229,7 +1328,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 // Forcing the reconciling by deleting the sdk sub directory
                 getDevice()
                         .deleteFile(sdkDataPackagePath + "/" + sdkDirsBeforeLoadingSdksList.get(0));
-
                 runPhase("loadSdk");
 
                 final String OldPackagePath =
