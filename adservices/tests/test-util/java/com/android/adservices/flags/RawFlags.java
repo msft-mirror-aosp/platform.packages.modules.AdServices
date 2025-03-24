@@ -3480,6 +3480,13 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
+    public final boolean getAdServicesConsentDataMigrationEnabled() {
+        return mBackend.getFlag(
+                KEY_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED,
+                DEFAULT_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED);
+    }
+
+    @Override
     public final String getMddEnrollmentManifestFileUrl() {
         return mBackend.getFlag(
                 KEY_MDD_ENROLLMENT_MANIFEST_FILE_URL, MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL);
