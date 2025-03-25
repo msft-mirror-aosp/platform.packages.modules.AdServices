@@ -17,8 +17,11 @@
 package com.android.adservices.service.signals.updateprocessors.append;
 
 import com.android.adservices.data.signals.DBProtectedSignal;
+import com.android.adservices.service.signals.evict.EvictionPriority;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils;
+import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandler;
+import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,13 +40,23 @@ import java.util.Set;
  *     <strong>[Key]</strong>: {
  *       "values": <strong>[Values]</strong>,
  *       "max_signals": <strong>[Max Signals]</strong>
+ *       "eviction_priority": <strong>[Eviction Priority]</strong>
  *     }
  *     ... // additional signals
  *   }
  * }
  * </pre>
  */
-public class AppendV0 extends Append {
+public class AppendV1 extends Append {
+    @VisibleForTesting
+    public static final String TOO_MANY_SIGNALS_ERROR =
+            "Attempting to append %d than with a max_signals of %d";
+
+    private final EvictionPriorityHandler mEvictionPriorityHandler;
+
+    public AppendV1(EvictionPriorityHandler evictionPriorityHandler) {
+        mEvictionPriorityHandler = evictionPriorityHandler;
+    }
 
     @Override
     protected void processKey(
@@ -55,7 +68,8 @@ public class AppendV0 extends Append {
         UpdateProcessorUtils.touchKey(key, toReturn.getKeysTouched());
         int maxSignals = update.getInt(MAX_SIGNALS);
         JSONArray values = update.getJSONArray(VALUES);
-        // Check that the JSON isn't trying to add more than it's maximum allowed signals
+
+        // Check that the JSON isn't trying to add more than its maximum allowed signals
         if (values.length() > maxSignals) {
             throw new IllegalArgumentException(
                     String.format(TOO_MANY_SIGNALS_ERROR, values.length(), maxSignals));
@@ -64,19 +78,25 @@ public class AppendV0 extends Append {
         deleteSignals(key, maxSignals, values, current, toReturn);
 
         // Add all the signals
-        addSignals(UpdateProcessorUtils.getByteArrayFromBuffer(key), values, toReturn);
+        EvictionPriority evictionPriority = mEvictionPriorityHandler.getEvictionPriority(update);
+        addSignals(
+                UpdateProcessorUtils.getByteArrayFromBuffer(key),
+                values,
+                evictionPriority,
+                toReturn);
     }
 
     /** Add all the new signals. */
-    private void addSignals(byte[] key, JSONArray values, UpdateOutput toReturn)
+    private void addSignals(
+            byte[] key, JSONArray values, EvictionPriority evictionPriority, UpdateOutput toReturn)
             throws JSONException {
         // Add the new signals.
         for (int i = 0; i < values.length(); i++) {
             DBProtectedSignal.Builder newSignalBuilder =
                     DBProtectedSignal.builder()
                             .setKey(key)
-                            .setValue(
-                                    UpdateProcessorUtils.decodeValue(APPEND, values.getString(i)));
+                            .setValue(UpdateProcessorUtils.decodeValue(APPEND, values.getString(i)))
+                            .setEvictionPriority(evictionPriority);
             toReturn.getToAdd().add(newSignalBuilder);
         }
     }
