@@ -18,6 +18,7 @@ package com.android.adservices.flags;
 
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_8;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_GET_BINDING_UID_IMPORTANCE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS;
@@ -221,7 +222,10 @@ public final class AdServicesMockFlagsSetterRule
                 when(mockFlags.getProtectedSignalPeriodicEncodingJobPeriodMs())
                         .thenReturn(Long.valueOf(flag.value));
                 return;
-
+            case KEY_ENABLE_GET_BINDING_UID_IMPORTANCE:
+                when(mockFlags.getEnableGetBindingUidImportance())
+                        .thenReturn(Boolean.valueOf(flag.value));
+                return;
             default:
                 throw new UnsupportedOperationException("Don't know how to mock " + flag);
         }

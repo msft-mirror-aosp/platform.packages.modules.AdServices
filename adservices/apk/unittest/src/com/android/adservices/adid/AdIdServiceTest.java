@@ -19,6 +19,7 @@ package com.android.adservices.adid;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -68,7 +69,10 @@ public final class AdIdServiceTest extends AdServicesExtendedMockitoTestCase {
         AdIdService spyAdIdService = spy(new AdIdService());
         doReturn(mMockPackageManager).when(spyAdIdService).getPackageManager();
         doReturn(mMockAppImportanceFilter)
-                .when(() -> AppImportanceFilter.create(any(Context.class), any(Supplier.class)));
+                .when(
+                        () ->
+                                AppImportanceFilter.create(
+                                        any(Context.class), any(Supplier.class), anyBoolean()));
 
         spyAdIdService.onCreate();
         IBinder binder = spyAdIdService.onBind(getIntentForAdIdService());

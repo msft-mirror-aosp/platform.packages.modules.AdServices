@@ -28,6 +28,7 @@ import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -72,8 +73,11 @@ public class MeasurementService extends Service {
             final AppImportanceFilter appImportanceFilter =
                     AppImportanceFilter.create(
                             this,
-                            () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation());
-
+                            () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation(),
+                            BinderFlagReader.readFlag(
+                                    () ->
+                                            FlagsFactory.getFlags()
+                                                    .getEnableGetBindingUidImportance()));
             mMeasurementService =
                     new MeasurementServiceImpl(
                             this,

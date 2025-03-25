@@ -469,7 +469,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         any(),
                         any());
         when(ConsentManager.getInstance()).thenReturn(mConsentManagerMock);
-        when(AppImportanceFilter.create(any(), any())).thenReturn(mAppImportanceFilterMock);
+        when(AppImportanceFilter.create(any(), any(), anyBoolean()))
+                .thenReturn(mAppImportanceFilterMock);
         doNothing()
                 .when(mAppImportanceFilterMock)
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());
