@@ -122,8 +122,7 @@ import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.countunique.CountUniqueRegistrar;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
-import com.android.adservices.service.measurement.ondevicepersonalization.IOdpDelegationWrapper;
-import com.android.adservices.service.measurement.ondevicepersonalization.NoOdpDelegationWrapper;
+import com.android.adservices.service.measurement.ondevicepersonalization.OdpDelegationWrapperFactory;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
@@ -268,7 +267,6 @@ public final class ReportAndRegisterEventIntegrationTest extends AdServicesExten
     private MeasurementImpl mMeasurementImplSpy;
     @Mock EnrollmentDao mEnrollmentDaoMock;
     @Mock MeasurementDataDeleter mMeasurementDataDeleterMock;
-    IOdpDelegationWrapper mIOdpDelegationWrapperMock = mock(NoOdpDelegationWrapper.class);
 
     AdSelectionServiceImpl mAdSelectionService;
     private AsyncRegistrationQueueRunner mAsyncRegistrationQueueRunnerSpy;
@@ -276,6 +274,7 @@ public final class ReportAndRegisterEventIntegrationTest extends AdServicesExten
     @Mock private DebugReportApi mDebugReportApiMock;
 
     @Mock private CountUniqueRegistrar mCountUniqueMock;
+    @Mock private OdpDelegationWrapperFactory mOdpDelegationWrapperFactory;
 
     @Spy
     private AsyncSourceFetcher mAsyncSourceFetcherSpy =
@@ -293,9 +292,9 @@ public final class ReportAndRegisterEventIntegrationTest extends AdServicesExten
                     mContext,
                     mEnrollmentDaoMock,
                     mFakeFlags,
-                    mIOdpDelegationWrapperMock,
                     mDatastoreManagerSpy,
-                    mDebugReportApiMock);
+                    mDebugReportApiMock,
+                    mOdpDelegationWrapperFactory);
 
     @Mock private SourceNoiseHandler mSourceNoiseHandlerMock;
     private RetryStrategyFactory mRetryStrategyFactory;
