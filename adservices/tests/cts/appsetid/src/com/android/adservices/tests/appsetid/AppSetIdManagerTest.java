@@ -76,8 +76,8 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
 
         appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, callback);
 
-        Exception exception = callback.getFailure();
-        if (exception != null && exception instanceof ProviderServiceTaskCancelledException) {
+        Exception exception = callback.getError();
+        if (exception instanceof ProviderServiceTaskCancelledException) {
             mLog.e("task was cancelled");
             return;
         }
