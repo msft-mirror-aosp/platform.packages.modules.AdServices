@@ -501,6 +501,13 @@ public interface IMeasurementDao {
             long earliestValidAggregateDebugReportInsertion)
             throws DatastoreException;
 
+    /** Deletes all expired count unique records from tables. */
+    void deleteExpiredCountUniqueRecords(
+            long metadataExpiryTime,
+            long earliestValidContributionTime,
+            long earliestValidReportScheduledTime)
+            throws DatastoreException;
+
     /**
      * Mark relevant source as install attributed.
      *
