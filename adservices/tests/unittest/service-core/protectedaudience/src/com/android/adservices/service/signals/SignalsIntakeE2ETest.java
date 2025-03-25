@@ -92,6 +92,7 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
+import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerFactory;
 import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEventHandler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -211,7 +212,10 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
                         .build());
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
-        mUpdateProcessorSelector = new UpdateProcessorSelector();
+        mUpdateProcessorSelector =
+                new UpdateProcessorSelector(
+                        new EvictionPriorityHandlerFactory(
+                                mFakeFlags.getProtectedSignalsEnablePrioritizedEviction()));
         mEncoderPersistenceDao = EncoderPersistenceDao.getInstance();
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
