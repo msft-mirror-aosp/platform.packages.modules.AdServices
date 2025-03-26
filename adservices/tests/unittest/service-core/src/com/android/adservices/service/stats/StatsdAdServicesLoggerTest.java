@@ -100,16 +100,10 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNE
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.OnDeviceClassifierStatus;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.PrecomputedClassifierStatus;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyFloat;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -138,8 +132,10 @@ import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedStats;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.dx.mockito.inline.extended.MockedVoidMethod;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
@@ -151,7 +147,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @SpyStatic(SdkLevel.class)
-@SpyStatic(AdServicesStatsLog.class)
+@MockStatic(AdServicesStatsLog.class)
 public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoTestCase {
 
     // Atom IDs
@@ -202,20 +198,11 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT(
+            reason = "b/325098723 - Atoms using write.*Array() crash the module on S- devices")
     public void testLogGetTopicsReportedStats_tPlus() {
         // Mocks
         when(mMockFlags.getCompatLoggingKillSwitch()).thenReturn(false);
-        mockIsAtLeastT(true);
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(), anyInt(), anyInt(), anyInt(), any(byte[].class)));
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(), any(int[].class), anyInt(), anyInt(), anyInt()));
 
         // Invoke logging call
         mLogger.logGetTopicsReportedStats(TOPICS_REPORTED_STATS_DATA);
@@ -243,15 +230,11 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT(
+            reason = "b/325098723 - Atoms using write.*Array() crash the module on S- devices")
     public void testLogGetTopicsReportedStats_tPlus_noCompatLoggingDueToKillSwitch() {
         // Mocks
         when(mMockFlags.getCompatLoggingKillSwitch()).thenReturn(true);
-        mockIsAtLeastT(true);
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(), any(int[].class), anyInt(), anyInt(), anyInt()));
 
         // Invoke logging call
         mLogger.logGetTopicsReportedStats(TOPICS_REPORTED_STATS_DATA);
@@ -274,11 +257,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         // Mocks
         when(mMockFlags.getCompatLoggingKillSwitch()).thenReturn(false);
         mockIsAtLeastT(false);
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(), anyInt(), anyInt(), anyInt(), any(byte[].class)));
 
         // Invoke logging call
         mLogger.logGetTopicsReportedStats(TOPICS_REPORTED_STATS_DATA);
@@ -310,32 +288,11 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT(
+            reason = "b/325098723 - Atoms using write.*Array() crash the module on S- devices")
     public void testLogEpochComputationClassifierStats_tPlus() {
         // Mocks
         when(mMockFlags.getCompatLoggingKillSwitch()).thenReturn(false);
-        mockIsAtLeastT(true);
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        any(byte[].class),
-                                        anyInt(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt()));
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        any(int[].class),
-                                        anyInt(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt()));
 
         // Invoke logging call
         mLogger.logEpochComputationClassifierStats(EPOCH_COMPUTATION_CLASSIFIER_STATS_DATA);
@@ -375,21 +332,11 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT(
+            reason = "b/325098723 - Atoms using write.*Array() crash the module on S- devices")
     public void testLogEpochComputationClassifierStats_tPlus_noCompatLoggingDueToKillSwitch() {
         // Mocks
         when(mMockFlags.getCompatLoggingKillSwitch()).thenReturn(true);
-        mockIsAtLeastT(true);
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        any(int[].class),
-                                        anyInt(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt()));
 
         // Invoke logging call
         mLogger.logEpochComputationClassifierStats(EPOCH_COMPUTATION_CLASSIFIER_STATS_DATA);
@@ -417,17 +364,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         // Mocks
         when(mMockFlags.getCompatLoggingKillSwitch()).thenReturn(false);
         mockIsAtLeastT(false);
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        any(byte[].class),
-                                        anyInt(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt()));
 
         // Invoke logging call
         mLogger.logEpochComputationClassifierStats(EPOCH_COMPUTATION_CLASSIFIER_STATS_DATA);
@@ -467,19 +403,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testlogFledgeApiCallStats() {
-        // Mocks
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyString(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyInt()));
-
         int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
         int resultCode = STATUS_SUCCESS;
         int latencyMs = 10;
@@ -505,17 +428,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     @Test
     public void testlogFledgeApiCallStatsWithAppPackageNameLogging_enabled() {
         when(mMockFlags.getFledgeAppPackageNameLoggingEnabled()).thenReturn(true);
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyString(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyInt()));
 
         mLogger = new StatsdAdServicesLogger(mMockFlags);
 
@@ -545,17 +457,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     @Test
     public void testlogFledgeApiCallStatsWithAppPackageNameLogging_nullAppPackageName() {
         when(mMockFlags.getFledgeAppPackageNameLoggingEnabled()).thenReturn(true);
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyString(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyInt()));
 
         mLogger = new StatsdAdServicesLogger(mMockFlags);
 
@@ -584,17 +485,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     @Test
     public void testlogFledgeApiCallStatsWithAppPackageNameLogging_disabled() {
         when(mMockFlags.getFledgeAppPackageNameLoggingEnabled()).thenReturn(false);
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyString(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyInt()));
 
         mLogger = new StatsdAdServicesLogger(mMockFlags);
 
@@ -639,17 +529,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setDebugJoinKeyHashLimit(hashLimit)
                         .setSourceRegistrant(SOURCE_REGISTRANT)
                         .build();
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyBoolean(),
-                                        anyLong(),
-                                        anyLong(),
-                                        anyString()));
 
         // Invoke logging call
         mLogger.logMeasurementDebugKeysMatch(stats);
@@ -694,25 +573,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setEventReportCount(3)
                         .setEventDebugReportCount(1)
                         .build();
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyBoolean(),
-                                        anyBoolean(),
-                                        anyLong(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt()));
 
         // Invoke logging call
         mLogger.logMeasurementAttributionStats(stats, enrollmentId);
@@ -753,7 +613,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setWipeoutType(WipeoutStatus.WipeoutType.CONSENT_FLIP.ordinal())
                         .setSourceRegistrant(SOURCE_REGISTRANT)
                         .build();
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyString()));
 
         // Invoke logging call
         mLogger.logMeasurementWipeoutStats(stats);
@@ -785,8 +644,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setRegistrationDelay(registrationDelay)
                         .setRegistrant(SOURCE_REGISTRANT)
                         .build();
-        doNothing()
-                .when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyLong(), anyString()));
 
         // Invoke logging call
         mLogger.logMeasurementDelayedSourceRegistrationStats(stats);
@@ -815,7 +672,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setRegistrationStatus(
                                 OdpRegistrationStatus.RegistrationStatus.ODP_UNAVAILABLE.getValue())
                         .build();
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
 
         // Invoke logging call
         mLogger.logMeasurementOdpRegistrations(stats);
@@ -844,7 +700,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setLatency(latency)
                         .setApiCallStatus(OdpApiCallStatus.ApiCallStatus.SUCCESS.getValue())
                         .build();
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyLong(), anyInt()));
 
         // Invoke logging call
         mLogger.logMeasurementOdpApiCall(stats);
@@ -865,18 +720,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     @Test
     public void logConsentMigrationStats_success() {
         when(mMockFlags.getAdservicesConsentMigrationLoggingEnabled()).thenReturn(true);
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyBoolean(),
-                                        anyBoolean(),
-                                        anyBoolean(),
-                                        anyBoolean(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt()));
 
         ConsentMigrationStats consentMigrationStats =
                 ConsentMigrationStats.builder()
@@ -952,17 +795,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setNumUniqueAdIdsLimit(uniqueAdIdLimit)
                         .setSourceRegistrant(SOURCE_REGISTRANT)
                         .build();
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyBoolean(),
-                                        anyLong(),
-                                        anyLong(),
-                                        anyString()));
 
         // Invoke logging call
         mLogger.logMeasurementAdIdMatchForDebugKeysStats(stats);
@@ -1000,17 +832,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setNumUniqueAdIdsLimit(uniqueAdIdLimit)
                         .setSourceRegistrant(SOURCE_REGISTRANT)
                         .build();
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyBoolean(),
-                                        anyLong(),
-                                        anyLong(),
-                                        anyString()));
 
         // Invoke logging call
         mLogger.logMeasurementAdIdMatchForDebugKeysStats(stats);
@@ -1049,17 +870,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setNumUniqueAdIdsLimit(uniqueAdIdLimit)
                         .setSourceRegistrant(SOURCE_REGISTRANT)
                         .build();
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyBoolean(),
-                                        anyLong(),
-                                        anyLong(),
-                                        anyString()));
 
         // Invoke logging call
         mLogger.logMeasurementAdIdMatchForDebugKeysStats(stats);
@@ -1085,8 +895,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     public void logEnrollmentData_success() {
         int transactionTypeEnumValue =
                 EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.ordinal();
-        doNothing()
-                .when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyBoolean(), anyInt()));
 
         // Invoke logging call
         mLogger.logEnrollmentDataStats(transactionTypeEnumValue, true, 100);
@@ -1107,8 +915,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void logEnrollmentMatch_success() {
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyBoolean(), anyInt()));
-
         // Invoke logging call
         mLogger.logEnrollmentMatchStats(true, 100);
 
@@ -1125,8 +931,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void logEnrollmentFileDownload_success() {
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyBoolean(), anyInt()));
-
         // Invoke logging call
         mLogger.logEnrollmentFileDownloadStats(true, 100);
 
@@ -1147,16 +951,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                 EnrollmentStatus.DataFileGroupStatus.PENDING_CUSTOM_VALIDATION.ordinal();
         int errorCauseEnumValue =
                 EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE.ordinal();
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyString(),
-                                        anyInt()));
 
         // Invoke logging call
         mLogger.logEnrollmentFailedStats(
@@ -1207,23 +1001,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setCurrentRegistrationUnderClickDeduplicationLimit(clickUnderLimit)
                         .build();
 
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyBoolean(),
-                                        anyBoolean(),
-                                        anyBoolean(),
-                                        anyLong(),
-                                        anyLong(),
-                                        anyString(),
-                                        anyBoolean(),
-                                        anyBoolean(),
-                                        anyLong(),
-                                        anyBoolean()));
-
         // Invoke logging call.
         mLogger.logMeasurementClickVerificationStats(stats);
 
@@ -1262,18 +1039,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setEncryptionKeyUrl(encryptionKeyUrl)
                         .build();
 
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyBoolean(),
-                                        anyString(),
-                                        anyString(),
-                                        anyString()));
-
         // Invoke logging call.
         mLogger.logEncryptionKeyFetchedStats(stats);
 
@@ -1303,8 +1068,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setMethodName(INSERT_KEY)
                         .build();
 
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt(), anyInt()));
-
         // Invoke logging call.
         mLogger.logEncryptionKeyDbTransactionEndedStats(stats);
 
@@ -1323,9 +1086,9 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT(
+            reason = "b/325098723 - Atoms using write.*Array() crash the module on S- devices")
     public void logDestinationRegisteredBeaconsReportedStats_tPlus_success() {
-        // TODO: b/325098723 - Atoms using writeIntArray() crash the module on S- devices
-        mockIsAtLeastT(true);
         List<DestinationRegisteredBeaconsReportedStats.InteractionKeySizeRangeType>
                 keySizeRangeTypeList = Arrays.asList(
                 DestinationRegisteredBeaconsReportedStats
@@ -1350,13 +1113,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setTableNumRows(25)
                         .setAdServicesStatusCode(0)
                         .build();
-
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(), anyInt(), anyInt(), any(), anyInt(), anyInt(),
-                                        anyInt()));
 
         // Invoke logging call.
         mLogger.logDestinationRegisteredBeaconsReportedStats(stats);
@@ -1403,12 +1159,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setAdServicesStatusCode(0)
                         .build();
 
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(), anyInt(), anyInt(), any(), anyInt(), anyInt(),
-                                        anyInt()));
         // Invoke logging call.
         mLogger.logDestinationRegisteredBeaconsReportedStats(stats);
 
@@ -1423,8 +1173,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setBeaconReportingDestinationType(SELLER_DESTINATION)
                         .setNumMatchingUris(5)
                         .build();
-
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
 
         // Invoke logging call.
         mLogger.logReportInteractionApiCalledStats(stats);
@@ -1451,8 +1199,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setNumUnreportedUris(5)
                         .build();
 
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
-
         // Invoke logging call.
         mLogger.logInteractionReportingTableClearedStats(stats);
 
@@ -1477,7 +1223,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         @Result int result = AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_ALL;
         AppManifestConfigCall call = new AppManifestConfigCall(pkgName, apiType);
         call.result = result;
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyString(), anyInt(), anyInt()));
 
         mLogger.logAppManifestConfigCall(call);
 
@@ -1491,16 +1236,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testLogKAnonSignStatus_success() {
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyBoolean(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt()));
         boolean wasSuccessful = true;
         int action = 0;
         int actionFailureReason = 0;
@@ -1531,11 +1266,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testLogKAnonJoinStatus_success() {
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(), anyBoolean(), anyInt(), anyInt(), anyInt()));
         boolean wasSuccessful = true;
         int latency = 1000;
         int numberOfFailedMessages = 32;
@@ -1563,16 +1293,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testLogKAnonInitializeStats_success() {
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyBoolean(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt()));
         boolean wasSuccessful = true;
         int action = 1;
         int actionFailureReason = 2;
@@ -1600,12 +1320,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testLogKanonBackgroundJobStats_success() {
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(), anyInt(), anyInt(), anyInt(), anyInt(), anyInt(),
-                                        anyInt()));
         int jobResult = 1;
         int totalMessagesAttempted = 12;
         int messagesFailedToJoin = 123;
@@ -1639,12 +1353,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testLogKanonImmediateSignJoinStats_success() {
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(), anyInt(), anyInt(), anyInt(), anyInt(),
-                                        anyInt()));
         int jobResult = 1;
         int totalMessagesAttempted = 12;
         int messagesFailedToJoin = 123;
@@ -1675,7 +1383,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testLogKAnonGetChallengeStats_success() {
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt(), anyInt()));
         int jobResult = 1;
         int latency = 17;
         int challengeSizeInBytes = 100;
@@ -1706,8 +1413,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setNumBuyers(3)
                         .setStatusCode(STATUS_SUCCESS)
                         .build();
-
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
 
         // Invoke logging call.
         mLogger.logGetAdSelectionDataApiCalledStats(stats);
@@ -1748,8 +1453,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setNumReEstimations(5)
                         .build();
 
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
-
         // Invoke logging call.
         mLogger.logGetAdSelectionDataApiCalledStats(stats);
 
@@ -1782,8 +1485,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setStatusCode(STATUS_SUCCESS)
                         .setServerAuctionCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_API)
                         .build();
-
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
 
         // Invoke logging call.
         mLogger.logGetAdSelectionDataApiCalledStats(stats);
@@ -1826,7 +1527,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setEncodedSignalsSizeMin(32)
                         .setNumCustomAudiencesWithComponentAds(5)
                         .build();
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
 
         // Invoke logging call.
         mLogger.logGetAdSelectionDataBuyerInputGeneratedStats(stats);
@@ -1864,7 +1564,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setFetchStatus(ENCODING_FETCH_STATUS_SUCCESS)
                         .setAdTechId("com.google.android")
                         .build();
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt(), anyString()));
 
         // Invoke logging call.
         mLogger.logEncodingJsFetchStats(stats);
@@ -1894,7 +1593,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setPackageUid(42)
                         .setAdTechId("ABC123")
                         .build();
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
 
         // Invoke logging call.
         mLogger.logUpdateSignalsApiCalledStats(stats);
@@ -1925,16 +1623,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setJsMemoryUsed(100)
                         .setAdTechId("123")
                         .build();
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyString()));
 
         // Invoke logging call.
         mLogger.logEncodingJsExecutionStats(stats);
@@ -1973,7 +1661,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setTotalNumberOfUsedKeys(11)
                         .setTotalNumberOfUsedFilters(12)
                         .build();
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
 
         // Invoke logging call.
         mLogger.logAdFilteringProcessJoinCAReportedStats(stats);
@@ -2023,7 +1710,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setNumOfContextualAdsFilteredOutOfBiddingNoAds(3)
                         .setTotalNumOfContextualAdsBeforeFiltering(4)
                         .build();
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
 
         // Invoke logging call.
         mLogger.logAdFilteringProcessAdSelectionReportedStats(stats);
@@ -2065,7 +1751,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setNumberOfInsertedEvent(2)
                         .setNumberOfEvictedEvent(3)
                         .build();
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
 
         // Invoke logging call.
         mLogger.logAdCounterHistogramUpdaterReportedStats(stats);
@@ -2097,7 +1782,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setLatencyOfEncryptionPerTopicMs(4)
                         .setLatencyOfPersistingEncryptedTopicsToDbMs(3)
                         .build();
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
 
         // Invoke logging call.
         mLogger.logTopicsEncryptionEpochComputationReportedStats(stats);
@@ -2127,8 +1811,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setCountJoinUrls(3)
                         .build();
 
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
-
         // Invoke logging call.
         mLogger.logServerAuctionBackgroundKeyFetchScheduledStats(stats);
 
@@ -2153,7 +1835,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setCountOfEncryptedTopics(5)
                         .setLatencyOfReadingEncryptedTopicsFromDbMs(100)
                         .build();
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
 
         // Invoke logging call.
         mLogger.logTopicsEncryptionGetTopicsReportedStats(stats);
@@ -2181,7 +1862,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 AdsRelevanceStatusUtils
                                         .PAS_ENCODING_SOURCE_TYPE_ENCODING_JOB_SERVICE)
                         .build();
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
 
         // Invoke logging call.
         mLogger.logEncodingJobRunStats(stats);
@@ -2208,8 +1888,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         int latency = 1000;
         ShellCommandStats stats = new ShellCommandStats(command, result, latency);
 
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt(), anyInt()));
-
         mLogger.logShellCommandStats(stats);
 
         MockedVoidMethod writeInvocation =
@@ -2227,7 +1905,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setWinnerType(WINNER_TYPE_PAS_WINNER)
                         .setNumComponentAds(5)
                         .build();
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt()));
 
         // Invoke logging call.
         mLogger.logPersistAdSelectionResultCalledStats(stats);
@@ -2266,29 +1943,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setScoreAdSellerAdditionalSignalsContainedDataVersion(true)
                         .setScoreAdJsScriptResultCode(3)
                         .build();
-
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyBoolean(),
-                                        anyInt()));
 
         // Invocation
         mLogger.logRunAdScoringProcessReportedStats(stats);
@@ -2344,29 +1998,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setGenerateBidJsScriptResultCode(2)
                         .build();
 
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyBoolean(),
-                                        anyBoolean(),
-                                        anyInt()));
-
         // Invocation
         mLogger.logRunAdBiddingPerCAProcessReportedStats(stats);
 
@@ -2398,8 +2029,9 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT(
+            reason = "b/325098723 - Atoms using write.*Array() crash the module on S- devices")
     public void testLogUpdateSignalsProcessReportedStats_success() {
-        mockIsAtLeastT(true);
         UpdateSignalsProcessReportedStats stats =
                 UpdateSignalsProcessReportedStats.builder()
                         .setUpdateSignalsProcessLatencyMillis(200)
@@ -2421,27 +2053,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setUpdatedSignalsWithEvictionPriorityCount(11)
                         .setSignalUpdateSchemaVersion(0)
                         .build();
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyFloat(),
-                                        anyFloat(),
-                                        anyFloat(),
-                                        any(int[].class),
-                                        any(int[].class),
-                                        any(int[].class),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt()));
 
         // Invoke logging call.
         mLogger.logUpdateSignalsProcessReportedStats(stats);
@@ -2481,11 +2092,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setCurrentEpochJobSetting(2)
                         .setScheduleIfNeededEpochJobStatus(1)
                         .build();
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(), anyInt(), anyInt(), anyInt(), anyInt()));
 
         // Invoke logging call.
         mLogger.logTopicsScheduleEpochJobSettingReportedStats(stats);
@@ -2506,20 +2112,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testLogScheduledCustomAudienceUpdatePerformedStats_success() {
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyBoolean(),
-                                        anyInt(),
-                                        anyInt()));
         ScheduledCustomAudienceUpdatePerformedStats stats =
                 ScheduledCustomAudienceUpdatePerformedStats.builder()
                         .setNumberOfPartialCustomAudienceInRequest(1)
@@ -2553,7 +2145,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testLogScheduledCustomAudienceUpdateBackgroundJobStats_success() {
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
         ScheduledCustomAudienceUpdateBackgroundJobStats stats =
                 ScheduledCustomAudienceUpdateBackgroundJobStats.builder()
                         .setNumberOfUpdatesFound(1)
@@ -2573,16 +2164,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testLogScheduledCustomAudienceUpdateScheduleAttemptedStats_success() {
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyBoolean()));
         ScheduledCustomAudienceUpdateScheduleAttemptedStats stats =
                 ScheduledCustomAudienceUpdateScheduleAttemptedStats.builder()
                         .setNumberOfPartialCustomAudiences(1)
@@ -2609,16 +2190,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testLogScheduledCustomAudienceUpdatePerformedFailureStats_success() {
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyBoolean()));
         ScheduledCustomAudienceUpdatePerformedFailureStats stats =
                 ScheduledCustomAudienceUpdatePerformedFailureStats.builder()
                         .setFailureAction(
@@ -2639,12 +2210,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testLogNumberOfTypesOfReportingUrlsReceivedStats_success() {
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(), anyInt(), anyInt(), anyInt(), anyInt(), anyInt(),
-                                        anyInt()));
         NumberOfTypesOfReportingUrlsReceivedStats stats =
                 NumberOfTypesOfReportingUrlsReceivedStats.builder()
                         .setNumberOfTopLevelSellerReportingUrl(1)
@@ -2672,7 +2237,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testLogReportingWithDestinationPerformedStats_success() {
-        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt(), anyInt()));
         ReportingWithDestinationPerformedStats stats =
                 ReportingWithDestinationPerformedStats.builder()
                         .setDestination(REPORTING_CALL_DESTINATION_COMPONENT_SELLER)
