@@ -145,6 +145,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 @SpyStatic(SdkLevel.class)
 @MockStatic(AdServicesStatsLog.class)
@@ -2045,10 +2046,9 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setMaxRawProtectedSignalsSizeBytes(345.67F)
                         .setMinRawProtectedSignalsSizeBytes(0.0001F)
                         .setSignalEvictorsUsed(
-                                ImmutableList.of(
-                                        SIGNAL_EVICTOR_FIFO, SIGNAL_EVICTOR_PRIORITIZED_FIFO))
-                        .setUpdatedSignalEvictionPriorities(ImmutableList.of(EVICT_LATER))
-                        .setEvictedSignalEvictionPriorities(ImmutableList.of(EVICT_SOONER))
+                                Set.of(SIGNAL_EVICTOR_FIFO, SIGNAL_EVICTOR_PRIORITIZED_FIFO))
+                        .setUpdatedSignalEvictionPriorities(Set.of(EVICT_LATER))
+                        .setEvictedSignalEvictionPriorities(Set.of(EVICT_SOONER))
                         .setPerBuyerEvictedSignalSize(SIZE_LARGE)
                         .setUpdatedSignalsWithEvictionPriorityCount(11)
                         .setSignalUpdateSchemaVersion(0)

@@ -21,9 +21,9 @@ import com.android.adservices.service.stats.AdsRelevanceStatusUtils.SignalEvicto
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils.Size;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
-import java.util.List;
+import java.util.Set;
 
 /** Class for updateSignals API process reported stats. */
 @AutoValue
@@ -63,13 +63,13 @@ public abstract class UpdateSignalsProcessReportedStats {
     public abstract float getMinRawProtectedSignalsSizeBytes();
 
     /** Returns the unique evictors used in an eviction. */
-    public abstract ImmutableList<@SignalEvictorType Integer> getSignalEvictorsUsed();
+    public abstract ImmutableSet<@SignalEvictorType Integer> getSignalEvictorsUsed();
 
     /** Returns the unique evicton priorities across updated signals in a single update call. */
-    public abstract ImmutableList<EvictionPriority> getUpdatedSignalEvictionPriorities();
+    public abstract ImmutableSet<EvictionPriority> getUpdatedSignalEvictionPriorities();
 
     /** Returns the unique evicton priorities across evicted signals. */
-    public abstract ImmutableList<EvictionPriority> getEvictedSignalEvictionPriorities();
+    public abstract ImmutableSet<EvictionPriority> getEvictedSignalEvictionPriorities();
 
     /** Returns the bucketed size of the evicted signals in o single update call. */
     @Size
@@ -123,13 +123,13 @@ public abstract class UpdateSignalsProcessReportedStats {
         public abstract Builder setMinRawProtectedSignalsSizeBytes(float value);
 
         /** Sets the unique evictors used in an eviction. */
-        public abstract Builder setSignalEvictorsUsed(List<@SignalEvictorType Integer> value);
+        public abstract Builder setSignalEvictorsUsed(Set<@SignalEvictorType Integer> value);
 
         /** Sets the unique evicton priorities across updated signals in a single update call. */
-        public abstract Builder setUpdatedSignalEvictionPriorities(List<EvictionPriority> value);
+        public abstract Builder setUpdatedSignalEvictionPriorities(Set<EvictionPriority> value);
 
         /** Sets the unique evicton priorities across evicted signals. */
-        public abstract Builder setEvictedSignalEvictionPriorities(List<EvictionPriority> value);
+        public abstract Builder setEvictedSignalEvictionPriorities(Set<EvictionPriority> value);
 
         /** Sets the bucketed size of the evicted signals in o single update call. */
         public abstract Builder setPerBuyerEvictedSignalSize(@Size int value);
