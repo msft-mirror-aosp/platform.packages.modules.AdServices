@@ -29,6 +29,8 @@ import android.annotation.RequiresApi;
 import android.content.Context;
 import android.os.Build;
 
+import androidx.annotation.Nullable;
+
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
@@ -59,7 +61,7 @@ public final class AsyncRegistrationFallbackJob implements JobWorker {
             Context context, ExecutionRuntimeParameters executionRuntimeParameters) {
         return Futures.submit(
                 () -> {
-                    processAsyncRecords(context);
+                    processAsyncRecords();
                     return SUCCESS;
                 },
                 AdServicesExecutors.getBlockingExecutor());
@@ -72,6 +74,12 @@ public final class AsyncRegistrationFallbackJob implements JobWorker {
         }
 
         return JOB_ENABLED_STATUS_ENABLED;
+    }
+
+    @Nullable
+    @Override
+    public String getJobPolicyString(int jobId) {
+        return FlagsFactory.getFlags().getSpeMeasurementAsyncRegistrationFallbackJobPolicy();
     }
 
     /** Schedules the {@link AsyncRegistrationFallbackJob}. */
@@ -117,7 +125,7 @@ public final class AsyncRegistrationFallbackJob implements JobWorker {
     }
 
     @VisibleForTesting
-    void processAsyncRecords(Context context) {
+    void processAsyncRecords() {
         JobLockHolder.getInstance(ASYNC_REGISTRATION_PROCESSING)
                 .runWithLock(
                         "AsyncRegistrationFallbackJob",

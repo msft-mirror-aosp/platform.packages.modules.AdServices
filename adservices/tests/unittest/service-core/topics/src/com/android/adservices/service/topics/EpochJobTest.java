@@ -105,6 +105,13 @@ public final class EpochJobTest extends AdServicesJobTestCase {
     }
 
     @Test
+    public void testGetJobPolicyString() {
+        assertWithMessage("getJobPolicyString() for EpochJob")
+                .that(mEpochJob.getJobPolicyString(/* jobId= */ 0))
+                .isNull();
+    }
+
+    @Test
     public void testSchedule_spe() {
         when(mMockFlags.getSpeOnEpochJobEnabled()).thenReturn(true);
 

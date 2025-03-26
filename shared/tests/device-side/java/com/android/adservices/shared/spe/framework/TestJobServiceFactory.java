@@ -39,18 +39,21 @@ public final class TestJobServiceFactory implements JobServiceFactory {
     private final AdServicesErrorLogger mErrorLogger;
 
     private final JobSchedulingLogger mJobSchedulingLogger;
+    private final ModuleSharedFlags mModuleSharedFlags;
 
     public TestJobServiceFactory(
             @Nullable JobWorker jobWorker,
             @Nullable JobServiceLogger logger,
             @Nullable ModuleJobPolicy moduleJobPolicy,
             @Nullable AdServicesErrorLogger errorLogger,
-            @Nullable JobSchedulingLogger jobSchedulingLogger) {
+            @Nullable JobSchedulingLogger jobSchedulingLogger,
+            @Nullable ModuleSharedFlags moduleSharedFlags) {
         mJobWorker = jobWorker;
         mJobServiceLogger = logger;
         mModuleJobPolicy = moduleJobPolicy;
         mErrorLogger = errorLogger;
         mJobSchedulingLogger = jobSchedulingLogger;
+        mModuleSharedFlags = moduleSharedFlags;
     }
 
     @Override
@@ -89,7 +92,7 @@ public final class TestJobServiceFactory implements JobServiceFactory {
 
     @Override
     public ModuleSharedFlags getFlags() {
-        return new ModuleSharedFlags() {};
+        return mModuleSharedFlags;
     }
 
     @Override

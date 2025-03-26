@@ -27,6 +27,8 @@ import static org.mockito.Mockito.spy;
 
 import android.content.Context;
 
+import androidx.annotation.Nullable;
+
 import com.android.adservices.shared.SharedMockitoTestCase;
 import com.android.adservices.shared.spe.JobServiceConstants.JobEnablementStatus;
 import com.android.adservices.shared.spe.scheduling.BackoffPolicy;
@@ -38,6 +40,7 @@ import org.junit.Test;
 
 /** Unit tests for default methods in {@link JobWorker}. */
 public final class JobWorkerTest extends SharedMockitoTestCase {
+    private static final String TEST_JOB_POLICY_STRING = "test_job_policy";
     private static final JobWorker sJobWorker =
             new JobWorker() {
                 @Override
@@ -50,6 +53,12 @@ public final class JobWorkerTest extends SharedMockitoTestCase {
                 @JobEnablementStatus
                 public int getJobEnablementStatus() {
                     return JOB_ENABLED_STATUS_ENABLED;
+                }
+
+                @Nullable
+                @Override
+                public String getJobPolicyString(int jobId) {
+                    return TEST_JOB_POLICY_STRING;
                 }
             };
 
@@ -80,5 +89,10 @@ public final class JobWorkerTest extends SharedMockitoTestCase {
                 .getJobEnablementStatus();
         expect.that(spyJobWorker.getJobSchedulingEnablementStatus())
                 .isEqualTo(JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON);
+    }
+
+    @Test
+    public void testGetJobPolicyString() {
+        assertThat(sJobWorker.getJobPolicyString(/* jobId= */ 1)).isEqualTo(TEST_JOB_POLICY_STRING);
     }
 }
