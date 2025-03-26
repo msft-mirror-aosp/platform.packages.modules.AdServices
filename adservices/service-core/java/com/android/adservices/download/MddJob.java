@@ -28,6 +28,7 @@ import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
 
+import android.annotation.Nullable;
 import android.app.job.JobScheduler;
 import android.content.Context;
 import android.os.Build;
@@ -157,6 +158,24 @@ public final class MddJob implements JobWorker {
                             return SUCCESS;
                         },
                         AdServicesExecutors.getBlockingExecutor());
+    }
+
+    @Override
+    @Nullable
+    public String getJobPolicyString(int jobId) {
+        com.android.adservices.service.Flags flags = FlagsFactory.getFlags();
+
+        if (jobId == MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId()) {
+            return flags.getSpeMddMaintenanceJobPolicy();
+        } else if (jobId == MDD_CHARGING_PERIODIC_TASK_JOB.getJobId()) {
+            return flags.getSpeMddChargingJobPolicy();
+        } else if (jobId == MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId()) {
+            return flags.getSpeMddCellularChargingJobPolicy();
+        } else if (jobId == MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId()) {
+            return flags.getSpeMddWifiChargingJobPolicy();
+        }
+
+        return null;
     }
 
     /** Schedules all MDD background jobs. */

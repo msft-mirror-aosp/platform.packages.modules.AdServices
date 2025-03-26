@@ -29,6 +29,7 @@ import static com.android.adservices.spe.AdServicesJobInfo.TOPICS_EPOCH_JOB;
 import android.content.Context;
 import android.os.Build;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
@@ -69,6 +70,12 @@ public final class EpochJob implements JobWorker {
         }
 
         return JOB_ENABLED_STATUS_ENABLED;
+    }
+
+    @Nullable
+    @Override
+    public String getJobPolicyString(int jobId) {
+        return null;
     }
 
     /** Schedules the {@link EpochJob}. */

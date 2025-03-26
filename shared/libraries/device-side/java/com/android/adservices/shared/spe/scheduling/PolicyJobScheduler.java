@@ -37,6 +37,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.os.PersistableBundle;
 
+import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
@@ -47,12 +48,14 @@ import com.android.adservices.shared.spe.framework.JobServiceFactory;
 import com.android.adservices.shared.spe.framework.JobWorker;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.util.LogUtil;
+import com.android.adservices.shared.util.ProtoParser;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
@@ -87,6 +90,10 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
     private final Class<T> mJobServiceClass;
     private final AdServicesErrorLogger mErrorLogger;
     private final JobSchedulingLogger mJobSchedulingLogger;
+    private final ModuleSharedFlags mFlags;
+
+    // A cached map of JobPolicy to stored the processed JobPolicy synced from the flag server.
+    private final Map<Integer, JobPolicy> mJobPolicyMap;
 
     public PolicyJobScheduler(JobServiceFactory jobServiceFactory, Class<T> jobServiceClass) {
         mJobServiceFactory = jobServiceFactory;
@@ -95,6 +102,9 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
         mErrorLogger = mJobServiceFactory.getErrorLogger();
         mJobServiceClass = jobServiceClass;
         mJobSchedulingLogger = mJobServiceFactory.getJobSchedulingLogger();
+        mFlags = mJobServiceFactory.getFlags();
+
+        mJobPolicyMap = new HashMap<>();
     }
 
     /**
@@ -136,7 +146,9 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
         }
 
         // Get the jobInfo to schedule.
-        JobInfo jobInfoToSchedule = getJobInfoToSchedule(context, jobSpec, jobName);
+        String jobPolicyString = worker.getJobPolicyString(jobId);
+        JobInfo jobInfoToSchedule =
+                getJobInfoToSchedule(context, jobSpec, jobName, jobPolicyString);
 
         JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         if (jobScheduler == null) {
@@ -175,11 +187,15 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
     // Gets a JobInfo to schedule the job. It's computed by merging the default JobPolicy from job
     // scheduling and the synced JobPolicy from Mendel server.
     @VisibleForTesting
-    JobInfo getJobInfoToSchedule(Context context, JobSpec jobSpec, String jobName) {
+    JobInfo getJobInfoToSchedule(
+            Context context, JobSpec jobSpec, String jobName, @Nullable String jobPolicyString) {
         int jobId = jobSpec.getJobPolicy().getJobId();
 
         JobPolicy defaultJobPolicy = jobSpec.getJobPolicy();
-        JobPolicy serverJobPolicy = getPolicyFromFlagServer(jobId, jobName);
+        JobPolicy serverJobPolicy =
+                mFlags.getSpeEnablePerJobPolicy()
+                        ? getPerJobPolicyFromFlagServer(jobPolicyString, jobId, jobName)
+                        : getPolicyFromFlagServer(jobId, jobName);
 
         JobInfo.Builder builder = createBaseJobInfoBuilder(context, jobId);
         // Apply the Extras from the jobSpec.
@@ -204,6 +220,22 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
         }
 
         return PolicyProcessor.applyPolicyToJobInfo(builder, mergedJobPolicy);
+    }
+
+    @Nullable
+    JobPolicy getPerJobPolicyFromFlagServer(
+            @Nullable String jobPolicyString, int jobId, String jobName) {
+        if (mJobPolicyMap.containsKey(jobId)) {
+            return mJobPolicyMap.get(jobId);
+        }
+
+        LogUtil.v("Loading per-job JobPolicy from preload map...");
+        JobPolicy jobPolicy =
+                ProtoParser.parseBase64EncodedStringToProto(
+                        JobPolicy.parser(), mErrorLogger, jobName, jobPolicyString);
+
+        mJobPolicyMap.put(jobId, jobPolicy);
+        return jobPolicy;
     }
 
     // Get the JobPolicy from the Flag Server. Returns null if the policy doesn't exist or the
