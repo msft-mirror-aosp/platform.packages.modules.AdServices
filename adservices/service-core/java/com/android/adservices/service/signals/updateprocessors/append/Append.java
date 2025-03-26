@@ -56,7 +56,7 @@ public abstract class Append implements UpdateProcessor {
     public UpdateOutput processUpdates(
             Object updates, Map<ByteBuffer, Set<DBProtectedSignal>> current) throws JSONException {
         UpdateOutput toReturn = new UpdateOutput();
-        JSONObject updatesObject = UpdateProcessorUtils.castToJSONObject(APPEND, updates);
+        JSONObject updatesObject = UpdateProcessorUtils.validateAndCastToJSONObject(APPEND, updates);
         // Iterate over the keys.
         for (Iterator<String> iter = updatesObject.keys(); iter.hasNext(); ) {
             String stringKey = iter.next();

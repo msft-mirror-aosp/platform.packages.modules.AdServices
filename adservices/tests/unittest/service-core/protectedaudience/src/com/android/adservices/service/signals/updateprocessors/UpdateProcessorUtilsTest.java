@@ -17,74 +17,95 @@
 package com.android.adservices.service.signals.updateprocessors;
 
 import static com.android.adservices.service.signals.SignalsFixture.BB_KEY_1;
-import static com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils.castToJSONArray;
-import static com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils.castToJSONObject;
 import static com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils.decodeKey;
 import static com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils.decodeValue;
 import static com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils.touchKey;
+import static com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils.validateAndCastToJSONArray;
+import static com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils.validateAndCastToJSONObject;
+import static com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils.validateAndCastToString;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+
+import com.google.common.collect.Sets;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Set;
 
-public class UpdateProcessorUtilsTest {
+@RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
+public class UpdateProcessorUtilsTest extends AdServicesUnitTestCase {
 
     private static final String COMMAND = "put";
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
-
     @Test
-    public void testCastToJSONArraySuccess() {
+    public void testValidateAndCastToJSONArraySuccess() {
         JSONArray expected = new JSONArray();
-        expected.put("abitrary string");
-        JSONArray actual = castToJSONArray(COMMAND, expected);
-        assertEquals(expected, actual);
+        expected.put("arbitrary string");
+        JSONArray actual = validateAndCastToJSONArray(COMMAND, expected);
+        assertWithMessage("Validated JSON array").that(actual).isEqualTo(expected);
     }
 
     @Test
-    public void testCastToJSONArrayFailure() {
-        assertThrows(IllegalArgumentException.class, () -> castToJSONArray(COMMAND, new Object()));
+    public void testValidateAndCastToJSONArrayFailure() {
+        assertThrows(
+                "Expected exception",
+                IllegalArgumentException.class,
+                () -> validateAndCastToJSONArray(COMMAND, new Object()));
     }
 
     @Test
-    public void testCastToJSONObjectSuccess() throws JSONException {
+    public void testValidateAndCastToJSONObjectSuccess() throws JSONException {
         JSONObject expected = new JSONObject();
-        expected.put("abitrary_string", "other_string");
-        JSONObject actual = castToJSONObject(COMMAND, expected);
-        assertEquals(expected, actual);
+        expected.put("arbitrary_string", "other_string");
+        JSONObject actual = validateAndCastToJSONObject(COMMAND, expected);
+        assertWithMessage("Validated JSON object").that(actual).isEqualTo(expected);
     }
 
     @Test
-    public void testCastToJSONObjectFailure() {
-        assertThrows(IllegalArgumentException.class, () -> castToJSONObject(COMMAND, new Object()));
+    public void testValidateAndCastToJSONObjectFailure() {
+        assertThrows(
+                "Expected exception",
+                IllegalArgumentException.class,
+                () -> validateAndCastToJSONObject(COMMAND, new Object()));
+    }
+
+    @Test
+    public void testValidateAndCastToStringSuccess() {
+        String expected = "arbitrary string";
+        String actual = validateAndCastToString(COMMAND, expected);
+        assertWithMessage("Validated string").that(actual).isEqualTo(expected);
+    }
+
+    @Test
+    public void testValidateAndCastToStringFailure() {
+        assertThrows(
+                "Expected exception",
+                IllegalArgumentException.class,
+                () -> validateAndCastToString(COMMAND, new Object()));
     }
 
     @Test
     public void testTouchKeySuccess() {
-        HashSet<ByteBuffer> set = new HashSet<>();
+        Set<ByteBuffer> set = Sets.newHashSet();
         touchKey(BB_KEY_1, set);
-        assertTrue(set.contains(BB_KEY_1));
+        assertWithMessage("Touched key").that(set).containsExactly(BB_KEY_1);
     }
 
     @Test
     public void testTouchKeyFailure() {
         assertThrows(
+                "Expected exception",
                 IllegalArgumentException.class,
-                () -> touchKey(BB_KEY_1, new HashSet<>(Arrays.asList(BB_KEY_1))));
+                () -> touchKey(BB_KEY_1, Sets.newHashSet(BB_KEY_1)));
     }
 
     @Test
@@ -92,19 +113,25 @@ public class UpdateProcessorUtilsTest {
         String key = "AQIDBA==";
         ByteBuffer decoded = decodeKey(COMMAND, key);
         ByteBuffer expected = ByteBuffer.wrap(new byte[] {(byte) 1, (byte) 2, (byte) 3, (byte) 4});
-        assertEquals(expected, decoded);
+        assertWithMessage("Decoded key").that(decoded).isEqualTo(expected);
     }
 
     @Test
     public void testDecodeKeyInvalidBase64() {
         String key = "*";
-        assertThrows(IllegalArgumentException.class, () -> decodeKey(COMMAND, key));
+        assertThrows(
+                "Expected exception",
+                IllegalArgumentException.class,
+                () -> decodeKey(COMMAND, key));
     }
 
     @Test
     public void testDecodeKeyTooBig() {
         String key = "AAAAAAAAAAAAAAAAAAAAAAAA";
-        assertThrows(IllegalArgumentException.class, () -> decodeKey(COMMAND, key));
+        assertThrows(
+                "Expected exception",
+                IllegalArgumentException.class,
+                () -> decodeKey(COMMAND, key));
     }
 
     @Test
@@ -112,18 +139,24 @@ public class UpdateProcessorUtilsTest {
         String value = "KgUJ";
         byte[] decoded = decodeValue(COMMAND, value);
         byte[] expected = {(byte) 42, (byte) 5, (byte) 9};
-        assertArrayEquals(expected, decoded);
+        assertWithMessage("Decoded value").that(decoded).isEqualTo(expected);
     }
 
     @Test
     public void testDecodeValueInvalidBase64() {
         String value = "*";
-        assertThrows(IllegalArgumentException.class, () -> decodeValue(COMMAND, value));
+        assertThrows(
+                "Expected exception",
+                IllegalArgumentException.class,
+                () -> decodeValue(COMMAND, value));
     }
 
     @Test
     public void testDecodeValueTooBig() {
         String value = "a".repeat(500);
-        assertThrows(IllegalArgumentException.class, () -> decodeValue(COMMAND, value));
+        assertThrows(
+                "Expected exception",
+                IllegalArgumentException.class,
+                () -> decodeValue(COMMAND, value));
     }
 }

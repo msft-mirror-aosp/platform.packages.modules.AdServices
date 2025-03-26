@@ -35,12 +35,15 @@ import static com.android.adservices.service.signals.SignalsFixture.createSignal
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+
+import com.google.common.collect.ImmutableMap;
 
 import org.json.JSONObject;
 import org.junit.Test;
@@ -57,13 +60,6 @@ import java.util.Set;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
 public class PutV0Test extends AdServicesUnitTestCase {
-
-    /*
-     * I feel that hardcoding the names here is appropriate here since the JSON names are an
-     * external contract and changing them should require test changes.
-     */
-    private static final String PUT = "put";
-
     private final PutV0 mPutV0 = new PutV0();
 
     @Test
@@ -137,5 +133,16 @@ public class PutV0Test extends AdServicesUnitTestCase {
         List<DBProtectedSignal.Builder> expected =
                 Arrays.asList(DBProtectedSignal.builder().setKey(KEY_1).setValue(VALUE_1));
         assertSignalsBuilderUnorderedListEquals(expected, output.getToAdd());
+    }
+
+    @Test
+    public void testProcessUpdates_invalidUpdateType() throws Exception {
+        JSONObject updatesJson = new JSONObject();
+        updatesJson.put(BASE64_KEY_1, new JSONObject());
+
+        assertThrows(
+                "Expected exception",
+                IllegalArgumentException.class,
+                () -> mPutV0.processUpdates(updatesJson, ImmutableMap.of()));
     }
 }

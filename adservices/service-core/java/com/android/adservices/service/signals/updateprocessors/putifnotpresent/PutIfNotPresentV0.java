@@ -47,7 +47,7 @@ public class PutIfNotPresentV0 extends PutIfNotPresent {
             Object updates, Map<ByteBuffer, Set<DBProtectedSignal>> current) throws JSONException {
         UpdateOutput toReturn = new UpdateOutput();
         JSONObject updatesObject =
-                UpdateProcessorUtils.castToJSONObject(PUT_IF_NOT_PRESENT, updates);
+                UpdateProcessorUtils.validateAndCastToJSONObject(PUT_IF_NOT_PRESENT, updates);
         for (Iterator<String> iter = updatesObject.keys(); iter.hasNext(); ) {
             String stringKey = iter.next();
             ByteBuffer key = UpdateProcessorUtils.decodeKey(PUT_IF_NOT_PRESENT, stringKey);

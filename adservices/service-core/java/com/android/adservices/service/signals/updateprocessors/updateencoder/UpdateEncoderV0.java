@@ -51,7 +51,7 @@ public class UpdateEncoderV0 extends UpdateEncoder {
     public UpdateOutput processUpdates(
             Object updates, Map<ByteBuffer, Set<DBProtectedSignal>> current) throws JSONException {
         UpdateOutput toReturn = new UpdateOutput();
-        JSONObject updatesObject = UpdateProcessorUtils.castToJSONObject(UPDATE_ENCODER, updates);
+        JSONObject updatesObject = UpdateProcessorUtils.validateAndCastToJSONObject(UPDATE_ENCODER, updates);
 
         try {
             if (!updatesObject.has(ACTION)) {
