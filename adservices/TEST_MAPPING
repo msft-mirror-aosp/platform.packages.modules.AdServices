@@ -9,349 +9,133 @@
 {
   "adservices-mainline-presubmit": [
     {
-      "name": "AdServicesApkUITestsAppConsent",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUITestsAppConsent"
     },
     {
-      "name": "AdServicesApkUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUnitTests"
     },
     {
-      "name": "AdServicesApkUINotificationTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUINotificationTests"
     },
     {
-      "name": "AdServicesApkUISettingsTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUISettingsTests"
     },
     {
-      "name": "AdServicesApkUISettingsGaOtaTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUISettingsGaOtaTests"
     },
     {
-      "name": "AdServicesCobaltUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesCobaltUnitTests"
     },
     {
-      "name": "AdServicesFrameworkUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesFrameworkUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreAdIdUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreAdIdUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreCommonUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreCommonUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreAppSearchUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreAppSearchUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreAppsetIdUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreAppsetIdUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreMeasurementUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreMeasurementUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreTopicsUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreTopicsUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreProtectedAudienceUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreProtectedAudienceUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreDatabaseMigrationUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreDatabaseMigrationUnitTests"
     },
     {
-      "name": "AdServicesJsEngineUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesJsEngineUnitTests"
     },
     {
-      "name": "AdServicesMddIntegrationTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesMddIntegrationTests"
     },
     {
-      "name": "AdServicesTestUtilityTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesTestUtilityTests"
     },
     {
-      "name": "CtsAdServicesDeviceTestCases",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesDeviceTestCases"
     },
     {
-      "name": "CtsAdServicesDebuggableDeviceTestCases",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesDebuggableDeviceTestCases"
     },
     {
-      "name": "CtsAdServicesRootTestCases",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesRootTestCases"
     },
     {
-      "name": "CtsAdServicesEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesEndToEndTests"
     },
     {
-      "name": "CtsAdServicesEndToEndTestMeasurement",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesEndToEndTestMeasurement"
     },
     {
-      "name": "CtsAdServicesPermissionsValidEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesPermissionsValidEndToEndTests"
     },
     {
-      "name": "CtsAdServicesPermissionsAppOptOutEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesPermissionsAppOptOutEndToEndTests"
     },
     {
-      "name": "CtsAdServicesPermissionsNoPermEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesPermissionsNoPermEndToEndTests"
     },
     {
-      "name": "CtsAdServicesNotInAllowListEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesNotInAllowListEndToEndTests"
     },
     {
-      "name": "CtsAdServicesTopicsAppUpdateTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesTopicsAppUpdateTests"
     },
     {
-      "name": "CtsAdServicesTopicsConnectionTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesTopicsConnectionTests"
     },
     {
-      "name": "CtsAdServicesMddTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesMddTests"
     },
     {
-      "name": "CtsSandboxedAdIdManagerTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsSandboxedAdIdManagerTests"
     },
     {
-      "name": "CtsSandboxedTopicsManagerTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsSandboxedTopicsManagerTests"
     },
     {
-      "name": "CtsSandboxedMeasurementManagerTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsSandboxedMeasurementManagerTests"
     },
     {
-      "name": "CtsSandboxedFledgeManagerTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsSandboxedFledgeManagerTests"
     },
     {
-      "name": "CtsAdIdEndToEndTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdIdEndToEndTest"
     },
     {
-      "name": "CtsAppSetIdEndToEndTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAppSetIdEndToEndTest"
     },
     {
-      "name": "CtsAdServicesCobaltTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesCobaltTest"
     },
     {
-      "name": "CtsAdServicesHostTests",
-      "options": [
-        {
-          // NOTE: host-side tests use a different package
-          "exclude-annotation": "android.platform.test.annotations.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesHostTests"
     },
     {
-      "name": "AdServicesUIUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesUIUnitTests"
     },
     {
-      "name": "AdServicesManagerServiceTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesManagerServiceTests"
     },
     {
-      "name": "CtsAdServicesExtDataStorageServiceTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesExtDataStorageServiceTest"
     },
     {
-      "name": "AdServicesApkUISettingsGaUXSelectorTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUISettingsGaUXSelectorTests"
     }
   ],
   // This group is used to configure AdServices tests for ExtServices pre-submit testing. Only add
@@ -360,1089 +144,456 @@
   // (b) Targets compat SDK version (S)
   "extservices-mainline-presubmit": [
     {
-      "name": "AdExtServicesApkUINotificationTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesApkUINotificationTests"
     },
     {
-      "name": "AdExtServicesApkUISettingsTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesApkUISettingsTests"
     },
     {
-      "name": "AdExtServicesApkUITestsAppConsent",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesApkUITestsAppConsent"
     },
     {
-      "name": "AdExtServicesApkUISettingsGaOtaTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesApkUISettingsGaOtaTests"
     },
     {
-      "name": "AdExtServicesApkUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesApkUnitTests"
     },
     {
-      "name": "AdExtServicesCobaltUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesCobaltUnitTests"
     },
     {
-      "name": "AdExtServicesFrameworkUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesFrameworkUnitTests"
     },
     {
-      "name": "AdExtServicesFrameworkRvcUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesFrameworkRvcUnitTests"
     },
     {
-      "name": "AdExtServicesServiceCoreUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreUnitTests"
     },
     {
-      "name": "AdExtServicesServiceCoreAdIdUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreAdIdUnitTests"
     },
     {
-      "name": "AdExtServicesServiceCoreAdIdRvcUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreAdIdRvcUnitTests"
     },
     {
-      "name": "AdExtServicesServiceCoreCommonUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreCommonUnitTests"
     },
     {
-      "name": "AdExtServicesServiceCoreAppSearchUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreAppSearchUnitTests"
     },
     {
-      "name": "AdExtServicesServiceCoreAppsetIdUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreAppsetIdUnitTests"
     },
     {
-      "name": "AdExtServicesServiceCoreMeasurementUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreMeasurementUnitTests"
     },
     {
-      "name": "AdExtServicesServiceCoreMeasurementRvcUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreMeasurementRvcUnitTests"
     },
     {
-      "name": "AdExtServicesServiceCoreTopicsUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreTopicsUnitTests"
     },
     {
-      "name": "AdExtServicesServiceCoreProtectedAudienceUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreProtectedAudienceUnitTests"
     },
     {
-      "name": "AdExtServicesJsEngineUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesJsEngineUnitTests"
     },
     {
-      "name": "AdExtServicesMddIntegrationTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesMddIntegrationTests"
     },
     {
-      "name": "CtsAdExtServicesDeviceTestCases",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesDeviceTestCases"
     },
     {
-      "name": "CtsAdExtServicesRvcDeviceTestCases",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesRvcDeviceTestCases"
     },
     {
-      "name": "CtsAdExtServicesDebuggableDeviceTestCases",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesDebuggableDeviceTestCases"
     },
     {
-      "name": "CtsAdExtServicesEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesEndToEndTests"
     },
     {
-      "name": "CtsAdExtServicesEndToEndTestMeasurement",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesEndToEndTestMeasurement"
     },
     {
-      "name": "CtsAdExtServicesEndToEndRvcTestMeasurement",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesEndToEndRvcTestMeasurement"
     },
     {
-      "name": "CtsAdExtServicesPermissionsValidEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesPermissionsValidEndToEndTests"
     },
     {
-      "name": "CtsAdExtServicesPermissionsAppOptOutEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesPermissionsAppOptOutEndToEndTests"
     },
     {
-      "name": "CtsAdExtServicesPermissionsNoPermEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesPermissionsNoPermEndToEndTests"
     },
     {
-      "name": "CtsAdExtServicesNotInAllowListEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesNotInAllowListEndToEndTests"
     },
     {
-      "name": "CtsAdExtServicesTopicsAppUpdateTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesTopicsAppUpdateTests"
     },
     {
-      "name": "CtsAdExtServicesTopicsConnectionTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesTopicsConnectionTests"
     },
     {
-      "name": "CtsAdExtServicesMddTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesMddTests"
     },
     {
-      "name": "CtsAdExtServicesAdIdEndToEndTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesAdIdEndToEndTest"
     },
     {
-      "name": "CtsAdExtServicesAdIdRvcEndToEndTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesAdIdRvcEndToEndTest"
     },
     {
-      "name": "CtsAdExtServicesExtDataStorageServiceTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesExtDataStorageServiceTest"
     },
     {
-      "name": "CtsAdExtServicesAppSetIdEndToEndTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesAppSetIdEndToEndTest"
     },
     {
-      "name": "CtsAdExtServicesAdServicesCobaltTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesAdServicesCobaltTest"
     },
     {
-      "name": "CtsAdExtServicesHostTests",
-      "options": [
-        {
-          // NOTE: host-side tests use a different package
-          "exclude-annotation": "android.platform.test.annotations.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesHostTests"
     },
     {
-      "name": "AdExtServicesEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesEndToEndTests"
     },
     {
-      "name": "AdExtServicesRvcEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesRvcEndToEndTests"
     },
     {
-      "name": "AdExtServicesUIUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesUIUnitTests"
     }
   ],
   "mainline-presubmit": [
     {
       // Install com.google.android.adservices.apex and run AdServicesApkUINotificationTests.
-      "name": "AdServicesApkUINotificationTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUINotificationTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesApkUINotificationTests.
-      "name": "AdExtServicesApkUINotificationTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesApkUINotificationTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesApkUISettingsTests.
-      "name": "AdServicesApkUISettingsTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUISettingsTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesApkUISettingsTests.
-      "name": "AdExtServicesApkUISettingsTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesApkUISettingsTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesApkUITestsAppConsent.
-      "name": "AdServicesApkUITestsAppConsent[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUITestsAppConsent[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesApkUITestsAppConsent.
-      "name": "AdExtServicesApkUITestsAppConsent[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesApkUITestsAppConsent[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesApkUISettingsGaOtaTests.
-      "name": "AdServicesApkUISettingsGaOtaTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUISettingsGaOtaTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesApkUISettingsGaOtaTests.
-      "name": "AdExtServicesApkUISettingsGaOtaTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesApkUISettingsGaOtaTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesApkUnitTests.
-      "name": "AdServicesApkUnitTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUnitTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesApkUnitTests.
-      "name": "AdExtServicesApkUnitTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesApkUnitTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesApkUISettingsGaUXSelectorTests.
-      "name": "AdServicesApkUISettingsGaUXSelectorTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUISettingsGaUXSelectorTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesCobaltUnitTests.
-      "name": "AdServicesCobaltUnitTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesCobaltUnitTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesCobaltUnitTests.
-      "name": "AdExtServicesCobaltUnitTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesCobaltUnitTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesMddIntegrationTests.
-      "name": "AdServicesMddIntegrationTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesMddIntegrationTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesMddIntegrationTests.
-      "name": "AdExtServicesMddIntegrationTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesMddIntegrationTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesFrameworkUnitTests.
-      "name": "AdServicesFrameworkUnitTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesFrameworkUnitTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesFrameworkUnitTests.
-      "name": "AdExtServicesFrameworkUnitTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesFrameworkUnitTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesFrameworkRvcUnitTests.
-      "name": "AdExtServicesFrameworkRvcUnitTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesFrameworkRvcUnitTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesServiceCoreUnitTests.
-      "name": "AdServicesServiceCoreUnitTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreUnitTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesServiceCoreUnitTests.
-      "name": "AdExtServicesServiceCoreUnitTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreUnitTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesServiceCoreAdIdUnitTests.
-      "name": "AdServicesServiceCoreAdIdUnitTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreAdIdUnitTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesServiceCoreAdIdUnitTests.
-      "name": "AdExtServicesServiceCoreAdIdUnitTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreAdIdUnitTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesServiceCoreAdIdRvcUnitTests.
-      "name": "AdExtServicesServiceCoreAdIdRvcUnitTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreAdIdRvcUnitTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesServiceCoreCommonUnitTests.
-      "name": "AdServicesServiceCoreCommonUnitTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreCommonUnitTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdExtServicesServiceCoreCommonUnitTests.
-      "name": "AdExtServicesServiceCoreCommonUnitTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreCommonUnitTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesServiceCoreAppSearchUnitTests.
-      "name": "AdServicesServiceCoreAppSearchUnitTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreAppSearchUnitTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesServiceCoreAppSearchUnitTests.
-      "name": "AdExtServicesServiceCoreAppSearchUnitTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreAppSearchUnitTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesServiceCoreAppsetIdUnitTests.
-      "name": "AdServicesServiceCoreAppsetIdUnitTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreAppsetIdUnitTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesServiceCoreAppsetIdUnitTests.
-      "name": "AdExtServicesServiceCoreAppsetIdUnitTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreAppsetIdUnitTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run
       // AdServicesServiceCoreMeasurementUnitTests.
-      "name": "AdServicesServiceCoreMeasurementUnitTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreMeasurementUnitTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run
       // AdExtServicesServiceCoreMeasurementUnitTests.
-      "name": "AdExtServicesServiceCoreMeasurementUnitTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreMeasurementUnitTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run
       // AdExtServicesServiceCoreMeasurementRvcUnitTests.
-      "name": "AdExtServicesServiceCoreMeasurementRvcUnitTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreMeasurementRvcUnitTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run
       // AdServicesServiceCoreTopicsUnitTests.
-      "name": "AdServicesServiceCoreTopicsUnitTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreTopicsUnitTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run
       // AdExtServicesServiceCoreTopicsUnitTests.
-      "name": "AdExtServicesServiceCoreTopicsUnitTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreTopicsUnitTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run
       // AdServicesServiceCoreProtectedAudienceUnitTests.
-      "name": "AdServicesServiceCoreProtectedAudienceUnitTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreProtectedAudienceUnitTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run
       // AdServicesServiceCoreDatabaseMigrationUnitTests.
-      "name": "AdServicesServiceCoreDatabaseMigrationUnitTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreDatabaseMigrationUnitTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run
       // AdExtServicesServiceCoreProtectedAudienceUnitTests.
-      "name": "AdExtServicesServiceCoreProtectedAudienceUnitTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesServiceCoreProtectedAudienceUnitTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesJsEngineUnitTests.
-      "name": "AdServicesJsEngineUnitTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesJsEngineUnitTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesJsEngineUnitTests.
-      "name": "AdExtServicesJsEngineUnitTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesJsEngineUnitTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesDeviceTestCases.
-      "name": "CtsAdServicesDeviceTestCases[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesDeviceTestCases[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run CtsAdExtServicesDeviceTestCases.
-      "name": "CtsAdExtServicesDeviceTestCases[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesDeviceTestCases[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run CtsAdExtServicesRvcDeviceTestCases.
-      "name": "CtsAdExtServicesRvcDeviceTestCases[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesRvcDeviceTestCases[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesDebuggableDeviceTestCases.
-      "name": "CtsAdServicesDebuggableDeviceTestCases[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesDebuggableDeviceTestCases[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesRootTestCases.
-      "name": "CtsAdServicesRootTestCases[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesRootTestCases[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run CtsAdExtServicesDebuggableDeviceTestCases.
-      "name": "CtsAdExtServicesDebuggableDeviceTestCases[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesDebuggableDeviceTestCases[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesEndToEndTests.
-      "name": "CtsAdServicesEndToEndTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesEndToEndTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run CtsAdExtServicesEndToEndTests.
-      "name": "CtsAdExtServicesEndToEndTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesEndToEndTests[com.google.android.extservices.apex]"
     },
     {
-      "name": "CtsAdServicesEndToEndTestMeasurement[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesEndToEndTestMeasurement[com.google.android.adservices.apex]"
     },
     {
-      "name": "CtsAdExtServicesEndToEndTestMeasurement[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesEndToEndTestMeasurement[com.google.android.extservices.apex]"
     },
     {
-      "name": "CtsAdExtServicesEndToEndRvcTestMeasurement[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesEndToEndRvcTestMeasurement[com.google.android.extservices.apex]"
     },
     {
-      "name": "CtsAdServicesPermissionsValidEndToEndTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesPermissionsValidEndToEndTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "CtsAdExtServicesPermissionsValidEndToEndTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesPermissionsValidEndToEndTests[com.google.android.extservices.apex]"
     },
     {
-      "name": "CtsAdServicesPermissionsAppOptOutEndToEndTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesPermissionsAppOptOutEndToEndTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "CtsAdExtServicesPermissionsAppOptOutEndToEndTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesPermissionsAppOptOutEndToEndTests[com.google.android.extservices.apex]"
     },
     {
-      "name": "CtsAdServicesPermissionsNoPermEndToEndTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesPermissionsNoPermEndToEndTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "CtsAdExtServicesPermissionsNoPermEndToEndTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesPermissionsNoPermEndToEndTests[com.google.android.extservices.apex]"
     },
     {
-      "name": "CtsAdServicesNotInAllowListEndToEndTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesNotInAllowListEndToEndTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "CtsAdExtServicesNotInAllowListEndToEndTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesNotInAllowListEndToEndTests[com.google.android.extservices.apex]"
     },
     {
-      "name": "CtsAdServicesTopicsAppUpdateTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesTopicsAppUpdateTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "CtsAdExtServicesTopicsAppUpdateTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesTopicsAppUpdateTests[com.google.android.extservices.apex]"
     },
     {
-      "name": "CtsAdServicesTopicsConnectionTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesTopicsConnectionTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "CtsAdExtServicesTopicsConnectionTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesTopicsConnectionTests[com.google.android.extservices.apex]"
     },
     {
-      "name": "CtsAdServicesMddTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesMddTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "CtsAdExtServicesMddTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesMddTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsSandboxedAdIdManagerTests.
-      "name": "CtsSandboxedAdIdManagerTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsSandboxedAdIdManagerTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsSandboxedTopicsManagerTests.
-      "name": "CtsSandboxedTopicsManagerTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsSandboxedTopicsManagerTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsSandboxedMeasurementManagerTests.
-      "name": "CtsSandboxedMeasurementManagerTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsSandboxedMeasurementManagerTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run SandboxedFledgeManagerTests.
-      "name": "CtsSandboxedFledgeManagerTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsSandboxedFledgeManagerTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsAdIdEndToEndTest.
-      "name": "CtsAdIdEndToEndTest[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdIdEndToEndTest[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run CtsAdExtServicesAdIdEndToEndTest.
-      "name": "CtsAdExtServicesAdIdEndToEndTest[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesAdIdEndToEndTest[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run CtsAdExtServicesAdIdRvcEndToEndTest.
-      "name": "CtsAdExtServicesAdIdRvcEndToEndTest[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesAdIdRvcEndToEndTest[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run CtsAdExtServicesExtDataStorageServiceTest.
-      "name": "CtsAdExtServicesExtDataStorageServiceTest[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesExtDataStorageServiceTest[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsAppSetIdEndToEndTest.
-      "name": "CtsAppSetIdEndToEndTest[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAppSetIdEndToEndTest[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesCobaltTest.
-      "name": "CtsAdServicesCobaltTest[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesCobaltTest[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run CtsAdExtServicesAppSetIdEndToEndTest.
-      "name": "CtsAdExtServicesAppSetIdEndToEndTest[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesAppSetIdEndToEndTest[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run CtsAdExtServicesAdServicesCobaltTest.
-      "name": "CtsAdExtServicesAdServicesCobaltTest[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesAdServicesCobaltTest[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesHostTests.
-      "name": "CtsAdServicesHostTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          // NOTE: host-side tests use a different package
-          "exclude-annotation": "android.platform.test.annotations.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesHostTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run CtsAdExtServicesHostTests.
-      "name": "CtsAdExtServicesHostTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          // NOTE: host-side tests use a different package
-          "exclude-annotation": "android.platform.test.annotations.FlakyTest"
-        }
-      ]
+      "name": "CtsAdExtServicesHostTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesEndToEndTests.
-      "name": "AdExtServicesEndToEndTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesEndToEndTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesRvcEndToEndTests.
-      "name": "AdExtServicesRvcEndToEndTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesRvcEndToEndTests[com.google.android.extservices.apex]"
     },
     {
-      "name": "AdServicesUIUnitTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesUIUnitTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesEndToEndTests.
-      "name": "AdExtServicesUIUnitTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdExtServicesUIUnitTests[com.google.android.extservices.apex]"
     },
     {
-      "name": "AdServicesManagerServiceTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesManagerServiceTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "CtsAdServicesExtDataStorageServiceTest[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesExtDataStorageServiceTest[com.google.android.adservices.apex]"
     }
   ],
 
@@ -1450,236 +601,91 @@
   // Add ExtServices tests to "mainline-presubmit".
   "presubmit": [
     {
-      "name": "AdServicesCobaltUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesCobaltUnitTests"
     },
     {
-      "name": "AdServicesFrameworkUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesFrameworkUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreAdIdUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreAdIdUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreCommonUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreCommonUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreAppSearchUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreAppSearchUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreAppsetIdUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreAppsetIdUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreMeasurementUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreMeasurementUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreProtectedAudienceUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreProtectedAudienceUnitTests"
     },
     {
-      "name": "AdServicesServiceCoreTopicsUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreTopicsUnitTests"
     },
     {
-      "name": "AdServicesJsEngineUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesJsEngineUnitTests"
     },
     {
-      "name": "AdServicesEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesEndToEndTests"
     },
     {
-      "name": "CtsAdServicesTopicsAppUpdateTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesTopicsAppUpdateTests"
     },
     {
-      "name": "CtsAdServicesTopicsConnectionTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesTopicsConnectionTests"
     },
     {
-      "name": "CtsAdServicesMddTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesMddTests"
     },
     {
-      "name": "CtsAdServicesDeviceTestCases",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesDeviceTestCases"
     },
     {
-      "name": "CtsAdServicesDebuggableDeviceTestCases",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesDebuggableDeviceTestCases"
     },
     {
-      "name": "AdServicesApkUINotificationTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUINotificationTests"
     },
     {
-      "name": "AdServicesApkUISettingsTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUISettingsTests"
     },
     {
-      "name": "AdServicesApkUISettingsGaOtaTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUISettingsGaOtaTests"
     },
     {
-      "name": "AdServicesApkUISettingsGaUXSelectorTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUISettingsGaUXSelectorTests"
     },
     {
-      "name": "AdServicesApkUITestsAppConsent",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUITestsAppConsent"
     },
     {
-      "name": "CtsAdServicesEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesEndToEndTests"
     },
     {
-      "name": "AdServicesManagerServiceTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesManagerServiceTests"
     },
     {
-      "name": "AdServicesApkUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUnitTests"
     },
     {
-      "name": "CtsAdIdEndToEndTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdIdEndToEndTest"
     },
     {
-      "name": "CtsAdServicesExtDataStorageServiceTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesExtDataStorageServiceTest"
     },
     {
-      "name": "CtsAppSetIdEndToEndTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAppSetIdEndToEndTest"
     },
     {
-      "name": "CtsAdServicesCobaltTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesCobaltTest"
     }
   ],
 
@@ -1687,60 +693,25 @@
   // Add ExtServices tests to "mainline-presubmit".
   "postsubmit": [
     {
-      "name": "AdServicesMddIntegrationTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesMddIntegrationTests"
     },
     {
-      "name": "CtsAdServicesHostTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesHostTests"
     },
     {
-      "name": "AdServicesUIUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesUIUnitTests"
     },
     {
-      "name": "AdServicesApkUINotificationTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUINotificationTests"
     },
     {
-      "name": "AdServicesApkUISettingsTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUISettingsTests"
     },
     {
-      "name": "AdServicesApkUISettingsGaOtaTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesApkUISettingsGaOtaTests"
     },
     {
-      "name": "AdServicesServiceCoreDatabaseMigrationUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "AdServicesServiceCoreDatabaseMigrationUnitTests"
     }
   ],
   // This group is used to configure the tests for flag ramp testing in Gantry. Please add to this
@@ -1753,173 +724,67 @@
   // (e) Test is not flaky
   "adservices-flag-ramp-testing": [
     {
-      "name": "CtsAdServicesDeviceTestCases",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesDeviceTestCases"
     },
     {
-      "name": "CtsAdServicesDebuggableDeviceTestCases",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesDebuggableDeviceTestCases"
     },
     {
-      "name": "CtsAdServicesRootTestCases",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesRootTestCases"
     },
     {
-      "name": "CtsAdServicesEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesEndToEndTests"
     },
     {
-      "name": "CtsAdServicesEndToEndTestMeasurement",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesEndToEndTestMeasurement"
     },
     {
-      "name": "CtsAdServicesPermissionsValidEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesPermissionsValidEndToEndTests"
     },
     {
-      "name": "CtsAdServicesPermissionsAppOptOutEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesPermissionsAppOptOutEndToEndTests"
     },
     {
-      "name": "CtsAdServicesPermissionsNoPermEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesPermissionsNoPermEndToEndTests"
     },
     {
-      "name": "CtsAdServicesNotInAllowListEndToEndTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesNotInAllowListEndToEndTests"
     },
     {
-      "name": "CtsAdServicesTopicsAppUpdateTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesTopicsAppUpdateTests"
     },
     {
-      "name": "CtsAdServicesTopicsConnectionTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesTopicsConnectionTests"
     },
     {
-      "name": "CtsAdServicesMddTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesMddTests"
     },
     {
-      "name": "CtsSandboxedAdIdManagerTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsSandboxedAdIdManagerTests"
     },
     {
-      "name": "CtsSandboxedTopicsManagerTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsSandboxedTopicsManagerTests"
     },
     {
-      "name": "CtsSandboxedMeasurementManagerTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsSandboxedMeasurementManagerTests"
     },
     {
-      "name": "CtsSandboxedFledgeManagerTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsSandboxedFledgeManagerTests"
     },
     {
-      "name": "CtsAdIdEndToEndTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdIdEndToEndTest"
     },
     {
-      "name": "CtsAppSetIdEndToEndTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAppSetIdEndToEndTest"
     },
     {
-      "name": "CtsAdServicesCobaltTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesCobaltTest"
     },
     {
-      "name": "CtsAdServicesHostTests",
-      "options": [
-        {
-          // NOTE: host-side tests use a different package
-          "exclude-annotation": "android.platform.test.annotations.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesHostTests"
     },
     {
-      "name": "CtsAdServicesExtDataStorageServiceTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
+      "name": "CtsAdServicesExtDataStorageServiceTest"
     }
   ]
 }
