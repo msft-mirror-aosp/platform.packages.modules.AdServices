@@ -111,7 +111,6 @@ public class PutIfNotPresentV0Test extends AdServicesUnitTestCase {
         assertTrue(output.getToAdd().isEmpty());
     }
 
-
     @Test
     public void testProcessUpdates_invalidUpdateType() throws Exception {
         JSONObject updatesJson = new JSONObject();
