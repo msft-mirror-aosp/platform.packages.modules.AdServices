@@ -23,27 +23,42 @@ import static com.android.adservices.service.signals.updateprocessors.remove.Rem
 import static com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoder.UPDATE_ENCODER;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.when;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.signals.updateprocessors.append.Append;
+import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerFactory;
+import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerNoOpImpl;
 import com.android.adservices.service.signals.updateprocessors.put.Put;
 import com.android.adservices.service.signals.updateprocessors.putifnotpresent.PutIfNotPresent;
 import com.android.adservices.service.signals.updateprocessors.remove.Remove;
 import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoder;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
-public class UpdateProcessorSelectorTest extends AdServicesUnitTestCase {
+public class UpdateProcessorSelectorTest extends AdServicesMockitoTestCase {
 
     private static final String VALID_KEY = "append";
-    public UpdateProcessorSelector mUpdateProcessorSelector = new UpdateProcessorSelector();
+
+    @Mock private EvictionPriorityHandlerFactory mEvictionPriorityHandlerFactoryMock;
+    public UpdateProcessorSelector mUpdateProcessorSelector;
+
+    @Before
+    public void setup() {
+        when(mEvictionPriorityHandlerFactoryMock.getHandler())
+                .thenReturn(new EvictionPriorityHandlerNoOpImpl());
+
+        mUpdateProcessorSelector = new UpdateProcessorSelector(mEvictionPriorityHandlerFactoryMock);
+    }
 
     @Test
     public void testInvalidKey() {
         assertThrows(
-                "Selector should throw an exception when given an invalid JSON key",
+                "Expected exception",
                 IllegalArgumentException.class,
                 () ->
                         mUpdateProcessorSelector.getUpdateProcessor(
@@ -54,7 +69,7 @@ public class UpdateProcessorSelectorTest extends AdServicesUnitTestCase {
     @Test
     public void testInvalidVersion() {
         assertThrows(
-                "Selector should throw an exception when given an invalid update schema version",
+                "Expected exception",
                 IllegalArgumentException.class,
                 () -> mUpdateProcessorSelector.getUpdateProcessor(VALID_KEY, -1));
     }
