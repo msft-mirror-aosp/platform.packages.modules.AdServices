@@ -20,6 +20,7 @@ import static com.android.adservices.service.signals.updateprocessors.putifnotpr
 
 import com.android.adservices.service.signals.SignalUpdates.UpdateSchemaVersion;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorFactory;
+import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -31,10 +32,18 @@ public class PutIfNotPresentFactory extends UpdateProcessorFactory {
     private static final List<Integer> SUPPORTED_VERSIONS =
             ImmutableList.of(UpdateSchemaVersion.V0);
 
+    private final EvictionPriorityHandlerFactory mEvictionPriorityHandlerFactory;
+
+    public PutIfNotPresentFactory(EvictionPriorityHandlerFactory evictionPriorityHandlerFactory) {
+        mEvictionPriorityHandlerFactory = evictionPriorityHandlerFactory;
+    }
+
     @Override
     public PutIfNotPresent getUpdateProcessor(@UpdateSchemaVersion int version) {
         return switch (version) {
             case UpdateSchemaVersion.V0 -> new PutIfNotPresentV0();
+            case UpdateSchemaVersion.V1 ->
+                    new PutIfNotPresentV1(mEvictionPriorityHandlerFactory.getHandler());
             default ->
                     throw new IllegalArgumentException(
                             String.format(
