@@ -67,4 +67,11 @@ public interface ModuleSharedFlags {
     default String getEncodedErrorCodeListPerSampleInterval() {
         return ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL;
     }
+
+    @FeatureFlag(SHARED)
+    boolean DEFAULT_SPE_ENABLE_PER_JOB_POLICY = false;
+
+    default boolean getSpeEnablePerJobPolicy() {
+        return DEFAULT_SPE_ENABLE_PER_JOB_POLICY;
+    }
 }

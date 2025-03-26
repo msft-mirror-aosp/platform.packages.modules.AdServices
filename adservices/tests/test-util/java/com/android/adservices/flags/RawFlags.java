@@ -3742,4 +3742,48 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
         return mBackend.getFlag(
                 KEY_ENABLE_GET_BINDING_UID_IMPORTANCE, ENABLE_GET_BINDING_UID_IMPORTANCE);
     }
+
+    @Override
+    public boolean getSpeEnablePerJobPolicy() {
+        return mBackend.getFlag(KEY_SPE_ENABLE_PER_JOB_POLICY, DEFAULT_SPE_ENABLE_PER_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeCustomAudienceBackgroundFetchJobPolicy() {
+        return mBackend.getFlag(
+                KEY_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY,
+                DEFAULT_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeMddMaintenanceJobPolicy() {
+        return mBackend.getFlag(
+                KEY_SPE_MDD_MAINTENANCE_JOB_POLICY, DEFAULT_SPE_MDD_MAINTENANCE_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeMddChargingJobPolicy() {
+        return mBackend.getFlag(
+                KEY_SPE_MDD_CHARGING_JOB_POLICY, DEFAULT_SPE_MDD_CHARGING_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeMddCellularChargingJobPolicy() {
+        return mBackend.getFlag(
+                KEY_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY,
+                DEFAULT_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeMddWifiChargingJobPolicy() {
+        return mBackend.getFlag(
+                KEY_SPE_MDD_WIFI_CHARGING_JOB_POLICY, DEFAULT_SPE_MDD_WIFI_CHARGING_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeMeasurementAsyncRegistrationFallbackJobPolicy() {
+        return mBackend.getFlag(
+                KEY_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY,
+                DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY);
+    }
 }
