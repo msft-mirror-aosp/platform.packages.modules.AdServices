@@ -101,6 +101,8 @@ public class UpdateProcessingOrchestrator {
             UpdateSignalsApiCalledStats.Builder jsonProcessingStatsBuilder,
             UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
         sLogger.v("Processing signal updates for " + adtech);
+        updateSignalsProcessReportedLogger.setSignalUpdateSchemaVersion(
+                signalUpdates.getUpdateSchemaVersion());
         try {
             // Load the current signals, organizing them into a map for quick access
             List<DBProtectedSignal> currentSignalsList =
