@@ -22,7 +22,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.CountUniqueMetadata;
 import com.android.adservices.service.measurement.CountUniqueReport;
@@ -45,8 +45,11 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
     private static final long METADATA_EXPIRY_WINDOW_MILLS = TimeUnit.DAYS.toMillis(30);
     private final DatastoreManager mDatastoreManager;
 
-    public CountUniqueRegistrar(DatastoreManager datastoreManager) {
+    private final Flags mFlags;
+
+    public CountUniqueRegistrar(DatastoreManager datastoreManager, Flags flags) {
         mDatastoreManager = datastoreManager;
+        mFlags = flags;
     }
 
     @Override
@@ -221,8 +224,12 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
             return Optional.empty();
         }
 
-        BigInteger key = getKey(dao, eventHeaderJson, registrationUriOrigin.get());
         int value = getValue(eventHeaderJson);
+        if (!isContributionBudgetAvailable(value, enrollmentId, dao, asyncRegistration)) {
+            return Optional.empty();
+        }
+
+        BigInteger key = getKey(dao, eventHeaderJson, registrationUriOrigin.get());
         builder.setContributionValue(value);
         builder.setContributionTime(asyncRegistration.getRequestTime());
         builder.setPayload(
@@ -237,7 +244,7 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
         }
         builder.setStatus(CountUniqueReport.ReportDeliveryStatus.PENDING);
         builder.setScheduledReportTime(asyncRegistration.getRequestTime());
-        builder.setApiVersion(AggregatePayloadGenerator.getApiVersion(FlagsFactory.getFlags()));
+        builder.setApiVersion(AggregatePayloadGenerator.getApiVersion(mFlags));
         if (asyncRegistration.hasAdIdPermission()
                 && !eventHeaderJson.isNull(CountUniqueHeaderContract.DEBUG_KEY)) {
             builder.setDebugKey(eventHeaderJson.getString(CountUniqueHeaderContract.DEBUG_KEY));
@@ -247,6 +254,52 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
         }
         builder.setEnrollmentId(enrollmentId);
         return Optional.of(builder.build());
+    }
+
+    private boolean isContributionBudgetAvailable(
+            long value,
+            String enrollmentId,
+            IMeasurementDao dao,
+            AsyncRegistration asyncRegistration)
+            throws DatastoreException {
+        if (value
+                        + dao.sumTotalCountUniqueContributionsInWindow(
+                                enrollmentId,
+                                getShortWindowStartTime(asyncRegistration),
+                                asyncRegistration.getRequestTime())
+                > mFlags.getMeasurementCountUniqueShortWindowContributionBudget()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "CountUniqueRegistrar: Ignoring event. Short window contribution budget"
+                                    + " met for enrollment - "
+                                    + enrollmentId);
+            return false;
+        }
+
+        if (value
+                        + dao.sumTotalCountUniqueContributionsInWindow(
+                                enrollmentId,
+                                getLongWindowStartTime(asyncRegistration),
+                                asyncRegistration.getRequestTime())
+                > mFlags.getMeasurementCountUniqueLongWindowContributionBudget()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "CountUniqueRegistrar: Ignoring event. Long window contribution budget"
+                                    + " met for enrollment - "
+                                    + enrollmentId);
+            return false;
+        }
+        return true;
+    }
+
+    private long getShortWindowStartTime(AsyncRegistration asyncRegistration) {
+        return asyncRegistration.getRequestTime()
+                - mFlags.getMeasurementCountUniqueMaxContributionShortWindow();
+    }
+
+    private long getLongWindowStartTime(AsyncRegistration asyncRegistration) {
+        return asyncRegistration.getRequestTime()
+                - mFlags.getMeasurementCountUniqueMaxContributionLongWindow();
     }
 
     private AggregateHistogramContribution createHistogramContribution(

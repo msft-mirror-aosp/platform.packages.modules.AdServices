@@ -3985,6 +3985,34 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getMeasurementCountUniqueShortWindowContributionBudget() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET,
+                DEFAULT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET);
+    }
+
+    @Override
+    public int getMeasurementCountUniqueLongWindowContributionBudget() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET,
+                DEFAULT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET);
+    }
+
+    @Override
+    public long getMeasurementCountUniqueMaxContributionShortWindow() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW_MS,
+                DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW);
+    }
+
+    @Override
+    public long getMeasurementCountUniqueMaxContributionLongWindow() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW_MS,
+                DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW);
+    }
+
+    @Override
     public boolean getNotificationDismissedOnClick() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK,

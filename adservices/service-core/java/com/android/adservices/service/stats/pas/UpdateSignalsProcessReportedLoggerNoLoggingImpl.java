@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.stats.pas;
 
+import com.android.adservices.service.signals.evict.EvictionPriority;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
+
+import java.util.List;
+
 public class UpdateSignalsProcessReportedLoggerNoLoggingImpl
         implements UpdateSignalsProcessReportedLogger {
     @Override
@@ -44,4 +49,23 @@ public class UpdateSignalsProcessReportedLoggerNoLoggingImpl
 
     @Override
     public void setMinRawProtectedSignalsSizeBytes(float minRawProtectedSignalsSizeBytes) {}
+
+    @Override
+    public void setSignalEvictorsUsed(
+            List<@AdsRelevanceStatusUtils.SignalEvictorType Integer> evictorTypes) {}
+
+    @Override
+    public void setUpdatedSignalEvictionPriorities(List<EvictionPriority> evictionPriorities) {}
+
+    @Override
+    public void setEvictedSignalEvictionPriorities(List<EvictionPriority> evictionPriorities) {}
+
+    @Override
+    public void setPerBuyerEvictedSignalSize(int evictedSignalSize) {}
+
+    @Override
+    public void setUpdatedSignalsWithEvictionPriorityCount(int evictionPriorityCount) {}
+
+    @Override
+    public void setSignalUpdateSchemaVersion(int updateSchemaVersion) {}
 }

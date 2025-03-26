@@ -3698,15 +3698,13 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         .setReportingOrigin(reportingOrigin)
                         .build();
 
-        mDatastoreManager.runInTransaction(
-                (dao) -> {
-                    dao.insertCountUniqueMetadata(m, true);
-                    CountUniqueMetadata metadata = dao.getCountUniqueMetadata(key, reportingOrigin);
-                    assertThat(metadata.getKey()).isEqualTo(key);
-                    assertThat(metadata.getValue()).isEqualTo(value1);
-                    assertThat(metadata.getReportingOrigin()).isEqualTo(reportingOrigin);
-                    assertThat(metadata.getExpirationTime()).isEqualTo(expirationTime);
-                });
+        Optional<CountUniqueMetadata> metadata =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> {
+                            dao.insertCountUniqueMetadata(m, true);
+                            return dao.getCountUniqueMetadata(key, reportingOrigin);
+                        });
+        assertThat(metadata.get()).isEqualTo(m);
     }
 
     @Test
@@ -3732,6 +3730,78 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                             DatastoreException.class,
                             () -> dao.getCountUniqueMetadata(key2, reportingOrigin));
                 });
+    }
+
+    @Test
+    public void testCountTotalContributionsPerEnrollmentInWindowInCountUnique_returnsCount() {
+        String payload = "payload";
+        Uri reportingOrigin = Uri.parse("https://test.foo");
+        int status = CountUniqueReport.ReportDeliveryStatus.PENDING;
+        int debugStatus = CountUniqueReport.ReportDeliveryStatus.PENDING;
+        Long scheduledReportTime = System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1);
+        String version = "0.1";
+        String debugKey = "asadsadsa=";
+        String contextId = "testContextId";
+        String enrollmentId = "test-id";
+        long contributionTime = System.currentTimeMillis();
+        long windowStartTime = contributionTime - TimeUnit.MINUTES.toMillis(10);
+
+        CountUniqueReport report1 =
+                createCountUniqueReport(
+                        "report1",
+                        payload,
+                        reportingOrigin,
+                        status,
+                        debugStatus,
+                        scheduledReportTime,
+                        version,
+                        debugKey,
+                        contextId,
+                        enrollmentId,
+                        6,
+                        contributionTime);
+
+        CountUniqueReport report2 =
+                createCountUniqueReport(
+                        "report2",
+                        payload,
+                        reportingOrigin,
+                        status,
+                        debugStatus,
+                        scheduledReportTime,
+                        version,
+                        debugKey,
+                        contextId,
+                        enrollmentId,
+                        4,
+                        contributionTime);
+
+        // Should not be included in sum as contribution time is over window end time
+        CountUniqueReport report3 =
+                createCountUniqueReport(
+                        "report3",
+                        payload,
+                        reportingOrigin,
+                        status,
+                        debugStatus,
+                        scheduledReportTime,
+                        version,
+                        debugKey,
+                        contextId,
+                        enrollmentId,
+                        5,
+                        contributionTime + TimeUnit.HOURS.toMillis(1));
+
+        assertThat(
+                        mDatastoreManager.runInTransactionWithResult(
+                                (dao) -> {
+                                    dao.insertCountUniqueReport(report1);
+                                    dao.insertCountUniqueReport(report2);
+                                    dao.insertCountUniqueReport(report3);
+                                    return dao.sumTotalCountUniqueContributionsInWindow(
+                                            enrollmentId, windowStartTime, contributionTime);
+                                }))
+                .isEqualTo(Optional.of(10L)); // report 1 and report 2 only
     }
 
     @Test
@@ -15031,20 +15101,22 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
 
     private static void insertAttributedTrigger(TriggerSpecs triggerSpecs,
             EventReport eventReport) {
-        triggerSpecs.getAttributedTriggers().add(
-                new AttributedTrigger(
-                        eventReport.getTriggerId(),
-                        eventReport.getTriggerPriority(),
-                        eventReport.getTriggerData(),
-                        eventReport.getTriggerValue(),
-                        eventReport.getTriggerTime(),
-                        eventReport.getTriggerDedupKey(),
-                        eventReport.getTriggerDebugKey(),
-                        false));
+        triggerSpecs
+                .getAttributedTriggers()
+                .add(
+                        new AttributedTrigger(
+                                eventReport.getTriggerId(),
+                                eventReport.getTriggerPriority(),
+                                eventReport.getTriggerData(),
+                                eventReport.getTriggerValue(),
+                                eventReport.getTriggerTime(),
+                                eventReport.getTriggerDedupKey(),
+                                eventReport.getTriggerDebugKey(),
+                                false));
     }
 
-    private static void insertAttributedTrigger(List<AttributedTrigger> attributedTriggers,
-            EventReport eventReport) {
+    private static void insertAttributedTrigger(
+            List<AttributedTrigger> attributedTriggers, EventReport eventReport) {
         attributedTriggers.add(
                 new AttributedTrigger(
                         eventReport.getTriggerId(),

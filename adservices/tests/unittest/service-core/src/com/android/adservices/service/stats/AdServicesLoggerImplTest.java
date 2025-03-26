@@ -19,6 +19,8 @@ package com.android.adservices.service.stats;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
+import static com.android.adservices.service.signals.evict.EvictionPriority.EVICT_LATER;
+import static com.android.adservices.service.signals.evict.EvictionPriority.EVICT_SOONER;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus.INSERT_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionType.WRITE_TRANSACTION_TYPE;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.MethodName.INSERT_KEY;
@@ -55,6 +57,8 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPOR
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_DESTINATION_COMPONENT_SELLER;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_STATUS_FAILURE_HTTP_REDIRECTION;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_FIFO;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_PRIORITIZED_FIFO;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_LARGE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_SMALL;
@@ -91,6 +95,8 @@ import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledSt
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedStats;
 import com.android.adservices.shared.testing.AnswerSyncCallback;
+
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -999,6 +1005,14 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setMeanRawProtectedSignalsSizeBytes(123.4F)
                         .setMaxRawProtectedSignalsSizeBytes(345.67F)
                         .setMinRawProtectedSignalsSizeBytes(0.0001F)
+                        .setSignalEvictorsUsed(
+                                ImmutableList.of(
+                                        SIGNAL_EVICTOR_FIFO, SIGNAL_EVICTOR_PRIORITIZED_FIFO))
+                        .setUpdatedSignalEvictionPriorities(ImmutableList.of(EVICT_LATER))
+                        .setEvictedSignalEvictionPriorities(ImmutableList.of(EVICT_SOONER))
+                        .setPerBuyerEvictedSignalSize(SIZE_LARGE)
+                        .setUpdatedSignalsWithEvictionPriorityCount(11)
+                        .setSignalUpdateSchemaVersion(0)
                         .build();
         mAdservicesLogger.logUpdateSignalsProcessReportedStats(stats);
         verify(mStatsdLoggerMock).logUpdateSignalsProcessReportedStats(eq(stats));

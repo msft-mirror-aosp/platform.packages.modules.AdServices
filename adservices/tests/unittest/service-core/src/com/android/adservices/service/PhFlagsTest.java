@@ -929,7 +929,11 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTR
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DB_SIZE_LIMIT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS;
@@ -2002,6 +2006,38 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST,
                 Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST,
                 Flags::getMeasurementCountUniqueAppAllowlist);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueShortWindowContributionBudget() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET,
+                Flags.DEFAULT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET,
+                Flags::getMeasurementCountUniqueShortWindowContributionBudget);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueLongWindowContributionBudget() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET,
+                Flags.DEFAULT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET,
+                Flags::getMeasurementCountUniqueLongWindowContributionBudget);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueMaxContributionShortWindow() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW_MS,
+                Flags.DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW,
+                Flags::getMeasurementCountUniqueMaxContributionShortWindow);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueMaxContributionLongWindow() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW_MS,
+                Flags.DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW,
+                Flags::getMeasurementCountUniqueMaxContributionLongWindow);
     }
 
     @Test

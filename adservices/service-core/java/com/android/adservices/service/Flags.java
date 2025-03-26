@@ -3882,6 +3882,37 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB;
     }
 
+    /** Default short window contribution budget per enrollment for count unique */
+    @ConfigFlag int DEFAULT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET = 65536; // = 2^16
+
+    /** Returns default short window contribution budget per enrollment for count unique */
+    default int getMeasurementCountUniqueShortWindowContributionBudget() {
+        return DEFAULT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET;
+    }
+
+    /** Default long window contribution budget per enrollment for count unique */
+    @ConfigFlag int DEFAULT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET = 1048576; // = 2^20
+
+    /** Returns default long window contribution budget per site for count unique */
+    default int getMeasurementCountUniqueLongWindowContributionBudget() {
+        return DEFAULT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET;
+    }
+
+    @ConfigFlag
+    long DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW = TimeUnit.MINUTES.toMillis(10);
+
+    /** Maximum count unique contributions short window */
+    default long getMeasurementCountUniqueMaxContributionShortWindow() {
+        return DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW;
+    }
+
+    @ConfigFlag long DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW = TimeUnit.DAYS.toMillis(1);
+
+    /** Maximum count unique contributions long window */
+    default long getMeasurementCountUniqueMaxContributionLongWindow() {
+        return DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW;
+    }
+
     /** Default min time period between each execution of the Count Unique reporting job. */
     @ConfigFlag
     long DEFAULT_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(2);

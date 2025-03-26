@@ -351,7 +351,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 context,
                                 () ->
                                         FlagsFactory.getFlags()
-                                                .getForegroundStatuslLevelForValidation()),
+                                                .getForegroundStatuslLevelForValidation(),
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getEnableGetBindingUidImportance())),
                         FledgeAuthorizationFilter.create(
                                 context, AdServicesLoggerImpl.getInstance()),
                         new FledgeAllowListsFilter(
@@ -1238,7 +1242,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 mContext,
                                 () ->
                                         FlagsFactory.getFlags()
-                                                .getForegroundStatuslLevelForValidation()),
+                                                .getForegroundStatuslLevelForValidation(),
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getEnableGetBindingUidImportance())),
                         mFlags,
                         callingUid);
 
@@ -1325,7 +1333,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 mContext,
                                 () ->
                                         FlagsFactory.getFlags()
-                                                .getForegroundStatuslLevelForValidation()),
+                                                .getForegroundStatuslLevelForValidation(),
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getEnableGetBindingUidImportance())),
                         mFlags,
                         callingUid);
 
@@ -1378,7 +1390,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 mContext,
                                 () ->
                                         FlagsFactory.getFlags()
-                                                .getForegroundStatuslLevelForValidation()),
+                                                .getForegroundStatuslLevelForValidation(),
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getEnableGetBindingUidImportance())),
                         mFlags,
                         callingUid);
 
@@ -1435,7 +1451,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 mContext,
                                 () ->
                                         FlagsFactory.getFlags()
-                                                .getForegroundStatuslLevelForValidation()),
+                                                .getForegroundStatuslLevelForValidation(),
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getEnableGetBindingUidImportance())),
                         mFlags,
                         callingUid);
 
@@ -1489,7 +1509,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 mContext,
                                 () ->
                                         FlagsFactory.getFlags()
-                                                .getForegroundStatuslLevelForValidation()),
+                                                .getForegroundStatuslLevelForValidation(),
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getEnableGetBindingUidImportance())),
                         mFlags,
                         callingUid);
 
@@ -1541,7 +1565,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 mContext,
                                 () ->
                                         FlagsFactory.getFlags()
-                                                .getForegroundStatuslLevelForValidation()),
+                                                .getForegroundStatuslLevelForValidation(),
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getEnableGetBindingUidImportance())),
                         mFlags,
                         callingUid);
 

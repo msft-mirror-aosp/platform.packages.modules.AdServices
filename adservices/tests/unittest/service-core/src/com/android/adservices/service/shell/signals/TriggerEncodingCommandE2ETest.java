@@ -65,6 +65,7 @@ import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeApiThrottleFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -293,7 +294,9 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                                 mMockFlags,
                                 AppImportanceFilter.create(
                                         mContext,
-                                        mMockFlags::getForegroundStatuslLevelForValidation),
+                                        mMockFlags::getForegroundStatuslLevelForValidation,
+                                        BinderFlagReader.readFlag(
+                                                mMockFlags::getEnableGetBindingUidImportance)),
                                 FledgeAuthorizationFilter.create(mContext, logger),
                                 new FledgeAllowListsFilter(mMockFlags, logger),
                                 new FledgeApiThrottleFilter(

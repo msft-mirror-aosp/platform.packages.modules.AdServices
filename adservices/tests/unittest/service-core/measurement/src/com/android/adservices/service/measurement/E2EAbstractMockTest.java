@@ -235,7 +235,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         new EventReportWindowCalcDelegate(mFlags),
                         mImpressionNoiseUtil));
 
-        mCountUniqueRegistrar = new CountUniqueRegistrar(mDatastoreManager);
+        mCountUniqueRegistrar = new CountUniqueRegistrar(mDatastoreManager, mFlags);
 
         mAsyncSourceFetcher =
                 spy(

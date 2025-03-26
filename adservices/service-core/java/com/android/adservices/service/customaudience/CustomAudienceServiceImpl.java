@@ -144,7 +144,9 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 AdServicesLoggerImpl.getInstance(),
                 AppImportanceFilter.create(
                         context,
-                        () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation()),
+                        () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation(),
+                        BinderFlagReader.readFlag(
+                                () -> FlagsFactory.getFlags().getEnableGetBindingUidImportance())),
                 FlagsFactory.getFlags(),
                 DebugFlags.getInstance(),
                 CallingAppUidSupplierBinderImpl.create(),
@@ -157,7 +159,11 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                 context,
                                 () ->
                                         FlagsFactory.getFlags()
-                                                .getForegroundStatuslLevelForValidation()),
+                                                .getForegroundStatuslLevelForValidation(),
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getEnableGetBindingUidImportance())),
                         FledgeAuthorizationFilter.create(
                                 context, AdServicesLoggerImpl.getInstance()),
                         new FledgeAllowListsFilter(
@@ -637,6 +643,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             throw exception;
         }
 
+        final int callerUid = getCallingUid(apiName);
+
         DevContext devContext = mDevContextFilter.createDevContext();
 
         if (!devContext.getDeviceDevOptionsEnabled()) {
@@ -675,7 +683,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 biddingLogicJS,
                 biddingLogicJsVersion,
                 trustedBiddingSignals,
-                callback);
+                callback,
+                callerUid);
     }
 
     /**
@@ -703,6 +712,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             // Rethrow to fail fast
             throw exception;
         }
+
+        final int callerUid = getCallingUid(apiName);
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
@@ -735,7 +746,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         mAppImportanceFilter,
                         mFlags);
 
-        overrider.removeOverride(owner, buyer, name, callback);
+        overrider.removeOverride(owner, buyer, name, callback, callerUid);
     }
 
     /**

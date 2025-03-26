@@ -34,6 +34,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.SqliteObjectMapper;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.AsyncRegistrationFixture;
 import com.android.adservices.service.measurement.CountUniqueMetadata;
@@ -78,8 +79,16 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
                         new SQLDatastoreManager(
                                 DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger));
 
-        mCountUniqueRegistrar = new CountUniqueRegistrar(mDatastoreManager);
+        mCountUniqueRegistrar = new CountUniqueRegistrar(mDatastoreManager, mMockFlags);
         when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementCountUniqueShortWindowContributionBudget())
+                .thenReturn(Flags.DEFAULT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET);
+        when(mMockFlags.getMeasurementCountUniqueLongWindowContributionBudget())
+                .thenReturn(Flags.DEFAULT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET);
+        when(mMockFlags.getMeasurementCountUniqueMaxContributionShortWindow())
+                .thenReturn(Flags.DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW);
+        when(mMockFlags.getMeasurementCountUniqueMaxContributionLongWindow())
+                .thenReturn(Flags.DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW);
     }
 
     @After
@@ -91,7 +100,7 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void registerCountUniqueEvent_forIgnoreIfPresentAsTrue_doesNotUpdateMetadata()
+    public void registerCountUniqueEvent_forIgnoreIfPresentAsTrue_storesReport()
             throws JSONException {
         // Setup
         AsyncRegistration asyncRegistration =
@@ -175,7 +184,7 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void registerCountUniqueEvent_forIgnoreIfPresentAsFalse_forceUpdatesMetadata()
+    public void registerCountUniqueEvent_forIgnoreIfPresentAsFalse_storesReport()
             throws JSONException {
         // Setup
         AsyncRegistration asyncRegistration =
@@ -254,6 +263,111 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
             assertWithMessage("r.getContributionTime()")
                     .that(r.getContributionTime())
                     .isEqualTo(asyncRegistration.getRequestTime());
+        }
+    }
+
+    @Test
+    public void registerCountUniqueEvent_forTenMinContributionBudgetExceed_doesNotStoreReport()
+            throws JSONException {
+        // Setup
+        when(mMockFlags.getMeasurementCountUniqueShortWindowContributionBudget()).thenReturn(3);
+        when(mMockFlags.getMeasurementCountUniqueLongWindowContributionBudget()).thenReturn(100);
+
+        AsyncRegistration asyncRegistration =
+                AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
+                        .setRegistrationUri(REGISTRATION_URI)
+                        .setAdIdPermission(true)
+                        .build();
+
+        // Store bucket as metadata
+        String metadataHeader = "set;key=\"" + METADATA_KEY + "\";value=\"" + BUCKET;
+        mCountUniqueRegistrar.registerCountUniqueMetadata(
+                asyncRegistration, List.of(metadataHeader));
+
+        // Test
+        // Event 1 should be inserted
+        mCountUniqueRegistrar.registerCountUniqueEvent(
+                asyncRegistration,
+                createEventHeader(METADATA_KEY, VALUE, FILTERING_ID, CONTEXT_ID, DEBUG_KEY),
+                ENROLLMENT_ID);
+
+        // Event 2 should be inserted
+        mCountUniqueRegistrar.registerCountUniqueEvent(
+                asyncRegistration,
+                createEventHeader(METADATA_KEY, 2, FILTERING_ID, CONTEXT_ID, DEBUG_KEY),
+                ENROLLMENT_ID);
+
+        // Event 3 should not be inserted as 10 min budget met
+        mCountUniqueRegistrar.registerCountUniqueEvent(
+                asyncRegistration,
+                createEventHeader(METADATA_KEY, VALUE, FILTERING_ID, CONTEXT_ID, DEBUG_KEY),
+                ENROLLMENT_ID);
+
+        try (Cursor cursor =
+                DbTestUtil.getMeasurementDbHelperForTest()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.CountUniqueReportingContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+
+            assertWithMessage("cursor.getCount()").that(cursor.getCount()).isEqualTo(2);
+        }
+    }
+
+    @Test
+    public void registerCountUniqueEvent_forOneDayContributionBudgetExceed_doesNotStoreReport()
+            throws JSONException {
+        // Setup
+        when(mMockFlags.getMeasurementCountUniqueShortWindowContributionBudget()).thenReturn(100);
+        when(mMockFlags.getMeasurementCountUniqueLongWindowContributionBudget()).thenReturn(3);
+        AsyncRegistration asyncRegistration =
+                AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
+                        .setRegistrationUri(REGISTRATION_URI)
+                        .setAdIdPermission(true)
+                        .build();
+
+        // Store bucket as metadata
+        String metadataHeader = "set;key=\"" + METADATA_KEY + "\";value=\"" + BUCKET;
+        mCountUniqueRegistrar.registerCountUniqueMetadata(
+                asyncRegistration, List.of(metadataHeader));
+
+        // Test
+        // Event 1 should be inserted
+        mCountUniqueRegistrar.registerCountUniqueEvent(
+                asyncRegistration,
+                createEventHeader(METADATA_KEY, VALUE, FILTERING_ID, CONTEXT_ID, DEBUG_KEY),
+                ENROLLMENT_ID);
+
+        // Event 2 should be inserted
+        mCountUniqueRegistrar.registerCountUniqueEvent(
+                asyncRegistration,
+                createEventHeader(METADATA_KEY, 2, FILTERING_ID, CONTEXT_ID, DEBUG_KEY),
+                ENROLLMENT_ID);
+
+        // Event 3 should not be inserted as 10 min budget met
+        mCountUniqueRegistrar.registerCountUniqueEvent(
+                asyncRegistration,
+                createEventHeader(METADATA_KEY, VALUE, FILTERING_ID, CONTEXT_ID, DEBUG_KEY),
+                ENROLLMENT_ID);
+
+        try (Cursor cursor =
+                DbTestUtil.getMeasurementDbHelperForTest()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.CountUniqueReportingContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+
+            assertWithMessage("cursor.getCount()").that(cursor.getCount()).isEqualTo(2);
         }
     }
 
@@ -598,7 +712,7 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void registerCountUniqueEvent_forNulLDebugKey_StoresReport() throws JSONException {
+    public void registerCountUniqueEvent_forNullDebugKey_StoresReport() throws JSONException {
         // Setup
         AsyncRegistration asyncRegistration =
                 AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()

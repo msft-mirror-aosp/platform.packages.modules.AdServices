@@ -4275,6 +4275,27 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public long sumTotalCountUniqueContributionsInWindow(
+            String enrollmentId, long windowStartTime, long windowEndTime)
+            throws DatastoreException {
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT SUM(%2$s) FROM %1$s WHERE %3$s = ? AND %4$s > ? AND %4$s <= ?",
+                        CountUniqueReportingContract.TABLE,
+                        CountUniqueReportingContract.CONTRIBUTION_VALUE,
+                        CountUniqueReportingContract.ENROLLMENT_ID,
+                        CountUniqueReportingContract.CONTRIBUTION_TIME);
+
+        return DatabaseUtils.longForQuery(
+                mSQLTransaction.getDatabase(),
+                query,
+                new String[] {
+                    enrollmentId, String.valueOf(windowStartTime), String.valueOf(windowEndTime)
+                });
+    }
+
+    @Override
     public void insertAggregateDebugReportRecord(
             AggregateDebugReportRecord aggregateDebugReportRecord) throws DatastoreException {
         ContentValues values = new ContentValues();

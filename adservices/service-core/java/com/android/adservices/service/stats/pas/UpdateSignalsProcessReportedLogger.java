@@ -16,6 +16,12 @@
 
 package com.android.adservices.service.stats.pas;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SignalEvictorType;
+
+import com.android.adservices.service.signals.evict.EvictionPriority;
+
+import java.util.List;
+
 public interface UpdateSignalsProcessReportedLogger {
     /** Invokes the logger to log {@link UpdateSignalsProcessReportedStats}. */
     void logUpdateSignalsProcessReportedStats();
@@ -43,4 +49,22 @@ public interface UpdateSignalsProcessReportedLogger {
 
     /** Sets the size, in bytes, of the smallest raw protected signal stored by the caller. */
     void setMinRawProtectedSignalsSizeBytes(float minRawProtectedSignalsSizeBytes);
+
+    /** Sets the unique values of Evictor types used in an eviction. */
+    void setSignalEvictorsUsed(List<@SignalEvictorType Integer> evictorTypes);
+
+    /** Sets the unique values of Eviction priorities included in a Signals update. */
+    void setUpdatedSignalEvictionPriorities(List<EvictionPriority> evictionPriorities);
+
+    /** Sets the unique values of Eviction priorities in evicted Signals. */
+    void setEvictedSignalEvictionPriorities(List<EvictionPriority> evictionPriorities);
+
+    /** Sets the raw byte size of evicted Signals. */
+    void setPerBuyerEvictedSignalSize(int evictedSignalSize);
+
+    /** Sets the number of unique keys in the update JSON who have an eviction priority assigned. */
+    void setUpdatedSignalsWithEvictionPriorityCount(int evictionPriorityCount);
+
+    /** Sets the X-UPDATE-SCHEMA-VERSION from the update schema response header */
+    void setSignalUpdateSchemaVersion(int updateSchemaVersion);
 }
