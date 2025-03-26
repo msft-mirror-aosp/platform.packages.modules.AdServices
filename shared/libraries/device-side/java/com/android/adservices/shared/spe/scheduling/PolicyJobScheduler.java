@@ -146,7 +146,8 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
         }
 
         // Get the jobInfo to schedule.
-        String jobPolicyString = worker.getJobPolicyString(jobId);
+        String jobPolicyString =
+                mFlags.getSpeEnablePerJobPolicy() ? worker.getJobPolicyString(jobId) : null;
         JobInfo jobInfoToSchedule =
                 getJobInfoToSchedule(context, jobSpec, jobName, jobPolicyString);
 
