@@ -143,6 +143,18 @@ public final class BackgroundFetchJobTest extends AdServicesJobTestCase {
     }
 
     @Test
+    public void testGetJobPolicyString() {
+        String testBackgroundFetchJobPolicyString = "background_fetch_job_policy_string";
+
+        when(mMockFlags.getSpeCustomAudienceBackgroundFetchJobPolicy())
+                .thenReturn(testBackgroundFetchJobPolicyString);
+
+        assertWithMessage("getJobPolicyString() for BackgroundFetch")
+                .that(mBackgroundFetchJob.getJobPolicyString(/* jobId= */ 0))
+                .isEqualTo(testBackgroundFetchJobPolicyString);
+    }
+
+    @Test
     public void testSchedule_spe() {
         when(mMockFlags.getSpeOnBackgroundFetchJobEnabled()).thenReturn(true);
 

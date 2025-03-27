@@ -30,6 +30,8 @@ import android.annotation.RequiresApi;
 import android.content.Context;
 import android.os.Build;
 
+import androidx.annotation.Nullable;
+
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
@@ -84,6 +86,12 @@ public class BackgroundFetchJob implements JobWorker {
             return JOB_ENABLED_STATUS_DISABLED_FOR_USER_CONSENT_REVOKED;
         }
         return JOB_ENABLED_STATUS_ENABLED;
+    }
+
+    @Nullable
+    @Override
+    public String getJobPolicyString(int jobId) {
+        return FlagsFactory.getFlags().getSpeCustomAudienceBackgroundFetchJobPolicy();
     }
 
     /**

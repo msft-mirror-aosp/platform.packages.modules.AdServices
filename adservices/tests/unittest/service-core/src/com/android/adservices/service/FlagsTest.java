@@ -48,6 +48,12 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_R
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_MDD_CHARGING_JOB_POLICY;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_MDD_MAINTENANCE_JOB_POLICY;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_MDD_WIFI_CHARGING_JOB_POLICY;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
 import static com.android.adservices.service.Flags.ENABLE_GET_BINDING_UID_IMPORTANCE;
@@ -1391,6 +1397,54 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getProtectedSignalsUpdateSchemaVersion",
                 PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION,
                 Flags::getProtectedSignalsUpdateSchemaVersion);
+    }
+
+    @Test
+    public void testGetSpeCustomAudienceBackgroundFetchJobPolicy() {
+        testFlag(
+                "getSpeCustomAudienceBackgroundFetchJobPolicy",
+                DEFAULT_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY,
+                Flags::getSpeCustomAudienceBackgroundFetchJobPolicy);
+    }
+
+    @Test
+    public void testGetSpeMddMaintenanceJobPolicy() {
+        testFlag(
+                "getSpeMddMaintenanceJobPolicy",
+                DEFAULT_SPE_MDD_MAINTENANCE_JOB_POLICY,
+                Flags::getSpeMddMaintenanceJobPolicy);
+    }
+
+    @Test
+    public void testGetSpeMddChargingJobPolicy() {
+        testFlag(
+                "getSpeMddChargingJobPolicy",
+                DEFAULT_SPE_MDD_CHARGING_JOB_POLICY,
+                Flags::getSpeMddChargingJobPolicy);
+    }
+
+    @Test
+    public void testGetSpeMddCellularChargingJobPolicy() {
+        testFlag(
+                "getSpeMddCellularChargingJobPolicy",
+                DEFAULT_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY,
+                Flags::getSpeMddCellularChargingJobPolicy);
+    }
+
+    @Test
+    public void testGetSpeMddWifiChargingJobPolicy() {
+        testFlag(
+                "getSpeMddWifiChargingJobPolicy",
+                DEFAULT_SPE_MDD_WIFI_CHARGING_JOB_POLICY,
+                Flags::getSpeMddWifiChargingJobPolicy);
+    }
+
+    @Test
+    public void testGetSpeMeasurementAsyncRegistrationFallbackJobPolicy() {
+        testFlag(
+                "getSpeMeasurementAsyncRegistrationFallbackJobPolicy",
+                DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY,
+                Flags::getSpeMeasurementAsyncRegistrationFallbackJobPolicy);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

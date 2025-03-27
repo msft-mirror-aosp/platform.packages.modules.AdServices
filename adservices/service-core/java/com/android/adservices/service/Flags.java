@@ -6292,6 +6292,48 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_AD_SERVICES_CEL_SAMPLING_CONFIG;
     }
 
+    @ConfigFlag String DEFAULT_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY = "";
+
+    /** Returns the job policy for custom audience background fetch job. */
+    default String getSpeCustomAudienceBackgroundFetchJobPolicy() {
+        return DEFAULT_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY;
+    }
+
+    @ConfigFlag String DEFAULT_SPE_MDD_MAINTENANCE_JOB_POLICY = "";
+
+    /** Returns the job policy for MDD maintenance job. */
+    default String getSpeMddMaintenanceJobPolicy() {
+        return DEFAULT_SPE_MDD_MAINTENANCE_JOB_POLICY;
+    }
+
+    @ConfigFlag String DEFAULT_SPE_MDD_CHARGING_JOB_POLICY = "";
+
+    /** Returns the job policy for MDD charging job. */
+    default String getSpeMddChargingJobPolicy() {
+        return DEFAULT_SPE_MDD_CHARGING_JOB_POLICY;
+    }
+
+    @ConfigFlag String DEFAULT_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY = "";
+
+    /** Returns the job policy for MDD cellular charging job. */
+    default String getSpeMddCellularChargingJobPolicy() {
+        return DEFAULT_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY;
+    }
+
+    @ConfigFlag String DEFAULT_SPE_MDD_WIFI_CHARGING_JOB_POLICY = "";
+
+    /** Returns the job policy for MDD WI-FI charging job. */
+    default String getSpeMddWifiChargingJobPolicy() {
+        return DEFAULT_SPE_MDD_WIFI_CHARGING_JOB_POLICY;
+    }
+
+    @ConfigFlag String DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY = "";
+
+    /** Returns the job policy for Measurement async registration fallback job. */
+    default String getSpeMeasurementAsyncRegistrationFallbackJobPolicy() {
+        return DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
     ////////////////////////////////////////////////////////////////////////////////////////////////

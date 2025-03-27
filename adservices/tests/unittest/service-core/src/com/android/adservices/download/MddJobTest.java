@@ -235,6 +235,33 @@ public final class MddJobTest extends AdServicesJobTestCase {
         verify(mMockJobScheduler).cancel(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId());
     }
 
+    @Test
+    public void testGetJobPolicyString() {
+        String testMddMaintenanceJobPolicyString = "mdd_maintenance_job_policy_string";
+        String testMddChargingJobPolicyString = "mdd_charging_job_policy_string";
+        String testMddCellularChargingJobPolicyString = "mdd_cellular_charging_job_policy_string";
+        String testMddWifiChargingJobPolicyString = "mdd_wifi_charging_job_policy_string";
+
+        when(mMockFlags.getSpeMddMaintenanceJobPolicy())
+                .thenReturn(testMddMaintenanceJobPolicyString);
+        when(mMockFlags.getSpeMddChargingJobPolicy()).thenReturn(testMddChargingJobPolicyString);
+        when(mMockFlags.getSpeMddCellularChargingJobPolicy())
+                .thenReturn(testMddCellularChargingJobPolicyString);
+        when(mMockFlags.getSpeMddWifiChargingJobPolicy())
+                .thenReturn(testMddWifiChargingJobPolicyString);
+
+        expect.that(mMddJob.getJobPolicyString(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId()))
+                .isEqualTo(testMddMaintenanceJobPolicyString);
+        expect.that(mMddJob.getJobPolicyString(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId()))
+                .isEqualTo(testMddChargingJobPolicyString);
+        expect.that(mMddJob.getJobPolicyString(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId()))
+                .isEqualTo(testMddCellularChargingJobPolicyString);
+        expect.that(mMddJob.getJobPolicyString(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId()))
+                .isEqualTo(testMddWifiChargingJobPolicyString);
+
+        expect.that(mMddJob.getJobPolicyString(/* jobId= */ 0)).isNull();
+    }
+
     private void mockMddFlags() {
         doReturn(mMockMddFlags).when(MddFlags::getInstance);
         when(mMockMddFlags.maintenanceGcmTaskPeriod())
