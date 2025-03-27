@@ -3710,6 +3710,12 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
+    public long getMeasurementCountUniqueReportExpiry() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_REPORT_EXPIRY_MS, DEFAULT_COUNT_UNIQUE_REPORT_EXPIRY);
+    }
+
+    @Override
     public String getMeasurementCountUniqueAppSignatureAllowlist() {
         return mBackend.getFlag(
                 KEY_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST,

@@ -4020,6 +4020,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getMeasurementCountUniqueReportExpiry() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_REPORT_EXPIRY_MS,
+                DEFAULT_COUNT_UNIQUE_REPORT_EXPIRY);
+    }
+
+    @Override
     public boolean getNotificationDismissedOnClick() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK,
