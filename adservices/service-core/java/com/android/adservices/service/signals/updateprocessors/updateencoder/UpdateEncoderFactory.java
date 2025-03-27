@@ -29,12 +29,12 @@ import java.util.Locale;
 /** Factory class for the {@link UpdateEncoder} update processor. */
 public class UpdateEncoderFactory extends UpdateProcessorFactory {
     private static final List<Integer> SUPPORTED_VERSIONS =
-            ImmutableList.of(UpdateSchemaVersion.V0);
+            ImmutableList.of(UpdateSchemaVersion.V0, UpdateSchemaVersion.V1);
 
     @Override
     public UpdateEncoder getUpdateProcessor(@UpdateSchemaVersion int version) {
         return switch (version) {
-            case UpdateSchemaVersion.V0 -> new UpdateEncoderV0();
+            case UpdateSchemaVersion.V0, UpdateSchemaVersion.V1 -> new UpdateEncoderV0();
             default ->
                     throw new IllegalArgumentException(
                             String.format(

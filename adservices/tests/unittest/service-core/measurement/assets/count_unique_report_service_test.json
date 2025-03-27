@@ -1,0 +1,272 @@
+{
+  "testCases": [
+    {
+      "name": "Single pending report success",
+      "input": {
+        "sources": [],
+        "triggers": [],
+        "event_reports": [],
+        "attributions": [],
+        "aggregate_reports": [],
+        "count_unique_reports": [
+          {
+            "id":  "CUR1",
+            "context_id": "contextId",
+            "debug_cleartext_payload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768,\"id\":1}]}",
+            "reporting_origin": "https://subdomain.example.test",
+            "status": 1,
+            "scheduled_report_time": 20000000,
+            "api_version": "0.1",
+            "debug_key": "debugKey",
+            "enrollment_id": "enrollment_id",
+            "debug_report_status": 0,
+            "contribution_value": 32768,
+            "contribution_time": 20000000
+          }
+        ]
+      },
+      "output": {
+        "sources": [],
+        "triggers": [],
+        "event_reports": [],
+        "attributions": [],
+        "aggregate_reports": [],
+        "count_unique_reports": [
+          {
+            "id":  "CUR1",
+            "context_id": "contextId",
+            "debug_cleartext_payload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768,\"id\":1}]}",
+            "reporting_origin": "https://subdomain.example.test",
+            "status": 2,
+            "scheduled_report_time": 20000000,
+            "api_version": "0.1",
+            "debug_key": "debugKey",
+            "enrollment_id": "enrollment_id",
+            "debug_report_status": 0,
+            "contribution_value": 32768,
+            "contribution_time": 20000000
+          }
+        ]
+      },
+      "param": {
+        "response_code": 200,
+        "registration_origin": "https://subdomain.example.test"
+      }
+    },
+    {
+      "name": "Multiple pending report success",
+      "input": {
+        "sources": [],
+        "triggers": [],
+        "event_reports": [],
+        "attributions": [],
+        "aggregate_reports": [],
+        "count_unique_reports": [
+          {
+            "id":  "CUR1",
+            "context_id": "contextId",
+            "debug_cleartext_payload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768,\"id\":1}]}",
+            "reporting_origin": "https://subdomain.example.test",
+            "status": 1,
+            "scheduled_report_time": 20000000,
+            "api_version": "0.1",
+            "debug_key": "debugKey",
+            "enrollment_id": "enrollment_id",
+            "debug_report_status": 0,
+            "contribution_value": 32768,
+            "contribution_time": 20000000
+          },
+          {
+            "id":  "CUR2",
+            "context_id": "contextId2",
+            "debug_cleartext_payload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1370,\"value\":32768,\"id\":2}]}",
+            "reporting_origin": "https://subdomain.example.test",
+            "status": 1,
+            "scheduled_report_time": 20000000,
+            "api_version": "0.1",
+            "debug_key": "debugKey2",
+            "enrollment_id": "enrollment_id",
+            "debug_report_status": 0,
+            "contribution_value": 32768,
+            "contribution_time": 20000000
+          },
+          {
+            "id":  "CUR3",
+            "context_id": "contextId3",
+            "debug_cleartext_payload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1371,\"value\":32768,\"id\":3}]}",
+            "reporting_origin": "https://subdomain.example.test",
+            "status": 1,
+            "scheduled_report_time": 20000000,
+            "api_version": "0.1",
+            "debug_key": "debugKey3",
+            "enrollment_id": "enrollment_id",
+            "debug_report_status": 0,
+            "contribution_value": 32768,
+            "contribution_time": 20000000
+          }
+        ]
+      },
+      "output": {
+        "sources": [],
+        "triggers": [],
+        "event_reports": [],
+        "attributions": [],
+        "aggregate_reports": [],
+        "count_unique_reports": [
+          {
+            "id":  "CUR1",
+            "context_id": "contextId",
+            "debug_cleartext_payload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768,\"id\":1}]}",
+            "reporting_origin": "https://subdomain.example.test",
+            "status": 2,
+            "scheduled_report_time": 20000000,
+            "api_version": "0.1",
+            "debug_key": "debugKey",
+            "enrollment_id": "enrollment_id",
+            "debug_report_status": 0,
+            "contribution_value": 32768,
+            "contribution_time": 20000000
+          },
+          {
+            "id":  "CUR2",
+            "context_id": "contextId2",
+            "debug_cleartext_payload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1370,\"value\":32768,\"id\":2}]}",
+            "reporting_origin": "https://subdomain.example.test",
+            "status": 2,
+            "scheduled_report_time": 20000000,
+            "api_version": "0.1",
+            "debug_key": "debugKey2",
+            "enrollment_id": "enrollment_id",
+            "debug_report_status": 0,
+            "contribution_value": 32768,
+            "contribution_time": 20000000
+          },
+          {
+            "id":  "CUR3",
+            "context_id": "contextId3",
+            "debug_cleartext_payload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1371,\"value\":32768,\"id\":3}]}",
+            "reporting_origin": "https://subdomain.example.test",
+            "status": 2,
+            "scheduled_report_time": 20000000,
+            "api_version": "0.1",
+            "debug_key": "debugKey3",
+            "enrollment_id": "enrollment_id",
+            "debug_report_status": 0,
+            "contribution_value": 32768,
+            "contribution_time": 20000000
+          }
+        ]
+      },
+      "param": {
+        "response_code": 200,
+        "registration_origin": "https://subdomain.example.test"
+      }
+    },
+    {
+      "name": "Single pending report network failure",
+      "input": {
+        "sources": [],
+        "triggers": [],
+        "event_reports": [],
+        "attributions": [],
+        "aggregate_reports": [],
+        "count_unique_reports": [
+          {
+            "id":  "CUR1",
+            "context_id": "contextId",
+            "debug_cleartext_payload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768,\"id\":1}]}",
+            "reporting_origin": "https://subdomain.example.test",
+            "status": 1,
+            "scheduled_report_time": 20000000,
+            "api_version": "0.1",
+            "debug_key": "debugKey",
+            "enrollment_id": "enrollment_id",
+            "debug_report_status": 0,
+            "contribution_value": 32768,
+            "contribution_time": 20000000
+          }
+        ]
+      },
+      "output": {
+        "sources": [],
+        "triggers": [],
+        "event_reports": [],
+        "attributions": [],
+        "aggregate_reports": [],
+        "count_unique_reports": [
+          {
+            "id":  "CUR1",
+            "context_id": "contextId",
+            "debug_cleartext_payload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768,\"id\":1}]}",
+            "reporting_origin": "https://subdomain.example.test",
+            "status": 1,
+            "scheduled_report_time": 20000000,
+            "api_version": "0.1",
+            "debug_key": "debugKey",
+            "enrollment_id": "enrollment_id",
+            "debug_report_status": 0,
+            "contribution_value": 32768,
+            "contribution_time": 20000000
+          }
+        ]
+      },
+      "param": {
+        "response_code": 400,
+        "registration_origin": "https://subdomain.example.test"
+      }
+    },
+    {
+      "name": "Single report already uploaded",
+      "input": {
+        "sources": [],
+        "triggers": [],
+        "event_reports": [],
+        "attributions": [],
+        "aggregate_reports": [],
+        "count_unique_reports": [
+          {
+            "id":  "CUR1",
+            "context_id": "contextId",
+            "debug_cleartext_payload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768,\"id\":1}]}",
+            "reporting_origin": "https://subdomain.example.test",
+            "status": 2,
+            "scheduled_report_time": 20000000,
+            "api_version": "0.1",
+            "debug_key": "debugKey",
+            "enrollment_id": "enrollment_id",
+            "debug_report_status": 0,
+            "contribution_value": 32768,
+            "contribution_time": 20000000
+          }
+        ]
+      },
+      "output": {
+        "sources": [],
+        "triggers": [],
+        "event_reports": [],
+        "attributions": [],
+        "aggregate_reports": [],
+        "count_unique_reports": [
+          {
+            "id":  "CUR1",
+            "context_id": "contextId",
+            "debug_cleartext_payload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768,\"id\":1}]}",
+            "reporting_origin": "https://subdomain.example.test",
+            "status": 2,
+            "scheduled_report_time": 20000000,
+            "api_version": "0.1",
+            "debug_key": "debugKey",
+            "enrollment_id": "enrollment_id",
+            "debug_report_status": 0,
+            "contribution_value": 32768,
+            "contribution_time": 20000000
+          }
+        ]
+      },
+      "param": {
+        "response_code": 200,
+        "registration_origin": "https://subdomain.example.test"
+      }
+    }
+  ]
+}

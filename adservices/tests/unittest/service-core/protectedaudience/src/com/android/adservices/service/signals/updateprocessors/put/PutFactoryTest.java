@@ -17,30 +17,48 @@
 package com.android.adservices.service.signals.updateprocessors.put;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.when;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.signals.SignalUpdates.UpdateSchemaVersion;
+import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerFactory;
+import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerNoOpImpl;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
-public class PutFactoryTest extends AdServicesUnitTestCase {
+public class PutFactoryTest extends AdServicesMockitoTestCase {
     private static final int UNSUPPORTED_VERSION = -1;
 
-    private final PutFactory mPutFactory = new PutFactory();
+    @Mock private EvictionPriorityHandlerFactory mEvictionPriorityHandlerFactoryMock;
+
+    private PutFactory mPutFactory;
+
+    @Before
+    public void setup() {
+        when(mEvictionPriorityHandlerFactoryMock.getHandler())
+                .thenReturn(new EvictionPriorityHandlerNoOpImpl());
+        mPutFactory = new PutFactory(mEvictionPriorityHandlerFactoryMock);
+    }
 
     @Test
     public void testGetUpdateProcessor_supportedVersions() {
-        expect.withMessage("Expected update processor for schema version " + UpdateSchemaVersion.V0)
+        expect.withMessage("v0 processor")
                 .that(mPutFactory.getUpdateProcessor(UpdateSchemaVersion.V0))
                 .isInstanceOf(PutV0.class);
+
+        expect.withMessage("v1 processor")
+                .that(mPutFactory.getUpdateProcessor(UpdateSchemaVersion.V1))
+                .isInstanceOf(PutV1.class);
     }
 
     @Test
     public void testGetUpdateProcessor_unsupportedVersion() {
         assertThrows(
-                "Expected exception for unsupported version " + UNSUPPORTED_VERSION,
+                "Expected exception",
                 IllegalArgumentException.class,
                 () -> mPutFactory.getUpdateProcessor(UNSUPPORTED_VERSION));
     }

@@ -31,37 +31,54 @@ public class UpdateProcessorUtils {
     private static final int VALUE_MAX_SIZE_BYTES = 100;
 
     /**
-     * Casts the given update object to a JSONArray throwing an appropriate error if the input is
-     * not a JSONArray.
+     * Casts the given value to a JSONArray, throwing an appropriate error if the input is not a
+     * JSONArray.
      *
-     * @param commandName The name of the command running this method (needed for constructing the
-     *     error message in the event of a failure).
-     * @param updates The JSONArray to be cast.
+     * @param commandName The name of the command running this method (needed to construct the error
+     *     message in the event of a failure).
+     * @param toCast The JSONArray to be cast.
      * @return The post-cast JSONArray.
      */
-    public static JSONArray castToJSONArray(String commandName, Object updates) {
-        if (!(updates instanceof JSONArray)) {
+    public static JSONArray validateAndCastToJSONArray(String commandName, Object toCast) {
+        if (!(toCast instanceof JSONArray)) {
             throw new IllegalArgumentException(
                     String.format("Value for \"%s\" must be a JSON array", commandName));
         }
-        return (JSONArray) updates;
+        return (JSONArray) toCast;
     }
 
     /**
-     * Casts the given update object to a JSONObject throwing an appropriate error if the input is
-     * not a JSONObject.
+     * Casts the given value to a JSONObject, throwing an appropriate error if the input is not a
+     * JSONObject.
      *
-     * @param commandName The name of the command running this method (needed for constructing the
-     *     error message in the event of a failure).
-     * @param updates The JSONObject to be cast.
+     * @param commandName The name of the command running this method (needed to construct the error
+     *     message in the event of a failure).
+     * @param toCast The JSONObject to be cast.
      * @return The post-cast JSONObject.
      */
-    public static JSONObject castToJSONObject(String commandName, Object updates) {
-        if (!(updates instanceof JSONObject)) {
+    public static JSONObject validateAndCastToJSONObject(String commandName, Object toCast) {
+        if (!(toCast instanceof JSONObject)) {
             throw new IllegalArgumentException(
                     String.format("Value for \"%s\" must be a JSON object", commandName));
         }
-        return (JSONObject) updates;
+        return (JSONObject) toCast;
+    }
+
+    /**
+     * Casts the given value to a String, throwing an appropriate error if the input is not a
+     * String.
+     *
+     * @param commandName The name of the command running this method (needed to construct the error
+     *     message in the event of a failure).
+     * @param toCast The String to be cast.
+     * @return The post-cast String.
+     */
+    public static String validateAndCastToString(String commandName, Object toCast) {
+        if (!(toCast instanceof String)) {
+            throw new IllegalArgumentException(
+                    String.format("Value for \"%s\" must be a string", commandName));
+        }
+        return (String) toCast;
     }
 
     /**

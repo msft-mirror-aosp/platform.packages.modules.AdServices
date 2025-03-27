@@ -44,6 +44,7 @@ import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
@@ -1014,6 +1015,14 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
         if (filteringId != null) {
             contribution.put("id", filteringId);
         }
-        return contribution.toString();
+
+        JSONArray contributions = new JSONArray();
+        contributions.put(contribution);
+
+        JSONObject payload = new JSONObject();
+        payload.put("operation", "histogram");
+        payload.put("data", contributions);
+
+        return payload.toString();
     }
 }

@@ -40,10 +40,11 @@ public abstract class SignalUpdates {
 
     @IntDef(
             flag = true,
-            value = {UpdateSchemaVersion.V0})
+            value = {UpdateSchemaVersion.V0, UpdateSchemaVersion.V1})
     @Retention(RetentionPolicy.SOURCE)
     public @interface UpdateSchemaVersion {
         int V0 = 0;
+        int V1 = 1;
     }
 
     /** The signal update schema version. */

@@ -175,7 +175,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private final ArrayMap<CallingInfo, IBinder> mCallingInfosWithDeathRecipients =
             new ArrayMap<>();
 
-    @GuardedBy("mLock")
+    // This is accessed when ActivityManagerService calls into SdkSandboxManagerService. Use a
+    // different lock to avoid deadlocks.
+    @GuardedBy("mRunningInstrumentations")
     private final Set<CallingInfo> mRunningInstrumentations = new ArraySet<>();
 
     @GuardedBy("mLock")
@@ -756,11 +758,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
             enforceCallerHasNetworkAccess(callingPackageName);
             enforceCallerOrItsSandboxRunInForeground(callingInfo);
-            synchronized (mLock) {
-                if (mRunningInstrumentations.contains(callingInfo)) {
-                    throw new SecurityException(
-                            "Currently running instrumentation of this sdk sandbox process");
-                }
+            if (isInstrumentationRunning(callingInfo)) {
+                throw new SecurityException(
+                        "Currently running instrumentation of this sdk sandbox process");
             }
 
             if (isSdkSandboxDisabled()) {
@@ -2038,7 +2038,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         + callingInfo.getPackageName()
                         + " clientAppUid = "
                         + callingInfo.getUid());
-        synchronized (mLock) {
+        synchronized (mRunningInstrumentations) {
             mServiceProvider.unbindService(callingInfo);
             int sdkSandboxUid = Process.toSdkSandboxUid(callingInfo.getUid());
             mActivityManager.killUid(sdkSandboxUid, "instrumentation started");
@@ -2052,13 +2052,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private void notifyInstrumentationFinished(CallingInfo callingInfo) {
         Log.d(TAG, "notifyInstrumentationFinished: clientApp = " + callingInfo.getPackageName()
                 + " clientAppUid = " + callingInfo.getUid());
-        synchronized (mLock) {
+        synchronized (mRunningInstrumentations) {
             mRunningInstrumentations.remove(callingInfo);
         }
     }
 
     private boolean isInstrumentationRunning(CallingInfo callingInfo) {
-        synchronized (mLock) {
+        synchronized (mRunningInstrumentations) {
             return mRunningInstrumentations.contains(callingInfo);
         }
     }
@@ -2138,14 +2138,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return InterceptCase.NO_INTERCEPT;
             }
             final ApplicationInfo applicationInfo = info.getActivityInfo().applicationInfo;
-            synchronized (mLock) {
-                if (applicationInfo.packageName != null
-                        && mRunningInstrumentations.contains(
-                                new CallingInfo(applicationInfo.uid, applicationInfo.packageName))
-                        && isSdkSandboxAllowedToStartActivities(
-                                info.getCallingPid(), info.getCallingUid())) {
-                    return InterceptCase.INSTRUMENTATION_ACTIVITY;
-                }
+            if (applicationInfo.packageName != null
+                    && isSdkSandboxAllowedToStartActivities(
+                            info.getCallingPid(), info.getCallingUid())
+                    && isInstrumentationRunning(
+                            new CallingInfo(applicationInfo.uid, applicationInfo.packageName))) {
+                return InterceptCase.INSTRUMENTATION_ACTIVITY;
             }
 
             return InterceptCase.NO_INTERCEPT;
@@ -2556,16 +2554,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             // the intent identifier to match it against the running instrumentations.
             final String instrumentationPackageName = intent.getIdentifier();
             final int appUid = Process.getAppUidForSdkSandboxUid(callingUid);
-            synchronized (mLock) {
-                if (instrumentationPackageName != null
-                        && Process.isSdkSandboxUid(callingUid)
-                        && mRunningInstrumentations.contains(
-                                new CallingInfo(appUid, instrumentationPackageName))
-                        && isSdkSandboxAllowedToStartActivities(
-                                Binder.getCallingPid(), callingUid)) {
-                    // allow launching activities for sdk-in-sandbox instrumented tests.
-                    return;
-                }
+            if (instrumentationPackageName != null
+                    && Process.isSdkSandboxUid(callingUid)
+                    && isSdkSandboxAllowedToStartActivities(Binder.getCallingPid(), callingUid)
+                    && isInstrumentationRunning(instrumentationPackageName, appUid)) {
+                // allow launching activities for sdk-in-sandbox instrumented tests.
+                return;
             }
             throw new SecurityException(
                     "Intent "

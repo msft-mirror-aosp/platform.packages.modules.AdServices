@@ -26,6 +26,8 @@ import android.adservices.common.CommonFixture;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.devapi.DevContext;
 
+import com.google.common.truth.Expect;
+
 import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -138,6 +140,27 @@ public final class SignalsFixture {
                         .map(SignalsFixture::signalToStringNoTimeOrId)
                         .collect(Collectors.toSet());
         assertEquals(expectedSet, actualSet);
+    }
+
+    public static void expectThatSignalBuilderListsAreEqual(
+            Expect expect,
+            String message,
+            List<DBProtectedSignal.Builder> actual,
+            List<DBProtectedSignal.Builder> expected) {
+        List<DBProtectedSignal> actualBuilt =
+                actual.stream()
+                        .map(SignalsFixture::addMissingFieldsAndBuildSignal)
+                        .collect(Collectors.toList());
+        List<DBProtectedSignal> expectedBuilt =
+                expected.stream()
+                        .map(SignalsFixture::addMissingFieldsAndBuildSignal)
+                        .collect(Collectors.toList());
+        expect.withMessage(message).that(actualBuilt).containsExactlyElementsIn(expectedBuilt);
+    }
+
+    private static DBProtectedSignal addMissingFieldsAndBuildSignal(
+            DBProtectedSignal.Builder builder) {
+        return builder.setBuyer(ADTECH).setPackageName(PACKAGE).setCreationTime(NOW).build();
     }
 
     private static String signalToStringNoTimeOrId(DBProtectedSignal signal) {

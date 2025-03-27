@@ -18,9 +18,17 @@ package com.android.adservices.service.measurement;
 
 import android.net.Uri;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.common.WebUtil;
+import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
+import org.json.JSONException;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public final class CountUniqueReportFixture {
@@ -34,7 +42,9 @@ public final class CountUniqueReportFixture {
                 .setScheduledReportTime(ValidCountUniqueParams.SCHEDULED_REPORT_TIME)
                 .setReportingOrigin(ValidCountUniqueParams.REPORTING_ORIGIN)
                 .setDebugKey(ValidCountUniqueParams.DEBUG_KEY.toString())
-                .setContextId(ValidCountUniqueParams.CONTEXT_ID);
+                .setContextId(ValidCountUniqueParams.CONTEXT_ID)
+                .setPayload(ValidCountUniqueParams.getDebugPayload())
+                .setApiVersion(ValidCountUniqueParams.API_VERSION);
     }
 
     public static class ValidCountUniqueParams {
@@ -43,5 +53,26 @@ public final class CountUniqueReportFixture {
                 WebUtil.validUri("https://subdomain.example.test");
         public static final UnsignedLong DEBUG_KEY = new UnsignedLong(67878545L);
         public static final String CONTEXT_ID = "context_id";
+        public static final String API = "shared-storage";
+        public static final String API_VERSION = "0.1";
+
+        /** Get sample debug cleartext payload. */
+        public static String getDebugPayload() {
+            AggregateHistogramContribution contribution =
+                    new AggregateHistogramContribution.Builder()
+                            .setKey(BigInteger.valueOf(1369L))
+                            .setValue(32768)
+                            .build();
+
+            List<AggregateHistogramContribution> contributions = new ArrayList<>();
+            contributions.add(contribution);
+            String debugPayload = null;
+            try {
+                debugPayload = AggregateReport.generateDebugPayload(contributions);
+            } catch (JSONException e) {
+                LogUtil.e("JSONException when generating debug payload.");
+            }
+            return debugPayload;
+        }
     }
 }

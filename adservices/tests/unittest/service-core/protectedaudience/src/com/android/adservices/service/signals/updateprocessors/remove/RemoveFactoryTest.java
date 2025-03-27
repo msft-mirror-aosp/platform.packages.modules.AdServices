@@ -32,15 +32,19 @@ public class RemoveFactoryTest extends AdServicesUnitTestCase {
 
     @Test
     public void testGetUpdateProcessor_supportedVersions() {
-        expect.withMessage("Expected update processor for schema version " + UpdateSchemaVersion.V0)
+        expect.withMessage("v0 processor")
                 .that(mRemoveFactory.getUpdateProcessor(UpdateSchemaVersion.V0))
+                .isInstanceOf(RemoveV0.class);
+
+        expect.withMessage("v1 processor")
+                .that(mRemoveFactory.getUpdateProcessor(UpdateSchemaVersion.V1))
                 .isInstanceOf(RemoveV0.class);
     }
 
     @Test
     public void testGetUpdateProcessor_unsupportedVersion() {
         assertThrows(
-                "Expected exception for unsupported version " + UNSUPPORTED_VERSION,
+                "Expected exception",
                 IllegalArgumentException.class,
                 () -> mRemoveFactory.getUpdateProcessor(UNSUPPORTED_VERSION));
     }
