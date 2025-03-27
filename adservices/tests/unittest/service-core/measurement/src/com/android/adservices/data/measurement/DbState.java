@@ -24,6 +24,7 @@ import android.net.Uri;
 
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.measurement.Attribution;
+import com.android.adservices.service.measurement.CountUniqueReport;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.Source;
@@ -65,6 +66,7 @@ public class DbState {
     List<DebugReport> mDebugReportList;
     List<AsyncRegistration> mAsyncRegistrationList;
     List<KeyValueData> mKeyValueDataList;
+    List<CountUniqueReport> mCountUniqueReportList;
 
     public DbState() {
         mSourceList = new ArrayList<>();
@@ -77,6 +79,7 @@ public class DbState {
         mDebugReportList = new ArrayList<>();
         mAsyncRegistrationList = new ArrayList<>();
         mKeyValueDataList = new ArrayList<>();
+        mCountUniqueReportList = new ArrayList<>();
     }
 
     public DbState(JSONObject testInput) throws JSONException {
@@ -179,6 +182,15 @@ public class DbState {
                 JSONObject aJSON = keyValues.getJSONObject(i);
                 KeyValueData keyValueData = getKeyValueDataFrom(aJSON);
                 mKeyValueDataList.add(keyValueData);
+            }
+        }
+
+        if (testInput.has("count_unique_reports")) {
+            JSONArray countUniqueReports = testInput.getJSONArray("count_unique_reports");
+            for (int i = 0; i < countUniqueReports.length(); i++) {
+                JSONObject cJSON = countUniqueReports.getJSONObject(i);
+                CountUniqueReport countUniqueReport = getCountUniqueReportFrom(cJSON);
+                mCountUniqueReportList.add(countUniqueReport);
             }
         }
     }
@@ -313,6 +325,22 @@ public class DbState {
             mKeyValueDataList.add(builder.build());
         }
         keyValueDataCursor.close();
+
+        // Read CountUniqueReport table
+        Cursor countUniqueReportCursor =
+                readerDB.query(
+                        MeasurementTables.CountUniqueReportingContract.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        MeasurementTables.CountUniqueReportingContract.REPORT_ID);
+        while (countUniqueReportCursor.moveToNext()) {
+            mCountUniqueReportList.add(
+                    SqliteObjectMapper.constructCountUniqueReport(countUniqueReportCursor));
+        }
+        countUniqueReportCursor.close();
     }
 
     public void sortAll() {
@@ -347,6 +375,9 @@ public class DbState {
         mAsyncRegistrationList.sort(Comparator.comparing(AsyncRegistration::getRequestTime));
 
         mKeyValueDataList.sort(Comparator.comparing(KeyValueData::getKey));
+
+        mCountUniqueReportList.sort(
+                Comparator.comparing(CountUniqueReport::getScheduledReportTime));
     }
 
     public List<AggregateEncryptionKey> getAggregateEncryptionKeyList() {
@@ -618,6 +649,23 @@ public class DbState {
                 .setSourceType(Source.SourceType.values()[aJSON.getInt("sourceType")])
                 .setRedirectBehavior(
                         AsyncRedirect.RedirectBehavior.valueOf(aJSON.getString("redirectBehavior")))
+                .build();
+    }
+
+    private CountUniqueReport getCountUniqueReportFrom(JSONObject cJSON) throws JSONException {
+        return new CountUniqueReport.Builder()
+                .setReportId(cJSON.getString("id"))
+                .setContextId(cJSON.optString("context_id"))
+                .setPayload(cJSON.getString("debug_cleartext_payload"))
+                .setReportingOrigin(Uri.parse(cJSON.getString("reporting_origin")))
+                .setStatus(cJSON.getInt("status"))
+                .setScheduledReportTime(cJSON.getLong("scheduled_report_time"))
+                .setApiVersion(cJSON.getString("api_version"))
+                .setDebugKey(cJSON.optString("debug_key"))
+                .setContributionTime(cJSON.optLong("contribution_time"))
+                .setContributionValue(cJSON.optInt("contribution_value"))
+                .setDebugReportStatus(cJSON.optInt("debug_report_status"))
+                .setEnrollmentId(cJSON.optString("enrollment_id"))
                 .build();
     }
 

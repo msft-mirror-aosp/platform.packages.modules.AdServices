@@ -44,7 +44,7 @@ public class CountUniqueReportBody {
     @Nullable private String mContextId;
 
     @Nullable private String mDebugKey;
-    private Uri mAggregationCoordinatorOrigin;
+    @Nullable private Uri mAggregationCoordinatorOrigin;
 
     interface PayloadBodyKeys {
         String SHARED_INFO = "shared_info";
@@ -101,7 +101,7 @@ public class CountUniqueReportBody {
             countUniqueBodyJson.put(PayloadBodyKeys.DEBUG_KEY, mDebugKey);
         }
 
-        if (flags.getMeasurementAggregationCoordinatorOriginEnabled()) {
+        if (mAggregationCoordinatorOrigin != null) {
             countUniqueBodyJson.put(
                     PayloadBodyKeys.AGGREGATION_COORDINATOR_ORIGIN,
                     mAggregationCoordinatorOrigin.toString());
