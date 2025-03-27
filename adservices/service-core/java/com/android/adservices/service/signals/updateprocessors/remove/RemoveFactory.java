@@ -29,12 +29,12 @@ import java.util.Locale;
 /** Factory class for the {@link Remove} update processor. */
 public class RemoveFactory extends UpdateProcessorFactory {
     private static final List<Integer> SUPPORTED_VERSIONS =
-            ImmutableList.of(UpdateSchemaVersion.V0);
+            ImmutableList.of(UpdateSchemaVersion.V0, UpdateSchemaVersion.V1);
 
     @Override
     public Remove getUpdateProcessor(@UpdateSchemaVersion int version) {
         return switch (version) {
-            case UpdateSchemaVersion.V0 -> new RemoveV0();
+            case UpdateSchemaVersion.V0, UpdateSchemaVersion.V1 -> new RemoveV0();
             default ->
                     throw new IllegalArgumentException(
                             String.format(

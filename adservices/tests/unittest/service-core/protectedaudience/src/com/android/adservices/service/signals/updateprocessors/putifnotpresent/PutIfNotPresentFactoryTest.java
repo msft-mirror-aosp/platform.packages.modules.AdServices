@@ -17,30 +17,48 @@
 package com.android.adservices.service.signals.updateprocessors.putifnotpresent;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.when;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.signals.SignalUpdates.UpdateSchemaVersion;
+import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerFactory;
+import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerNoOpImpl;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
-public class PutIfNotPresentFactoryTest extends AdServicesUnitTestCase {
+public class PutIfNotPresentFactoryTest extends AdServicesMockitoTestCase {
     private static final int UNSUPPORTED_VERSION = -1;
 
-    private final PutIfNotPresentFactory mPutIfNotPresentFactory = new PutIfNotPresentFactory();
+    @Mock private EvictionPriorityHandlerFactory mEvictionPriorityHandlerFactoryMock;
+
+    private PutIfNotPresentFactory mPutIfNotPresentFactory;
+
+    @Before
+    public void setup() {
+        when(mEvictionPriorityHandlerFactoryMock.getHandler())
+                .thenReturn(new EvictionPriorityHandlerNoOpImpl());
+        mPutIfNotPresentFactory = new PutIfNotPresentFactory(mEvictionPriorityHandlerFactoryMock);
+    }
 
     @Test
     public void testGetUpdateProcessor_supportedVersions() {
-        expect.withMessage("Expected update processor for schema version " + UpdateSchemaVersion.V0)
+        expect.withMessage("v0 processor")
                 .that(mPutIfNotPresentFactory.getUpdateProcessor(UpdateSchemaVersion.V0))
                 .isInstanceOf(PutIfNotPresentV0.class);
+
+        expect.withMessage("v1 processor")
+                .that(mPutIfNotPresentFactory.getUpdateProcessor(UpdateSchemaVersion.V1))
+                .isInstanceOf(PutIfNotPresentV1.class);
     }
 
     @Test
     public void testGetUpdateProcessor_unsupportedVersion() {
         assertThrows(
-                "Expected exception for unsupported version " + UNSUPPORTED_VERSION,
+                "Expected exception",
                 IllegalArgumentException.class,
                 () -> mPutIfNotPresentFactory.getUpdateProcessor(UNSUPPORTED_VERSION));
     }

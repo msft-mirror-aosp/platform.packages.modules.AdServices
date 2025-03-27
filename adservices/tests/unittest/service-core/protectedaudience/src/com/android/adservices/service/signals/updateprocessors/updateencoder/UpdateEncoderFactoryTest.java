@@ -32,15 +32,19 @@ public class UpdateEncoderFactoryTest extends AdServicesUnitTestCase {
 
     @Test
     public void testGetUpdateProcessor_supportedVersions() {
-        expect.withMessage("Expected update processor for schema version " + UpdateSchemaVersion.V0)
+        expect.withMessage("v0 processor")
                 .that(mUpdateEncoderFactory.getUpdateProcessor(UpdateSchemaVersion.V0))
+                .isInstanceOf(UpdateEncoderV0.class);
+
+        expect.withMessage("v1 processor")
+                .that(mUpdateEncoderFactory.getUpdateProcessor(UpdateSchemaVersion.V1))
                 .isInstanceOf(UpdateEncoderV0.class);
     }
 
     @Test
     public void testGetUpdateProcessor_unsupportedVersion() {
         assertThrows(
-                "Expected exception for unsupported version " + UNSUPPORTED_VERSION,
+                "Expected exception",
                 IllegalArgumentException.class,
                 () -> mUpdateEncoderFactory.getUpdateProcessor(UNSUPPORTED_VERSION));
     }
