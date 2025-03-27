@@ -45,7 +45,7 @@ public class RemoveV0 extends Remove {
     public UpdateOutput processUpdates(
             Object updates, Map<ByteBuffer, Set<DBProtectedSignal>> current) throws JSONException {
         UpdateOutput toReturn = new UpdateOutput();
-        JSONArray updatesArray = UpdateProcessorUtils.castToJSONArray(REMOVE, updates);
+        JSONArray updatesArray = UpdateProcessorUtils.validateAndCastToJSONArray(REMOVE, updates);
         for (int i = 0; i < updatesArray.length(); i++) {
             ByteBuffer key = UpdateProcessorUtils.decodeKey(REMOVE, updatesArray.getString(i));
             UpdateProcessorUtils.touchKey(key, toReturn.getKeysTouched());

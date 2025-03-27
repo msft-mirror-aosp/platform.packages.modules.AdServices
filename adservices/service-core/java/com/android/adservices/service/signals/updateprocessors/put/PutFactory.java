@@ -20,6 +20,7 @@ import static com.android.adservices.service.signals.updateprocessors.put.Put.PU
 
 import com.android.adservices.service.signals.SignalUpdates.UpdateSchemaVersion;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorFactory;
+import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -29,12 +30,19 @@ import java.util.Locale;
 /** Factory class for the {@link Put} update processor. */
 public class PutFactory extends UpdateProcessorFactory {
     private static final List<Integer> SUPPORTED_VERSIONS =
-            ImmutableList.of(UpdateSchemaVersion.V0);
+            ImmutableList.of(UpdateSchemaVersion.V0, UpdateSchemaVersion.V1);
+
+    private final EvictionPriorityHandlerFactory mEvictionPriorityHandlerFactory;
+
+    public PutFactory(EvictionPriorityHandlerFactory evictionPriorityHandlerFactory) {
+        mEvictionPriorityHandlerFactory = evictionPriorityHandlerFactory;
+    }
 
     @Override
     public Put getUpdateProcessor(@UpdateSchemaVersion int version) {
         return switch (version) {
             case UpdateSchemaVersion.V0 -> new PutV0();
+            case UpdateSchemaVersion.V1 -> new PutV1(mEvictionPriorityHandlerFactory.getHandler());
             default ->
                     throw new IllegalArgumentException(
                             String.format(

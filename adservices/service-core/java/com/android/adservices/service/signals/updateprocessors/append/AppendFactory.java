@@ -20,6 +20,7 @@ import static com.android.adservices.service.signals.updateprocessors.append.App
 
 import com.android.adservices.service.signals.SignalUpdates.UpdateSchemaVersion;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorFactory;
+import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -29,12 +30,20 @@ import java.util.Locale;
 /** Factory class for the {@link Append} update processor. */
 public class AppendFactory extends UpdateProcessorFactory {
     private static final List<Integer> SUPPORTED_VERSIONS =
-            ImmutableList.of(UpdateSchemaVersion.V0);
+            ImmutableList.of(UpdateSchemaVersion.V0, UpdateSchemaVersion.V1);
+
+    private final EvictionPriorityHandlerFactory mEvictionPriorityHandlerFactory;
+
+    public AppendFactory(EvictionPriorityHandlerFactory evictionPriorityHandlerFactory) {
+        mEvictionPriorityHandlerFactory = evictionPriorityHandlerFactory;
+    }
 
     @Override
     public Append getUpdateProcessor(@UpdateSchemaVersion int version) {
         return switch (version) {
             case UpdateSchemaVersion.V0 -> new AppendV0();
+            case UpdateSchemaVersion.V1 ->
+                    new AppendV1(mEvictionPriorityHandlerFactory.getHandler());
             default ->
                     throw new IllegalArgumentException(
                             String.format(

@@ -41,8 +41,8 @@ public class UpdateProcessorSelector {
     public UpdateProcessorSelector(EvictionPriorityHandlerFactory evictionPriorityHandlerFactory) {
         mProcessorFactoryMap =
                 ImmutableMap.of(
-                        APPEND, new AppendFactory(),
-                        PUT, new PutFactory(),
+                        APPEND, new AppendFactory(evictionPriorityHandlerFactory),
+                        PUT, new PutFactory(evictionPriorityHandlerFactory),
                         PUT_IF_NOT_PRESENT, new PutIfNotPresentFactory(),
                         REMOVE, new RemoveFactory(),
                         UPDATE_ENCODER, new UpdateEncoderFactory());
