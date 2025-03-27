@@ -65,6 +65,9 @@ public class CountUniqueReportTest {
         assertWithMessage("countUniqueReport.getContributionTime()")
                 .that(countUniqueReport.getContributionTime())
                 .isEqualTo(555L);
+        assertWithMessage("countUniqueReport.getRegistrant()")
+                .that(countUniqueReport.getRegistrant())
+                .isEqualTo(Uri.parse("android-app://com.example"));
     }
 
     @Test
@@ -110,6 +113,9 @@ public class CountUniqueReportTest {
         assertWithMessage("countUniqueReport.getContributionTime()")
                 .that(countUniqueReport.getContributionTime())
                 .isNull();
+        assertWithMessage("countUniqueReport.getRegistrant()")
+                .that(countUniqueReport.getRegistrant())
+                .isNull();
     }
 
     @Test
@@ -146,6 +152,7 @@ public class CountUniqueReportTest {
                         .setEnrollmentId("different-enrollment")
                         .setContributionValue(4)
                         .setContributionTime(444L)
+                        .setRegistrant(Uri.parse("android-app://com.example2"))
                         .build();
         Set<CountUniqueReport> countUniqueReportSet1 = Set.of(countUniqueReport1);
         Set<CountUniqueReport> countUniqueReportSet2 = Set.of(countUniqueReport2);
@@ -175,6 +182,7 @@ public class CountUniqueReportTest {
                 .setEnrollmentId("test-enrollment-id")
                 .setContributionValue(5)
                 .setContributionTime(555L)
+                .setRegistrant(Uri.parse("android-app://com.example"))
                 .build();
     }
 }

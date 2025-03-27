@@ -682,6 +682,10 @@ public abstract class AbstractDbIntegrationTest extends AdServicesExtendedMockit
         values.put(
                 MeasurementTables.CountUniqueReportingContract.DEBUG_REPORT_STATUS,
                 countUniqueReport.getDebugReportStatus());
+        values.put(
+                MeasurementTables.CountUniqueReportingContract.REGISTRANT,
+                countUniqueReport.getRegistrant().toString());
+
         long row = db.insert(MeasurementTables.CountUniqueReportingContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("CountUniqueReport insertion failed.");

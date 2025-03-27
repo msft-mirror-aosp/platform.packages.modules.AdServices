@@ -27,12 +27,14 @@ public class CountUniqueMetadata {
     private String mKey;
     private Integer mValue;
     private Long mExpirationTime; // async registration time + 30 days
+    private Uri mRegistrant;
 
     public CountUniqueMetadata() {
         mReportingOrigin = null;
         mKey = null;
         mValue = null;
         mExpirationTime = null;
+        mRegistrant = null;
     }
 
     @Override
@@ -43,12 +45,13 @@ public class CountUniqueMetadata {
         return Objects.equals(mReportingOrigin, countUniqueMetadata.mReportingOrigin)
                 && Objects.equals(mKey, countUniqueMetadata.mKey)
                 && Objects.equals(mValue, countUniqueMetadata.mValue)
-                && mExpirationTime.equals(countUniqueMetadata.mExpirationTime);
+                && mExpirationTime.equals(countUniqueMetadata.mExpirationTime)
+                && mRegistrant.equals(countUniqueMetadata.mRegistrant);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mReportingOrigin, mKey, mValue, mExpirationTime);
+        return Objects.hash(mReportingOrigin, mKey, mValue, mExpirationTime, mRegistrant);
     }
 
     /** Reporting origin used to store the metadata */
@@ -69,6 +72,11 @@ public class CountUniqueMetadata {
     /** Expiration time for the metadata */
     public Long getExpirationTime() {
         return mExpirationTime;
+    }
+
+    /** Registrant that stored the metadata */
+    public Uri getRegistrant() {
+        return mRegistrant;
     }
 
     public static class Builder {
@@ -99,6 +107,12 @@ public class CountUniqueMetadata {
         /** See {@link CountUniqueMetadata#getExpirationTime()} ()} */
         public CountUniqueMetadata.Builder setExpirationTime(@NonNull Long expirationTime) {
             mMetadata.mExpirationTime = expirationTime;
+            return this;
+        }
+
+        /** See {@link CountUniqueMetadata#getRegistrant()} */
+        public CountUniqueMetadata.Builder setRegistrant(@NonNull Uri registrant) {
+            mMetadata.mRegistrant = registrant;
             return this;
         }
 

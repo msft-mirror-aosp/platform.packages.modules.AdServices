@@ -202,6 +202,7 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
             return Optional.empty();
         }
         builder.setReportingOrigin(registrationUriOrigin.get());
+        builder.setRegistrant(asyncRegistration.getRegistrant());
         return Optional.of(builder.build());
     }
 
@@ -253,6 +254,7 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
             builder.setDebugReportStatus(CountUniqueReport.ReportDeliveryStatus.NONE);
         }
         builder.setEnrollmentId(enrollmentId);
+        builder.setRegistrant(asyncRegistration.getRegistrant());
         return Optional.of(builder.build());
     }
 

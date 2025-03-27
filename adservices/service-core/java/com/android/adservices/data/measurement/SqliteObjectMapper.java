@@ -611,6 +611,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.CountUniqueReportingContract.CONTRIBUTION_TIME,
                 builder::setContributionTime);
+        setUriColumn(
+                cursor,
+                MeasurementTables.CountUniqueReportingContract.REGISTRANT,
+                builder::setRegistrant);
         return builder.build();
     }
 
@@ -631,6 +635,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.CountUniqueMetadataContract.EXPIRATION_TIME,
                 builder::setExpirationTime);
+        setUriColumn(
+                cursor,
+                MeasurementTables.CountUniqueMetadataContract.REGISTRANT,
+                builder::setRegistrant);
         return builder.build();
     }
 

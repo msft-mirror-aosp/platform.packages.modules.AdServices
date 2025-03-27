@@ -428,6 +428,7 @@ public class ContentValueFixtures {
         public static final String KEY = "test_key";
         public static final long VALUE = 678L;
         public static final long EXPIRATION_TIME = 8640000200L;
+        public static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
     }
 
     public static class CountUniqueReportValues {
@@ -438,6 +439,11 @@ public class ContentValueFixtures {
         public static final String API_VERSION = "1.0";
         public static final String DEBUG_KEY = "debug_key";
         public static final String CONTEXT_ID = "contextId";
+        public static final int DEBUG_STATUS = CountUniqueReport.ReportDeliveryStatus.PENDING;
+        public static final String ENROLLMENT_ID = "123";
+        public static final long CONTRIBUTION_VALUE = 3;
+        public static final long CONTRIBUTION_TIME = 8640000400L;
+        public static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
     }
 
     public static ContentValues generateAsyncRegistrationContentValuesV1() {
@@ -1919,6 +1925,18 @@ public class ContentValueFixtures {
     }
 
     /**
+     * @return Count Unique Metadata for V49
+     */
+    public static ContentValues generateCountUniqueMetadataV49() {
+        ContentValues metadata = generateCountUniqueMetadataV47();
+
+        metadata.put(
+                MeasurementTables.CountUniqueMetadataContract.REGISTRANT,
+                CountUniqueMetadataValues.REGISTRANT.toString());
+        return metadata;
+    }
+
+    /**
      * @return Count Unique Report for V46
      */
     public static ContentValues generateCountUniqueReportingV46() {
@@ -1944,6 +1962,37 @@ public class ContentValueFixtures {
         countUniqueReport.put(
                 MeasurementTables.CountUniqueReportingContract.CONTEXT_ID,
                 CountUniqueReportValues.CONTEXT_ID);
+        return countUniqueReport;
+    }
+
+    /**
+     * @return Count Unique Report for V48
+     */
+    public static ContentValues generateCountUniqueReportingV48() {
+        ContentValues countUniqueReport = generateCountUniqueReportingV46();
+        countUniqueReport.put(
+                MeasurementTables.CountUniqueReportingContract.DEBUG_REPORT_STATUS,
+                CountUniqueReportValues.DEBUG_STATUS);
+        countUniqueReport.put(
+                MeasurementTables.CountUniqueReportingContract.ENROLLMENT_ID,
+                CountUniqueReportValues.ENROLLMENT_ID);
+        countUniqueReport.put(
+                MeasurementTables.CountUniqueReportingContract.CONTRIBUTION_VALUE,
+                CountUniqueReportValues.CONTRIBUTION_VALUE);
+        countUniqueReport.put(
+                MeasurementTables.CountUniqueReportingContract.CONTRIBUTION_TIME,
+                CountUniqueReportValues.CONTRIBUTION_TIME);
+        return countUniqueReport;
+    }
+
+    /**
+     * @return Count Unique Report for V49
+     */
+    public static ContentValues generateCountUniqueReportingV49() {
+        ContentValues countUniqueReport = generateCountUniqueReportingV48();
+        countUniqueReport.put(
+                MeasurementTables.CountUniqueReportingContract.REGISTRANT,
+                CountUniqueReportValues.REGISTRANT.toString());
         return countUniqueReport;
     }
 }
