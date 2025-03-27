@@ -3913,6 +3913,13 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW;
     }
 
+    @ConfigFlag long DEFAULT_COUNT_UNIQUE_REPORT_EXPIRY = TimeUnit.DAYS.toMillis(5);
+
+    /** Default count unique report expiry */
+    default long getMeasurementCountUniqueReportExpiry() {
+        return DEFAULT_COUNT_UNIQUE_REPORT_EXPIRY;
+    }
+
     /** Default min time period between each execution of the Count Unique reporting job. */
     @ConfigFlag
     long DEFAULT_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(2);

@@ -29,6 +29,7 @@ import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRU
 import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET;
 import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW;
 import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW;
+import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_REPORT_EXPIRY;
 import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_LOG_SAMPLING_INFRA;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
@@ -1230,6 +1231,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementCountUniqueMaxContributionLongWindow",
                 DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW,
                 Flags::getMeasurementCountUniqueMaxContributionLongWindow);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueReportExpiry() {
+        testFlag(
+                "getMeasurementCountUniqueReportExpiry",
+                DEFAULT_COUNT_UNIQUE_REPORT_EXPIRY,
+                Flags::getMeasurementCountUniqueReportExpiry);
     }
 
     @Test
