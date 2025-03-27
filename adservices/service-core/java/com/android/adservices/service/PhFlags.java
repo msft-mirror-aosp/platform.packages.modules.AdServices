@@ -139,6 +139,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_BACKGROUN
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_EPOCH_JOB_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS;
 import static com.android.adservices.shared.common.flags.Constants.MAX_PERCENTAGE;
 
 import static java.lang.Float.parseFloat;
@@ -4125,6 +4126,9 @@ public final class PhFlags implements Flags {
         uxMap.put(
                 KEY_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED,
                 getAdServicesConsentDataMigrationEnabled());
+        uxMap.put(
+                KEY_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS,
+                getUiEnableSetAdsPersonalizationStatus());
         return uxMap;
     }
 
@@ -5403,5 +5407,12 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED,
                 DEFAULT_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED);
+    }
+
+    @Override
+    public boolean getUiEnableSetAdsPersonalizationStatus() {
+        return getDeviceConfigFlag(
+                KEY_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS,
+                DEFAULT_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS);
     }
 }

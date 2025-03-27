@@ -18,12 +18,14 @@ package android.adservices.common;
 
 
 import android.adservices.common.AdServicesStates;
+import android.adservices.common.AdsPersonalizationStatusParams;
 import android.adservices.common.UpdateAdServicesModuleStatesParams;
 import android.adservices.common.UpdateAdServicesUserChoicesParams;
 
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.GetAdServicesCommonStatesParams;
 import android.adservices.common.IAdServicesCommonCallback;
+import android.adservices.common.IAdsPersonalizationCallback;
 import android.adservices.common.IAdServicesCommonStatesCallback;
 import android.adservices.common.IEnableAdServicesCallback;
 import android.adservices.common.IRequestAdServicesModuleOverridesCallback;
@@ -63,4 +65,7 @@ interface IAdServicesCommonService {
         in UpdateAdServicesUserChoicesParams params,
         in IRequestAdServicesModuleUserChoicesCallback callback);
 
+    void setAdsPersonalizationStatus(
+        in AdsPersonalizationStatusParams params,
+        in IAdsPersonalizationCallback callback);
 }

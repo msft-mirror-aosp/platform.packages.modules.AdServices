@@ -171,4 +171,15 @@ public final class PermissionHelper {
         return hasPermission(
                 context, appPackageName, AdServicesPermissions.ACCESS_ADSERVICES_STATE);
     }
+
+    /**
+     * Returns if the caller has the permission to set ads personalization status.
+     *
+     * @return {@code true} if the caller has the permission.
+     */
+    public static boolean hasSetAdsPersonalizationStatusPermission(@NonNull Context context) {
+        return PackageManager.PERMISSION_GRANTED
+                == context.checkCallingOrSelfPermission(
+                        AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID);
+    }
 }

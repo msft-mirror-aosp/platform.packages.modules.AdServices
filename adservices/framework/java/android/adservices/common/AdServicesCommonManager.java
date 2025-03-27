@@ -220,6 +220,23 @@ public class AdServicesCommonManager {
     }
 
     /**
+     * Result codes that are common across various APIs.
+     *
+     * @hide
+     */
+    @IntDef(value = {ADS_PERSONALZATION_ENABLED, ADS_PERSONALZATION_DISABLED})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface AdsPersonalizationStatus {}
+
+    /** User opted in state */
+    @FlaggedApi(Flags.FLAG_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS)
+    public static final int ADS_PERSONALZATION_ENABLED = 0;
+
+    /** User opted out state */
+    @FlaggedApi(Flags.FLAG_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS)
+    public static final int ADS_PERSONALZATION_DISABLED = 1;
+
+    /**
      * Create AdServicesCommonManager.
      *
      * @hide
@@ -679,6 +696,60 @@ public class AdServicesCommonManager {
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException calling updateAdIdCache with %s", updateAdIdRequest);
+            executor.execute(
+                    () -> callback.onError(new IllegalStateException("Internal Error!", e)));
+        }
+    }
+
+    /**
+     * Updates {@link AdsPersonalizationStatus} in Adservices when the device account change. This
+     * API is used by AdIdProvider.
+     *
+     * @param adsPersonalizationStatusParams the param that contains {@link
+     *     AdsPersonalizationStatus}.
+     * @param executor the executor for the callback.
+     * @param callback the callback in type {@link OutcomeReceiver}, available on Android T and
+     *     above.
+     * @throws IllegalStateException when service is not available or the feature is not enabled, or
+     *     if there is any {@code Binder} invocation error.
+     * @throws SecurityException when the caller is not authorized to call this API.
+     * @hide
+     */
+    @SystemApi
+    @FlaggedApi(Flags.FLAG_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS)
+    @RequiresPermission(UPDATE_PRIVILEGED_AD_ID)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    public void setAdsPersonalizationStatus(
+            @NonNull AdsPersonalizationStatusParams adsPersonalizationStatusParams,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Boolean, Exception> callback) {
+        Objects.requireNonNull(adsPersonalizationStatusParams);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(callback);
+
+        IAdServicesCommonService service = getService();
+        try {
+            service.setAdsPersonalizationStatus(
+                    adsPersonalizationStatusParams,
+                    new IAdsPersonalizationCallback.Stub() {
+                        @Override
+                        public void onResult(String message) {
+                            executor.execute(() -> callback.onResult(true));
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode) {
+                            executor.execute(
+                                    () ->
+                                            callback.onError(
+                                                    AdServicesStatusUtils.asException(statusCode)));
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e(
+                    e,
+                    "RemoteException calling setAdsPersonalizationStatus with %s",
+                    adsPersonalizationStatusParams);
             executor.execute(
                     () -> callback.onError(new IllegalStateException("Internal Error!", e)));
         }
