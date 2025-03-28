@@ -979,12 +979,17 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                     stats.getMeanRawProtectedSignalsSizeBytes(),
                     stats.getMaxRawProtectedSignalsSizeBytes(),
                     stats.getMinRawProtectedSignalsSizeBytes(),
-                    stats.getSignalEvictorsUsed().stream().mapToInt(Integer::intValue).toArray(),
+                    stats.getSignalEvictorsUsed().stream()
+                            .mapToInt(Integer::intValue)
+                            .sorted()
+                            .toArray(),
                     stats.getUpdatedSignalEvictionPriorities().stream()
                             .mapToInt(EvictionPriority::getValue)
+                            .sorted()
                             .toArray(),
                     stats.getEvictedSignalEvictionPriorities().stream()
                             .mapToInt(EvictionPriority::getValue)
+                            .sorted()
                             .toArray(),
                     stats.getPerBuyerEvictedSignalSize(),
                     stats.getUpdatedSignalsWithEvictionPriorityCount(),

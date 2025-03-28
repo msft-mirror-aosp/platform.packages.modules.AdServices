@@ -16,10 +16,11 @@
 
 package com.android.adservices.service.stats.pas;
 
-import com.android.adservices.service.signals.evict.EvictionPriority;
-import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SignalEvictorType;
 
-import java.util.List;
+import com.android.adservices.service.signals.evict.EvictionPriority;
+
+import java.util.Set;
 
 public class UpdateSignalsProcessReportedLoggerNoLoggingImpl
         implements UpdateSignalsProcessReportedLogger {
@@ -51,20 +52,32 @@ public class UpdateSignalsProcessReportedLoggerNoLoggingImpl
     public void setMinRawProtectedSignalsSizeBytes(float minRawProtectedSignalsSizeBytes) {}
 
     @Override
-    public void setSignalEvictorsUsed(
-            List<@AdsRelevanceStatusUtils.SignalEvictorType Integer> evictorTypes) {}
+    public void setSignalEvictorsUsed(Set<@SignalEvictorType Integer> evictorTypes) {}
 
     @Override
-    public void setUpdatedSignalEvictionPriorities(List<EvictionPriority> evictionPriorities) {}
+    public void addSignalEvictorUsed(@SignalEvictorType int evictorType) {}
 
     @Override
-    public void setEvictedSignalEvictionPriorities(List<EvictionPriority> evictionPriorities) {}
+    public void setUpdatedSignalEvictionPriorities(Set<EvictionPriority> evictionPriorities) {}
+
+    @Override
+    public void addUpdatedSignalEvictionPriority(EvictionPriority evictionPriority) {}
+
+    @Override
+    public void setEvictedSignalEvictionPriorities(Set<EvictionPriority> evictionPriorities) {}
+
+    @Override
+    public void addEvictedSignalEvictionPriority(EvictionPriority evictionPriority) {}
 
     @Override
     public void setPerBuyerEvictedSignalSize(int evictedSignalSize) {}
 
     @Override
-    public void setUpdatedSignalsWithEvictionPriorityCount(int evictionPriorityCount) {}
+    public void setUpdatedSignalsWithEvictionPriorityForCount(
+            Set<String> updatedSignalsWithEvictionPriority) {}
+
+    @Override
+    public void addUpdatedSignalWithEvictionPriorityForCount(String key) {}
 
     @Override
     public void setSignalUpdateSchemaVersion(int updateSchemaVersion) {}

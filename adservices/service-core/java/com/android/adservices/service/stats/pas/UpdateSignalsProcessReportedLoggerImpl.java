@@ -26,9 +26,8 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils.SignalEvictorType;
 import com.android.adservices.shared.util.Clock;
 
-import com.google.common.collect.ImmutableList;
-
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProcessReportedLogger {
 
@@ -43,11 +42,11 @@ public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProc
     private int mPerBuyerSignalSize;
     private float mMaxRawProtectedSignalsSizeBytes;
     private float mMinRawProtectedSignalsSizeBytes;
-    private ImmutableList<Integer> mSignalEvictorsUsed;
-    private ImmutableList<EvictionPriority> mUpdatedSignalEvictionPriorities;
-    private ImmutableList<EvictionPriority> mEvictedSignalEvictionPriorities;
+    private Set<Integer> mSignalEvictorsUsed;
+    private Set<EvictionPriority> mUpdatedSignalEvictionPriorities;
+    private Set<EvictionPriority> mEvictedSignalEvictionPriorities;
     private int mPerBuyerEvictedSignalSize;
-    private int mUpdatedSignalsWithEvictionPriorityCount;
+    private Set<String> mUpdatedSignalsWithEvictionPriority;
     private int mSignalUpdateSchemaVersion;
 
     /** Constructs a {@link UpdateSignalsProcessReportedLoggerImpl} instance. */
@@ -57,11 +56,11 @@ public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProc
         mAdservicesApiStatusCode = FIELD_UNSET;
         mSignalsWrittenCount = SIZE_UNSET;
         mPerBuyerSignalSize = SIZE_UNSET;
-        mSignalEvictorsUsed = ImmutableList.of();
-        mUpdatedSignalEvictionPriorities = ImmutableList.of();
-        mEvictedSignalEvictionPriorities = ImmutableList.of();
+        mSignalEvictorsUsed = new HashSet<>();
+        mUpdatedSignalEvictionPriorities = new HashSet<>();
+        mEvictedSignalEvictionPriorities = new HashSet<>();
         mPerBuyerEvictedSignalSize = SIZE_UNSET;
-        mUpdatedSignalsWithEvictionPriorityCount = SIZE_UNSET;
+        mUpdatedSignalsWithEvictionPriority = new HashSet<>();
         mSignalUpdateSchemaVersion = FIELD_UNSET;
     }
 
@@ -100,7 +99,7 @@ public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProc
                         .setEvictedSignalEvictionPriorities(mEvictedSignalEvictionPriorities)
                         .setPerBuyerEvictedSignalSize(bucketedPerBuyerEvictedSignalSize)
                         .setUpdatedSignalsWithEvictionPriorityCount(
-                                mUpdatedSignalsWithEvictionPriorityCount)
+                                mUpdatedSignalsWithEvictionPriority.size())
                         .setSignalUpdateSchemaVersion(mSignalUpdateSchemaVersion)
                         .build());
     }
@@ -149,18 +148,33 @@ public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProc
     }
 
     @Override
-    public void setSignalEvictorsUsed(List<@SignalEvictorType Integer> evictorTypes) {
-        mSignalEvictorsUsed = ImmutableList.copyOf(evictorTypes);
+    public void setSignalEvictorsUsed(Set<@SignalEvictorType Integer> evictorTypes) {
+        mSignalEvictorsUsed = new HashSet<>(evictorTypes);
     }
 
     @Override
-    public void setUpdatedSignalEvictionPriorities(List<EvictionPriority> evictionPriorities) {
-        mUpdatedSignalEvictionPriorities = ImmutableList.copyOf(evictionPriorities);
+    public void addSignalEvictorUsed(@SignalEvictorType int evictorType) {
+        mSignalEvictorsUsed.add(evictorType);
     }
 
     @Override
-    public void setEvictedSignalEvictionPriorities(List<EvictionPriority> evictionPriorities) {
-        mEvictedSignalEvictionPriorities = ImmutableList.copyOf(evictionPriorities);
+    public void setUpdatedSignalEvictionPriorities(Set<EvictionPriority> evictionPriorities) {
+        mUpdatedSignalEvictionPriorities = new HashSet<>(evictionPriorities);
+    }
+
+    @Override
+    public void addUpdatedSignalEvictionPriority(EvictionPriority evictionPriority) {
+        mUpdatedSignalEvictionPriorities.add(evictionPriority);
+    }
+
+    @Override
+    public void setEvictedSignalEvictionPriorities(Set<EvictionPriority> evictionPriorities) {
+        mEvictedSignalEvictionPriorities = new HashSet<>(evictionPriorities);
+    }
+
+    @Override
+    public void addEvictedSignalEvictionPriority(EvictionPriority evictionPriority) {
+        mEvictedSignalEvictionPriorities.add(evictionPriority);
     }
 
     @Override
@@ -169,8 +183,14 @@ public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProc
     }
 
     @Override
-    public void setUpdatedSignalsWithEvictionPriorityCount(int evictionPriorityCount) {
-        mUpdatedSignalsWithEvictionPriorityCount = evictionPriorityCount;
+    public void setUpdatedSignalsWithEvictionPriorityForCount(
+            Set<String> updatedSignalsWithEvictionPriority) {
+        mUpdatedSignalsWithEvictionPriority = new HashSet<>(updatedSignalsWithEvictionPriority);
+    }
+
+    @Override
+    public void addUpdatedSignalWithEvictionPriorityForCount(String key) {
+        mUpdatedSignalsWithEvictionPriority.add(key);
     }
 
     @Override
