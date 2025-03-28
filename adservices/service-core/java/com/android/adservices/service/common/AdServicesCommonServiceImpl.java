@@ -659,7 +659,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             // this is currently not allowed
             return;
         }
-        consentManager.setModuleStates(moduleStates);
+        consentManager.setPendingModuleStates(moduleStates);
     }
 
     private static boolean isAnyToggleOnForNewModule(

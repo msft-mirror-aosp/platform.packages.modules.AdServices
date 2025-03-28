@@ -1362,7 +1362,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         // common checks
         callback.assertSuccess();
         verify(mConsentManager, atLeastOnce())
-                .setModuleStates(mAdservicesModuleStatesArgumentCaptor.capture());
+                .setPendingModuleStates(mAdservicesModuleStatesArgumentCaptor.capture());
 
         // specific checks
         SparseIntArray actualModuleStates = mAdservicesModuleStatesArgumentCaptor.getValue();
@@ -1422,6 +1422,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
 
         callback.assertFailed(STATUS_KILLSWITCH_ENABLED);
         verify(mConsentManager, never()).setModuleStates(any());
+        verify(mConsentManager, never()).setPendingModuleStates(any());
     }
 
     @Test
