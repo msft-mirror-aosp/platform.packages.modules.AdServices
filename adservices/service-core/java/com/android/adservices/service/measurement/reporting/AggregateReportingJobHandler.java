@@ -229,9 +229,6 @@ public class AggregateReportingJobHandler {
     }
 
     private String getAppPackageName(AggregateReport report) {
-        if (!mFlags.getMeasurementEnableAppPackageNameLogging()) {
-            return "";
-        }
         if (report.getSourceId() == null) {
             LoggerFactory.getMeasurementLogger().d("SourceId is null on aggregate report.");
             return "";

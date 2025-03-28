@@ -159,7 +159,6 @@ public class EventReportingJobHandlerTest {
         mMockFlags = mock(Flags.class);
         sContext = spy(ApplicationProvider.getApplicationContext());
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
         mDatastoreManager = new FakeDatasoreManager();
         when(mMeasurementDao.getSourceRegistrant(any())).thenReturn(SOURCE_REGISTRANT);
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowJsonException();
@@ -329,11 +328,12 @@ public class EventReportingJobHandlerTest {
         assertEquals(ReportingStatus.FailureStatus.UNKNOWN, reportingStatus.getFailureStatus());
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mMeasurementDao, times(1)).getSourceRegistrant(eq(SOURCE_ID));
         verify(mSpyEventReportingJobHandler, times(1))
                 .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
 
-        verify(mTransaction, times(2)).begin();
-        verify(mTransaction, times(2)).end();
+        verify(mTransaction, times(3)).begin();
+        verify(mTransaction, times(3)).end();
         verify(mMeasurementDao, times(1))
                 .insertOrUpdateAppReportHistory(
                         eq(APP_DESTINATION), eq(REPORTING_ORIGIN), eq(reportTime));
@@ -394,11 +394,12 @@ public class EventReportingJobHandlerTest {
         assertEquals(ReportingStatus.FailureStatus.UNKNOWN, reportingStatus.getFailureStatus());
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mMeasurementDao, times(1)).getSourceRegistrant(eq(SOURCE_ID));
         verify(mSpyEventReportingJobHandler, times(1))
                 .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
 
-        verify(mTransaction, times(2)).begin();
-        verify(mTransaction, times(2)).end();
+        verify(mTransaction, times(3)).begin();
+        verify(mTransaction, times(3)).end();
         verify(mMeasurementDao, never()).insertOrUpdateAppReportHistory(any(), any(), anyLong());
     }
 
@@ -458,11 +459,12 @@ public class EventReportingJobHandlerTest {
         assertEquals(ReportingStatus.FailureStatus.UNKNOWN, reportingStatus.getFailureStatus());
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mMeasurementDao, times(1)).getSourceRegistrant(eq(SOURCE_ID));
         verify(mSpyEventReportingJobHandler, times(1))
                 .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
 
-        verify(mTransaction, times(2)).begin();
-        verify(mTransaction, times(2)).end();
+        verify(mTransaction, times(3)).begin();
+        verify(mTransaction, times(3)).end();
         verify(mMeasurementDao, never()).insertOrUpdateAppReportHistory(any(), any(), anyLong());
     }
 
@@ -1181,10 +1183,11 @@ public class EventReportingJobHandlerTest {
         assertEquals(ReportingStatus.UploadStatus.SUCCESS, reportingStatus.getUploadStatus());
         assertEquals(ReportingStatus.FailureStatus.UNKNOWN, reportingStatus.getFailureStatus());
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mMeasurementDao, times(1)).getSourceRegistrant(eq(SOURCE_ID));
         verify(mSpyEventReportingJobHandler, times(1))
                 .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
-        verify(mTransaction, times(3)).begin();
-        verify(mTransaction, times(3)).end();
+        verify(mTransaction, times(4)).begin();
+        verify(mTransaction, times(4)).end();
     }
 
     @Test
@@ -1205,10 +1208,11 @@ public class EventReportingJobHandlerTest {
         assertEquals(ReportingStatus.UploadStatus.SUCCESS, reportingStatus.getUploadStatus());
         assertEquals(ReportingStatus.FailureStatus.UNKNOWN, reportingStatus.getFailureStatus());
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mMeasurementDao, times(1)).getSourceRegistrant(eq(SOURCE_ID));
         verify(mSpyEventReportingJobHandler, times(1))
                 .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.TRUE));
-        verify(mTransaction, times(3)).begin();
-        verify(mTransaction, times(3)).end();
+        verify(mTransaction, times(4)).begin();
+        verify(mTransaction, times(4)).end();
     }
 
     @Test
@@ -1229,10 +1233,11 @@ public class EventReportingJobHandlerTest {
         assertEquals(ReportingStatus.UploadStatus.SUCCESS, reportingStatus.getUploadStatus());
         assertEquals(ReportingStatus.FailureStatus.UNKNOWN, reportingStatus.getFailureStatus());
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mMeasurementDao, times(1)).getSourceRegistrant(eq(SOURCE_ID));
         verify(mSpyEventReportingJobHandler, times(1))
                 .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.FALSE));
-        verify(mTransaction, times(3)).begin();
-        verify(mTransaction, times(3)).end();
+        verify(mTransaction, times(4)).begin();
+        verify(mTransaction, times(4)).end();
     }
 
     @Test
@@ -1253,10 +1258,11 @@ public class EventReportingJobHandlerTest {
         assertEquals(ReportingStatus.UploadStatus.SUCCESS, reportingStatus.getUploadStatus());
         assertEquals(ReportingStatus.FailureStatus.UNKNOWN, reportingStatus.getFailureStatus());
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mMeasurementDao, times(1)).getSourceRegistrant(eq(SOURCE_ID));
         verify(mSpyEventReportingJobHandler, times(1))
                 .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.TRUE));
-        verify(mTransaction, times(3)).begin();
-        verify(mTransaction, times(3)).end();
+        verify(mTransaction, times(4)).begin();
+        verify(mTransaction, times(4)).end();
     }
 
     @Test
@@ -1277,10 +1283,11 @@ public class EventReportingJobHandlerTest {
         assertEquals(ReportingStatus.UploadStatus.SUCCESS, reportingStatus.getUploadStatus());
         assertEquals(ReportingStatus.FailureStatus.UNKNOWN, reportingStatus.getFailureStatus());
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mMeasurementDao, times(1)).getSourceRegistrant(eq(SOURCE_ID));
         verify(mSpyEventReportingJobHandler, times(1))
                 .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.FALSE));
-        verify(mTransaction, times(3)).begin();
-        verify(mTransaction, times(3)).end();
+        verify(mTransaction, times(4)).begin();
+        verify(mTransaction, times(4)).end();
     }
 
     @Test
@@ -1303,10 +1310,11 @@ public class EventReportingJobHandlerTest {
         assertEquals(ReportingStatus.UploadStatus.SUCCESS, reportingStatus.getUploadStatus());
         assertEquals(ReportingStatus.FailureStatus.UNKNOWN, reportingStatus.getFailureStatus());
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mMeasurementDao, times(1)).getSourceRegistrant(eq(SOURCE_ID));
         verify(mSpyEventReportingJobHandler, times(1))
                 .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
-        verify(mTransaction, times(3)).begin();
-        verify(mTransaction, times(3)).end();
+        verify(mTransaction, times(4)).begin();
+        verify(mTransaction, times(4)).end();
     }
 
     @Test
@@ -1330,10 +1338,11 @@ public class EventReportingJobHandlerTest {
         assertEquals(ReportingStatus.UploadStatus.SUCCESS, reportingStatus.getUploadStatus());
         assertEquals(ReportingStatus.FailureStatus.UNKNOWN, reportingStatus.getFailureStatus());
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mMeasurementDao, times(1)).getSourceRegistrant(eq(SOURCE_ID));
         verify(mSpyEventReportingJobHandler, times(1))
                 .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.TRUE));
-        verify(mTransaction, times(3)).begin();
-        verify(mTransaction, times(3)).end();
+        verify(mTransaction, times(4)).begin();
+        verify(mTransaction, times(4)).end();
     }
 
     @Test
@@ -1357,10 +1366,11 @@ public class EventReportingJobHandlerTest {
         assertEquals(ReportingStatus.UploadStatus.SUCCESS, reportingStatus.getUploadStatus());
         assertEquals(ReportingStatus.FailureStatus.UNKNOWN, reportingStatus.getFailureStatus());
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mMeasurementDao, times(1)).getSourceRegistrant(eq(SOURCE_ID));
         verify(mSpyEventReportingJobHandler, times(1))
                 .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.FALSE));
-        verify(mTransaction, times(3)).begin();
-        verify(mTransaction, times(3)).end();
+        verify(mTransaction, times(4)).begin();
+        verify(mTransaction, times(4)).end();
     }
 
     @Test
@@ -1420,10 +1430,11 @@ public class EventReportingJobHandlerTest {
         assertEquals(ReportingStatus.UploadStatus.SUCCESS, reportingStatus.getUploadStatus());
         assertEquals(ReportingStatus.FailureStatus.UNKNOWN, reportingStatus.getFailureStatus());
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mMeasurementDao, times(1)).getSourceRegistrant(eq(SOURCE_ID));
         verify(mSpyEventReportingJobHandler, times(1))
                 .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.TRUE));
-        verify(mTransaction, times(3)).begin();
-        verify(mTransaction, times(3)).end();
+        verify(mTransaction, times(4)).begin();
+        verify(mTransaction, times(4)).end();
     }
 
     @Test
@@ -1482,10 +1493,11 @@ public class EventReportingJobHandlerTest {
         assertEquals(ReportingStatus.UploadStatus.SUCCESS, reportingStatus.getUploadStatus());
         assertEquals(ReportingStatus.FailureStatus.UNKNOWN, reportingStatus.getFailureStatus());
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mMeasurementDao, times(1)).getSourceRegistrant(eq(SOURCE_ID));
         verify(mSpyEventReportingJobHandler, times(1))
                 .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.FALSE));
-        verify(mTransaction, times(3)).begin();
-        verify(mTransaction, times(3)).end();
+        verify(mTransaction, times(4)).begin();
+        verify(mTransaction, times(4)).end();
     }
 
     private void setUpTestForTriggerDebugAvailableHeader(

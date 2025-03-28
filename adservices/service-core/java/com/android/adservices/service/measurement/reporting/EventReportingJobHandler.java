@@ -192,9 +192,6 @@ public class EventReportingJobHandler {
     }
 
     private String getAppPackageName(EventReport eventReport) {
-        if (!mFlags.getMeasurementEnableAppPackageNameLogging()) {
-            return "";
-        }
         if (eventReport.getSourceId() == null) {
             LoggerFactory.getMeasurementLogger().d("SourceId is null on event report.");
             return "";

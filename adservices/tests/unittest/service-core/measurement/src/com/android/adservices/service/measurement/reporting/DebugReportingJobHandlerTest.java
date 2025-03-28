@@ -232,7 +232,6 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
         JSONArray debugReportPayload1 = new JSONArray();
         debugReportPayload1.put(debugReport1.toPayloadJson());
 
-        doReturn(true).when(mMockFlags).getMeasurementEnableAppPackageNameLogging();
         when(mMeasurementDao.getDebugReportIds()).thenReturn(List.of(debugReport1.getId()));
         when(mMeasurementDao.getDebugReport(debugReport1.getId())).thenReturn(debugReport1);
         doReturn(HttpURLConnection.HTTP_OK)
