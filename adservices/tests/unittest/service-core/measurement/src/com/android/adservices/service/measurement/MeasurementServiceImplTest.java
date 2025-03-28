@@ -104,6 +104,7 @@ import com.android.adservices.service.measurement.registration.AsyncRegistration
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.CountUniqueReportingJob;
 import com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
@@ -154,6 +155,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SpyStatic(AsyncRegistrationFallbackJob.class)
 @SpyStatic(VerboseDebugReportingFallbackJobService.class)
 @SpyStatic(DebugReportingFallbackJobService.class)
+@SpyStatic(CountUniqueReportingJob.class)
 public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final Uri APP_DESTINATION = Uri.parse("android-app://test.app-destination");
@@ -2208,6 +2210,7 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
                                         any(), anyBoolean()));
         doNothing()
                 .when(() -> DebugReportingFallbackJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doNothing().when(CountUniqueReportingJob::schedule);
     }
 
     /**
@@ -2673,6 +2676,7 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
         ExtendedMockito.verify(
                 () -> DebugReportingFallbackJobService.scheduleIfNeeded(any(), anyBoolean()),
                 times(1));
+        ExtendedMockito.verify(CountUniqueReportingJob::schedule, times(1));
     }
 
     private static class AccessDenier {

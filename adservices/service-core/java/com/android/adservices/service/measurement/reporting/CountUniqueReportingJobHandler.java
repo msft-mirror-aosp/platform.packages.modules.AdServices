@@ -27,13 +27,16 @@ import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.CryptoException;
 import com.android.adservices.service.measurement.CountUniqueReport;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
@@ -64,6 +67,16 @@ public class CountUniqueReportingJobHandler {
         mAggregateEncryptionKeyManager = aggregateEncryptionKeyManager;
         mFlags = flags;
         mContext = context;
+    }
+
+    /** Return a new instance of a CountUniqueReportingJobHandler. */
+    public static CountUniqueReportingJobHandler getInstance() {
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager();
+        Context context = ApplicationContextSingleton.get();
+        AggregateEncryptionKeyManager aggregateEncryptionKeyManager =
+                new AggregateEncryptionKeyManager(datastoreManager, context);
+        return new CountUniqueReportingJobHandler(
+                datastoreManager, aggregateEncryptionKeyManager, FlagsFactory.getFlags(), context);
     }
 
     /**

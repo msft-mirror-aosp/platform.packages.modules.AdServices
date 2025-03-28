@@ -24,6 +24,7 @@ import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.TOPICS_EPOCH_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -39,6 +40,7 @@ import com.android.adservices.service.customaudience.BackgroundFetchJob;
 import com.android.adservices.service.customaudience.BackgroundFetchJobService;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJob;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
+import com.android.adservices.service.measurement.reporting.CountUniqueReportingJob;
 import com.android.adservices.service.topics.EpochJob;
 import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
@@ -129,6 +131,11 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
                         mFactory.getJobWorkerInstance(
                                 MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId()))
                 .isInstanceOf(AsyncRegistrationFallbackJob.class);
+        expect.withMessage("getJobWorkerInstance() for MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB")
+                .that(
+                        mFactory.getJobWorkerInstance(
+                                MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB.getJobId()))
+                .isInstanceOf(CountUniqueReportingJob.class);
     }
 
     @Test
