@@ -1096,6 +1096,13 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
+    public void testLogProdDebugEnabledStats() {
+        ProdDebugEnabledStats stats = ProdDebugEnabledStats.create(true);
+        mAdservicesLogger.logProdDebugEnabledStats(stats);
+        verify(mStatsdLoggerMock).logProdDebugEnabledStats(eq(stats));
+    }
+
+    @Test
     public void testLogNumberOfTypesOfReportingUrlsReceivedStats() {
         NumberOfTypesOfReportingUrlsReceivedStats stats =
                 NumberOfTypesOfReportingUrlsReceivedStats.builder()
