@@ -109,6 +109,7 @@ import com.android.adservices.shared.testing.concurrency.SimpleSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import com.google.common.collect.ImmutableList;
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.RecordedRequest;
@@ -276,7 +277,12 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                                                 /* isCompletionBroadcastEnabled= */ true,
                                                 mForcedEncoder,
                                                 false),
-                                        new SignalEvictionController(),
+                                        new SignalEvictionController(
+                                                ImmutableList.of(),
+                                                mFakeFlags
+                                                        .getProtectedSignalsMaxSignalSizePerBuyerBytes(),
+                                                mFakeFlags
+                                                        .getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes()),
                                         mForcedEncoder),
                                 new AdTechUriValidator(
                                         "caller",

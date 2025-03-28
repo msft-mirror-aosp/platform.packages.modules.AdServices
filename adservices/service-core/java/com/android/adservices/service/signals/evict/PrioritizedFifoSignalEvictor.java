@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2025 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,30 +18,32 @@ package com.android.adservices.service.signals.evict;
 
 import android.adservices.common.AdTechIdentifier;
 
+import androidx.annotation.VisibleForTesting;
+
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
-import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Comparator;
 import java.util.List;
 
 /** Signal Evictor based on creation time. */
-public class FifoSignalEvictor implements SignalEvictor {
+public class PrioritizedFifoSignalEvictor implements SignalEvictor {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     @VisibleForTesting
-    static final Comparator<DBProtectedSignal> CREATION_TIME_COMPARATOR =
-            Comparator.comparing(DBProtectedSignal::getCreationTime);
+    static final Comparator<DBProtectedSignal> LOWEST_EVICTION_PRIORITY_THEN_EARLIEST_CREATED =
+            Comparator.comparing(DBProtectedSignal::getEvictionPriority)
+                    .thenComparing(DBProtectedSignal::getCreationTime);
 
     /**
      * {@inheritDoc} Triggers eviction if and only if total size exceeding the oversubscription
      * policy (hard limit).
      *
-     * <p>Removes signal with the oldest creation time from the signal list and adds to the to
-     * remove list in the {@code combinedUpdates} until the total size of signals fall below the
-     * {@code maxAllowedSignalSize}.
+     * <p>Removes signal with the lowest priority and oldest creation time (in that order) from the
+     * signal list and adds to the to remove list in the {@code combinedUpdates} until the total
+     * size of signals fall below the {@code maxAllowedSignalSize}.
      */
     @Override
     public boolean evict(
@@ -51,44 +53,50 @@ public class FifoSignalEvictor implements SignalEvictor {
             int maxAllowedSignalSize,
             int maxAllowedSignalSizeWithOversubscription,
             UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
-        sLogger.v("Start FIFO eviction.");
+        sLogger.v("Start prioritized FIFO eviction.");
         int currentSignalSize = SignalSizeCalculator.calculate(updatedSignals);
-        int evictionRulesCount = 0;
+        int numSignalsToEvict = 0;
 
         if (currentSignalSize <= maxAllowedSignalSizeWithOversubscription) {
-            sLogger.v("Signal size within the limit, skipping the FIFO eviction.");
+            sLogger.v("Signal size within the limit, skipping the prioritized FIFO eviction.");
             setUpdateSignalsProcessReportedLoggerValues(
                     updateSignalsProcessReportedLogger,
-                    evictionRulesCount,
+                    numSignalsToEvict,
                     currentSignalSize,
                     SignalSizeCalculator.maxSignalsSizeBytes(updatedSignals),
                     SignalSizeCalculator.minSignalsSizeBytes(updatedSignals));
             return false;
         }
 
-        updatedSignals.sort(CREATION_TIME_COMPARATOR.reversed());
+        updatedSignals.sort(LOWEST_EVICTION_PRIORITY_THEN_EARLIEST_CREATED);
 
-        // TODO: b/407576879 - Clean up inefficient list mutation
-        while (currentSignalSize > maxAllowedSignalSize) {
-            DBProtectedSignal oldestSignal = updatedSignals.remove(updatedSignals.size() - 1);
-            combinedUpdates.getToRemove().add(oldestSignal);
-            currentSignalSize -= SignalSizeCalculator.calculate(oldestSignal);
-            evictionRulesCount += 1;
+        while (currentSignalSize > maxAllowedSignalSize
+                && numSignalsToEvict < updatedSignals.size()) {
+            currentSignalSize -=
+                    SignalSizeCalculator.calculate(updatedSignals.get(numSignalsToEvict));
+            numSignalsToEvict++;
         }
+
+        combinedUpdates.getToRemove().addAll(updatedSignals.subList(0, numSignalsToEvict));
+
+        List<DBProtectedSignal> updatedSignalsAfterEviction =
+                updatedSignals.subList(numSignalsToEvict, updatedSignals.size());
 
         setUpdateSignalsProcessReportedLoggerValues(
                 updateSignalsProcessReportedLogger,
-                evictionRulesCount,
+                numSignalsToEvict,
                 currentSignalSize,
-                SignalSizeCalculator.maxSignalsSizeBytes(updatedSignals),
-                SignalSizeCalculator.minSignalsSizeBytes(updatedSignals));
+                SignalSizeCalculator.maxSignalsSizeBytes(updatedSignalsAfterEviction),
+                SignalSizeCalculator.minSignalsSizeBytes(updatedSignalsAfterEviction));
 
         sLogger.v(
-                "Finished FIFO signal Eviction, %d signals to add, and %d signals to remove",
+                "Finished prioritized FIFO signal Eviction, %d signals to add, and %d signals to"
+                        + " remove",
                 combinedUpdates.getToAddSize(), combinedUpdates.getToRemoveSize());
         return true;
     }
 
+    // TODO: b/402995096 - Set new eviction metrics here once available.
     private void setUpdateSignalsProcessReportedLoggerValues(
             UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger,
             int evictionRulesCount,

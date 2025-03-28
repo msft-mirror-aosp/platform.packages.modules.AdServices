@@ -97,7 +97,6 @@ import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
@@ -291,9 +290,9 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                 mLegacyFakeFlags.getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes();
         mSignalEvictionController =
                 new SignalEvictionController(
-                        ImmutableList.of(),
                         mLegacyFakeFlags.getProtectedSignalsMaxSignalSizePerBuyerBytes(),
-                        oversubscriptionBytesLimit);
+                        oversubscriptionBytesLimit,
+                        mLegacyFakeFlags.getProtectedSignalsEnablePrioritizedEviction());
 
         mUpdateProcessorSelector =
                 new UpdateProcessorSelector(
