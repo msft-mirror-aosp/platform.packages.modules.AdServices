@@ -2402,6 +2402,45 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public void deleteExpiredCountUniqueRecords(
+            long metadataExpiryTime,
+            long earliestValidContributionTime,
+            long earliestValidReportScheduledTime)
+            throws DatastoreException {
+        SQLiteDatabase db = mSQLTransaction.getDatabase();
+        db.delete(
+                MeasurementTables.CountUniqueMetadataContract.TABLE,
+                MeasurementTables.CountUniqueMetadataContract.EXPIRATION_TIME + " < ?",
+                new String[] {String.valueOf(metadataExpiryTime)});
+
+        // Condition 1 - Delete delivered reports after long time window contribution
+        // budget (1 hour) because we need to persist the reports for minimum 1 hour
+        // to be able to apply the budget
+        // Condition 2 - Delete reports older than 5 days irrespective of status
+        // to clean up stale data.
+        db.delete(
+                CountUniqueReportingContract.TABLE,
+                "("
+                        + getCountUniqueReportExpiryWhereClause()
+                        + ")"
+                        + " OR ("
+                        + CountUniqueReportingContract.SCHEDULED_REPORT_TIME
+                        + " < ?)",
+                new String[] {
+                    String.valueOf(CountUniqueReport.ReportDeliveryStatus.DELIVERED),
+                    String.valueOf(earliestValidContributionTime),
+                    String.valueOf(earliestValidReportScheduledTime)
+                });
+    }
+
+    private String getCountUniqueReportExpiryWhereClause() {
+        return CountUniqueReportingContract.STATUS
+                + " = ? AND "
+                + CountUniqueReportingContract.CONTRIBUTION_TIME
+                + " < ?";
+    }
+
+    @Override
     public List<String> fetchMatchingSources(
             @NonNull Uri registrant,
             @NonNull Instant start,
