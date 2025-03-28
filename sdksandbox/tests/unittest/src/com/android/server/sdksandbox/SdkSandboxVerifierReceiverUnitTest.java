@@ -16,6 +16,9 @@
 
 package com.android.server.sdksandbox;
 
+import static com.android.server.sdksandbox.SdkSandboxSettingsListener.PROPERTY_ENFORCE_RESTRICTIONS;
+import static com.android.server.sdksandbox.SdkSandboxSettingsListener.PROPERTY_VERIFY_DEX_FILES;
+
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
@@ -24,24 +27,19 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
-import android.platform.test.flag.junit.CheckFlagsRule;
-import android.platform.test.flag.junit.DeviceFlagsValueProvider;
-import android.provider.DeviceConfig;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.server.sdksandbox.verifier.SdkDexVerifier;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 
 import java.io.File;
 
@@ -54,14 +52,14 @@ public class SdkSandboxVerifierReceiverUnitTest extends DeviceSupportedBaseTest 
     private static final PackageInfo FAKE_PACKAGE_INFO = new PackageInfo();
     private static final Handler HANDLER = new Handler(Looper.getMainLooper());
 
+    private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
     private SdkSandboxVerifierReceiver mVerifierReceiver;
     private Context mSpyContext;
     private PackageManager mSpyPm;
-    private SdkDexVerifier mSpyDexVerifier;
+    private SdkDexVerifier mDexVerifier;
     private Handler mSpyHandler;
 
-    @Rule(order = 0)
-    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
+    @Rule public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.newInstance();
 
     @Before
     public void setup() {
@@ -71,14 +69,14 @@ public class SdkSandboxVerifierReceiverUnitTest extends DeviceSupportedBaseTest 
                         Manifest.permission.READ_DEVICE_CONFIG,
                         Manifest.permission.PACKAGE_VERIFICATION_AGENT);
 
-        StaticMockitoSessionBuilder mockitoSessionBuilder =
-                ExtendedMockito.mockitoSession().spyStatic(DeviceConfig.class).initMocks(this);
         mVerifierReceiver = new SdkSandboxVerifierReceiver();
-        mSpyDexVerifier = Mockito.spy(SdkDexVerifier.getInstance());
-        mVerifierReceiver.setSdkDexVerifier(mSpyDexVerifier);
-
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mSpyContext = Mockito.spy(context);
+        mSdkSandboxSettingsListener = new SdkSandboxSettingsListener(mSpyContext, null);
+
+        mDexVerifier = SdkDexVerifier.getInstance();
+        mDexVerifier.setSdkSandboxSettingsListener(mSdkSandboxSettingsListener);
+
         PackageManager pm = mSpyContext.getPackageManager();
         mSpyPm = Mockito.spy(pm);
         mSpyHandler = Mockito.spy(HANDLER);
@@ -88,47 +86,32 @@ public class SdkSandboxVerifierReceiverUnitTest extends DeviceSupportedBaseTest 
                 .thenReturn(FAKE_PACKAGE_INFO);
     }
 
-    @Ignore("TODO(b/231441674): This test relies on a flag which is planned to be rolledback")
+    @SetFlagTrue(PROPERTY_ENFORCE_RESTRICTIONS)
+    @SetFlagTrue(PROPERTY_VERIFY_DEX_FILES)
     @Test
     public void verifierBroadcastReceived_startsDexParsing() {
-        MockitoSession staticMockSession = null;
-        try {
-            staticMockSession =
-                    ExtendedMockito.mockitoSession().spyStatic(DeviceConfig.class).startMocking();
-            ExtendedMockito.when(
-                            DeviceConfig.getBoolean(
-                                    DeviceConfig.NAMESPACE_ADSERVICES,
-                                    SdkSandboxManagerService.PROPERTY_ENFORCE_RESTRICTIONS,
-                                    SdkSandboxManagerService.DEFAULT_VALUE_ENFORCE_RESTRICTIONS))
-                    .thenReturn(true);
+        mVerifierReceiver.verifySdkHandler(mSpyContext, VERIFY_INTENT, mSpyHandler);
 
-            mVerifierReceiver.verifySdkHandler(mSpyContext, VERIFY_INTENT, mSpyHandler);
-
-            Mockito.verify(mSpyHandler, Mockito.times(1)).post(Mockito.any());
-        } finally {
-            staticMockSession.finishMocking();
-        }
+        Mockito.verify(mSpyHandler, Mockito.times(1)).post(Mockito.any());
     }
 
-    @Ignore("TODO(b/231441674): This test relies on a flag which is planned to be rolledback")
     @Test
     public void verifierBroadcastReceived_doesNotStartDexParsing() {
-        MockitoSession staticMockSession = null;
-        try {
-            staticMockSession =
-                    ExtendedMockito.mockitoSession().spyStatic(DeviceConfig.class).startMocking();
-            ExtendedMockito.when(
-                            DeviceConfig.getBoolean(
-                                    DeviceConfig.NAMESPACE_ADSERVICES,
-                                    SdkSandboxManagerService.PROPERTY_ENFORCE_RESTRICTIONS,
-                                    SdkSandboxManagerService.DEFAULT_VALUE_ENFORCE_RESTRICTIONS))
-                    .thenReturn(false);
+        flags.setFlag(PROPERTY_ENFORCE_RESTRICTIONS, false);
+        flags.setFlag(PROPERTY_VERIFY_DEX_FILES, false);
+        mVerifierReceiver.verifySdkHandler(mSpyContext, VERIFY_INTENT, mSpyHandler);
 
-            mVerifierReceiver.verifySdkHandler(mSpyContext, VERIFY_INTENT, mSpyHandler);
+        Mockito.verify(mSpyHandler, Mockito.times(0)).post(Mockito.any());
 
-            Mockito.verify(mSpyHandler, Mockito.times(0)).post(Mockito.any());
-        } finally {
-            staticMockSession.finishMocking();
-        }
+        flags.setFlag(PROPERTY_ENFORCE_RESTRICTIONS, true);
+        mVerifierReceiver.verifySdkHandler(mSpyContext, VERIFY_INTENT, mSpyHandler);
+
+        Mockito.verify(mSpyHandler, Mockito.times(0)).post(Mockito.any());
+
+        flags.setFlag(PROPERTY_ENFORCE_RESTRICTIONS, false);
+        flags.setFlag(PROPERTY_VERIFY_DEX_FILES, true);
+        mVerifierReceiver.verifySdkHandler(mSpyContext, VERIFY_INTENT, mSpyHandler);
+
+        Mockito.verify(mSpyHandler, Mockito.times(0)).post(Mockito.any());
     }
 }
