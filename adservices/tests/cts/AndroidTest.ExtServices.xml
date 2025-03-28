@@ -86,6 +86,32 @@
                 value="device_config put adservices sdk_request_permits_per_second 100000"/>
         <option name="teardown-command"
                 value="device_config put adservices sdk_request_permits_per_second 1"/>
+        <option name="run-command" value="device_config put adservices RateLimiter__fledge_fetch_and_join_custom_audience_request_permits_per_second 100000" />
+        <option name="teardown-command" value="device_config put adservices RateLimiter__fledge_fetch_and_join_custom_audience_request_permits_per_second 1" />
+        <option name="run-command" value="device_config put adservices RateLimiter__fledge_get_ad_selection_data_request_permits_per_second 100000" />
+        <option name="teardown-command" value="device_config put adservices RateLimiter__fledge_get_ad_selection_data_request_permits_per_second 1" />
+        <option name="run-command" value="device_config put adservices RateLimiter__fledge_join_custom_audience_request_permits_per_second 100000" />
+        <option name="teardown-command" value="device_config put adservices RateLimiter__fledge_join_custom_audience_request_permits_per_second 1" />
+        <option name="run-command" value="device_config put adservices RateLimiter__fledge_leave_custom_audience_request_permits_per_second 100000" />
+        <option name="teardown-command" value="device_config put adservices RateLimiter__fledge_leave_custom_audience_request_permits_per_second 1" />
+        <option name="run-command" value="device_config put adservices RateLimiter__fledge_persist_ad_selection_result_request_permits_per_second 100000" />
+        <option name="teardown-command" value="device_config put adservices RateLimiter__fledge_persist_ad_selection_result_request_permits_per_second 1" />
+        <option name="run-command" value="device_config put adservices RateLimiter__fledge_report_impression_request_permits_per_second 100000" />
+        <option name="teardown-command" value="device_config put adservices RateLimiter__fledge_report_impression_request_permits_per_second 1" />
+        <option name="run-command" value="device_config put adservices fledge_report_interaction_request_permits_per_second 100000" />
+        <option name="teardown-command" value="device_config put adservices fledge_report_interaction_request_permits_per_second 1" />
+        <option name="run-command" value="device_config put adservices RateLimiter__fledge_schedule_custom_audience_update_request_permits_per_second 100000" />
+        <option name="teardown-command" value="device_config put adservices RateLimiter__fledge_schedule_custom_audience_update_request_permits_per_second 1" />
+        <option name="run-command" value="device_config put adservices RateLimiter__fledge_select_ads_request_permits_per_second 100000" />
+        <option name="teardown-command" value="device_config put adservices RateLimiter__fledge_select_ads_request_permits_per_second 1" />
+        <option name="run-command" value="device_config put adservices RateLimiter__fledge_select_ads_with_outcomes_request_permits_per_second 100000" />
+        <option name="teardown-command" value="device_config put adservices RateLimiter__fledge_select_ads_with_outcomes_request_permits_per_second 1" />
+        <option name="run-command" value="device_config put adservices RateLimiter__fledge_set_app_install_advertisers_request_permits_per_second 100000" />
+        <option name="teardown-command" value="device_config put adservices RateLimiter__fledge_set_app_install_advertisers_request_permits_per_second 1" />
+        <option name="run-command" value="device_config put adservices RateLimiter__fledge_update_ad_counter_histogram_request_permits_per_second 100000" />
+        <option name="teardown-command" value="device_config put adservices RateLimiter__fledge_update_ad_counter_histogram_request_permits_per_second 1" />
+        <option name="run-command" value="device_config put adservices RateLimiter__fledge_update_signals_request_permits_per_second 100000" />
+        <option name="teardown-command" value="device_config put adservices RateLimiter__fledge_update_signals_request_permits_per_second 1" />
 
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>

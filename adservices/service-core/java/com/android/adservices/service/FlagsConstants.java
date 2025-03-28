@@ -974,8 +974,34 @@ public final class FlagsConstants {
             "topics_api_app_request_permits_per_second";
     public static final String KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND =
             "topics_api_sdk_request_permits_per_second";
+    public static final String KEY_FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_join_custom_audience_request_permits_per_second";
+    public static final String
+            KEY_FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND =
+                    "RateLimiter__fledge_fetch_and_join_custom_audience_request_permits_per_second";
+    public static final String
+            KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND =
+                    "RateLimiter__fledge_schedule_custom_audience_update_request_permits_per_second";
+    public static final String KEY_FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_leave_custom_audience_request_permits_per_second";
+    public static final String KEY_FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_update_signals_request_permits_per_second";
+    public static final String KEY_FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_select_ads_request_permits_per_second";
+    public static final String KEY_FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_select_ads_with_outcomes_request_permits_per_second";
+    public static final String KEY_FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_get_ad_selection_data_request_permits_per_second";
+    public static final String KEY_FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_persist_ad_selection_result_request_permits_per_second";
+    public static final String KEY_FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_report_impression_request_permits_per_second";
     public static final String KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND =
             "fledge_report_interaction_request_permits_per_second";
+    public static final String KEY_FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_set_app_install_advertisers_request_permits_per_second";
+    public static final String KEY_FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_update_ad_counter_histogram_request_permits_per_second";
 
     // Adservices enable status keys.
     public static final String KEY_ADSERVICES_ENABLED = "adservice_enabled";
