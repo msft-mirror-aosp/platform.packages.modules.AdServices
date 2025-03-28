@@ -45,6 +45,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.CountUniqueReport;
 import com.android.adservices.service.measurement.CountUniqueReportFixture;
+import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
@@ -122,7 +123,7 @@ public class CountUniqueReportingJobHandlerTest {
     }
 
     @Before
-    public void setUp() {
+    public void setUp() throws DatastoreException {
         sContext = spy(ApplicationProvider.getApplicationContext());
         AggregateEncryptionKeyManager mockKeyManager = mock(AggregateEncryptionKeyManager.class);
         ArgumentCaptor<Integer> captorNumberOfKeys = ArgumentCaptor.forClass(Integer.class);
@@ -148,6 +149,7 @@ public class CountUniqueReportingJobHandlerTest {
         when(mMockFlags.getMeasurementEnableCountUniqueService()).thenReturn(true);
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        doReturn(1).when(mMeasurementDao).incrementAndGetReportingRetryCount(any(), any());
     }
 
     @Test
@@ -171,8 +173,9 @@ public class CountUniqueReportingJobHandlerTest {
                         countUniqueReport.getReportId(),
                         CountUniqueReport.ReportDeliveryStatus.DELIVERED);
 
+        ReportingStatus status = new ReportingStatus();
         mSpyCountUniqueReportingJobHandler.performReport(
-                countUniqueReport.getReportId(), AggregateCryptoFixture.getKey());
+                countUniqueReport.getReportId(), AggregateCryptoFixture.getKey(), status);
 
         verify(mMeasurementDao, times(1))
                 .markCountUniqueReportStatus(
@@ -180,6 +183,7 @@ public class CountUniqueReportingJobHandlerTest {
                         CountUniqueReport.ReportDeliveryStatus.DELIVERED);
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
+        assertThat(status.getUploadStatus()).isEqualTo(ReportingStatus.UploadStatus.SUCCESS);
     }
 
     @Test
@@ -203,8 +207,9 @@ public class CountUniqueReportingJobHandlerTest {
                         countUniqueReport.getReportId(),
                         CountUniqueReport.ReportDeliveryStatus.DELIVERED);
 
+        ReportingStatus status = new ReportingStatus();
         mSpyCountUniqueReportingJobHandler.performReport(
-                countUniqueReport.getReportId(), AggregateCryptoFixture.getKey());
+                countUniqueReport.getReportId(), AggregateCryptoFixture.getKey(), status);
 
         verify(mMeasurementDao, never())
                 .markCountUniqueReportStatus(
@@ -212,6 +217,9 @@ public class CountUniqueReportingJobHandlerTest {
                         CountUniqueReport.ReportDeliveryStatus.DELIVERED);
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
+        assertThat(status.getUploadStatus()).isEqualTo(ReportingStatus.UploadStatus.FAILURE);
+        assertThat(status.getFailureStatus())
+                .isEqualTo(ReportingStatus.FailureStatus.UNSUCCESSFUL_HTTP_RESPONSE_CODE);
     }
 
     @Test
@@ -223,8 +231,9 @@ public class CountUniqueReportingJobHandlerTest {
         when(mMeasurementDao.getCountUniqueReport(countUniqueReport.getReportId()))
                 .thenReturn(countUniqueReport);
 
+        ReportingStatus status = new ReportingStatus();
         mSpyCountUniqueReportingJobHandler.performReport(
-                countUniqueReport.getReportId(), AggregateCryptoFixture.getKey());
+                countUniqueReport.getReportId(), AggregateCryptoFixture.getKey(), status);
 
         verify(mMeasurementDao, never())
                 .markCountUniqueReportStatus(
@@ -232,6 +241,10 @@ public class CountUniqueReportingJobHandlerTest {
                         CountUniqueReport.ReportDeliveryStatus.DELIVERED);
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
+
+        assertThat(status.getUploadStatus()).isEqualTo(ReportingStatus.UploadStatus.FAILURE);
+        assertThat(status.getFailureStatus())
+                .isEqualTo(ReportingStatus.FailureStatus.REPORT_NOT_PENDING);
     }
 
     @Test
@@ -363,6 +376,41 @@ public class CountUniqueReportingJobHandlerTest {
         // 1 transaction for initial retrieval of pending report ids.
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
+    }
+
+    @Test
+    public void testPerformScheduledPendingReportsForMultipleReports_failureIncrementsRetry()
+            throws JSONException, DatastoreException, IOException {
+        CountUniqueReport countUniqueReport1 =
+                CountUniqueReportFixture.getValidCountUniqueReportBuilder()
+                        .setReportId("R1")
+                        .build();
+
+        JSONObject body1 = createSampleCountUniqueReportBody(countUniqueReport1);
+        when(mMeasurementDao.getPendingCountUniqueReportIds())
+                .thenReturn(List.of(countUniqueReport1.getReportId()));
+        when(mMeasurementDao.getCountUniqueReport(countUniqueReport1.getReportId()))
+                .thenReturn(countUniqueReport1);
+
+        doReturn(HttpURLConnection.HTTP_BAD_REQUEST)
+                .when(mSpyCountUniqueReportingJobHandler)
+                .makeHttpPostRequest(any(), any());
+
+        doReturn(body1)
+                .when(mSpyCountUniqueReportingJobHandler)
+                .createReportJsonPayload(eq(countUniqueReport1), any());
+
+        assertThat(mSpyCountUniqueReportingJobHandler.performScheduledPendingReports()).isTrue();
+
+        verify(mMeasurementDao, times(0))
+                .markCountUniqueReportStatus(
+                        countUniqueReport1.getReportId(),
+                        CountUniqueReport.ReportDeliveryStatus.DELIVERED);
+
+        verify(mMeasurementDao, times(1))
+                .incrementAndGetReportingRetryCount(
+                        countUniqueReport1.getReportId(),
+                        KeyValueData.DataType.COUNT_UNIQUE_REPORT_RETRY_COUNT);
     }
 
     private JSONObject createSampleCountUniqueReportBody(CountUniqueReport countUniqueReport)

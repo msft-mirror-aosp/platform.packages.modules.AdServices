@@ -2386,6 +2386,26 @@ class MeasurementDao implements IMeasurementDao {
                         + subQuery
                         + ")",
                 new String[] {});
+        // Cleanup unnecessary CountUniqueReport Retry Counts
+        if (FlagsFactory.getFlags().getMeasurementEnableCountUniqueService()) {
+            subQuery =
+                    "SELECT "
+                            + CountUniqueReportingContract.REPORT_ID
+                            + " FROM "
+                            + CountUniqueReportingContract.TABLE;
+            db.delete(
+                    KeyValueDataContract.TABLE,
+                    KeyValueDataContract.DATA_TYPE
+                            + " = ? "
+                            + " AND "
+                            + KeyValueDataContract.KEY
+                            + " NOT IN "
+                            + "("
+                            + subQuery
+                            + ")",
+                    new String[] {DataType.COUNT_UNIQUE_REPORT_RETRY_COUNT.toString()});
+        }
+
         if (earliestValidAppReportInsertion != null) {
             db.delete(
                     AppReportHistoryContract.TABLE,
@@ -4502,22 +4522,7 @@ class MeasurementDao implements IMeasurementDao {
     // TODO(402197747): Add similar method for debug reports.
     public List<String> getPendingCountUniqueReportIds() throws DatastoreException {
         List<String> pendingCountUniqueReportIds = new ArrayList<>();
-        try (Cursor cursor =
-                mSQLTransaction
-                        .getDatabase()
-                        .query(
-                                CountUniqueReportingContract.TABLE,
-                                /* columns= */ new String[] {
-                                    CountUniqueReportingContract.REPORT_ID,
-                                },
-                                CountUniqueReportingContract.STATUS + " = ? ",
-                                new String[] {
-                                    String.valueOf(CountUniqueReport.ReportDeliveryStatus.PENDING)
-                                },
-                                /* groupBy= */ null,
-                                /* having= */ null,
-                                /* orderBy= */ "RANDOM()",
-                                /* limit= */ null)) {
+        try (Cursor cursor = pendingCountUniqueReportIdsLimitRetryCursor()) {
             while (cursor.moveToNext()) {
                 pendingCountUniqueReportIds.add(
                         cursor.getString(
@@ -5080,6 +5085,47 @@ class MeasurementDao implements IMeasurementDao {
                             String.valueOf(AggregateReport.DebugReportStatus.PENDING),
                             String.valueOf(mReportingRetryLimitSupplier.get()),
                             String.valueOf(DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT),
+                        });
+    }
+
+    private Cursor pendingCountUniqueReportIdsLimitRetryCursor() throws DatastoreException {
+        return mSQLTransaction
+                .getDatabase()
+                .rawQuery(
+                        "SELECT "
+                                + CountUniqueReportingContract.REPORT_ID
+                                + ", "
+                                + KeyValueDataContract.VALUE
+                                + " FROM "
+                                + CountUniqueReportingContract.TABLE
+                                + " LEFT JOIN "
+                                + KeyValueDataContract.TABLE
+                                + " ON ( "
+                                + CountUniqueReportingContract.REPORT_ID
+                                + " = "
+                                + KeyValueDataContract.KEY
+                                + ") "
+                                + "WHERE "
+                                + "(CAST("
+                                + KeyValueDataContract.VALUE
+                                + " AS INTEGER) < ?"
+                                + "OR "
+                                + KeyValueDataContract.VALUE
+                                + " IS NULL)"
+                                + " AND "
+                                + CountUniqueReportingContract.STATUS
+                                + " = ? "
+                                + "AND ("
+                                + KeyValueDataContract.DATA_TYPE
+                                + " = ? "
+                                + "OR "
+                                + KeyValueDataContract.DATA_TYPE
+                                + " IS NULL)"
+                                + " ORDER BY RANDOM()",
+                        new String[] {
+                            String.valueOf(mReportingRetryLimitSupplier.get()),
+                            String.valueOf(CountUniqueReport.ReportDeliveryStatus.PENDING),
+                            String.valueOf(DataType.COUNT_UNIQUE_REPORT_RETRY_COUNT),
                         });
     }
 }

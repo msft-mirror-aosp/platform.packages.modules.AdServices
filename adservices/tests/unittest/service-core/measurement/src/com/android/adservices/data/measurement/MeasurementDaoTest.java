@@ -21,6 +21,7 @@ import static com.android.adservices.data.measurement.MeasurementTables.Aggregat
 import static com.android.adservices.data.measurement.MeasurementTables.AppReportHistoryContract;
 import static com.android.adservices.data.measurement.MeasurementTables.AsyncRegistrationContract;
 import static com.android.adservices.data.measurement.MeasurementTables.AttributionContract;
+import static com.android.adservices.data.measurement.MeasurementTables.CountUniqueReportingContract;
 import static com.android.adservices.data.measurement.MeasurementTables.EventReportContract;
 import static com.android.adservices.data.measurement.MeasurementTables.KeyValueDataContract;
 import static com.android.adservices.data.measurement.MeasurementTables.MSMT_TABLE_PREFIX;
@@ -7476,6 +7477,76 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    public void deleteExpiredRecords_RetryKeyValueData_countUniqueReport() {
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(true).when(mockFlags).getMeasurementEnableCountUniqueService();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
+        // Non-stale join record
+        CountUniqueReport countUniqueReport =
+                CountUniqueReportFixture.getValidCountUniqueReportBuilder()
+                        .setReportId("non-stale-key")
+                        .build();
+        mDatastoreManager.runInTransaction((dao) -> dao.insertCountUniqueReport(countUniqueReport));
+
+        // Should Remain
+        ContentValues nonStaleValues = new ContentValues();
+        nonStaleValues.put(
+                KeyValueDataContract.DATA_TYPE,
+                DataType.COUNT_UNIQUE_REPORT_RETRY_COUNT.toString());
+        nonStaleValues.put(KeyValueDataContract.KEY, countUniqueReport.getReportId());
+        nonStaleValues.put(KeyValueDataContract.VALUE, "1");
+        db.insert(KeyValueDataContract.TABLE, null, nonStaleValues);
+
+        // Should Delete
+        ContentValues staleValues = new ContentValues();
+        staleValues.put(
+                KeyValueDataContract.DATA_TYPE,
+                DataType.COUNT_UNIQUE_REPORT_RETRY_COUNT.toString());
+        staleValues.put(KeyValueDataContract.KEY, "stale-key");
+        staleValues.put(KeyValueDataContract.VALUE, "1");
+        db.insert(KeyValueDataContract.TABLE, null, staleValues);
+
+        mDatastoreManager.runInTransaction(
+                dao ->
+                        dao.deleteExpiredRecords(
+                                /* earliestValidInsertion */ 0,
+                                /* registrationRetryLimit */ 0,
+                                /* earliestValidAppReportInsertion */ null,
+                                /* earliestValidAggregateDebugReportInsertion */ 0));
+
+        // Assert Non-Stale record remains.
+        assertThat(
+                        DatabaseUtils.longForQuery(
+                                db,
+                                "SELECT COUNT("
+                                        + KeyValueDataContract.KEY
+                                        + ") FROM "
+                                        + KeyValueDataContract.TABLE
+                                        + " WHERE "
+                                        + KeyValueDataContract.KEY
+                                        + " = ?",
+                                new String[] {
+                                    nonStaleValues.getAsString(KeyValueDataContract.KEY)
+                                }))
+                .isEqualTo(1);
+
+        // Assert Stale Record Removed
+        assertThat(
+                        DatabaseUtils.longForQuery(
+                                db,
+                                "SELECT COUNT("
+                                        + KeyValueDataContract.KEY
+                                        + ") FROM "
+                                        + KeyValueDataContract.TABLE
+                                        + " WHERE "
+                                        + KeyValueDataContract.KEY
+                                        + " = ?",
+                                new String[] {staleValues.getAsString(KeyValueDataContract.KEY)}))
+                .isEqualTo(0);
+    }
+
+    @Test
     public void deleteExpiredRecords_reinstallAttributionEnabled_deletesExpiredAppInstallHistory() {
         Flags mockFlags = Mockito.mock(Flags.class);
         ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
@@ -12302,6 +12373,54 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         res = resOpt.get();
         assertEquals(1, res.size());
         assertEquals(List.of("2"), res);
+    }
+
+    @Test
+    public void getPendingCountUniqueReportIdsWithRetryLimit() {
+        // Mocking that the flags return a Max Retry of 1
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(1).when(mockFlags).getMeasurementReportingRetryLimit();
+        ExtendedMockito.doReturn(true).when(mockFlags).getMeasurementReportingRetryLimitEnabled();
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
+
+        CountUniqueReport report1 =
+                CountUniqueReportFixture.getValidCountUniqueReportBuilder()
+                        .setReportId("CUR1")
+                        .build();
+        CountUniqueReport report2 =
+                CountUniqueReportFixture.getValidCountUniqueReportBuilder()
+                        .setReportId("CUR2")
+                        .build();
+        List.of(report1, report2)
+                .forEach(
+                        report -> {
+                            ContentValues values = new ContentValues();
+                            values.put(
+                                    CountUniqueReportingContract.REPORT_ID, report.getReportId());
+                            values.put(CountUniqueReportingContract.STATUS, report.getStatus());
+                            db.insert(CountUniqueReportingContract.TABLE, null, values);
+                        });
+
+        Optional<List<String>> resOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        IMeasurementDao::getPendingCountUniqueReportIds);
+        assertThat(resOpt.isPresent()).isTrue();
+        List<String> res = resOpt.get();
+        assertThat(res.size()).isEqualTo(2);
+        assertThat(res.containsAll(List.of("CUR1", "CUR2"))).isTrue();
+        resOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> {
+                            // Adds records to KeyValueData table for Retry Count.
+                            dao.incrementAndGetReportingRetryCount(
+                                    "CUR1", DataType.COUNT_UNIQUE_REPORT_RETRY_COUNT);
+                            return dao.getPendingCountUniqueReportIds();
+                        });
+        res = resOpt.get();
+        assertThat(res.size()).isEqualTo(1);
+        assertThat(res).isEqualTo(List.of("CUR2"));
     }
 
     @Test
