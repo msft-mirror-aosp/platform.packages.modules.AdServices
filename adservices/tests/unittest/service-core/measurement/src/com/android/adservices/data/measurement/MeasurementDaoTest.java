@@ -21,6 +21,7 @@ import static com.android.adservices.data.measurement.MeasurementTables.Aggregat
 import static com.android.adservices.data.measurement.MeasurementTables.AppReportHistoryContract;
 import static com.android.adservices.data.measurement.MeasurementTables.AsyncRegistrationContract;
 import static com.android.adservices.data.measurement.MeasurementTables.AttributionContract;
+import static com.android.adservices.data.measurement.MeasurementTables.CountUniqueReportingContract;
 import static com.android.adservices.data.measurement.MeasurementTables.EventReportContract;
 import static com.android.adservices.data.measurement.MeasurementTables.KeyValueDataContract;
 import static com.android.adservices.data.measurement.MeasurementTables.MSMT_TABLE_PREFIX;
@@ -3733,6 +3734,217 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    public void testDeleteExpiredCountUniqueRecords_forOldMetadata_RemovesMetadata() {
+        String key = "key";
+        String oldKey = "oldKey";
+        Uri reportingOrigin = Uri.parse("https://test.foo");
+        List<CountUniqueMetadata> metadataList = new ArrayList<>();
+
+        for (int i = 0; i < 5; i++) {
+            metadataList.add(
+                    new CountUniqueMetadata.Builder()
+                            .setKey(oldKey + i)
+                            .setValue(i)
+                            .setExpirationTime(System.currentTimeMillis() - DAYS.toMillis(30))
+                            .setReportingOrigin(reportingOrigin)
+                            .build());
+        }
+
+        for (int i = 0; i < 5; i++) {
+            metadataList.add(
+                    new CountUniqueMetadata.Builder()
+                            .setKey(key + i)
+                            .setValue(i)
+                            .setExpirationTime(System.currentTimeMillis() + DAYS.toMillis(30))
+                            .setReportingOrigin(reportingOrigin)
+                            .build());
+        }
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    for (CountUniqueMetadata m : metadataList) {
+                        dao.insertCountUniqueMetadata(m, true);
+                    }
+                });
+
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.CountUniqueMetadataContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            assertThat(cursor.getCount()).isEqualTo(10);
+        }
+
+        mDatastoreManager.runInTransaction(
+                (dao) ->
+                        dao.deleteExpiredCountUniqueRecords(
+                                System.currentTimeMillis(),
+                                System.currentTimeMillis(),
+                                System.currentTimeMillis()));
+
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.CountUniqueMetadataContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+
+            assertThat(cursor.getCount()).isEqualTo(5); // 5 old keys to be deleted
+            while (cursor.moveToNext()) {
+                CountUniqueMetadata metadataFromDb =
+                        SqliteObjectMapper.constructCountUniqueMetadata(cursor);
+                assertThat(metadataFromDb.getKey().contains(oldKey)).isFalse();
+            }
+        }
+    }
+
+    @Test
+    public void testDeleteExpiredCountUniqueRecords_forOldReports_RemovesReports() {
+        String oldReportId = "old-report";
+        String reportId = "report";
+        String payload = "payload";
+        Uri reportingOrigin = Uri.parse("https://test.foo");
+        String version = "0.1";
+        String debugKey = "asadsadsa=";
+        String contextId = "testContextId";
+        String enrollmentId = "test-id";
+        int contributionValue = 5;
+
+        List<CountUniqueReport> reports = new ArrayList<>();
+
+        // Delivered reports over 24 hours should be deleted
+        for (int i = 0; i < 3; i++) {
+            reports.add(
+                    createCountUniqueReport(
+                            oldReportId + i,
+                            payload,
+                            reportingOrigin,
+                            CountUniqueReport.ReportDeliveryStatus.DELIVERED,
+                            CountUniqueReport.ReportDeliveryStatus.DELIVERED,
+                            System.currentTimeMillis() - TimeUnit.HOURS.toMillis(5),
+                            version,
+                            debugKey,
+                            contextId,
+                            enrollmentId,
+                            contributionValue,
+                            System.currentTimeMillis() - TimeUnit.HOURS.toMillis(24)));
+        }
+
+        // Pending reports over 5 days should be deleted.
+        for (int i = 3; i < 5; i++) {
+            reports.add(
+                    createCountUniqueReport(
+                            oldReportId + i,
+                            payload,
+                            reportingOrigin,
+                            CountUniqueReport.ReportDeliveryStatus.PENDING,
+                            CountUniqueReport.ReportDeliveryStatus.PENDING,
+                            System.currentTimeMillis() - TimeUnit.DAYS.toMillis(10),
+                            version,
+                            debugKey,
+                            contextId,
+                            enrollmentId,
+                            contributionValue,
+                            System.currentTimeMillis() - TimeUnit.DAYS.toMillis(11)));
+        }
+
+        // Delivered reports less than 24 hours should not be deleted
+        for (int i = 5; i < 7; i++) {
+            reports.add(
+                    createCountUniqueReport(
+                            reportId + i,
+                            payload,
+                            reportingOrigin,
+                            CountUniqueReport.ReportDeliveryStatus.DELIVERED,
+                            CountUniqueReport.ReportDeliveryStatus.DELIVERED,
+                            System.currentTimeMillis() - TimeUnit.HOURS.toMillis(5),
+                            version,
+                            debugKey,
+                            contextId,
+                            enrollmentId,
+                            contributionValue,
+                            System.currentTimeMillis() - TimeUnit.HOURS.toMillis(5)));
+        }
+
+        // Pending reports less than 24 hours should not be deleted
+        for (int i = 7; i < 10; i++) {
+            reports.add(
+                    createCountUniqueReport(
+                            reportId + i,
+                            payload,
+                            reportingOrigin,
+                            CountUniqueReport.ReportDeliveryStatus.PENDING,
+                            CountUniqueReport.ReportDeliveryStatus.PENDING,
+                            System.currentTimeMillis() - TimeUnit.HOURS.toMillis(2),
+                            version,
+                            debugKey,
+                            contextId,
+                            enrollmentId,
+                            contributionValue,
+                            System.currentTimeMillis() - TimeUnit.HOURS.toMillis(2)));
+        }
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    for (CountUniqueReport r : reports) {
+                        dao.insertCountUniqueReport(r);
+                    }
+                });
+
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.CountUniqueReportingContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            assertThat(cursor.getCount()).isEqualTo(10);
+        }
+
+        mDatastoreManager.runInTransaction(
+                (dao) ->
+                        dao.deleteExpiredCountUniqueRecords(
+                                System.currentTimeMillis(),
+                                System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1),
+                                System.currentTimeMillis() - TimeUnit.DAYS.toMillis(5)));
+
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.CountUniqueReportingContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+
+            assertThat(cursor.getCount()).isEqualTo(5); // 5 delivered old reports to be deleted
+            while (cursor.moveToNext()) {
+                CountUniqueReport reportFromDb =
+                        SqliteObjectMapper.constructCountUniqueReport(cursor);
+                assertThat(reportFromDb.getReportId().contains(oldReportId)).isFalse();
+            }
+        }
+    }
+
+    @Test
     public void testCountTotalContributionsPerEnrollmentInWindowInCountUnique_returnsCount() {
         String payload = "payload";
         Uri reportingOrigin = Uri.parse("https://test.foo");
@@ -7262,6 +7474,76 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                                 + KeyValueDataContract.KEY
                                 + " = ?",
                         new String[] {staleValues.getAsString(KeyValueDataContract.KEY)}));
+    }
+
+    @Test
+    public void deleteExpiredRecords_RetryKeyValueData_countUniqueReport() {
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(true).when(mockFlags).getMeasurementEnableCountUniqueService();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
+        // Non-stale join record
+        CountUniqueReport countUniqueReport =
+                CountUniqueReportFixture.getValidCountUniqueReportBuilder()
+                        .setReportId("non-stale-key")
+                        .build();
+        mDatastoreManager.runInTransaction((dao) -> dao.insertCountUniqueReport(countUniqueReport));
+
+        // Should Remain
+        ContentValues nonStaleValues = new ContentValues();
+        nonStaleValues.put(
+                KeyValueDataContract.DATA_TYPE,
+                DataType.COUNT_UNIQUE_REPORT_RETRY_COUNT.toString());
+        nonStaleValues.put(KeyValueDataContract.KEY, countUniqueReport.getReportId());
+        nonStaleValues.put(KeyValueDataContract.VALUE, "1");
+        db.insert(KeyValueDataContract.TABLE, null, nonStaleValues);
+
+        // Should Delete
+        ContentValues staleValues = new ContentValues();
+        staleValues.put(
+                KeyValueDataContract.DATA_TYPE,
+                DataType.COUNT_UNIQUE_REPORT_RETRY_COUNT.toString());
+        staleValues.put(KeyValueDataContract.KEY, "stale-key");
+        staleValues.put(KeyValueDataContract.VALUE, "1");
+        db.insert(KeyValueDataContract.TABLE, null, staleValues);
+
+        mDatastoreManager.runInTransaction(
+                dao ->
+                        dao.deleteExpiredRecords(
+                                /* earliestValidInsertion */ 0,
+                                /* registrationRetryLimit */ 0,
+                                /* earliestValidAppReportInsertion */ null,
+                                /* earliestValidAggregateDebugReportInsertion */ 0));
+
+        // Assert Non-Stale record remains.
+        assertThat(
+                        DatabaseUtils.longForQuery(
+                                db,
+                                "SELECT COUNT("
+                                        + KeyValueDataContract.KEY
+                                        + ") FROM "
+                                        + KeyValueDataContract.TABLE
+                                        + " WHERE "
+                                        + KeyValueDataContract.KEY
+                                        + " = ?",
+                                new String[] {
+                                    nonStaleValues.getAsString(KeyValueDataContract.KEY)
+                                }))
+                .isEqualTo(1);
+
+        // Assert Stale Record Removed
+        assertThat(
+                        DatabaseUtils.longForQuery(
+                                db,
+                                "SELECT COUNT("
+                                        + KeyValueDataContract.KEY
+                                        + ") FROM "
+                                        + KeyValueDataContract.TABLE
+                                        + " WHERE "
+                                        + KeyValueDataContract.KEY
+                                        + " = ?",
+                                new String[] {staleValues.getAsString(KeyValueDataContract.KEY)}))
+                .isEqualTo(0);
     }
 
     @Test
@@ -12091,6 +12373,54 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         res = resOpt.get();
         assertEquals(1, res.size());
         assertEquals(List.of("2"), res);
+    }
+
+    @Test
+    public void getPendingCountUniqueReportIdsWithRetryLimit() {
+        // Mocking that the flags return a Max Retry of 1
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(1).when(mockFlags).getMeasurementReportingRetryLimit();
+        ExtendedMockito.doReturn(true).when(mockFlags).getMeasurementReportingRetryLimitEnabled();
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
+
+        CountUniqueReport report1 =
+                CountUniqueReportFixture.getValidCountUniqueReportBuilder()
+                        .setReportId("CUR1")
+                        .build();
+        CountUniqueReport report2 =
+                CountUniqueReportFixture.getValidCountUniqueReportBuilder()
+                        .setReportId("CUR2")
+                        .build();
+        List.of(report1, report2)
+                .forEach(
+                        report -> {
+                            ContentValues values = new ContentValues();
+                            values.put(
+                                    CountUniqueReportingContract.REPORT_ID, report.getReportId());
+                            values.put(CountUniqueReportingContract.STATUS, report.getStatus());
+                            db.insert(CountUniqueReportingContract.TABLE, null, values);
+                        });
+
+        Optional<List<String>> resOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        IMeasurementDao::getPendingCountUniqueReportIds);
+        assertThat(resOpt.isPresent()).isTrue();
+        List<String> res = resOpt.get();
+        assertThat(res.size()).isEqualTo(2);
+        assertThat(res.containsAll(List.of("CUR1", "CUR2"))).isTrue();
+        resOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> {
+                            // Adds records to KeyValueData table for Retry Count.
+                            dao.incrementAndGetReportingRetryCount(
+                                    "CUR1", DataType.COUNT_UNIQUE_REPORT_RETRY_COUNT);
+                            return dao.getPendingCountUniqueReportIds();
+                        });
+        res = resOpt.get();
+        assertThat(res.size()).isEqualTo(1);
+        assertThat(res).isEqualTo(List.of("CUR2"));
     }
 
     @Test

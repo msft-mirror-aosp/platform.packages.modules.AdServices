@@ -27,13 +27,19 @@ import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.CryptoException;
 import com.android.adservices.service.measurement.CountUniqueReport;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
+import com.android.adservices.service.measurement.reporting.ReportingStatus.FailureStatus;
+import com.android.adservices.service.measurement.reporting.ReportingStatus.UploadStatus;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
@@ -64,6 +70,16 @@ public class CountUniqueReportingJobHandler {
         mAggregateEncryptionKeyManager = aggregateEncryptionKeyManager;
         mFlags = flags;
         mContext = context;
+    }
+
+    /** Return a new instance of a CountUniqueReportingJobHandler. */
+    public static CountUniqueReportingJobHandler getInstance() {
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager();
+        Context context = ApplicationContextSingleton.get();
+        AggregateEncryptionKeyManager aggregateEncryptionKeyManager =
+                new AggregateEncryptionKeyManager(datastoreManager, context);
+        return new CountUniqueReportingJobHandler(
+                datastoreManager, aggregateEncryptionKeyManager, FlagsFactory.getFlags(), context);
     }
 
     /**
@@ -119,8 +135,20 @@ public class CountUniqueReportingJobHandler {
                 ReportUtil.logReportingFailure(LOGGING_NAME, "Thread interrupted, exiting early");
                 return true;
             }
+            ReportingStatus reportingStatus = new ReportingStatus();
+            final String countUniqueReportId = pendingCountUniqueReports.get(i);
+            performReport(countUniqueReportId, keys.get(i), reportingStatus);
 
-            performReport(pendingCountUniqueReports.get(i), keys.get(i));
+            if (reportingStatus.getUploadStatus() == UploadStatus.FAILURE) {
+                mDatastoreManager.runInTransaction(
+                        (dao) -> {
+                            int retryCount =
+                                    dao.incrementAndGetReportingRetryCount(
+                                            countUniqueReportId,
+                                            KeyValueData.DataType.COUNT_UNIQUE_REPORT_RETRY_COUNT);
+                            reportingStatus.setRetryCount(retryCount);
+                        });
+            }
         }
 
         return true;
@@ -133,7 +161,10 @@ public class CountUniqueReportingJobHandler {
      * @param countUniqueReportId for the datastore id of the {@link CountUniqueReport}
      * @param key used for encrypting report payload
      */
-    synchronized void performReport(String countUniqueReportId, AggregateEncryptionKey key) {
+    synchronized void performReport(
+            String countUniqueReportId,
+            AggregateEncryptionKey key,
+            ReportingStatus reportingStatus) {
         Optional<CountUniqueReport> countUniqueReportOpt =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> dao.getCountUniqueReport(countUniqueReportId));
@@ -143,6 +174,8 @@ public class CountUniqueReportingJobHandler {
                     LOGGING_NAME,
                     String.format(
                             "Pending Count Unique Reports not found: ID: %s", countUniqueReportId));
+            setReportingStatus(
+                    reportingStatus, UploadStatus.FAILURE, FailureStatus.REPORT_NOT_FOUND);
             return;
         }
 
@@ -156,6 +189,8 @@ public class CountUniqueReportingJobHandler {
                     null,
                     ReportingStatus.ReportType.COUNT_UNIQUE.toString());
             // TODO(400528120): Add report status logging for report not pending.
+            setReportingStatus(
+                    reportingStatus, UploadStatus.FAILURE, FailureStatus.REPORT_NOT_PENDING);
             return;
         }
 
@@ -177,6 +212,10 @@ public class CountUniqueReportingJobHandler {
                         null,
                         ReportingStatus.ReportType.COUNT_UNIQUE.toString());
                 // TODO(400528120): Add report status logging for unsuccessful HTTP response.
+                setReportingStatus(
+                        reportingStatus,
+                        UploadStatus.FAILURE,
+                        FailureStatus.UNSUCCESSFUL_HTTP_RESPONSE_CODE);
                 return;
             }
 
@@ -194,6 +233,7 @@ public class CountUniqueReportingJobHandler {
                         null,
                         ReportingStatus.ReportType.COUNT_UNIQUE.toString());
                 // TODO(400528120): Add report status logging for failed report status update.
+                setReportingStatus(reportingStatus, UploadStatus.FAILURE, FailureStatus.DATASTORE);
             }
 
             LoggerFactory.getMeasurementLogger()
@@ -204,6 +244,7 @@ public class CountUniqueReportingJobHandler {
                             null,
                             ReportingStatus.ReportType.COUNT_UNIQUE.toString());
             // TODO(400528120): Add report status logging for success.
+            setReportingStatus(reportingStatus, UploadStatus.SUCCESS, FailureStatus.UNKNOWN);
         } catch (JSONException e) {
             // JSON Serialization error
             ReportUtil.logReportingFailure(
@@ -216,6 +257,8 @@ public class CountUniqueReportingJobHandler {
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             // TODO(400528120): Add report status logging for JSON serialization error.
+            setReportingStatus(
+                    reportingStatus, UploadStatus.FAILURE, FailureStatus.SERIALIZATION_ERROR);
         } catch (IOException e) {
             // Network Error
             ReportUtil.logReportingFailure(
@@ -228,6 +271,7 @@ public class CountUniqueReportingJobHandler {
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             // TODO(400528120): Add report status logging for network error.
+            setReportingStatus(reportingStatus, UploadStatus.FAILURE, FailureStatus.NETWORK);
         } catch (CryptoException e) {
             // Encryption error
             ReportUtil.logReportingFailure(
@@ -241,6 +285,8 @@ public class CountUniqueReportingJobHandler {
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_ENCRYPTION_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             // TODO(400528120): Add report status logging for encryption error.
+            setReportingStatus(
+                    reportingStatus, UploadStatus.FAILURE, FailureStatus.ENCRYPTION_ERROR);
         } catch (Exception e) {
             // Any other exception
             ReportUtil.logReportingFailure(
@@ -254,6 +300,7 @@ public class CountUniqueReportingJobHandler {
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             // TODO(400528120): Add report status logging for generic error.
+            setReportingStatus(reportingStatus, UploadStatus.FAILURE, FailureStatus.UNKNOWN);
         }
     }
 
@@ -285,5 +332,14 @@ public class CountUniqueReportingJobHandler {
                 new CountUniqueReportSender(mIsDebugInstance, mContext);
         return countUniqueReportSender.sendReportWithHeaders(
                 adTechDomain, countUniqueReportBody, null);
+    }
+
+    private void setReportingStatus(
+            ReportingStatus reportingStatus,
+            ReportingStatus.UploadStatus uploadStatus,
+            ReportingStatus.FailureStatus failureStatus) {
+        reportingStatus.setFailureStatus(failureStatus);
+        reportingStatus.setUploadStatus(uploadStatus);
+        // TODO(400528120): Add report status logging.
     }
 }

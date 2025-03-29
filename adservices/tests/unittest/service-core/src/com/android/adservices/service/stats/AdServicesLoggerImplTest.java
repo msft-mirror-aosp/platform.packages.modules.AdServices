@@ -96,8 +96,6 @@ import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedStats;
 import com.android.adservices.shared.testing.AnswerSyncCallback;
 
-import com.google.common.collect.ImmutableList;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -106,6 +104,7 @@ import org.mockito.Mock;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /** Unit tests for {@link AdServicesLoggerImpl}. */
 @SpyStatic(FlagsFactory.class)
@@ -1006,10 +1005,9 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setMaxRawProtectedSignalsSizeBytes(345.67F)
                         .setMinRawProtectedSignalsSizeBytes(0.0001F)
                         .setSignalEvictorsUsed(
-                                ImmutableList.of(
-                                        SIGNAL_EVICTOR_FIFO, SIGNAL_EVICTOR_PRIORITIZED_FIFO))
-                        .setUpdatedSignalEvictionPriorities(ImmutableList.of(EVICT_LATER))
-                        .setEvictedSignalEvictionPriorities(ImmutableList.of(EVICT_SOONER))
+                                Set.of(SIGNAL_EVICTOR_FIFO, SIGNAL_EVICTOR_PRIORITIZED_FIFO))
+                        .setUpdatedSignalEvictionPriorities(Set.of(EVICT_LATER))
+                        .setEvictedSignalEvictionPriorities(Set.of(EVICT_SOONER))
                         .setPerBuyerEvictedSignalSize(SIZE_LARGE)
                         .setUpdatedSignalsWithEvictionPriorityCount(11)
                         .setSignalUpdateSchemaVersion(0)

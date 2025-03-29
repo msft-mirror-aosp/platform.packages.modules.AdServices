@@ -69,6 +69,7 @@ import com.android.adservices.service.measurement.registration.AsyncRegistration
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.CountUniqueReportingJob;
 import com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
@@ -105,6 +106,7 @@ import org.mockito.Mock;
 @SpyStatic(CobaltJobService.class)
 @SpyStatic(DebugReportSenderJobService.class)
 @SpyStatic(AdPackageDenyPreProcessJobService.class)
+@SpyStatic(CountUniqueReportingJob.class)
 public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTestCase {
 
     @Mock private JobScheduler mJobScheduler;
@@ -143,6 +145,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         doReturn(true).when(() -> CobaltJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing().when(() -> DebugReportSenderJobService.scheduleIfNeeded(any(), anyBoolean()));
         doReturn(true).when(() -> AdPackageDenyPreProcessJobService.scheduleIfNeeded());
+        doNothing().when(CountUniqueReportingJob::schedule);
     }
 
     @Test
@@ -618,6 +621,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         verify(
                 () -> DebugReportingFallbackJobService.scheduleIfNeeded(any(), eq(false)),
                 times(numberOfTimes));
+        assertCountUniqueReportingJobScheduled(numberOfTimes);
     }
 
     private void assertMaintenanceJobScheduled(int numberOfTimes) {
@@ -652,6 +656,10 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
     private void assertPackageDenyJobScheduled(int numberOfTimes) {
         verify(() -> AdPackageDenyPreProcessJobService.scheduleIfNeeded(), times(numberOfTimes));
+    }
+
+    private void assertCountUniqueReportingJobScheduled(int numberOfTimes) {
+        verify(CountUniqueReportingJob::schedule, times(numberOfTimes));
     }
 
     private void mockMeasurementEnabled(boolean value) {

@@ -16,8 +16,6 @@
 
 package com.android.server.sdksandbox;
 
-import static com.android.sdksandbox.flags.Flags.sdkSandboxVerifySdkDexFiles;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -28,7 +26,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.OutcomeReceiver;
 import android.os.Process;
-import android.provider.DeviceConfig;
 import android.util.Log;
 
 import com.android.internal.annotations.VisibleForTesting;
@@ -67,21 +64,14 @@ public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
     }
 
     @VisibleForTesting
-    void setSdkDexVerifier(SdkDexVerifier sdkDexVerifier) {
-        mSdkDexVerifier = sdkDexVerifier;
-    }
-
-    @VisibleForTesting
     void verifySdkHandler(Context context, Intent intent, Handler handler) {
         int verificationId = intent.getIntExtra(PackageManager.EXTRA_VERIFICATION_ID, -1);
 
-        boolean isRestrictionsEnabled =
-                sdkSandboxVerifySdkDexFiles()
-                        && DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
-                                SdkSandboxManagerService.PROPERTY_ENFORCE_RESTRICTIONS,
-                                SdkSandboxManagerService.DEFAULT_VALUE_ENFORCE_RESTRICTIONS);
-        if (!isRestrictionsEnabled) {
+        if (mSdkDexVerifier == null) {
+            mSdkDexVerifier = SdkDexVerifier.getInstance();
+        }
+
+        if (!mSdkDexVerifier.dexVerificationEnabled()) {
             context.getPackageManager()
                     .verifyPendingInstall(verificationId, PackageManager.VERIFICATION_ALLOW);
             Log.d(TAG, "Restrictions disabled. Sent VERIFICATION_ALLOW");
@@ -102,9 +92,6 @@ public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
             return;
         }
 
-        if (mSdkDexVerifier == null) {
-            mSdkDexVerifier = SdkDexVerifier.getInstance();
-        }
         int targetSdkVersion =
                 packageInfo.applicationInfo != null
                         ? packageInfo.applicationInfo.targetSdkVersion

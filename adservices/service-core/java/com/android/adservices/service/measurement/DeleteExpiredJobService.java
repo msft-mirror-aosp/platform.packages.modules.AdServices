@@ -90,6 +90,20 @@ public final class DeleteExpiredJobService extends JobService {
                                                     getEarliestValidAggregateDebugReportInsertion(
                                                             flags, currentTimeMillis)));
 
+                    if (flags.getMeasurementEnableCountUniqueService()) {
+                        // Using separate dao transaction for count unique deletion
+                        // so that any error does not affect measurement deletion
+                        DatastoreManagerFactory.getDatastoreManager()
+                                .runInTransaction(
+                                        dao ->
+                                                dao.deleteExpiredCountUniqueRecords(
+                                                        currentTimeMillis,
+                                                        getEarliestValidContributionTime(
+                                                                flags, currentTimeMillis),
+                                                        getEarliestValidReportScheduledTime(
+                                                                flags, currentTimeMillis)));
+                    }
+
                     boolean shouldRetry = false;
                     AdServicesJobServiceLogger.getInstance()
                             .recordJobFinished(
@@ -100,6 +114,14 @@ public final class DeleteExpiredJobService extends JobService {
                     jobFinished(params, shouldRetry);
                 });
         return true;
+    }
+
+    private long getEarliestValidContributionTime(Flags flags, long currentTimeMillis) {
+        return currentTimeMillis - flags.getMeasurementCountUniqueMaxContributionLongWindow();
+    }
+
+    private long getEarliestValidReportScheduledTime(Flags flags, long currentTimeMillis) {
+        return currentTimeMillis - flags.getMeasurementCountUniqueReportExpiry();
     }
 
     @Nullable

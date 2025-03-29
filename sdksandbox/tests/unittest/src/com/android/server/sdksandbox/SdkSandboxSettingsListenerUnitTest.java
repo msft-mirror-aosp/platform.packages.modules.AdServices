@@ -19,6 +19,7 @@ package com.android.server.sdksandbox;
 import static com.android.server.sdksandbox.SdkSandboxSettingsListener.PROPERTY_ENABLE_HSUM_SUPPORT_FOR_SDK_STORAGE;
 import static com.android.server.sdksandbox.SdkSandboxSettingsListener.PROPERTY_FIX_STOP_SANDBOX_DEADLOCK;
 import static com.android.server.sdksandbox.SdkSandboxSettingsListener.PROPERTY_RECONCILE_ON_VOLUME_MOUNT;
+import static com.android.server.sdksandbox.SdkSandboxSettingsListener.PROPERTY_VERIFY_DEX_FILES;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -47,6 +48,7 @@ public class SdkSandboxSettingsListenerUnitTest extends DeviceSupportedBaseTest 
             "apply_sdk_sandbox_next_restrictions";
     private static final String PROPERTY_SERVICES_ALLOWLIST =
             "services_allowlist_per_targetSdkVersion";
+
     private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
 
     @Before
@@ -207,6 +209,20 @@ public class SdkSandboxSettingsListenerUnitTest extends DeviceSupportedBaseTest 
 
         setDeviceConfigProperty(PROPERTY_FIX_STOP_SANDBOX_DEADLOCK, "false");
         assertThat(mSdkSandboxSettingsListener.getStopSandboxDeadlockFix()).isFalse();
+    }
+
+    @Test
+    public void testVerifyDexFiles_default() {
+        assertThat(mSdkSandboxSettingsListener.verifyDexFiles()).isFalse();
+    }
+
+    @Test
+    public void testVerifyDexFiles_update() {
+        setDeviceConfigProperty(PROPERTY_VERIFY_DEX_FILES, "true");
+        assertThat(mSdkSandboxSettingsListener.verifyDexFiles()).isTrue();
+
+        setDeviceConfigProperty(PROPERTY_VERIFY_DEX_FILES, "false");
+        assertThat(mSdkSandboxSettingsListener.verifyDexFiles()).isFalse();
     }
 
     private void verifyAllowlistEntryContents(

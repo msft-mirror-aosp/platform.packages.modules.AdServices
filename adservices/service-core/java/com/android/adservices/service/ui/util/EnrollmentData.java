@@ -43,12 +43,12 @@ import java.io.Serializable;
  */
 public class EnrollmentData implements Serializable {
     // IMPORTANT: New data must be serialized/deserialized correctly to be stored
-    private final SparseIntArray mModuleStates = new SparseIntArray();
-    private final SparseIntArray mUserChoices = new SparseIntArray();
-
     private static final String MODULE_STATE_JSON_KEY = "mModuleStates";
-
+    private final SparseIntArray mModuleStates = new SparseIntArray();
     private static final String USER_CHOICE_JSON_KEY = "mUserChoices";
+    private final SparseIntArray mUserChoices = new SparseIntArray();
+    private static final String PENDING_MODULE_STATE_JSON_KEY = "mPendingModuleStates";
+    private final SparseIntArray mPendingModuleStates = new SparseIntArray();
 
     /**
      * Serializes module enrollment state data to string.
@@ -67,6 +67,12 @@ public class EnrollmentData implements Serializable {
             // Serialize mUserChoices
             JSONArray userChoicesArray = getJsonArrFromSparseArr(data.mUserChoices);
             jsonObject.put(USER_CHOICE_JSON_KEY, userChoicesArray);
+
+            // Serialize mPendingModuleStates
+            JSONArray pendingModuleStatesArray = getJsonArrFromSparseArr(data.mPendingModuleStates);
+            jsonObject.put(PENDING_MODULE_STATE_JSON_KEY, pendingModuleStatesArray);
+
+            // Convert Json Object to String
             enrollmentDataStr = jsonObject.toString();
         } catch (JSONException e) {
             LogUtil.e("Enrollment Data serializing error:" + e);
@@ -95,6 +101,12 @@ public class EnrollmentData implements Serializable {
             // Deserialize mUserChoices
             JSONArray userChoicesArray = jsonObject.getJSONArray(USER_CHOICE_JSON_KEY);
             populateSparseArrFromJsonArr(userChoicesArray, enrollmentData.mUserChoices);
+
+            // Deserialize mPendingModuleStates
+            JSONArray pendingModuleStatesArray =
+                    jsonObject.getJSONArray(PENDING_MODULE_STATE_JSON_KEY);
+            populateSparseArrFromJsonArr(
+                    pendingModuleStatesArray, enrollmentData.mPendingModuleStates);
         } catch (JSONException e) {
             LogUtil.e("Enrollment Data deserializing error:" + e);
         }
@@ -126,7 +138,7 @@ public class EnrollmentData implements Serializable {
      * Stores the state for the given module.
      *
      * @param module Code for desired module.
-     * @param state Module choice object to update in enrollment data.
+     * @param state Module state object to update in enrollment data.
      */
     public void putModuleState(@Module int module, @ModuleState int state) {
         mModuleStates.put(module, state);
@@ -172,6 +184,37 @@ public class EnrollmentData implements Serializable {
     public void putUserChoice(
             @ModuleCode int moduleCode, @ModuleUserChoiceCode int userChoiceCode) {
         mUserChoices.put(moduleCode, userChoiceCode);
+    }
+
+    /**
+     * Gets all the pending module states currently stored.
+     *
+     * @return all pending module states.
+     */
+    public SparseIntArray getPendingModuleStates() {
+        return mPendingModuleStates;
+    }
+
+    /**
+     * Gets the pending module state for the given module. If null, then returns {@link
+     * AdServicesCommonManager#MODULE_STATE_UNKNOWN}.
+     *
+     * @param key Key of desired module.
+     * @return pending module state for given module.
+     */
+    @ModuleState
+    public int getPendingModuleState(@ModuleCode int key) {
+        return mPendingModuleStates.get(key, MODULE_STATE_UNKNOWN);
+    }
+
+    /**
+     * Stores the pending state for the given module.
+     *
+     * @param module Code for desired module.
+     * @param state pending Module state object to update in enrollment data.
+     */
+    public void putPendingModuleState(@Module int module, @ModuleState int state) {
+        mPendingModuleStates.put(module, state);
     }
 
     private static JSONArray getJsonArrFromSparseArr(SparseIntArray inputArr) throws JSONException {

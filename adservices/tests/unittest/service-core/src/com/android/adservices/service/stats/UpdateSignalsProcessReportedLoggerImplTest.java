@@ -36,13 +36,13 @@ import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogg
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedStats;
 import com.android.adservices.shared.util.Clock;
 
-import com.google.common.collect.ImmutableList;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.util.Set;
 
 public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServicesMockitoTestCase {
     private static final long TEST_UPDATE_SIGNALS_START_TIME = 100L;
@@ -62,13 +62,14 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
     private static final float TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES = 0.0001F;
     private static final int TEST_EXACT_PER_BUYER_EVICTED_SIGNAL_SIZE = 600;
     private static final int TEST_BUCKETED_PER_BUYER_EVICTED_SIGNAL_SIZE = SIZE_LARGE;
-    private static final ImmutableList<Integer> EVICTOR_TYPE_LIST =
-            ImmutableList.of(SIGNAL_EVICTOR_FIFO, SIGNAL_EVICTOR_PRIORITIZED_FIFO);
-    private static final ImmutableList<EvictionPriority> UPDATE_SIGNAL_EVICTION_PRIORITIES =
-            ImmutableList.of(EVICT_LATER);
-    private static final ImmutableList<EvictionPriority> EVICTED_SIGNAL_EVICTION_PRIORITIES =
-            ImmutableList.of(EVICT_SOONER);
-    private static final int UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT = 11;
+    private static final Set<Integer> EVICTOR_TYPES =
+            Set.of(SIGNAL_EVICTOR_FIFO, SIGNAL_EVICTOR_PRIORITIZED_FIFO);
+    private static final Set<EvictionPriority> UPDATE_SIGNAL_EVICTION_PRIORITIES =
+            Set.of(EVICT_LATER);
+    private static final Set<EvictionPriority> EVICTED_SIGNAL_EVICTION_PRIORITIES =
+            Set.of(EVICT_SOONER);
+    private static final Set<String> UPDATED_SIGNALS_WITH_EVICTION_PRIORITY =
+            Set.of("signal_1", "signal_2", "signal_3");
     private static final int SIGNAL_UPDATE_SCHEMA_VERSION = 1;
 
     @Mock private Clock mClockMock;
@@ -101,15 +102,15 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         mUpdateSignalsProcessReportedLoggerImpl.setMinRawProtectedSignalsSizeBytes(
                 TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPE_LIST);
+        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPES);
         mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalEvictionPriorities(
                 UPDATE_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setEvictedSignalEvictionPriorities(
                 EVICTED_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setPerBuyerEvictedSignalSize(
                 TEST_EXACT_PER_BUYER_EVICTED_SIGNAL_SIZE);
-        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityCount(
-                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityForCount(
+                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY);
         mUpdateSignalsProcessReportedLoggerImpl.setSignalUpdateSchemaVersion(
                 SIGNAL_UPDATE_SCHEMA_VERSION);
 
@@ -134,7 +135,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPE_LIST);
+        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPES);
         expect.that(stats.getUpdatedSignalEvictionPriorities())
                 .isEqualTo(UPDATE_SIGNAL_EVICTION_PRIORITIES);
         expect.that(stats.getEvictedSignalEvictionPriorities())
@@ -142,8 +143,64 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
         expect.that(stats.getPerBuyerEvictedSignalSize())
                 .isEqualTo(TEST_BUCKETED_PER_BUYER_EVICTED_SIGNAL_SIZE);
         expect.that(stats.getUpdatedSignalsWithEvictionPriorityCount())
-                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY.size());
         expect.that(stats.getSignalUpdateSchemaVersion()).isEqualTo(SIGNAL_UPDATE_SCHEMA_VERSION);
+    }
+
+    @Test
+    public void testUpdateSignalsProcessReportedStatsLogger_addToSets() {
+        mUpdateSignalsProcessReportedLoggerImpl.addSignalEvictorUsed(SIGNAL_EVICTOR_FIFO);
+        mUpdateSignalsProcessReportedLoggerImpl.addUpdatedSignalEvictionPriority(EVICT_LATER);
+        mUpdateSignalsProcessReportedLoggerImpl.addEvictedSignalEvictionPriority(EVICT_SOONER);
+        mUpdateSignalsProcessReportedLoggerImpl.addUpdatedSignalWithEvictionPriorityForCount(
+                "signal_1");
+
+        mUpdateSignalsProcessReportedLoggerImpl.logUpdateSignalsProcessReportedStats();
+
+        // Verify the logging of UpdateSignalsProcessReportedStats
+        verify(mAdServicesLoggerMock)
+                .logUpdateSignalsProcessReportedStats(mArgumentCaptor.capture());
+
+        UpdateSignalsProcessReportedStats stats = mArgumentCaptor.getValue();
+        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(Set.of(SIGNAL_EVICTOR_FIFO));
+        expect.that(stats.getUpdatedSignalEvictionPriorities())
+                .isEqualTo(UPDATE_SIGNAL_EVICTION_PRIORITIES);
+        expect.that(stats.getEvictedSignalEvictionPriorities())
+                .isEqualTo(EVICTED_SIGNAL_EVICTION_PRIORITIES);
+        expect.that(stats.getUpdatedSignalsWithEvictionPriorityCount()).isEqualTo(1);
+    }
+
+    @Test
+    public void testUpdateSignalsProcessReportedStatsLogger_addToSetsWillDedup() {
+        mUpdateSignalsProcessReportedLoggerImpl.addSignalEvictorUsed(
+                SIGNAL_EVICTOR_PRIORITIZED_FIFO);
+        mUpdateSignalsProcessReportedLoggerImpl.addSignalEvictorUsed(
+                SIGNAL_EVICTOR_PRIORITIZED_FIFO);
+        mUpdateSignalsProcessReportedLoggerImpl.addUpdatedSignalEvictionPriority(EVICT_LATER);
+        mUpdateSignalsProcessReportedLoggerImpl.addUpdatedSignalEvictionPriority(EVICT_LATER);
+        mUpdateSignalsProcessReportedLoggerImpl.addEvictedSignalEvictionPriority(EVICT_SOONER);
+        mUpdateSignalsProcessReportedLoggerImpl.addEvictedSignalEvictionPriority(EVICT_SOONER);
+        mUpdateSignalsProcessReportedLoggerImpl.addUpdatedSignalWithEvictionPriorityForCount(
+                "signal_1");
+        mUpdateSignalsProcessReportedLoggerImpl.addUpdatedSignalWithEvictionPriorityForCount(
+                "signal_1");
+        mUpdateSignalsProcessReportedLoggerImpl.addUpdatedSignalWithEvictionPriorityForCount(
+                "signal_1");
+
+        mUpdateSignalsProcessReportedLoggerImpl.logUpdateSignalsProcessReportedStats();
+
+        // Verify the logging of UpdateSignalsProcessReportedStats
+        verify(mAdServicesLoggerMock)
+                .logUpdateSignalsProcessReportedStats(mArgumentCaptor.capture());
+
+        UpdateSignalsProcessReportedStats stats = mArgumentCaptor.getValue();
+        expect.that(stats.getSignalEvictorsUsed())
+                .isEqualTo(Set.of(SIGNAL_EVICTOR_PRIORITIZED_FIFO));
+        expect.that(stats.getUpdatedSignalEvictionPriorities())
+                .isEqualTo(UPDATE_SIGNAL_EVICTION_PRIORITIES);
+        expect.that(stats.getEvictedSignalEvictionPriorities())
+                .isEqualTo(EVICTED_SIGNAL_EVICTION_PRIORITIES);
+        expect.that(stats.getUpdatedSignalsWithEvictionPriorityCount()).isEqualTo(1);
     }
 
     @Test
@@ -161,15 +218,15 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         mUpdateSignalsProcessReportedLoggerImpl.setMinRawProtectedSignalsSizeBytes(
                 TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPE_LIST);
+        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPES);
         mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalEvictionPriorities(
                 UPDATE_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setEvictedSignalEvictionPriorities(
                 EVICTED_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setPerBuyerEvictedSignalSize(
                 TEST_EXACT_PER_BUYER_EVICTED_SIGNAL_SIZE);
-        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityCount(
-                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityForCount(
+                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY);
         mUpdateSignalsProcessReportedLoggerImpl.setSignalUpdateSchemaVersion(
                 SIGNAL_UPDATE_SCHEMA_VERSION);
 
@@ -193,7 +250,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPE_LIST);
+        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPES);
         expect.that(stats.getUpdatedSignalEvictionPriorities())
                 .isEqualTo(UPDATE_SIGNAL_EVICTION_PRIORITIES);
         expect.that(stats.getEvictedSignalEvictionPriorities())
@@ -201,7 +258,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
         expect.that(stats.getPerBuyerEvictedSignalSize())
                 .isEqualTo(TEST_BUCKETED_PER_BUYER_EVICTED_SIGNAL_SIZE);
         expect.that(stats.getUpdatedSignalsWithEvictionPriorityCount())
-                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY.size());
         expect.that(stats.getSignalUpdateSchemaVersion()).isEqualTo(SIGNAL_UPDATE_SCHEMA_VERSION);
     }
 
@@ -220,15 +277,15 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         mUpdateSignalsProcessReportedLoggerImpl.setMinRawProtectedSignalsSizeBytes(
                 TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPE_LIST);
+        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPES);
         mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalEvictionPriorities(
                 UPDATE_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setEvictedSignalEvictionPriorities(
                 EVICTED_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setPerBuyerEvictedSignalSize(
                 TEST_EXACT_PER_BUYER_EVICTED_SIGNAL_SIZE);
-        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityCount(
-                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityForCount(
+                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY);
         mUpdateSignalsProcessReportedLoggerImpl.setSignalUpdateSchemaVersion(
                 SIGNAL_UPDATE_SCHEMA_VERSION);
 
@@ -253,7 +310,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPE_LIST);
+        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPES);
         expect.that(stats.getUpdatedSignalEvictionPriorities())
                 .isEqualTo(UPDATE_SIGNAL_EVICTION_PRIORITIES);
         expect.that(stats.getEvictedSignalEvictionPriorities())
@@ -261,7 +318,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
         expect.that(stats.getPerBuyerEvictedSignalSize())
                 .isEqualTo(TEST_BUCKETED_PER_BUYER_EVICTED_SIGNAL_SIZE);
         expect.that(stats.getUpdatedSignalsWithEvictionPriorityCount())
-                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY.size());
         expect.that(stats.getSignalUpdateSchemaVersion()).isEqualTo(SIGNAL_UPDATE_SCHEMA_VERSION);
     }
 
@@ -282,15 +339,15 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         mUpdateSignalsProcessReportedLoggerImpl.setMinRawProtectedSignalsSizeBytes(
                 TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPE_LIST);
+        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPES);
         mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalEvictionPriorities(
                 UPDATE_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setEvictedSignalEvictionPriorities(
                 EVICTED_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setPerBuyerEvictedSignalSize(
                 TEST_EXACT_PER_BUYER_EVICTED_SIGNAL_SIZE);
-        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityCount(
-                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityForCount(
+                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY);
         mUpdateSignalsProcessReportedLoggerImpl.setSignalUpdateSchemaVersion(
                 SIGNAL_UPDATE_SCHEMA_VERSION);
 
@@ -314,7 +371,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPE_LIST);
+        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPES);
         expect.that(stats.getUpdatedSignalEvictionPriorities())
                 .isEqualTo(UPDATE_SIGNAL_EVICTION_PRIORITIES);
         expect.that(stats.getEvictedSignalEvictionPriorities())
@@ -322,7 +379,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
         expect.that(stats.getPerBuyerEvictedSignalSize())
                 .isEqualTo(TEST_BUCKETED_PER_BUYER_EVICTED_SIGNAL_SIZE);
         expect.that(stats.getUpdatedSignalsWithEvictionPriorityCount())
-                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY.size());
         expect.that(stats.getSignalUpdateSchemaVersion()).isEqualTo(SIGNAL_UPDATE_SCHEMA_VERSION);
     }
 
@@ -342,15 +399,15 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         mUpdateSignalsProcessReportedLoggerImpl.setMinRawProtectedSignalsSizeBytes(
                 TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPE_LIST);
+        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPES);
         mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalEvictionPriorities(
                 UPDATE_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setEvictedSignalEvictionPriorities(
                 EVICTED_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setPerBuyerEvictedSignalSize(
                 TEST_EXACT_PER_BUYER_EVICTED_SIGNAL_SIZE);
-        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityCount(
-                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityForCount(
+                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY);
         mUpdateSignalsProcessReportedLoggerImpl.setSignalUpdateSchemaVersion(
                 SIGNAL_UPDATE_SCHEMA_VERSION);
 
@@ -375,7 +432,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPE_LIST);
+        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPES);
         expect.that(stats.getUpdatedSignalEvictionPriorities())
                 .isEqualTo(UPDATE_SIGNAL_EVICTION_PRIORITIES);
         expect.that(stats.getEvictedSignalEvictionPriorities())
@@ -383,7 +440,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
         expect.that(stats.getPerBuyerEvictedSignalSize())
                 .isEqualTo(TEST_BUCKETED_PER_BUYER_EVICTED_SIGNAL_SIZE);
         expect.that(stats.getUpdatedSignalsWithEvictionPriorityCount())
-                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY.size());
         expect.that(stats.getSignalUpdateSchemaVersion()).isEqualTo(SIGNAL_UPDATE_SCHEMA_VERSION);
     }
 
@@ -403,15 +460,15 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         mUpdateSignalsProcessReportedLoggerImpl.setMinRawProtectedSignalsSizeBytes(
                 TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPE_LIST);
+        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPES);
         mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalEvictionPriorities(
                 UPDATE_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setEvictedSignalEvictionPriorities(
                 EVICTED_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setPerBuyerEvictedSignalSize(
                 TEST_EXACT_PER_BUYER_EVICTED_SIGNAL_SIZE);
-        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityCount(
-                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityForCount(
+                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY);
         mUpdateSignalsProcessReportedLoggerImpl.setSignalUpdateSchemaVersion(
                 SIGNAL_UPDATE_SCHEMA_VERSION);
 
@@ -436,7 +493,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPE_LIST);
+        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPES);
         expect.that(stats.getUpdatedSignalEvictionPriorities())
                 .isEqualTo(UPDATE_SIGNAL_EVICTION_PRIORITIES);
         expect.that(stats.getEvictedSignalEvictionPriorities())
@@ -444,7 +501,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
         expect.that(stats.getPerBuyerEvictedSignalSize())
                 .isEqualTo(TEST_BUCKETED_PER_BUYER_EVICTED_SIGNAL_SIZE);
         expect.that(stats.getUpdatedSignalsWithEvictionPriorityCount())
-                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY.size());
         expect.that(stats.getSignalUpdateSchemaVersion()).isEqualTo(SIGNAL_UPDATE_SCHEMA_VERSION);
     }
 
@@ -463,15 +520,15 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         mUpdateSignalsProcessReportedLoggerImpl.setMinRawProtectedSignalsSizeBytes(
                 TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPE_LIST);
+        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPES);
         mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalEvictionPriorities(
                 UPDATE_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setEvictedSignalEvictionPriorities(
                 EVICTED_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setPerBuyerEvictedSignalSize(
                 TEST_EXACT_PER_BUYER_EVICTED_SIGNAL_SIZE);
-        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityCount(
-                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityForCount(
+                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY);
         mUpdateSignalsProcessReportedLoggerImpl.setSignalUpdateSchemaVersion(
                 SIGNAL_UPDATE_SCHEMA_VERSION);
 
@@ -495,7 +552,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPE_LIST);
+        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPES);
         expect.that(stats.getUpdatedSignalEvictionPriorities())
                 .isEqualTo(UPDATE_SIGNAL_EVICTION_PRIORITIES);
         expect.that(stats.getEvictedSignalEvictionPriorities())
@@ -503,7 +560,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
         expect.that(stats.getPerBuyerEvictedSignalSize())
                 .isEqualTo(TEST_BUCKETED_PER_BUYER_EVICTED_SIGNAL_SIZE);
         expect.that(stats.getUpdatedSignalsWithEvictionPriorityCount())
-                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY.size());
         expect.that(stats.getSignalUpdateSchemaVersion()).isEqualTo(SIGNAL_UPDATE_SCHEMA_VERSION);
     }
 
@@ -523,15 +580,15 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
         // Skip setMaxRawProtectedSignalsSizeBytes() on purpose
         mUpdateSignalsProcessReportedLoggerImpl.setMinRawProtectedSignalsSizeBytes(
                 TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPE_LIST);
+        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPES);
         mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalEvictionPriorities(
                 UPDATE_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setEvictedSignalEvictionPriorities(
                 EVICTED_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setPerBuyerEvictedSignalSize(
                 TEST_EXACT_PER_BUYER_EVICTED_SIGNAL_SIZE);
-        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityCount(
-                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityForCount(
+                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY);
         mUpdateSignalsProcessReportedLoggerImpl.setSignalUpdateSchemaVersion(
                 SIGNAL_UPDATE_SCHEMA_VERSION);
 
@@ -555,7 +612,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
         expect.that(stats.getMaxRawProtectedSignalsSizeBytes()).isEqualTo(0F);
         expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPE_LIST);
+        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPES);
         expect.that(stats.getUpdatedSignalEvictionPriorities())
                 .isEqualTo(UPDATE_SIGNAL_EVICTION_PRIORITIES);
         expect.that(stats.getEvictedSignalEvictionPriorities())
@@ -563,7 +620,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
         expect.that(stats.getPerBuyerEvictedSignalSize())
                 .isEqualTo(TEST_BUCKETED_PER_BUYER_EVICTED_SIGNAL_SIZE);
         expect.that(stats.getUpdatedSignalsWithEvictionPriorityCount())
-                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY.size());
         expect.that(stats.getSignalUpdateSchemaVersion()).isEqualTo(SIGNAL_UPDATE_SCHEMA_VERSION);
     }
 
@@ -583,15 +640,15 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
         mUpdateSignalsProcessReportedLoggerImpl.setMaxRawProtectedSignalsSizeBytes(
                 TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         // Skip setMinRawProtectedSignalsSizeBytes() on purpose
-        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPE_LIST);
+        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPES);
         mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalEvictionPriorities(
                 UPDATE_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setEvictedSignalEvictionPriorities(
                 EVICTED_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setPerBuyerEvictedSignalSize(
                 TEST_EXACT_PER_BUYER_EVICTED_SIGNAL_SIZE);
-        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityCount(
-                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityForCount(
+                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY);
         mUpdateSignalsProcessReportedLoggerImpl.setSignalUpdateSchemaVersion(
                 SIGNAL_UPDATE_SCHEMA_VERSION);
 
@@ -615,7 +672,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
         expect.that(stats.getMaxRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         expect.that(stats.getMinRawProtectedSignalsSizeBytes()).isEqualTo(0F);
-        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPE_LIST);
+        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPES);
         expect.that(stats.getUpdatedSignalEvictionPriorities())
                 .isEqualTo(UPDATE_SIGNAL_EVICTION_PRIORITIES);
         expect.that(stats.getEvictedSignalEvictionPriorities())
@@ -623,7 +680,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
         expect.that(stats.getPerBuyerEvictedSignalSize())
                 .isEqualTo(TEST_BUCKETED_PER_BUYER_EVICTED_SIGNAL_SIZE);
         expect.that(stats.getUpdatedSignalsWithEvictionPriorityCount())
-                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY.size());
         expect.that(stats.getSignalUpdateSchemaVersion()).isEqualTo(SIGNAL_UPDATE_SCHEMA_VERSION);
     }
 
@@ -650,8 +707,8 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 EVICTED_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setPerBuyerEvictedSignalSize(
                 TEST_EXACT_PER_BUYER_EVICTED_SIGNAL_SIZE);
-        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityCount(
-                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityForCount(
+                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY);
         mUpdateSignalsProcessReportedLoggerImpl.setSignalUpdateSchemaVersion(
                 SIGNAL_UPDATE_SCHEMA_VERSION);
 
@@ -684,7 +741,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
         expect.that(stats.getPerBuyerEvictedSignalSize())
                 .isEqualTo(TEST_BUCKETED_PER_BUYER_EVICTED_SIGNAL_SIZE);
         expect.that(stats.getUpdatedSignalsWithEvictionPriorityCount())
-                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY.size());
         expect.that(stats.getSignalUpdateSchemaVersion()).isEqualTo(SIGNAL_UPDATE_SCHEMA_VERSION);
     }
 
@@ -705,14 +762,14 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         mUpdateSignalsProcessReportedLoggerImpl.setMinRawProtectedSignalsSizeBytes(
                 TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPE_LIST);
+        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPES);
         // Skip setUpdatedSignalEvictionPriorities() on purpose
         mUpdateSignalsProcessReportedLoggerImpl.setEvictedSignalEvictionPriorities(
                 EVICTED_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setPerBuyerEvictedSignalSize(
                 TEST_EXACT_PER_BUYER_EVICTED_SIGNAL_SIZE);
-        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityCount(
-                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityForCount(
+                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY);
         mUpdateSignalsProcessReportedLoggerImpl.setSignalUpdateSchemaVersion(
                 SIGNAL_UPDATE_SCHEMA_VERSION);
 
@@ -737,14 +794,14 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPE_LIST);
+        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPES);
         expect.that(stats.getUpdatedSignalEvictionPriorities()).isEmpty();
         expect.that(stats.getEvictedSignalEvictionPriorities())
                 .isEqualTo(EVICTED_SIGNAL_EVICTION_PRIORITIES);
         expect.that(stats.getPerBuyerEvictedSignalSize())
                 .isEqualTo(TEST_BUCKETED_PER_BUYER_EVICTED_SIGNAL_SIZE);
         expect.that(stats.getUpdatedSignalsWithEvictionPriorityCount())
-                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY.size());
         expect.that(stats.getSignalUpdateSchemaVersion()).isEqualTo(SIGNAL_UPDATE_SCHEMA_VERSION);
     }
 
@@ -765,14 +822,14 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         mUpdateSignalsProcessReportedLoggerImpl.setMinRawProtectedSignalsSizeBytes(
                 TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPE_LIST);
+        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPES);
         mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalEvictionPriorities(
                 UPDATE_SIGNAL_EVICTION_PRIORITIES);
         // Skip setEvictedSignalEvictionPriorities() on purpose
         mUpdateSignalsProcessReportedLoggerImpl.setPerBuyerEvictedSignalSize(
                 TEST_EXACT_PER_BUYER_EVICTED_SIGNAL_SIZE);
-        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityCount(
-                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityForCount(
+                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY);
         mUpdateSignalsProcessReportedLoggerImpl.setSignalUpdateSchemaVersion(
                 SIGNAL_UPDATE_SCHEMA_VERSION);
 
@@ -797,14 +854,14 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPE_LIST);
+        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPES);
         expect.that(stats.getUpdatedSignalEvictionPriorities())
                 .isEqualTo(UPDATE_SIGNAL_EVICTION_PRIORITIES);
         expect.that(stats.getEvictedSignalEvictionPriorities()).isEmpty();
         expect.that(stats.getPerBuyerEvictedSignalSize())
                 .isEqualTo(TEST_BUCKETED_PER_BUYER_EVICTED_SIGNAL_SIZE);
         expect.that(stats.getUpdatedSignalsWithEvictionPriorityCount())
-                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY.size());
         expect.that(stats.getSignalUpdateSchemaVersion()).isEqualTo(SIGNAL_UPDATE_SCHEMA_VERSION);
     }
 
@@ -824,14 +881,14 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         mUpdateSignalsProcessReportedLoggerImpl.setMinRawProtectedSignalsSizeBytes(
                 TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPE_LIST);
+        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPES);
         mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalEvictionPriorities(
                 UPDATE_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setEvictedSignalEvictionPriorities(
                 EVICTED_SIGNAL_EVICTION_PRIORITIES);
         // Skip setPerBuyerEvictedSignalSize() on purpose
-        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityCount(
-                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityForCount(
+                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY);
         mUpdateSignalsProcessReportedLoggerImpl.setSignalUpdateSchemaVersion(
                 SIGNAL_UPDATE_SCHEMA_VERSION);
 
@@ -856,14 +913,14 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPE_LIST);
+        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPES);
         expect.that(stats.getUpdatedSignalEvictionPriorities())
                 .isEqualTo(UPDATE_SIGNAL_EVICTION_PRIORITIES);
         expect.that(stats.getEvictedSignalEvictionPriorities())
                 .isEqualTo(EVICTED_SIGNAL_EVICTION_PRIORITIES);
         expect.that(stats.getPerBuyerEvictedSignalSize()).isEqualTo(SIZE_UNSET);
         expect.that(stats.getUpdatedSignalsWithEvictionPriorityCount())
-                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY.size());
         expect.that(stats.getSignalUpdateSchemaVersion()).isEqualTo(SIGNAL_UPDATE_SCHEMA_VERSION);
     }
 
@@ -884,14 +941,14 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         mUpdateSignalsProcessReportedLoggerImpl.setMinRawProtectedSignalsSizeBytes(
                 TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPE_LIST);
+        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPES);
         mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalEvictionPriorities(
                 UPDATE_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setEvictedSignalEvictionPriorities(
                 EVICTED_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setPerBuyerEvictedSignalSize(
                 TEST_EXACT_PER_BUYER_EVICTED_SIGNAL_SIZE);
-        // Skip setUpdatedSignalsWithEvictionPriorityCount() on purpose
+        // Skip setUpdatedSignalsWithEvictionPriorityForCount() on purpose
         mUpdateSignalsProcessReportedLoggerImpl.setSignalUpdateSchemaVersion(
                 SIGNAL_UPDATE_SCHEMA_VERSION);
 
@@ -916,7 +973,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPE_LIST);
+        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPES);
         expect.that(stats.getUpdatedSignalEvictionPriorities())
                 .isEqualTo(UPDATE_SIGNAL_EVICTION_PRIORITIES);
         expect.that(stats.getEvictedSignalEvictionPriorities())
@@ -943,15 +1000,15 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         mUpdateSignalsProcessReportedLoggerImpl.setMinRawProtectedSignalsSizeBytes(
                 TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPE_LIST);
+        mUpdateSignalsProcessReportedLoggerImpl.setSignalEvictorsUsed(EVICTOR_TYPES);
         mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalEvictionPriorities(
                 UPDATE_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setEvictedSignalEvictionPriorities(
                 EVICTED_SIGNAL_EVICTION_PRIORITIES);
         mUpdateSignalsProcessReportedLoggerImpl.setPerBuyerEvictedSignalSize(
                 TEST_EXACT_PER_BUYER_EVICTED_SIGNAL_SIZE);
-        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityCount(
-                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+        mUpdateSignalsProcessReportedLoggerImpl.setUpdatedSignalsWithEvictionPriorityForCount(
+                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY);
         // Skip setSignalUpdateSchemaVersion() on purpose
 
         mUpdateSignalsProcessReportedLoggerImpl.logUpdateSignalsProcessReportedStats();
@@ -975,7 +1032,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPE_LIST);
+        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(EVICTOR_TYPES);
         expect.that(stats.getUpdatedSignalEvictionPriorities())
                 .isEqualTo(UPDATE_SIGNAL_EVICTION_PRIORITIES);
         expect.that(stats.getEvictedSignalEvictionPriorities())
@@ -983,7 +1040,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
         expect.that(stats.getPerBuyerEvictedSignalSize())
                 .isEqualTo(TEST_BUCKETED_PER_BUYER_EVICTED_SIGNAL_SIZE);
         expect.that(stats.getUpdatedSignalsWithEvictionPriorityCount())
-                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY.size());
         expect.that(stats.getSignalUpdateSchemaVersion()).isEqualTo(FIELD_UNSET);
     }
 }

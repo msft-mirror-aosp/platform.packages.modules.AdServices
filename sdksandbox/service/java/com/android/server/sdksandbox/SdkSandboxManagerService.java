@@ -391,6 +391,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mSdkSandboxStorageManager = mInjector.getSdkSandboxStorageManager();
         mSdkSandboxStatsdLogger = mInjector.getSdkSandboxStatsdLogger();
         mSdkSandboxRestrictionManager = mInjector.getSdkSandboxRestrictionManager();
+        mSdkSandboxRestrictionManager.setSdkSandboxSettingsListener(mSdkSandboxSettingsListener);
 
         // Start the handler thread.
         HandlerThread handlerThread = new HandlerThread("SdkSandboxManagerServiceHandler");
@@ -408,6 +409,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private void registerBroadcastReceivers() {
         registerPackageUpdateBroadcastReceiver();
+        // TODO(b/406771034): Clean up the dynamic registration of the SdkSandboxVerifierReceiver
         registerVerifierBroadcastReceiver();
     }
 
