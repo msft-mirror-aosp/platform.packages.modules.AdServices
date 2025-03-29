@@ -73,19 +73,19 @@ public final class AsyncRegistrationFallbackJobTest extends AdServicesJobTestCas
         mocker.mockAdServicesJobServiceFactory(mMockAdServicesJobServiceFactory);
 
         // Mock processAsyncRecords() to do nothing unless asked.
-        doNothing().when(mSpyAsyncRegistrationFallbackJob).processAsyncRecords(any());
+        doNothing().when(mSpyAsyncRegistrationFallbackJob).processAsyncRecords();
     }
 
     @Test
     @SuppressWarnings("unused")
     public void testGetExecutionFuture() throws Exception {
         ListenableFuture<ExecutionResult> executionFuture =
-                mSpyAsyncRegistrationFallbackJob.getExecutionFuture(sContext, mMockParams);
+                mSpyAsyncRegistrationFallbackJob.getExecutionFuture(mContext, mMockParams);
 
         assertWithMessage("testGetExecutionFuture().get()")
                 .that(executionFuture.get())
                 .isEqualTo(SUCCESS);
-        verify(mSpyAsyncRegistrationFallbackJob).processAsyncRecords(sContext);
+        verify(mSpyAsyncRegistrationFallbackJob).processAsyncRecords();
     }
 
     @Test
@@ -104,6 +104,19 @@ public final class AsyncRegistrationFallbackJobTest extends AdServicesJobTestCas
         assertWithMessage("getJobEnablementStatus() for AsyncRegistrationFallback kill switch OFF")
                 .that(mSpyAsyncRegistrationFallbackJob.getJobEnablementStatus())
                 .isEqualTo(JOB_ENABLED_STATUS_ENABLED);
+    }
+
+    @Test
+    public void testGetJobPolicyString() {
+        String testAsyncRegistrationFallbackJobPolicyString =
+                "async_registration_fallback_job_policy_string";
+
+        when(mMockFlags.getSpeMeasurementAsyncRegistrationFallbackJobPolicy())
+                .thenReturn(testAsyncRegistrationFallbackJobPolicyString);
+
+        assertWithMessage("getJobPolicyString() for AsyncRegistrationFallback")
+                .that(mSpyAsyncRegistrationFallbackJob.getJobPolicyString(/* jobId= */ 0))
+                .isEqualTo(testAsyncRegistrationFallbackJobPolicyString);
     }
 
     @Test

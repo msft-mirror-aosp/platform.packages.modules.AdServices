@@ -1495,6 +1495,21 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST =
             "MeasurementCountUnique__app_signature_allowlist";
 
+    public static final String KEY_MEASUREMENT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET =
+            "MeasurementCountUnique__short_window_contribution_budget";
+
+    public static final String KEY_MEASUREMENT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET =
+            "MeasurementCountUnique__long_window_contribution_budget";
+
+    public static final String KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW_MS =
+            "MeasurementCountUnique__max_contribution_short_window_ms";
+
+    public static final String KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW_MS =
+            "MeasurementCountUnique__max_contribution_long_window_ms";
+
+    public static final String KEY_MEASUREMENT_COUNT_UNIQUE_REPORT_EXPIRY_MS =
+            "MeasurementCountUnique__report_expiry_ms";
+
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";
@@ -1805,4 +1820,30 @@ public final class FlagsConstants {
 
     public static final String KEY_ENABLE_GET_BINDING_UID_IMPORTANCE =
             "CommonInfra__enable_get_binding_uid_importance";
+
+    /** Key to enable per job policy in SPE. */
+    public static final String KEY_SPE_ENABLE_PER_JOB_POLICY = "Spe__enable_per_job_policy";
+
+    /** Key for job policy for custom audience background fetch job. */
+    public static final String KEY_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY =
+            "Spe__custom_audience_background_fetch_job_policy";
+
+    /** Key for job policy for MDD maintenance job. */
+    public static final String KEY_SPE_MDD_MAINTENANCE_JOB_POLICY =
+            "Spe__mdd_maintenance_job_policy";
+
+    /** Key for job policy for MDD charging job. */
+    public static final String KEY_SPE_MDD_CHARGING_JOB_POLICY = "Spe__mdd_charging_job_policy";
+
+    /** Key for job policy for MDD cellular charging job. */
+    public static final String KEY_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY =
+            "Spe__mdd_cellular_charging_job_policy";
+
+    /** Key for job policy for MDD WI-FI charging job. */
+    public static final String KEY_SPE_MDD_WIFI_CHARGING_JOB_POLICY =
+            "Spe__mdd_wifi_charging_job_policy";
+
+    /** Key for job policy for Measurement async registration fallback job. */
+    public static final String KEY_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY =
+            "Spe__measurement_async_registration_fallback_job_policy";
 }

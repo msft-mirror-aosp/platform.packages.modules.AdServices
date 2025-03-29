@@ -33,6 +33,7 @@ import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiType;
@@ -73,7 +74,9 @@ public class TopicsService extends Service {
         AppImportanceFilter appImportanceFilter =
                 AppImportanceFilter.create(
                         this,
-                        () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation());
+                        () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation(),
+                        BinderFlagReader.readFlag(
+                                () -> FlagsFactory.getFlags().getEnableGetBindingUidImportance()));
 
         if (mTopicsService == null) {
             mTopicsService =

@@ -44,7 +44,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedListener {
+/**
+ * Listens to changes in DeviceConfig flags and caches their values
+ *
+ * @hide
+ */
+public class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedListener {
 
     private static final String TAG = "SdkSandboxManager";
     private static final String PROPERTY_DISABLE_SDK_SANDBOX = "disable_sdk_sandbox";
@@ -55,7 +60,8 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
      * Property to enforce restrictions for SDK sandbox processes. If the value of this property is
      * {@code true}, the restrictions will be enforced.
      */
-    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "sdksandbox_enforce_restrictions";
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static final String PROPERTY_ENFORCE_RESTRICTIONS = "sdksandbox_enforce_restrictions";
 
     private static final boolean DEFAULT_VALUE_ENFORCE_RESTRICTIONS = true;
 
@@ -111,6 +117,12 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
 
     // Trivial bug fix. Enabled by default.
     private static final boolean DEFAULT_VALUE_FIX_STOP_SANDBOX_DEADLOCK = true;
+
+    // Property to enable verification of dex files in SDK sandbox.
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static final String PROPERTY_VERIFY_DEX_FILES = "SdkInstallChecks__verify_dex_files";
+
+    private static final boolean DEFAULT_VALUE_VERIFY_DEX_FILES = false;
 
     private final Context mContext;
     private final Object mLock = new Object();
@@ -225,6 +237,13 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
                     DeviceConfig.NAMESPACE_ADSERVICES,
                     PROPERTY_FIX_STOP_SANDBOX_DEADLOCK,
                     DEFAULT_VALUE_FIX_STOP_SANDBOX_DEADLOCK);
+
+    @GuardedBy("mLock")
+    private boolean mVerifyDexFiles =
+            DeviceConfig.getBoolean(
+                    DeviceConfig.NAMESPACE_ADSERVICES,
+                    PROPERTY_VERIFY_DEX_FILES,
+                    DEFAULT_VALUE_VERIFY_DEX_FILES);
 
     SdkSandboxSettingsListener(Context context, SdkSandboxManagerService sdkSandboxManagerService) {
         mContext = context;
@@ -350,6 +369,12 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
                             mSdkSandboxManagerService.onUserUnlocking(
                                     mSdkSandboxManagerService.getCurrentUserId());
                         }
+                        break;
+                    case PROPERTY_VERIFY_DEX_FILES:
+                        mVerifyDexFiles =
+                                properties.getBoolean(
+                                        PROPERTY_VERIFY_DEX_FILES, DEFAULT_VALUE_VERIFY_DEX_FILES);
+
                     default:
                 }
                 if (propertyIsLogged) {
@@ -460,6 +485,13 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
     public boolean getStopSandboxDeadlockFix() {
         synchronized (mLock) {
             return mStopSandboxDeadlockFix;
+        }
+    }
+
+    /** Returns the flag value gating verification of SDK libraries DEX files */
+    public boolean verifyDexFiles() {
+        synchronized (mLock) {
+            return mVerifyDexFiles;
         }
     }
 

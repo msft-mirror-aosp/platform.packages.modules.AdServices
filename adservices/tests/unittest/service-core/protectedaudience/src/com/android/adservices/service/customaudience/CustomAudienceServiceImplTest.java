@@ -124,6 +124,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
 
+    private static final int CALLER_UID = Process.myUid();
+
     private static final CustomAudience VALID_CUSTOM_AUDIENCE =
             CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
 
@@ -1536,7 +1538,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         doThrow(new WrongCallingApplicationStateException())
                 .when(mAppImportanceFilterMock)
                 .assertCallerIsInForeground(
-                        CustomAudienceFixture.VALID_OWNER,
+                        CALLER_UID,
                         AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO,
                         null);
 
@@ -1559,7 +1561,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         verify(mCustomAudienceImplMock).getCustomAudienceDao();
         verify(mAppImportanceFilterMock)
                 .assertCallerIsInForeground(
-                        CustomAudienceFixture.VALID_OWNER,
+                        CALLER_UID,
                         AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO,
                         null);
         verifyErrorResponseCustomAudienceOverrideCallback(
@@ -1658,7 +1660,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         int apiName = AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
         doThrow(new WrongCallingApplicationStateException())
                 .when(mAppImportanceFilterMock)
-                .assertCallerIsInForeground(CustomAudienceFixture.VALID_OWNER, apiName, null);
+                .assertCallerIsInForeground(CALLER_UID, apiName, null);
 
         mService.removeCustomAudienceRemoteInfoOverride(
                 CustomAudienceFixture.VALID_OWNER,
@@ -1674,8 +1676,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
         verify(mDevContextFilterMock).createDevContext();
         verify(mCustomAudienceImplMock).getCustomAudienceDao();
-        verify(mAppImportanceFilterMock)
-                .assertCallerIsInForeground(CustomAudienceFixture.VALID_OWNER, apiName, null);
+        verify(mAppImportanceFilterMock).assertCallerIsInForeground(CALLER_UID, apiName, null);
         verifyErrorResponseCustomAudienceOverrideCallback(
                 STATUS_BACKGROUND_CALLER, ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
         verifyLoggerMock(apiName, mPackageName, STATUS_BACKGROUND_CALLER);

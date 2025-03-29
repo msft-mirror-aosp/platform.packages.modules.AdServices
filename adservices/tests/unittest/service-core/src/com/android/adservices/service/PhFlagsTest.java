@@ -124,6 +124,13 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_
 import static com.android.adservices.service.Flags.DEFAULT_PAS_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER;
 import static com.android.adservices.service.Flags.DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_ENABLE_PER_JOB_POLICY;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_MDD_CHARGING_JOB_POLICY;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_MDD_MAINTENANCE_JOB_POLICY;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_MDD_WIFI_CHARGING_JOB_POLICY;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY;
 import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_EPOCH_JOB_ENABLED;
@@ -929,7 +936,12 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTR
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_REPORT_EXPIRY_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DB_SIZE_LIMIT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS;
@@ -1156,6 +1168,13 @@ import static com.android.adservices.service.FlagsConstants.KEY_RECORD_MANUAL_IN
 import static com.android.adservices.service.FlagsConstants.KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_ENABLE_PER_JOB_POLICY;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_MDD_CHARGING_JOB_POLICY;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_MDD_MAINTENANCE_JOB_POLICY;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_MDD_WIFI_CHARGING_JOB_POLICY;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_EPOCH_JOB_ENABLED;
@@ -2002,6 +2021,46 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST,
                 Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST,
                 Flags::getMeasurementCountUniqueAppAllowlist);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueShortWindowContributionBudget() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET,
+                Flags.DEFAULT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET,
+                Flags::getMeasurementCountUniqueShortWindowContributionBudget);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueLongWindowContributionBudget() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET,
+                Flags.DEFAULT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET,
+                Flags::getMeasurementCountUniqueLongWindowContributionBudget);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueMaxContributionShortWindow() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW_MS,
+                Flags.DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW,
+                Flags::getMeasurementCountUniqueMaxContributionShortWindow);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueMaxContributionLongWindow() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW_MS,
+                Flags.DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW,
+                Flags::getMeasurementCountUniqueMaxContributionLongWindow);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueReportExpiry() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_REPORT_EXPIRY_MS,
+                Flags.DEFAULT_COUNT_UNIQUE_REPORT_EXPIRY,
+                Flags::getMeasurementCountUniqueReportExpiry);
     }
 
     @Test
@@ -6469,6 +6528,62 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE,
                 MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE,
                 Flags::getMeasurementDebugJoinKeysNoncompliantAdtechsSampleRate);
+    }
+
+    @Test
+    public void testGetSpeEnablePerJobPolicy() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_SPE_ENABLE_PER_JOB_POLICY,
+                DEFAULT_SPE_ENABLE_PER_JOB_POLICY,
+                Flags::getSpeEnablePerJobPolicy);
+    }
+
+    @Test
+    public void testGetSpeCustomAudienceBackgroundFetchJobPolicy() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY,
+                DEFAULT_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY,
+                Flags::getSpeCustomAudienceBackgroundFetchJobPolicy);
+    }
+
+    @Test
+    public void testGetSpeMddMaintenanceJobPolicy() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_SPE_MDD_MAINTENANCE_JOB_POLICY,
+                DEFAULT_SPE_MDD_MAINTENANCE_JOB_POLICY,
+                Flags::getSpeMddMaintenanceJobPolicy);
+    }
+
+    @Test
+    public void testGetSpeMddChargingJobPolicy() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_SPE_MDD_CHARGING_JOB_POLICY,
+                DEFAULT_SPE_MDD_CHARGING_JOB_POLICY,
+                Flags::getSpeMddChargingJobPolicy);
+    }
+
+    @Test
+    public void testGetSpeMddCellularChargingJobPolicy() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY,
+                DEFAULT_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY,
+                Flags::getSpeMddCellularChargingJobPolicy);
+    }
+
+    @Test
+    public void testGetSpeMddWifiChargingJobPolicy() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_SPE_MDD_WIFI_CHARGING_JOB_POLICY,
+                DEFAULT_SPE_MDD_WIFI_CHARGING_JOB_POLICY,
+                Flags::getSpeMddWifiChargingJobPolicy);
+    }
+
+    @Test
+    public void testGetSpeMeasurementAsyncRegistrationFallbackJobPolicy() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY,
+                DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY,
+                Flags::getSpeMeasurementAsyncRegistrationFallbackJobPolicy);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

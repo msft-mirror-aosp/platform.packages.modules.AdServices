@@ -19,6 +19,8 @@ package com.android.adservices.service.stats;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
+import static com.android.adservices.service.signals.evict.EvictionPriority.EVICT_LATER;
+import static com.android.adservices.service.signals.evict.EvictionPriority.EVICT_SOONER;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus.INSERT_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionType.WRITE_TRANSACTION_TYPE;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.MethodName.INSERT_KEY;
@@ -55,6 +57,8 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPOR
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_DESTINATION_COMPONENT_SELLER;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_STATUS_FAILURE_HTTP_REDIRECTION;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_FIFO;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_PRIORITIZED_FIFO;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_LARGE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_SMALL;
@@ -100,6 +104,7 @@ import org.mockito.Mock;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /** Unit tests for {@link AdServicesLoggerImpl}. */
 @SpyStatic(FlagsFactory.class)
@@ -999,6 +1004,13 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setMeanRawProtectedSignalsSizeBytes(123.4F)
                         .setMaxRawProtectedSignalsSizeBytes(345.67F)
                         .setMinRawProtectedSignalsSizeBytes(0.0001F)
+                        .setSignalEvictorsUsed(
+                                Set.of(SIGNAL_EVICTOR_FIFO, SIGNAL_EVICTOR_PRIORITIZED_FIFO))
+                        .setUpdatedSignalEvictionPriorities(Set.of(EVICT_LATER))
+                        .setEvictedSignalEvictionPriorities(Set.of(EVICT_SOONER))
+                        .setPerBuyerEvictedSignalSize(SIZE_LARGE)
+                        .setUpdatedSignalsWithEvictionPriorityCount(11)
+                        .setSignalUpdateSchemaVersion(0)
                         .build();
         mAdservicesLogger.logUpdateSignalsProcessReportedStats(stats);
         verify(mStatsdLoggerMock).logUpdateSignalsProcessReportedStats(eq(stats));

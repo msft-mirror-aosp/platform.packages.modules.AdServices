@@ -52,6 +52,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
@@ -413,7 +414,8 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, mFakeFlags);
         when(ConsentManager.getInstance()).thenReturn(mConsentManagerMock);
-        when(AppImportanceFilter.create(any(), any())).thenReturn(mAppImportanceFilterMock);
+        when(AppImportanceFilter.create(any(), any(), anyBoolean()))
+                .thenReturn(mAppImportanceFilterMock);
         doNothing()
                 .when(mAppImportanceFilterMock)
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());

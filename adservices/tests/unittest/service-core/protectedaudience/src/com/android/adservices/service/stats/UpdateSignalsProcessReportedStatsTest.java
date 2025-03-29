@@ -18,12 +18,20 @@ package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
+import static com.android.adservices.service.signals.evict.EvictionPriority.DEFAULT;
+import static com.android.adservices.service.signals.evict.EvictionPriority.EVICT_LATER;
+import static com.android.adservices.service.signals.evict.EvictionPriority.EVICT_SOONER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_FIFO;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_PRIORITIZED_FIFO;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.service.signals.evict.EvictionPriority;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedStats;
 
 import org.junit.Test;
+
+import java.util.Set;
 
 public class UpdateSignalsProcessReportedStatsTest extends AdServicesUnitTestCase {
     private static final int UPDATE_SIGNALS_PROCESS_LATENCY_MILLIS = 200;
@@ -36,6 +44,15 @@ public class UpdateSignalsProcessReportedStatsTest extends AdServicesUnitTestCas
     private static final float MEAN_RAW_PROTECTED_SIGNALS_SIZE_BYTES = 123.4f;
     private static final float MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES = 345.67f;
     private static final float MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES = 0.0001f;
+    private static final Set<Integer> VALID_EVICTOR_LIST =
+            Set.of(SIGNAL_EVICTOR_FIFO, SIGNAL_EVICTOR_PRIORITIZED_FIFO);
+    private static final Set<EvictionPriority> UPDATED_EVICTION_PRIORITY_LIST =
+            Set.of(DEFAULT, EVICT_SOONER);
+    private static final Set<EvictionPriority> EVICTED_EVICTION_PRIORITY_LIST =
+            Set.of(DEFAULT, EVICT_LATER);
+    private static final int SIGNAL_UPDATE_SCHEMA_VERSION = 0;
+    private static final int UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT = 11;
+    private static final int PER_BUYER_EVICTED_SIGNAL_SIZE = 12;
 
     @Test
     public void testBuildUpdateSignalsApiCalledStats() {
@@ -51,6 +68,13 @@ public class UpdateSignalsProcessReportedStatsTest extends AdServicesUnitTestCas
                         .setMeanRawProtectedSignalsSizeBytes(MEAN_RAW_PROTECTED_SIGNALS_SIZE_BYTES)
                         .setMaxRawProtectedSignalsSizeBytes(MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES)
                         .setMinRawProtectedSignalsSizeBytes(MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES)
+                        .setSignalEvictorsUsed(VALID_EVICTOR_LIST)
+                        .setUpdatedSignalEvictionPriorities(UPDATED_EVICTION_PRIORITY_LIST)
+                        .setEvictedSignalEvictionPriorities(EVICTED_EVICTION_PRIORITY_LIST)
+                        .setPerBuyerEvictedSignalSize(PER_BUYER_EVICTED_SIGNAL_SIZE)
+                        .setUpdatedSignalsWithEvictionPriorityCount(
+                                UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT)
+                        .setSignalUpdateSchemaVersion(SIGNAL_UPDATE_SCHEMA_VERSION)
                         .build();
 
         expect.that(stats.getUpdateSignalsProcessLatencyMillis())
@@ -67,5 +91,15 @@ public class UpdateSignalsProcessReportedStatsTest extends AdServicesUnitTestCas
                 .isEqualTo(MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
         expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
+
+        expect.that(stats.getSignalEvictorsUsed()).isEqualTo(VALID_EVICTOR_LIST);
+        expect.that(stats.getUpdatedSignalEvictionPriorities())
+                .isEqualTo(UPDATED_EVICTION_PRIORITY_LIST);
+        expect.that(stats.getEvictedSignalEvictionPriorities())
+                .isEqualTo(EVICTED_EVICTION_PRIORITY_LIST);
+        expect.that(stats.getPerBuyerEvictedSignalSize()).isEqualTo(PER_BUYER_EVICTED_SIGNAL_SIZE);
+        expect.that(stats.getUpdatedSignalsWithEvictionPriorityCount())
+                .isEqualTo(UPDATED_SIGNALS_WITH_EVICTION_PRIORITY_COUNT);
+        expect.that(stats.getSignalUpdateSchemaVersion()).isEqualTo(SIGNAL_UPDATE_SCHEMA_VERSION);
     }
 }

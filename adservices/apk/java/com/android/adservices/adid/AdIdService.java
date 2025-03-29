@@ -24,6 +24,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdServiceImpl;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.util.Clock;
@@ -48,7 +49,9 @@ public class AdIdService extends Service {
         AppImportanceFilter appImportanceFilter =
                 AppImportanceFilter.create(
                         this,
-                        () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation());
+                        () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation(),
+                        BinderFlagReader.readFlag(
+                                () -> FlagsFactory.getFlags().getEnableGetBindingUidImportance()));
 
         if (mAdIdService == null) {
             mAdIdService =

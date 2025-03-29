@@ -26,6 +26,11 @@ import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_JOB_EXECU
 import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET;
+import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW;
+import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW;
+import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_REPORT_EXPIRY;
+import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_LOG_SAMPLING_INFRA;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
@@ -44,6 +49,12 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_R
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_MDD_CHARGING_JOB_POLICY;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_MDD_MAINTENANCE_JOB_POLICY;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_MDD_WIFI_CHARGING_JOB_POLICY;
+import static com.android.adservices.service.Flags.DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
 import static com.android.adservices.service.Flags.ENABLE_GET_BINDING_UID_IMPORTANCE;
@@ -1191,6 +1202,46 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementCountUniqueShortWindowContributionBudget() {
+        testFlag(
+                "getMeasurementCountUniqueShortWindowContributionBudget",
+                DEFAULT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET,
+                Flags::getMeasurementCountUniqueShortWindowContributionBudget);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueLongWindowContributionBudget() {
+        testFlag(
+                "getMeasurementCountUniqueLongWindowContributionBudget",
+                DEFAULT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET,
+                Flags::getMeasurementCountUniqueLongWindowContributionBudget);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueMaxContributionShortWindow() {
+        testFlag(
+                "getMeasurementCountUniqueMaxContributionShortWindow",
+                DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW,
+                Flags::getMeasurementCountUniqueMaxContributionShortWindow);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueMaxContributionLongWindow() {
+        testFlag(
+                "getMeasurementCountUniqueMaxContributionLongWindow",
+                DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW,
+                Flags::getMeasurementCountUniqueMaxContributionLongWindow);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueReportExpiry() {
+        testFlag(
+                "getMeasurementCountUniqueReportExpiry",
+                DEFAULT_COUNT_UNIQUE_REPORT_EXPIRY,
+                Flags::getMeasurementCountUniqueReportExpiry);
+    }
+
+    @Test
     public void testGetFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
         testFeatureFlag(
                 "FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS",
@@ -1355,6 +1406,54 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getProtectedSignalsUpdateSchemaVersion",
                 PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION,
                 Flags::getProtectedSignalsUpdateSchemaVersion);
+    }
+
+    @Test
+    public void testGetSpeCustomAudienceBackgroundFetchJobPolicy() {
+        testFlag(
+                "getSpeCustomAudienceBackgroundFetchJobPolicy",
+                DEFAULT_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY,
+                Flags::getSpeCustomAudienceBackgroundFetchJobPolicy);
+    }
+
+    @Test
+    public void testGetSpeMddMaintenanceJobPolicy() {
+        testFlag(
+                "getSpeMddMaintenanceJobPolicy",
+                DEFAULT_SPE_MDD_MAINTENANCE_JOB_POLICY,
+                Flags::getSpeMddMaintenanceJobPolicy);
+    }
+
+    @Test
+    public void testGetSpeMddChargingJobPolicy() {
+        testFlag(
+                "getSpeMddChargingJobPolicy",
+                DEFAULT_SPE_MDD_CHARGING_JOB_POLICY,
+                Flags::getSpeMddChargingJobPolicy);
+    }
+
+    @Test
+    public void testGetSpeMddCellularChargingJobPolicy() {
+        testFlag(
+                "getSpeMddCellularChargingJobPolicy",
+                DEFAULT_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY,
+                Flags::getSpeMddCellularChargingJobPolicy);
+    }
+
+    @Test
+    public void testGetSpeMddWifiChargingJobPolicy() {
+        testFlag(
+                "getSpeMddWifiChargingJobPolicy",
+                DEFAULT_SPE_MDD_WIFI_CHARGING_JOB_POLICY,
+                Flags::getSpeMddWifiChargingJobPolicy);
+    }
+
+    @Test
+    public void testGetSpeMeasurementAsyncRegistrationFallbackJobPolicy() {
+        testFlag(
+                "getSpeMeasurementAsyncRegistrationFallbackJobPolicy",
+                DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY,
+                Flags::getSpeMeasurementAsyncRegistrationFallbackJobPolicy);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

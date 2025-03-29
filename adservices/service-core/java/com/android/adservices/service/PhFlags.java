@@ -126,6 +126,13 @@ import static com.android.adservices.service.FlagsConstants.KEY_PAS_SIGNALS_DOWN
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_ENABLE_PER_JOB_POLICY;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_MDD_CHARGING_JOB_POLICY;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_MDD_MAINTENANCE_JOB_POLICY;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_MDD_WIFI_CHARGING_JOB_POLICY;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_EPOCH_JOB_ENABLED;
@@ -3985,6 +3992,41 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getMeasurementCountUniqueShortWindowContributionBudget() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET,
+                DEFAULT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET);
+    }
+
+    @Override
+    public int getMeasurementCountUniqueLongWindowContributionBudget() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET,
+                DEFAULT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET);
+    }
+
+    @Override
+    public long getMeasurementCountUniqueMaxContributionShortWindow() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW_MS,
+                DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW);
+    }
+
+    @Override
+    public long getMeasurementCountUniqueMaxContributionLongWindow() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW_MS,
+                DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW);
+    }
+
+    @Override
+    public long getMeasurementCountUniqueReportExpiry() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_REPORT_EXPIRY_MS,
+                DEFAULT_COUNT_UNIQUE_REPORT_EXPIRY);
+    }
+
+    @Override
     public boolean getNotificationDismissedOnClick() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK,
@@ -5298,5 +5340,50 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE,
                 MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE);
+    }
+
+    @Override
+    public boolean getSpeEnablePerJobPolicy() {
+        return getDeviceConfigFlag(
+                KEY_SPE_ENABLE_PER_JOB_POLICY, DEFAULT_SPE_ENABLE_PER_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeCustomAudienceBackgroundFetchJobPolicy() {
+        return getDeviceConfigFlag(
+                KEY_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY,
+                DEFAULT_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeMddMaintenanceJobPolicy() {
+        return getDeviceConfigFlag(
+                KEY_SPE_MDD_MAINTENANCE_JOB_POLICY, DEFAULT_SPE_MDD_MAINTENANCE_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeMddChargingJobPolicy() {
+        return getDeviceConfigFlag(
+                KEY_SPE_MDD_CHARGING_JOB_POLICY, DEFAULT_SPE_MDD_CHARGING_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeMddCellularChargingJobPolicy() {
+        return getDeviceConfigFlag(
+                KEY_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY,
+                DEFAULT_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeMddWifiChargingJobPolicy() {
+        return getDeviceConfigFlag(
+                KEY_SPE_MDD_WIFI_CHARGING_JOB_POLICY, DEFAULT_SPE_MDD_WIFI_CHARGING_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeMeasurementAsyncRegistrationFallbackJobPolicy() {
+        return getDeviceConfigFlag(
+                KEY_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY,
+                DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY);
     }
 }

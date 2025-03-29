@@ -19,17 +19,12 @@ package com.android.adservices.service.signals.updateprocessors.append;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils;
-import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -49,30 +44,9 @@ import java.util.Set;
  * </pre>
  */
 public class AppendV0 extends Append {
-    @VisibleForTesting
-    public static final String TOO_MANY_SIGNALS_ERROR =
-            "Attempting to append %d than with a max_signals of %d";
-
-    private static final String MAX_SIGNALS = "max_signals";
-    private static final String VALUES = "values";
 
     @Override
-    public UpdateOutput processUpdates(
-            Object updates, Map<ByteBuffer, Set<DBProtectedSignal>> current) throws JSONException {
-        UpdateOutput toReturn = new UpdateOutput();
-        JSONObject updatesObject = UpdateProcessorUtils.castToJSONObject(APPEND, updates);
-        // Iterate over the keys.
-        for (Iterator<String> iter = updatesObject.keys(); iter.hasNext(); ) {
-            String stringKey = iter.next();
-            ByteBuffer key = UpdateProcessorUtils.decodeKey(APPEND, stringKey);
-            JSONObject update = updatesObject.getJSONObject(stringKey);
-            processKey(key, update, current, toReturn);
-        }
-        return toReturn;
-    }
-
-    /** Process the update for one key. */
-    private void processKey(
+    protected void processKey(
             ByteBuffer key,
             JSONObject update,
             Map<ByteBuffer, Set<DBProtectedSignal>> current,
@@ -91,25 +65,6 @@ public class AppendV0 extends Append {
 
         // Add all the signals
         addSignals(UpdateProcessorUtils.getByteArrayFromBuffer(key), values, toReturn);
-    }
-
-    /** Delete excess signals to make room for the new ones. */
-    private void deleteSignals(
-            ByteBuffer key,
-            int maxSignals,
-            JSONArray values,
-            Map<ByteBuffer, Set<DBProtectedSignal>> current,
-            UpdateOutput toReturn) {
-        int leftoverSpace = maxSignals - values.length();
-        if (current.containsKey(key)) {
-            List<DBProtectedSignal> timeSeries = new ArrayList<>(current.get(key));
-            if (timeSeries.size() > leftoverSpace) {
-                timeSeries.sort(Comparator.comparing(DBProtectedSignal::getCreationTime));
-                // Add the oldest signals that don't fit in the leftover space to the remove list.
-                toReturn.getToRemove()
-                        .addAll(timeSeries.subList(0, timeSeries.size() - leftoverSpace));
-            }
-        }
     }
 
     /** Add all the new signals. */

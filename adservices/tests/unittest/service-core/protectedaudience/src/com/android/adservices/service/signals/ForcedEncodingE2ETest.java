@@ -83,6 +83,7 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
+import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerFactory;
 import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEventHandler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -294,7 +295,10 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                         mLegacyFakeFlags.getProtectedSignalsMaxSignalSizePerBuyerBytes(),
                         oversubscriptionBytesLimit);
 
-        mUpdateProcessorSelector = new UpdateProcessorSelector();
+        mUpdateProcessorSelector =
+                new UpdateProcessorSelector(
+                        new EvictionPriorityHandlerFactory(
+                                mLegacyFakeFlags.getProtectedSignalsEnablePrioritizedEviction()));
 
         mUpdateProcessingOrchestrator =
                 new UpdateProcessingOrchestrator(
@@ -330,7 +334,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                 new UpdatesDownloader(
                         mLightweightExecutor,
                         mAdServicesHttpsClient,
-                        mFakeFlags.getProtectedSignalsUpdateSchemaVersion());
+                        mLegacyFakeFlags.getProtectedSignalsUpdateSchemaVersion());
 
         mAdtechUriValidator = new AdTechUriValidator("", "", "", "");
 

@@ -20,6 +20,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -68,7 +69,8 @@ public final class AppSetIdServiceTest extends AdServicesExtendedMockitoTestCase
 
         AppSetIdService spyAppSetIdService = spy(AppSetIdService.class);
         doReturn(mMockPackageManager).when(spyAppSetIdService).getPackageManager();
-        doReturn(mMockAppImportanceFilter).when(() -> AppImportanceFilter.create(any(), any()));
+        doReturn(mMockAppImportanceFilter)
+                .when(() -> AppImportanceFilter.create(any(), any(), anyBoolean()));
 
         spyAppSetIdService.onCreate();
         IBinder binder = spyAppSetIdService.onBind(getIntentForAppSetIdService());

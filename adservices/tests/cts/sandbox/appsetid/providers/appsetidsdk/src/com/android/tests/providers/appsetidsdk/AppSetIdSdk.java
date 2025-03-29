@@ -27,6 +27,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import com.android.adservices.shared.common.exception.ProviderServiceTaskCancelledException;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 
 import java.util.concurrent.Executor;
@@ -61,6 +62,10 @@ public class AppSetIdSdk extends SandboxedSdkProvider {
                 // Failed to call the getAppSetId
                 Exception exception = callback.getError();
                 Log.e(TAG, "Failed to call the getAppSetId with exception: " + exception);
+                if (exception instanceof ProviderServiceTaskCancelledException) {
+                    Log.e(TAG, "provider service cancellation exception");
+                    return new SandboxedSdk(new Binder());
+                }
                 throw new LoadSdkException(new Exception("AppSetId failed."), new Bundle());
             }
         } catch (Exception e) {

@@ -3882,6 +3882,44 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB;
     }
 
+    /** Default short window contribution budget per enrollment for count unique */
+    @ConfigFlag int DEFAULT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET = 65536; // = 2^16
+
+    /** Returns default short window contribution budget per enrollment for count unique */
+    default int getMeasurementCountUniqueShortWindowContributionBudget() {
+        return DEFAULT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET;
+    }
+
+    /** Default long window contribution budget per enrollment for count unique */
+    @ConfigFlag int DEFAULT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET = 1048576; // = 2^20
+
+    /** Returns default long window contribution budget per site for count unique */
+    default int getMeasurementCountUniqueLongWindowContributionBudget() {
+        return DEFAULT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET;
+    }
+
+    @ConfigFlag
+    long DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW = TimeUnit.MINUTES.toMillis(10);
+
+    /** Maximum count unique contributions short window */
+    default long getMeasurementCountUniqueMaxContributionShortWindow() {
+        return DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW;
+    }
+
+    @ConfigFlag long DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW = TimeUnit.DAYS.toMillis(1);
+
+    /** Maximum count unique contributions long window */
+    default long getMeasurementCountUniqueMaxContributionLongWindow() {
+        return DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW;
+    }
+
+    @ConfigFlag long DEFAULT_COUNT_UNIQUE_REPORT_EXPIRY = TimeUnit.DAYS.toMillis(5);
+
+    /** Default count unique report expiry */
+    default long getMeasurementCountUniqueReportExpiry() {
+        return DEFAULT_COUNT_UNIQUE_REPORT_EXPIRY;
+    }
+
     /** Default min time period between each execution of the Count Unique reporting job. */
     @ConfigFlag
     long DEFAULT_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(2);
@@ -6259,6 +6297,48 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the base64 encoded LogSamplingConfig for AdServices client error logging. */
     default String getAdServicesCelSamplingConfig() {
         return DEFAULT_AD_SERVICES_CEL_SAMPLING_CONFIG;
+    }
+
+    @ConfigFlag String DEFAULT_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY = "";
+
+    /** Returns the job policy for custom audience background fetch job. */
+    default String getSpeCustomAudienceBackgroundFetchJobPolicy() {
+        return DEFAULT_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY;
+    }
+
+    @ConfigFlag String DEFAULT_SPE_MDD_MAINTENANCE_JOB_POLICY = "";
+
+    /** Returns the job policy for MDD maintenance job. */
+    default String getSpeMddMaintenanceJobPolicy() {
+        return DEFAULT_SPE_MDD_MAINTENANCE_JOB_POLICY;
+    }
+
+    @ConfigFlag String DEFAULT_SPE_MDD_CHARGING_JOB_POLICY = "";
+
+    /** Returns the job policy for MDD charging job. */
+    default String getSpeMddChargingJobPolicy() {
+        return DEFAULT_SPE_MDD_CHARGING_JOB_POLICY;
+    }
+
+    @ConfigFlag String DEFAULT_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY = "";
+
+    /** Returns the job policy for MDD cellular charging job. */
+    default String getSpeMddCellularChargingJobPolicy() {
+        return DEFAULT_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY;
+    }
+
+    @ConfigFlag String DEFAULT_SPE_MDD_WIFI_CHARGING_JOB_POLICY = "";
+
+    /** Returns the job policy for MDD WI-FI charging job. */
+    default String getSpeMddWifiChargingJobPolicy() {
+        return DEFAULT_SPE_MDD_WIFI_CHARGING_JOB_POLICY;
+    }
+
+    @ConfigFlag String DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY = "";
+
+    /** Returns the job policy for Measurement async registration fallback job. */
+    default String getSpeMeasurementAsyncRegistrationFallbackJobPolicy() {
+        return DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

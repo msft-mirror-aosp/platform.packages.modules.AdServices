@@ -65,6 +65,7 @@ import com.android.adservices.service.measurement.registration.AsyncRegistration
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.CountUniqueReportingJob;
 import com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
@@ -223,6 +224,7 @@ public class BackgroundJobsManager {
      *   <li>{@link MddJobService}
      *   <li>{@link EncryptionKeyJobService}
      *   <li>{@link CobaltJobService}
+     *   <li>{@link CountUniqueReportingJob}
      * </ul>
      *
      * @param context application context.
@@ -250,6 +252,7 @@ public class BackgroundJobsManager {
             scheduleEncryptionKeyBackgroundJobs(context);
             scheduleCobaltBackgroundJob(context);
             scheduleAdPackageDenyPreProcessBackgroundJob();
+            CountUniqueReportingJob.schedule();
         }
     }
 

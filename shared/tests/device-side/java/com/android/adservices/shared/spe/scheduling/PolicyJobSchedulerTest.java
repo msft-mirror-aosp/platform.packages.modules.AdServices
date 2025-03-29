@@ -49,8 +49,10 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.os.PersistableBundle;
 import android.platform.test.annotations.DisabledOnRavenwood;
+import android.util.Base64;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
+import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
@@ -95,7 +97,7 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
                     .build();
     private static final JobSpec sJobSpec = new JobSpec.Builder(sJobPolicy).build();
 
-    private final JobScheduler mJobScheduler = sContext.getSystemService(JobScheduler.class);
+    private final JobScheduler mJobScheduler = mContext.getSystemService(JobScheduler.class);
     private TestJobServiceFactory mFactory;
     private PolicyJobScheduler<TestJobService> mPolicyJobScheduler;
     @Mock private JobServiceLogger mMockLogger;
@@ -103,6 +105,7 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
     @Mock private ModuleJobPolicy mMockModuleJobPolicy;
     @Mock private AdServicesErrorLogger mMockErrorLogger;
     @Mock private JobSchedulingLogger mMockJobSchedulingLogger;
+    @Mock private ModuleSharedFlags mMockModuleSharedFlags;
 
     @Before
     public void setup() {
@@ -114,7 +117,8 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
                         mMockLogger,
                         mMockModuleJobPolicy,
                         mMockErrorLogger,
-                        mMockJobSchedulingLogger);
+                        mMockJobSchedulingLogger,
+                        mMockModuleSharedFlags);
         mPolicyJobScheduler = new PolicyJobScheduler<>(mFactory, TestJobService.class);
     }
 
@@ -137,7 +141,7 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
 
         assertThrows(
                 IllegalStateException.class,
-                () -> mPolicyJobScheduler.scheduleJob(sContext, jobSpec));
+                () -> mPolicyJobScheduler.scheduleJob(mContext, jobSpec));
     }
 
     @Test
@@ -145,7 +149,7 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
         when(mMockJobWorker.getJobSchedulingEnablementStatus())
                 .thenReturn(JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON);
 
-        assertThat(mPolicyJobScheduler.scheduleJob(sContext, sJobSpec))
+        assertThat(mPolicyJobScheduler.scheduleJob(mContext, sJobSpec))
                 .isEqualTo(SCHEDULING_RESULT_CODE_SKIPPED);
     }
 
@@ -159,7 +163,7 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
         scheduleOneTimeJobWithDefaultConstraints();
 
         expect.withMessage("The scheduling for job with same JobInfo")
-                .that(mPolicyJobScheduler.scheduleJob(sContext, sJobSpec))
+                .that(mPolicyJobScheduler.scheduleJob(mContext, sJobSpec))
                 .isEqualTo(SCHEDULING_RESULT_CODE_SKIPPED);
     }
 
@@ -169,7 +173,7 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
 
         JobSpec jobSpec = new JobSpec.Builder(sJobPolicy).setShouldForceSchedule(true).build();
         expect.withMessage("The forced scheduling for job with same JobInfo")
-                .that(mPolicyJobScheduler.scheduleJob(sContext, jobSpec))
+                .that(mPolicyJobScheduler.scheduleJob(mContext, jobSpec))
                 .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
     }
 
@@ -183,7 +187,7 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
 
         // Call the scheduling method with an updated info.
         expect.withMessage("The scheduling for job with different jobInfo")
-                .that(mPolicyJobScheduler.scheduleJob(sContext, updatedJobSpec))
+                .that(mPolicyJobScheduler.scheduleJob(mContext, updatedJobSpec))
                 .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
 
         JobInfo scheduledJobInfo = mJobScheduler.getPendingJob(JOB_ID_1);
@@ -210,9 +214,9 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
                             return true;
                         })
                 .when(spyScheduler)
-                .scheduleJob(sContext, sJobSpec);
+                .scheduleJob(mContext, sJobSpec);
 
-        spyScheduler.schedule(sContext, sJobSpec);
+        spyScheduler.schedule(mContext, sJobSpec);
 
         assertWithMessage("The scheduling finishing")
                 .that(countDownLatch.await(3, TimeUnit.SECONDS))
@@ -220,7 +224,10 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
     }
 
     @Test
-    public void getJobInfoToSchedule() {
+    public void testGetJobInfoToSchedule() {
+        // Disable per-job policy.
+        when(mMockModuleSharedFlags.getSpeEnablePerJobPolicy()).thenReturn(false);
+
         long minimumLatencyFromServer = sJobPolicy.getOneOffJobParams().getMinimumLatencyMs() + 1;
         JobPolicy serverJobPolicy =
                 sJobPolicy.toBuilder()
@@ -243,30 +250,62 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
                         .setExtras(extras)
                         .build();
         assertWithMessage("getJobInfoToSchedule()")
-                .that(mPolicyJobScheduler.getJobInfoToSchedule(sContext, jobSpec, JOB_NAME_1))
+                .that(
+                        mPolicyJobScheduler.getJobInfoToSchedule(
+                                mContext, jobSpec, JOB_NAME_1, /* jobPolicyString= */ ""))
                 .isEqualTo(expectedJobInfo);
     }
 
     @Test
-    public void getJobInfoToSchedule_throwsWhenSyncPolicy() {
+    public void testGetJobInfoToSchedule_throwsWhenSyncPolicy() {
+        // Disable per-job policy.
+        when(mMockModuleSharedFlags.getSpeEnablePerJobPolicy()).thenReturn(false);
+
         // Policy requires to have job_id field to merge. It will throw an exception without job_id.
         JobPolicy serverJobPolicy = sJobPolicy.toBuilder().clearJobId().build();
         doReturn(Map.of(JOB_ID_1, serverJobPolicy)).when(mMockModuleJobPolicy).getJobPolicyMap();
 
-        JobSpec jobSpec = new JobSpec.Builder(sJobPolicy).build();
         // The JobInfo to return should come from the default policy if any error happens.
         JobInfo expectedJobInfo =
-                PolicyProcessor.applyPolicyToJobInfo(
-                        getBaseJobInfoBuilder(), jobSpec.getJobPolicy());
+                PolicyProcessor.applyPolicyToJobInfo(getBaseJobInfoBuilder(), sJobPolicy);
 
         assertWithMessage("getJobInfoToSchedule()")
-                .that(mPolicyJobScheduler.getJobInfoToSchedule(sContext, jobSpec, JOB_NAME_1))
+                .that(
+                        mPolicyJobScheduler.getJobInfoToSchedule(
+                                mContext, sJobSpec, JOB_NAME_1, /* jobPolicyString= */ ""))
                 .isEqualTo(expectedJobInfo);
         verify(mMockErrorLogger)
                 .logError(
                         any(),
                         eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_INVALID_JOB_POLICY_SYNC),
                         eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON));
+    }
+
+    @Test
+    public void testGetJobInfoToSchedule_perJobPolicy() {
+        // Enable per-job policy.
+        when(mMockModuleSharedFlags.getSpeEnablePerJobPolicy()).thenReturn(true);
+
+        String jobPolicyString = Base64.encodeToString(sJobPolicy.toByteArray(), Base64.DEFAULT);
+
+        assertThat(
+                        mPolicyJobScheduler.getJobInfoToSchedule(
+                                mContext, sJobSpec, JOB_NAME_1, jobPolicyString))
+                .isEqualTo(getTestJobInfo());
+    }
+
+    @Test
+    public void testGetJobInfoToSchedule_perJobPolicy_nullJobPolicyString() {
+        // Enable per-job policy.
+        when(mMockModuleSharedFlags.getSpeEnablePerJobPolicy()).thenReturn(true);
+
+        // The JobInfo to return should come from the default policy if any error happens.
+        JobInfo expectedJobInfo =
+                PolicyProcessor.applyPolicyToJobInfo(getBaseJobInfoBuilder(), sJobPolicy);
+        assertThat(
+                        mPolicyJobScheduler.getJobInfoToSchedule(
+                                mContext, sJobSpec, JOB_NAME_1, /* jobPolicyString= */ null))
+                .isEqualTo(expectedJobInfo);
     }
 
     @Test
@@ -287,9 +326,49 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
                         mMockLogger,
                         /* moduleJobPolicy= */ null,
                         mMockErrorLogger,
-                        mMockJobSchedulingLogger);
+                        mMockJobSchedulingLogger,
+                        mMockModuleSharedFlags);
         assertWithMessage("The returned jobInfo for null module policy synced from server")
                 .that(mPolicyJobScheduler.getPolicyFromFlagServer(JOB_ID_1, JOB_NAME_1))
+                .isNull();
+    }
+
+    @Test
+    public void testGetPerJobPolicyFromFlagServer() {
+        // Call the method with a valid job policy.
+        String jobPolicyString = Base64.encodeToString(sJobPolicy.toByteArray(), Base64.DEFAULT);
+
+        expect.withMessage("Job Policy is as expected.")
+                .that(
+                        mPolicyJobScheduler.getPerJobPolicyFromFlagServer(
+                                jobPolicyString, JOB_ID_1, JOB_NAME_1))
+                .isEqualTo(sJobPolicy);
+
+        // Call the method at the second time and it should directly return the value in the map.
+        // Use an invalid jobPolicyString to validate the behavior.
+
+        expect.withMessage("Getting Job Policy from Cache.")
+                .that(
+                        mPolicyJobScheduler.getPerJobPolicyFromFlagServer(
+                                jobPolicyString, JOB_ID_1, JOB_NAME_1))
+                .isEqualTo(sJobPolicy);
+    }
+
+    @Test
+    public void testGetPerJobPolicyFromFlagServer_invalidJobPolicyString() {
+        expect.withMessage("Invalid Job Policy String returning")
+                .that(
+                        mPolicyJobScheduler.getPerJobPolicyFromFlagServer(
+                                "invalid_job_policy_string", JOB_ID_1, JOB_NAME_1))
+                .isNull();
+    }
+
+    @Test
+    public void testGetPerJobPolicyFromFlagServer_nullJobPolicyString() {
+        expect.withMessage("Null Job Policy String returning")
+                .that(
+                        mPolicyJobScheduler.getPerJobPolicyFromFlagServer(
+                                "invalid_job_policy_string", JOB_ID_1, JOB_NAME_1))
                 .isNull();
     }
 
@@ -306,7 +385,7 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
     @Test
     public void testCreateBaseJobInfoBuilder() {
         JobInfo.Builder expectedBuilder =
-                new JobInfo.Builder(JOB_ID_1, new ComponentName(sContext, TestJobService.class));
+                new JobInfo.Builder(JOB_ID_1, new ComponentName(mContext, TestJobService.class));
         assertWithMessage("Base jobInfo creation")
                 .that(expectedBuilder.build())
                 .isEqualTo(getBaseJobInfoBuilder().build());
@@ -369,7 +448,14 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
     }
 
     private JobInfo.Builder getBaseJobInfoBuilder() {
-        return mPolicyJobScheduler.createBaseJobInfoBuilder(sContext, JOB_ID_1);
+        return mPolicyJobScheduler.createBaseJobInfoBuilder(mContext, JOB_ID_1);
+    }
+
+    private JobInfo getTestJobInfo() {
+        return getBaseJobInfoBuilder()
+                .setMinimumLatency(MINIMUM_LATENCY_MS)
+                .setRequiresCharging(REQUIRE_CHARGING)
+                .build();
     }
 
     private void scheduleOneTimeJobWithDefaultConstraints() {
@@ -380,7 +466,7 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
                 .that(mJobScheduler.getPendingJob(JOB_ID_1))
                 .isNull();
         expect.withMessage("Scheduling for  job with id=%s", JOB_ID_1)
-                .that(mPolicyJobScheduler.scheduleJob(sContext, sJobSpec))
+                .that(mPolicyJobScheduler.scheduleJob(mContext, sJobSpec))
                 .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
 
         JobInfo scheduledJobInfo = mJobScheduler.getPendingJob(JOB_ID_1);

@@ -501,6 +501,13 @@ public interface IMeasurementDao {
             long earliestValidAggregateDebugReportInsertion)
             throws DatastoreException;
 
+    /** Deletes all expired count unique records from tables. */
+    void deleteExpiredCountUniqueRecords(
+            long metadataExpiryTime,
+            long earliestValidContributionTime,
+            long earliestValidReportScheduledTime)
+            throws DatastoreException;
+
     /**
      * Mark relevant source as install attributed.
      *
@@ -927,6 +934,18 @@ public interface IMeasurementDao {
      * @throws DatastoreException when SQLite issue occurs.
      */
     void deleteCountUniqueMetadata(String key, Uri reportingOrigin) throws DatastoreException;
+
+    /**
+     * Returns total sum of contributions for a reporting site in a given time window
+     *
+     * @param enrollmentId enrollment of reporting site
+     * @param windowStartTime start time for window
+     * @param windowEndTime end time for window
+     * @throws DatastoreException when SQLite issue occurs.
+     */
+    long sumTotalCountUniqueContributionsInWindow(
+            String enrollmentId, long windowStartTime, long windowEndTime)
+            throws DatastoreException;
 
     /**
      * Insert an entry of {@link AggregateDebugReportRecord} into the {@link

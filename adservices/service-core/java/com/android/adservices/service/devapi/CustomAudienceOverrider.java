@@ -114,7 +114,8 @@ public class CustomAudienceOverrider {
             @NonNull String biddingLogicJS,
             long biddingLogicJsVersion,
             @NonNull AdSelectionSignals trustedBiddingSignals,
-            @NonNull CustomAudienceOverrideCallback callback) {
+            @NonNull CustomAudienceOverrideCallback callback,
+            int callerUid) {
         Objects.requireNonNull(callback);
 
         // Auto-generated variable name is too long for lint check
@@ -132,7 +133,7 @@ public class CustomAudienceOverrider {
 
                                     if (mFlags.getEnforceForegroundStatusForFledgeOverrides()) {
                                         mAppImportanceFilter.assertCallerIsInForeground(
-                                                owner, shortApiName, null);
+                                                callerUid, shortApiName, null);
                                     }
                                     return null;
                                 }))
@@ -173,7 +174,8 @@ public class CustomAudienceOverrider {
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
-            @NonNull CustomAudienceOverrideCallback callback) {
+            @NonNull CustomAudienceOverrideCallback callback,
+            int callerUid) {
         Objects.requireNonNull(callback);
 
         // Auto-generated variable name is too long for lint check
@@ -189,7 +191,7 @@ public class CustomAudienceOverrider {
 
                                     if (mFlags.getEnforceForegroundStatusForFledgeOverrides()) {
                                         mAppImportanceFilter.assertCallerIsInForeground(
-                                                owner, shortApiName, null);
+                                                callerUid, shortApiName, null);
                                     }
                                     return null;
                                 }))

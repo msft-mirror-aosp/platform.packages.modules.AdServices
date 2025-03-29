@@ -50,6 +50,7 @@ import android.content.ComponentName;
 import android.platform.test.annotations.DisabledOnRavenwood;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
+import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
@@ -91,6 +92,7 @@ public final class AbstractJobServiceTest extends SharedMockitoTestCase {
     @Mock private AdServicesErrorLogger mMockErrorLogger;
     @Mock private JobSchedulingLogger mMockJobSchedulingLogger;
     @Mock private BackoffPolicy mMockBackoffPolicy;
+    @Mock private ModuleSharedFlags mMockModuleSharedFlags;
 
     @Before
     public void setup() {
@@ -105,7 +107,8 @@ public final class AbstractJobServiceTest extends SharedMockitoTestCase {
                         mMockLogger,
                         MODULE_JOB_POLICY,
                         mMockErrorLogger,
-                        mMockJobSchedulingLogger);
+                        mMockJobSchedulingLogger,
+                        mMockModuleSharedFlags);
         doReturn(mFactory).when(mSpyJobService).getJobServiceFactory();
         mSpyJobService.onCreate();
 
@@ -144,7 +147,8 @@ public final class AbstractJobServiceTest extends SharedMockitoTestCase {
                         mMockLogger,
                         MODULE_JOB_POLICY,
                         mMockErrorLogger,
-                        mMockJobSchedulingLogger);
+                        mMockJobSchedulingLogger,
+                        mMockModuleSharedFlags);
         doReturn(mFactory).when(mSpyJobService).getJobServiceFactory();
         mSpyJobService.onCreate();
         JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyJobService);

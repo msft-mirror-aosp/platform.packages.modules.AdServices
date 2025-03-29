@@ -20,11 +20,7 @@ import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.nio.ByteBuffer;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -43,25 +39,12 @@ import java.util.Set;
 public class PutIfNotPresentV0 extends PutIfNotPresent {
 
     @Override
-    public UpdateOutput processUpdates(
-            Object updates, Map<ByteBuffer, Set<DBProtectedSignal>> current) throws JSONException {
-        UpdateOutput toReturn = new UpdateOutput();
-        JSONObject updatesObject =
-                UpdateProcessorUtils.castToJSONObject(PUT_IF_NOT_PRESENT, updates);
-        for (Iterator<String> iter = updatesObject.keys(); iter.hasNext(); ) {
-            String stringKey = iter.next();
-            ByteBuffer key = UpdateProcessorUtils.decodeKey(PUT_IF_NOT_PRESENT, stringKey);
-            processKey(key, updatesObject.getString(stringKey), current, toReturn);
-        }
-        return toReturn;
-    }
-
-    /** Process the update for one key. */
-    private void processKey(
+    protected void processKey(
             ByteBuffer key,
-            String value,
+            Object update,
             Map<ByteBuffer, Set<DBProtectedSignal>> current,
             UpdateOutput toReturn) {
+        String value = UpdateProcessorUtils.validateAndCastToString(PUT_IF_NOT_PRESENT, update);
         UpdateProcessorUtils.touchKey(key, toReturn.getKeysTouched());
         // Add the new signal if nothing exists under the key
         if (!current.containsKey(key)) {

@@ -41,6 +41,7 @@ public class KeyValueData {
         DEBUG_REPORT_RETRY_COUNT,
         JOB_LAST_EXECUTION_TIME,
         JOB_NEXT_EXECUTION_TIME,
+        COUNT_UNIQUE_REPORT_RETRY_COUNT
     }
 
     private DataType mDataType = null;
@@ -176,7 +177,8 @@ public class KeyValueData {
                 && mDataType != DataType.DEBUG_EVENT_REPORT_RETRY_COUNT
                 && mDataType != DataType.DEBUG_REPORT_RETRY_COUNT
                 && mDataType != DataType.JOB_LAST_EXECUTION_TIME
-                && mDataType != DataType.JOB_NEXT_EXECUTION_TIME) {
+                && mDataType != DataType.JOB_NEXT_EXECUTION_TIME
+                && mDataType != DataType.COUNT_UNIQUE_REPORT_RETRY_COUNT) {
             throw new IllegalStateException("Illegal method call");
         }
     }

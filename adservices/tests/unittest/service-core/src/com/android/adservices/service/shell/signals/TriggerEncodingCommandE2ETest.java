@@ -65,6 +65,7 @@ import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeApiThrottleFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -90,6 +91,7 @@ import com.android.adservices.service.signals.UpdateSignalsOrchestrator;
 import com.android.adservices.service.signals.UpdatesDownloader;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
+import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerFactory;
 import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEventHandler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.NoOpLoggerImpl;
@@ -262,7 +264,10 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                                         mFakeFlags.getProtectedSignalsUpdateSchemaVersion()),
                                 new UpdateProcessingOrchestrator(
                                         mProtectedSignalsDao,
-                                        new UpdateProcessorSelector(),
+                                        new UpdateProcessorSelector(
+                                                new EvictionPriorityHandlerFactory(
+                                                        mFakeFlags
+                                                                .getProtectedSignalsEnablePrioritizedEviction())),
                                         new UpdateEncoderEventHandler(
                                                 mEncoderEndpointDao,
                                                 encoderLogicHandler,
@@ -293,7 +298,9 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                                 mMockFlags,
                                 AppImportanceFilter.create(
                                         mContext,
-                                        mMockFlags::getForegroundStatuslLevelForValidation),
+                                        mMockFlags::getForegroundStatuslLevelForValidation,
+                                        BinderFlagReader.readFlag(
+                                                mMockFlags::getEnableGetBindingUidImportance)),
                                 FledgeAuthorizationFilter.create(mContext, logger),
                                 new FledgeAllowListsFilter(mMockFlags, logger),
                                 new FledgeApiThrottleFilter(

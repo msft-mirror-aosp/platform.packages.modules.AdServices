@@ -97,7 +97,8 @@ public class AsyncSourceFetcher {
                 context,
                 EnrollmentDao.getInstance(),
                 FlagsFactory.getFlags(),
-                new CountUniqueRegistrar(DatastoreManagerFactory.getDatastoreManager()),
+                new CountUniqueRegistrar(
+                        DatastoreManagerFactory.getDatastoreManager(), FlagsFactory.getFlags()),
                 DatastoreManagerFactory.getDatastoreManager(),
                 new DebugReportApi(context, FlagsFactory.getFlags()));
     }

@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.measurement;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
@@ -147,6 +149,9 @@ public abstract class AbstractDbIntegrationTest extends AdServicesExtendedMockit
                     areEqualKeyValueData(
                             mOutput.mKeyValueDataList.get(i), dbState.mKeyValueDataList.get(i)));
         }
+
+        assertThat(areEqual(mOutput.mCountUniqueReportList, dbState.mCountUniqueReportList))
+                .isTrue();
     }
 
     private boolean areDebugReportContentsSimilar(
@@ -329,6 +334,7 @@ public abstract class AbstractDbIntegrationTest extends AdServicesExtendedMockit
         db.delete(MeasurementTables.AsyncRegistrationContract.TABLE, null, null);
         db.delete(MeasurementTables.DebugReportContract.TABLE, null, null);
         db.delete(MeasurementTables.KeyValueDataContract.TABLE, null, null);
+        db.delete(MeasurementTables.CountUniqueReportingContract.TABLE, null, null);
     }
 
     /**
@@ -365,6 +371,10 @@ public abstract class AbstractDbIntegrationTest extends AdServicesExtendedMockit
         }
         for (KeyValueData keyValueData : input.mKeyValueDataList) {
             insertToDb(keyValueData, db);
+        }
+
+        for (CountUniqueReport countUniqueReport : input.mCountUniqueReportList) {
+            insertToDb(countUniqueReport, db);
         }
     }
 
@@ -657,6 +667,21 @@ public abstract class AbstractDbIntegrationTest extends AdServicesExtendedMockit
         values.put(
                 MeasurementTables.CountUniqueReportingContract.SCHEDULED_REPORT_TIME,
                 countUniqueReport.getScheduledReportTime());
+        values.put(
+                MeasurementTables.CountUniqueReportingContract.CONTEXT_ID,
+                countUniqueReport.getContextId());
+        values.put(
+                MeasurementTables.CountUniqueReportingContract.ENROLLMENT_ID,
+                countUniqueReport.getEnrollmentId());
+        values.put(
+                MeasurementTables.CountUniqueReportingContract.CONTRIBUTION_TIME,
+                countUniqueReport.getContributionTime());
+        values.put(
+                MeasurementTables.CountUniqueReportingContract.CONTRIBUTION_VALUE,
+                countUniqueReport.getContributionValue());
+        values.put(
+                MeasurementTables.CountUniqueReportingContract.DEBUG_REPORT_STATUS,
+                countUniqueReport.getDebugReportStatus());
         long row = db.insert(MeasurementTables.CountUniqueReportingContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("CountUniqueReport insertion failed.");

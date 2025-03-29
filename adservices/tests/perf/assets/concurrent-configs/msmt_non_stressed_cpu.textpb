@@ -1,0 +1,209 @@
+# Measurement Concurrent Cpu Stress Profile for Load Testing.
+schedule: INDEXED
+scenarios [
+  {
+    index: 1
+    journeys [
+      {
+        journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource"
+        methodName: "repeatedlyRegisterSourceView"
+        extras [
+          {
+            key: "repeat_count"
+            value: "25"
+          },
+          {
+            key: "ms_delay_pre"
+            value: "500"
+          },
+          {
+            key: "sdk_name"
+            value: "sdk3"
+          }
+        ]
+      },
+      {
+        journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource"
+        methodName: "repeatedlyRegisterSourceView"
+        extras [
+          {
+            key: "repeat_count"
+            value: "25"
+          },
+          {
+            key: "ms_delay_pre"
+            value: "500"
+          },
+          {
+            key: "sdk_name"
+            value: "sdk3"
+          }
+        ]
+      },
+      {
+        journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource"
+        methodName: "repeatedlyRegisterSourceView"
+        extras [
+          {
+            key: "repeat_count"
+            value: "25"
+          },
+          {
+            key: "ms_delay_pre"
+            value: "500"
+          },
+          {
+            key: "sdk_name"
+            value: "sdk3"
+          }
+        ]
+      },
+      {
+        journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource"
+        methodName: "repeatedlyRegisterSourceView"
+        extras [
+          {
+            key: "repeat_count"
+            value: "25"
+          },
+          {
+            key: "ms_delay_pre"
+            value: "500"
+          },
+          {
+            key: "sdk_name"
+            value: "sdk3"
+          }
+        ]
+      },
+      {
+        journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource"
+        methodName: "repeatedlyRegisterSourceView"
+        extras [
+          {
+            key: "repeat_count"
+            value: "25"
+          },
+          {
+            key: "ms_delay_pre"
+            value: "500"
+          },
+          {
+            key: "sdk_name"
+            value: "sdk3"
+          }
+        ]
+      },
+      {
+        journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource"
+        methodName: "repeatedlyRegisterSourceView"
+        extras [
+          {
+            key: "repeat_count"
+            value: "25"
+          },
+          {
+            key: "ms_delay_pre"
+            value: "500"
+          },
+          {
+            key: "sdk_name"
+            value: "sdk3"
+          }
+        ]
+      }
+    ]
+    after_test: STAY_IN_APP
+  },
+  {
+      index: 2
+      journeys [
+        {
+          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+          methodName: "repeatedlyRegisterTrigger"
+          extras [
+            {
+              key: "sdk_name"
+              value: "sdk4"
+            },
+            {
+              key: "disable_enrollments_check"
+              value: "true"
+            }
+          ]
+        },
+        {
+          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+          methodName: "repeatedlyRegisterTrigger"
+          extras [
+            {
+              key: "sdk_name"
+              value: "sdk4"
+            },
+            {
+              key: "disable_enrollments_check"
+              value: "true"
+            }
+          ]
+        },
+        {
+          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+          methodName: "repeatedlyRegisterTrigger"
+          extras [
+            {
+              key: "sdk_name"
+              value: "sdk4"
+            },
+            {
+              key: "disable_enrollments_check"
+              value: "true"
+            }
+          ]
+        },
+        {
+          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+          methodName: "repeatedlyRegisterTrigger"
+          extras [
+            {
+              key: "sdk_name"
+              value: "sdk4"
+            },
+            {
+              key: "disable_enrollments_check"
+              value: "true"
+            }
+          ]
+        },
+        {
+          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+          methodName: "repeatedlyRegisterTrigger"
+          extras [
+            {
+              key: "sdk_name"
+              value: "sdk4"
+            },
+            {
+              key: "disable_enrollments_check"
+              value: "true"
+            }
+          ]
+        },
+        {
+          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+          methodName: "repeatedlyRegisterTrigger"
+          extras [
+            {
+              key: "sdk_name"
+              value: "sdk4"
+            },
+            {
+              key: "disable_enrollments_check"
+              value: "true"
+            }
+          ]
+        }
+      ]
+      after_test: STAY_IN_APP
+  }
+]
+repetitions: 1

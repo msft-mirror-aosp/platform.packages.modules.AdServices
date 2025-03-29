@@ -16,12 +16,14 @@
 
 package com.android.adservices.shared.spe.framework;
 
+import android.annotation.Nullable;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.Context;
 
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.spe.JobServiceConstants.JobEnablementStatus;
 import com.android.adservices.shared.spe.scheduling.BackoffPolicy;
 import com.android.adservices.shared.spe.scheduling.PolicyJobScheduler;
@@ -41,6 +43,7 @@ import java.util.concurrent.Future;
  * <ul>
  *   <li>{@link JobWorker#getExecutionFuture(Context, ExecutionRuntimeParameters)}
  *   <li>{@link JobWorker#getJobEnablementStatus()}
+ *   <li>{@link JobWorker#getJobPolicyString(int)}
  * </ul>
  *
  * Override below methods if needed,
@@ -89,6 +92,25 @@ public interface JobWorker {
      */
     @JobEnablementStatus
     int getJobEnablementStatus();
+
+    // TODO(b/405397835): Remove the default identifier after per-job policy is fully adopted.
+    /**
+     * The encoded 64-based string to represent a {@link JobPolicy}. This {@link JobPolicy} is
+     * synced from the flag server so the job constraints could be adjusted dynamically.
+     *
+     * <p>Note when a job is to be re-scheduled, the SPE framework detects if the {@link JobPolicy}
+     * to schedule is different as what has been scheduled. The job will be scheduled only when they
+     * are different, otherwise the job scheduling will be skipped.
+     *
+     * <p>Generally, the method should get the string by calling a flag getter within your app.
+     *
+     * @param jobId an <b>optional</b> field to allow the job to determine which policy to use.
+     * @return the encoded 64-based string to represent a {@link JobPolicy}.
+     */
+    @Nullable
+    default String getJobPolicyString(int jobId) {
+        return "";
+    }
 
     /**
      * A default method to get the extra logic to be executed if it's stopped by {@link

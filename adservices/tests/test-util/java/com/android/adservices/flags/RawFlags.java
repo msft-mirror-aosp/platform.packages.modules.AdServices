@@ -3682,6 +3682,40 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
+    public int getMeasurementCountUniqueShortWindowContributionBudget() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET,
+                DEFAULT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET);
+    }
+
+    @Override
+    public int getMeasurementCountUniqueLongWindowContributionBudget() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET,
+                DEFAULT_COUNT_UNIQUE_LONG_WINDOW_CONTRIBUTION_BUDGET);
+    }
+
+    @Override
+    public long getMeasurementCountUniqueMaxContributionShortWindow() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW_MS,
+                DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW);
+    }
+
+    @Override
+    public long getMeasurementCountUniqueMaxContributionLongWindow() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW_MS,
+                DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW);
+    }
+
+    @Override
+    public long getMeasurementCountUniqueReportExpiry() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_REPORT_EXPIRY_MS, DEFAULT_COUNT_UNIQUE_REPORT_EXPIRY);
+    }
+
+    @Override
     public String getMeasurementCountUniqueAppSignatureAllowlist() {
         return mBackend.getFlag(
                 KEY_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST,
@@ -3713,5 +3747,49 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     public boolean getEnableGetBindingUidImportance() {
         return mBackend.getFlag(
                 KEY_ENABLE_GET_BINDING_UID_IMPORTANCE, ENABLE_GET_BINDING_UID_IMPORTANCE);
+    }
+
+    @Override
+    public boolean getSpeEnablePerJobPolicy() {
+        return mBackend.getFlag(KEY_SPE_ENABLE_PER_JOB_POLICY, DEFAULT_SPE_ENABLE_PER_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeCustomAudienceBackgroundFetchJobPolicy() {
+        return mBackend.getFlag(
+                KEY_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY,
+                DEFAULT_SPE_CUSTOM_AUDIENCE_BACKGROUND_FETCH_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeMddMaintenanceJobPolicy() {
+        return mBackend.getFlag(
+                KEY_SPE_MDD_MAINTENANCE_JOB_POLICY, DEFAULT_SPE_MDD_MAINTENANCE_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeMddChargingJobPolicy() {
+        return mBackend.getFlag(
+                KEY_SPE_MDD_CHARGING_JOB_POLICY, DEFAULT_SPE_MDD_CHARGING_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeMddCellularChargingJobPolicy() {
+        return mBackend.getFlag(
+                KEY_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY,
+                DEFAULT_SPE_MDD_CELLULAR_CHARGING_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeMddWifiChargingJobPolicy() {
+        return mBackend.getFlag(
+                KEY_SPE_MDD_WIFI_CHARGING_JOB_POLICY, DEFAULT_SPE_MDD_WIFI_CHARGING_JOB_POLICY);
+    }
+
+    @Override
+    public String getSpeMeasurementAsyncRegistrationFallbackJobPolicy() {
+        return mBackend.getFlag(
+                KEY_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY,
+                DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY);
     }
 }

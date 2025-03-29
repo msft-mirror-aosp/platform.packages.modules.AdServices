@@ -32,12 +32,15 @@ import static com.android.adservices.service.signals.SignalsFixture.assertSignal
 import static com.android.adservices.service.signals.SignalsFixture.createSignal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+
+import com.google.common.collect.ImmutableMap;
 
 import org.json.JSONObject;
 import org.junit.Test;
@@ -106,5 +109,16 @@ public class PutIfNotPresentV0Test extends AdServicesUnitTestCase {
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
         assertTrue(output.getToAdd().isEmpty());
+    }
+
+    @Test
+    public void testProcessUpdates_invalidUpdateType() throws Exception {
+        JSONObject updatesJson = new JSONObject();
+        updatesJson.put(BASE64_KEY_1, new JSONObject());
+
+        assertThrows(
+                "Expected exception",
+                IllegalArgumentException.class,
+                () -> mPutIfNotPresentV0.processUpdates(updatesJson, ImmutableMap.of()));
     }
 }

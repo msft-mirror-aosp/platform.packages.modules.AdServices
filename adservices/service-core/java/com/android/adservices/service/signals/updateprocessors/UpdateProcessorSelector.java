@@ -24,6 +24,7 @@ import static com.android.adservices.service.signals.updateprocessors.updateenco
 
 import com.android.adservices.service.signals.SignalUpdates.UpdateSchemaVersion;
 import com.android.adservices.service.signals.updateprocessors.append.AppendFactory;
+import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerFactory;
 import com.android.adservices.service.signals.updateprocessors.put.PutFactory;
 import com.android.adservices.service.signals.updateprocessors.putifnotpresent.PutIfNotPresentFactory;
 import com.android.adservices.service.signals.updateprocessors.remove.RemoveFactory;
@@ -35,15 +36,15 @@ import java.util.Map;
 
 /** Selector class for getting the appropriate update processor */
 public class UpdateProcessorSelector {
-
     private final Map<String, UpdateProcessorFactory> mProcessorFactoryMap;
 
-    public UpdateProcessorSelector() {
+    public UpdateProcessorSelector(EvictionPriorityHandlerFactory evictionPriorityHandlerFactory) {
         mProcessorFactoryMap =
                 ImmutableMap.of(
-                        APPEND, new AppendFactory(),
-                        PUT, new PutFactory(),
-                        PUT_IF_NOT_PRESENT, new PutIfNotPresentFactory(),
+                        APPEND, new AppendFactory(evictionPriorityHandlerFactory),
+                        PUT, new PutFactory(evictionPriorityHandlerFactory),
+                        PUT_IF_NOT_PRESENT,
+                                new PutIfNotPresentFactory(evictionPriorityHandlerFactory),
                         REMOVE, new RemoveFactory(),
                         UPDATE_ENCODER, new UpdateEncoderFactory());
     }

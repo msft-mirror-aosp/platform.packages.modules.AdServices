@@ -33,6 +33,7 @@ import com.android.adservices.service.customaudience.BackgroundFetchJob;
 import com.android.adservices.service.customaudience.BackgroundFetchJobService;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJob;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
+import com.android.adservices.service.measurement.reporting.CountUniqueReportingJob;
 import com.android.adservices.service.topics.EpochJob;
 import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
@@ -132,6 +133,8 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
                     return new MddJob();
                 case MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB:
                     return new AsyncRegistrationFallbackJob();
+                case MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB:
+                    return new CountUniqueReportingJob();
                 default:
                     throw new RuntimeException(
                             "The job isn't configured for jobWorker creation. Requested Job ID: "
