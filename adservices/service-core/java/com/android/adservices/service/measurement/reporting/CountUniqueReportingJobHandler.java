@@ -111,11 +111,11 @@ public class CountUniqueReportingJobHandler {
         List<String> pendingCountUniqueReports = pendingCountUniqueReportsOpt.get();
 
         // TODO(399672589): Add support for different coordinator origins.
-        Uri defaultCoordinatorOrigin =
-                Uri.parse(mFlags.getMeasurementDefaultAggregationCoordinatorOrigin());
+        Uri countUniqueCoordinatorOrigin =
+                Uri.parse(mFlags.getMeasurementCountUniqueAggregationCoordinatorOrigin());
         List<AggregateEncryptionKey> keys =
                 mAggregateEncryptionKeyManager.getAggregateEncryptionKeys(
-                        defaultCoordinatorOrigin, pendingCountUniqueReports.size());
+                        countUniqueCoordinatorOrigin, pendingCountUniqueReports.size());
 
         if (keys.size() != pendingCountUniqueReports.size()) {
             LoggerFactory.getMeasurementLogger()
