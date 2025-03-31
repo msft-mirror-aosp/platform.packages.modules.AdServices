@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.stats.pas;
 
+import static com.android.adservices.service.signals.SignalUpdates.UpdateSchemaVersion;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.PER_BUYER_SIGNAL_SIZE_BUCKETS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_UNSET;
@@ -194,7 +195,7 @@ public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProc
     }
 
     @Override
-    public void setSignalUpdateSchemaVersion(int updateSchemaVersion) {
+    public void setSignalUpdateSchemaVersion(@UpdateSchemaVersion int updateSchemaVersion) {
         mSignalUpdateSchemaVersion = updateSchemaVersion;
     }
 }
