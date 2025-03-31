@@ -3947,6 +3947,11 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST;
     }
 
+    /** Returns the default measurement count unique aggregation coordinator origin. */
+    default String getMeasurementCountUniqueAggregationCoordinatorOrigin() {
+        return getMeasurementDefaultAggregationCoordinatorOrigin();
+    }
+
     /** Kill switch to guard backward-compatible logging. See go/rbc-ww-logging */
     @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean COMPAT_LOGGING_KILL_SWITCH = false;

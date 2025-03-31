@@ -32,6 +32,7 @@ import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -87,8 +88,13 @@ public class CountUniqueReportingJobHandlerTest {
     protected static Context sContext;
     DatastoreManager mDatastoreManager;
 
+    @Mock AggregateEncryptionKeyManager mMockKeyManager;
+
     CountUniqueReportingJobHandler mCountUniqueReportingJobHandler;
     CountUniqueReportingJobHandler mSpyCountUniqueReportingJobHandler;
+
+    static final String AGGREGATION_COORDINATOR_ORIGIN =
+            "https://publickeyservice.msmt.aws.privacysandboxservices.com";
 
     // setup
 
@@ -125,9 +131,8 @@ public class CountUniqueReportingJobHandlerTest {
     @Before
     public void setUp() throws DatastoreException {
         sContext = spy(ApplicationProvider.getApplicationContext());
-        AggregateEncryptionKeyManager mockKeyManager = mock(AggregateEncryptionKeyManager.class);
         ArgumentCaptor<Integer> captorNumberOfKeys = ArgumentCaptor.forClass(Integer.class);
-        when(mockKeyManager.getAggregateEncryptionKeys(any(), captorNumberOfKeys.capture()))
+        when(mMockKeyManager.getAggregateEncryptionKeys(any(), captorNumberOfKeys.capture()))
                 .thenAnswer(
                         invocation -> {
                             List<AggregateEncryptionKey> keys = new ArrayList<>();
@@ -139,13 +144,13 @@ public class CountUniqueReportingJobHandlerTest {
         mDatastoreManager = new FakeDatastoreManager();
         mCountUniqueReportingJobHandler =
                 new CountUniqueReportingJobHandler(
-                        mDatastoreManager, mockKeyManager, mMockFlags, sContext);
+                        mDatastoreManager, mMockKeyManager, mMockFlags, sContext);
         mSpyCountUniqueReportingJobHandler = Mockito.spy(mCountUniqueReportingJobHandler);
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         when(mMockFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
         when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
-        when(mMockFlags.getMeasurementDefaultAggregationCoordinatorOrigin())
-                .thenReturn("https://publickeyservice.msmt.aws.privacysandboxservices.com");
+        when(mMockFlags.getMeasurementCountUniqueAggregationCoordinatorOrigin())
+                .thenReturn(AGGREGATION_COORDINATOR_ORIGIN);
         when(mMockFlags.getMeasurementEnableCountUniqueService()).thenReturn(true);
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
@@ -411,6 +416,37 @@ public class CountUniqueReportingJobHandlerTest {
                 .incrementAndGetReportingRetryCount(
                         countUniqueReport1.getReportId(),
                         KeyValueData.DataType.COUNT_UNIQUE_REPORT_RETRY_COUNT);
+    }
+
+    @Test
+    public void testSendReport_usesCorrectAggregationCoordinatorOrigin()
+            throws DatastoreException, JSONException, IOException {
+        CountUniqueReport countUniqueReport =
+                CountUniqueReportFixture.getValidCountUniqueReportBuilder().build();
+        when(mMeasurementDao.getCountUniqueReport(countUniqueReport.getReportId()))
+                .thenReturn(countUniqueReport);
+        JSONObject countUniqueReportBody = createSampleCountUniqueReportBody(countUniqueReport);
+        when(mMeasurementDao.getPendingCountUniqueReportIds())
+                .thenReturn(List.of(countUniqueReport.getReportId()));
+        when(mMeasurementDao.getCountUniqueReport(countUniqueReport.getReportId()))
+                .thenReturn(countUniqueReport);
+
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyCountUniqueReportingJobHandler)
+                .makeHttpPostRequest(eq(countUniqueReport.getReportingOrigin()), any());
+        doReturn(countUniqueReportBody)
+                .when(mSpyCountUniqueReportingJobHandler)
+                .createReportJsonPayload(any(), any());
+        doNothing()
+                .when(mMeasurementDao)
+                .markCountUniqueReportStatus(
+                        countUniqueReport.getReportId(),
+                        CountUniqueReport.ReportDeliveryStatus.DELIVERED);
+
+        assertThat(mSpyCountUniqueReportingJobHandler.performScheduledPendingReports()).isTrue();
+
+        verify(mMockKeyManager, times(1))
+                .getAggregateEncryptionKeys(Uri.parse(AGGREGATION_COORDINATOR_ORIGIN), 1);
     }
 
     private JSONObject createSampleCountUniqueReportBody(CountUniqueReport countUniqueReport)

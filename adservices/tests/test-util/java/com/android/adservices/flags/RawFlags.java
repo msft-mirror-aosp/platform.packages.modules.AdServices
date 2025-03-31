@@ -3723,6 +3723,13 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
+    public String getMeasurementCountUniqueAggregationCoordinatorOrigin() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_AGGREGATION_COORDINATOR_ORIGIN,
+                getMeasurementDefaultAggregationCoordinatorOrigin());
+    }
+
+    @Override
     public boolean getMeasurementEnableDebugJoinKeysOpenAccess() {
         return mBackend.getFlag(
                 KEY_MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS,

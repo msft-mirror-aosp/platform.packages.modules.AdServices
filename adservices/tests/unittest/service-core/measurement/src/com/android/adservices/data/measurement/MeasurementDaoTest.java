@@ -3364,22 +3364,23 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testInsertCountUniqueReport_forValidEvent_isSuccess() {
-        String reportId = "reportId";
+        String reportId = "report";
         String payload = "payload";
         Uri reportingOrigin = Uri.parse("https://test.foo");
         int status = CountUniqueReport.ReportDeliveryStatus.PENDING;
         int debugStatus = CountUniqueReport.ReportDeliveryStatus.PENDING;
-        Long scheduledReportTime = 1726874188124L;
+        Long scheduledReportTime = System.currentTimeMillis();
         String version = "0.1";
         String debugKey = "asadsadsa=";
         String contextId = "testContextId";
         String enrollmentId = "test-id";
         int contributionValue = 5;
-        long contributionTime = 1726874188232L;
+        long contributionTime = System.currentTimeMillis();
+        Uri registrant = ValidAsyncRegistrationParams.REGISTRANT;
 
-        CountUniqueReport report =
+        CountUniqueReport report1 =
                 createCountUniqueReport(
-                        reportId,
+                        reportId + "1",
                         payload,
                         reportingOrigin,
                         status,
@@ -3390,14 +3391,48 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         contextId,
                         enrollmentId,
                         contributionValue,
-                        contributionTime);
+                        contributionTime,
+                        registrant);
 
-        boolean result =
-                mDatastoreManager.runInTransaction(
-                        (dao) -> {
-                            dao.insertCountUniqueReport(report);
-                        });
-        assertThat(result).isTrue();
+        CountUniqueReport report2 =
+                createCountUniqueReport(
+                        reportId + "2",
+                        payload,
+                        reportingOrigin,
+                        status,
+                        debugStatus,
+                        scheduledReportTime,
+                        version,
+                        debugKey,
+                        contextId,
+                        enrollmentId,
+                        contributionValue,
+                        contributionTime,
+                        registrant);
+
+        CountUniqueReport report3 =
+                createCountUniqueReport(
+                        reportId + "3",
+                        payload,
+                        reportingOrigin,
+                        status,
+                        debugStatus,
+                        scheduledReportTime,
+                        version,
+                        debugKey,
+                        contextId,
+                        enrollmentId,
+                        contributionValue,
+                        contributionTime,
+                        registrant);
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertCountUniqueReport(report1);
+                    dao.insertCountUniqueReport(report2);
+                    dao.insertCountUniqueReport(report3);
+                });
+
         try (Cursor cursor =
                 MeasurementDbHelper.getInstance()
                         .getReadableDatabase()
@@ -3409,18 +3444,12 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                                 null,
                                 null,
                                 null)) {
-
-            assertThat(cursor.getCount()).isEqualTo(1);
-            List<CountUniqueReport> reports = new ArrayList<>();
+            assertThat(cursor.getCount()).isEqualTo(3);
 
             while (cursor.moveToNext()) {
-                CountUniqueReport reportFromDb =
-                        SqliteObjectMapper.constructCountUniqueReport(cursor);
-                reports.add(reportFromDb);
-            }
 
-            for (CountUniqueReport r : reports) {
-                assertThat(r.getReportId()).isEqualTo(reportId);
+                CountUniqueReport r = SqliteObjectMapper.constructCountUniqueReport(cursor);
+                assertThat(r.getReportId().contains("report")).isTrue();
                 assertThat(r.getPayload()).isEqualTo(payload);
                 assertThat(r.getReportingOrigin()).isEqualTo(reportingOrigin);
                 assertThat(r.getStatus()).isEqualTo(status);
@@ -3432,6 +3461,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                 assertThat(r.getEnrollmentId()).isEqualTo(enrollmentId);
                 assertThat(r.getContributionValue()).isEqualTo(contributionValue);
                 assertThat(r.getContributionTime()).isEqualTo(contributionTime);
+                assertThat(r.getRegistrant()).isEqualTo(registrant);
             }
         }
     }
@@ -3443,13 +3473,14 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         Integer value2 = 2;
         Long expirationTime = 1726874188124L;
         Uri reportingOrigin = Uri.parse("https://test.foo");
-
+        Uri registrant = ValidAsyncRegistrationParams.REGISTRANT;
         CountUniqueMetadata metadata =
                 new CountUniqueMetadata.Builder()
                         .setKey(key)
                         .setValue(value1)
                         .setExpirationTime(expirationTime)
                         .setReportingOrigin(reportingOrigin)
+                        .setRegistrant(registrant)
                         .build();
         CountUniqueMetadata metadata2 =
                 new CountUniqueMetadata.Builder()
@@ -3457,6 +3488,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         .setValue(value2)
                         .setExpirationTime(expirationTime)
                         .setReportingOrigin(reportingOrigin)
+                        .setRegistrant(registrant)
                         .build();
 
         boolean result =
@@ -3485,6 +3517,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
             assertThat(metadataFromDb.getValue()).isEqualTo(value1);
             assertThat(metadataFromDb.getReportingOrigin()).isEqualTo(reportingOrigin);
             assertThat(metadataFromDb.getExpirationTime()).isEqualTo(expirationTime);
+            assertThat(metadataFromDb.getRegistrant()).isEqualTo(registrant);
         }
 
         result =
@@ -3513,6 +3546,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
             assertThat(metadataFromDb.getValue()).isEqualTo(value1); // should not be value2
             assertThat(metadataFromDb.getReportingOrigin()).isEqualTo(reportingOrigin);
             assertThat(metadataFromDb.getExpirationTime()).isEqualTo(expirationTime);
+            assertThat(metadataFromDb.getRegistrant()).isEqualTo(registrant);
         }
     }
 
@@ -3523,13 +3557,14 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         Integer value2 = 2;
         Long expirationTime = 1726874188124L;
         Uri reportingOrigin = Uri.parse("https://test.foo");
-
+        Uri registrant = ValidAsyncRegistrationParams.REGISTRANT;
         CountUniqueMetadata metadata1 =
                 new CountUniqueMetadata.Builder()
                         .setKey(key)
                         .setValue(value1)
                         .setExpirationTime(expirationTime)
                         .setReportingOrigin(reportingOrigin)
+                        .setRegistrant(registrant)
                         .build();
 
         CountUniqueMetadata metadata2 =
@@ -3538,6 +3573,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         .setValue(value2)
                         .setExpirationTime(expirationTime)
                         .setReportingOrigin(reportingOrigin)
+                        .setRegistrant(registrant)
                         .build();
 
         boolean result =
@@ -3566,6 +3602,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
             assertThat(metadataFromDb.getValue()).isEqualTo(value1);
             assertThat(metadataFromDb.getReportingOrigin()).isEqualTo(reportingOrigin);
             assertThat(metadataFromDb.getExpirationTime()).isEqualTo(expirationTime);
+            assertThat(metadataFromDb.getRegistrant()).isEqualTo(registrant);
         }
 
         result =
@@ -3594,6 +3631,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
             assertThat(metadataFromDb.getValue()).isEqualTo(value2); // record updated to value2
             assertThat(metadataFromDb.getReportingOrigin()).isEqualTo(reportingOrigin);
             assertThat(metadataFromDb.getExpirationTime()).isEqualTo(expirationTime);
+            assertThat(metadataFromDb.getRegistrant()).isEqualTo(registrant);
         }
     }
 
@@ -3605,13 +3643,14 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         Integer value2 = 2;
         Long expirationTime = 1726874188124L;
         Uri reportingOrigin = Uri.parse("https://test.foo");
-
+        Uri registrant = ValidAsyncRegistrationParams.REGISTRANT;
         CountUniqueMetadata metadata1 =
                 new CountUniqueMetadata.Builder()
                         .setKey(key1)
                         .setValue(value1)
                         .setExpirationTime(expirationTime)
                         .setReportingOrigin(reportingOrigin)
+                        .setRegistrant(registrant)
                         .build();
         CountUniqueMetadata metadata2 =
                 new CountUniqueMetadata.Builder()
@@ -3619,6 +3658,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         .setValue(value2)
                         .setExpirationTime(expirationTime)
                         .setReportingOrigin(reportingOrigin)
+                        .setRegistrant(registrant)
                         .build();
 
         boolean result =
@@ -3690,6 +3730,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         Integer value1 = 1;
         Long expirationTime = 1726874188124L;
         Uri reportingOrigin = Uri.parse("https://test.foo");
+        Uri registrant = ValidAsyncRegistrationParams.REGISTRANT;
 
         CountUniqueMetadata m =
                 new CountUniqueMetadata.Builder()
@@ -3697,6 +3738,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         .setValue(value1)
                         .setExpirationTime(expirationTime)
                         .setReportingOrigin(reportingOrigin)
+                        .setRegistrant(registrant)
                         .build();
 
         Optional<CountUniqueMetadata> metadata =
@@ -3715,6 +3757,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         Integer value1 = 1;
         Long expirationTime = 1726874188124L;
         Uri reportingOrigin = Uri.parse("https://test.foo");
+        Uri registrant = ValidAsyncRegistrationParams.REGISTRANT;
 
         CountUniqueMetadata m =
                 new CountUniqueMetadata.Builder()
@@ -3722,6 +3765,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         .setValue(value1)
                         .setExpirationTime(expirationTime)
                         .setReportingOrigin(reportingOrigin)
+                        .setRegistrant(registrant)
                         .build();
 
         mDatastoreManager.runInTransaction(
@@ -3735,6 +3779,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testDeleteExpiredCountUniqueRecords_forOldMetadata_RemovesMetadata() {
+        Uri registrant = ValidAsyncRegistrationParams.REGISTRANT;
         String key = "key";
         String oldKey = "oldKey";
         Uri reportingOrigin = Uri.parse("https://test.foo");
@@ -3747,6 +3792,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                             .setValue(i)
                             .setExpirationTime(System.currentTimeMillis() - DAYS.toMillis(30))
                             .setReportingOrigin(reportingOrigin)
+                            .setRegistrant(registrant)
                             .build());
         }
 
@@ -3757,6 +3803,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                             .setValue(i)
                             .setExpirationTime(System.currentTimeMillis() + DAYS.toMillis(30))
                             .setReportingOrigin(reportingOrigin)
+                            .setRegistrant(registrant)
                             .build());
         }
 
@@ -3820,6 +3867,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         String contextId = "testContextId";
         String enrollmentId = "test-id";
         int contributionValue = 5;
+        Uri registrant = ValidAsyncRegistrationParams.REGISTRANT;
 
         List<CountUniqueReport> reports = new ArrayList<>();
 
@@ -3838,7 +3886,8 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                             contextId,
                             enrollmentId,
                             contributionValue,
-                            System.currentTimeMillis() - TimeUnit.HOURS.toMillis(24)));
+                            System.currentTimeMillis() - TimeUnit.HOURS.toMillis(24),
+                            registrant));
         }
 
         // Pending reports over 5 days should be deleted.
@@ -3856,7 +3905,8 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                             contextId,
                             enrollmentId,
                             contributionValue,
-                            System.currentTimeMillis() - TimeUnit.DAYS.toMillis(11)));
+                            System.currentTimeMillis() - TimeUnit.DAYS.toMillis(11),
+                            registrant));
         }
 
         // Delivered reports less than 24 hours should not be deleted
@@ -3874,7 +3924,8 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                             contextId,
                             enrollmentId,
                             contributionValue,
-                            System.currentTimeMillis() - TimeUnit.HOURS.toMillis(5)));
+                            System.currentTimeMillis() - TimeUnit.HOURS.toMillis(5),
+                            registrant));
         }
 
         // Pending reports less than 24 hours should not be deleted
@@ -3892,7 +3943,8 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                             contextId,
                             enrollmentId,
                             contributionValue,
-                            System.currentTimeMillis() - TimeUnit.HOURS.toMillis(2)));
+                            System.currentTimeMillis() - TimeUnit.HOURS.toMillis(2),
+                            registrant));
         }
 
         mDatastoreManager.runInTransaction(
@@ -3957,7 +4009,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         String enrollmentId = "test-id";
         long contributionTime = System.currentTimeMillis();
         long windowStartTime = contributionTime - TimeUnit.MINUTES.toMillis(10);
-
+        Uri registrant = ValidAsyncRegistrationParams.REGISTRANT;
         CountUniqueReport report1 =
                 createCountUniqueReport(
                         "report1",
@@ -3971,7 +4023,8 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         contextId,
                         enrollmentId,
                         6,
-                        contributionTime);
+                        contributionTime,
+                        registrant);
 
         CountUniqueReport report2 =
                 createCountUniqueReport(
@@ -3986,7 +4039,8 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         contextId,
                         enrollmentId,
                         4,
-                        contributionTime);
+                        contributionTime,
+                        registrant);
 
         // Should not be included in sum as contribution time is over window end time
         CountUniqueReport report3 =
@@ -4002,7 +4056,8 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         contextId,
                         enrollmentId,
                         5,
-                        contributionTime + TimeUnit.HOURS.toMillis(1));
+                        contributionTime + TimeUnit.HOURS.toMillis(1),
+                        ValidAsyncRegistrationParams.REGISTRANT);
 
         assertThat(
                         mDatastoreManager.runInTransactionWithResult(
@@ -15509,7 +15564,8 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
             String contextId,
             String enrollmentId,
             int contributionValue,
-            long contributionTime) {
+            long contributionTime,
+            Uri registrant) {
         CountUniqueReport.Builder builder = new CountUniqueReport.Builder();
         builder.setReportId(reportId);
         builder.setPayload(payload);
@@ -15523,6 +15579,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         builder.setEnrollmentId(enrollmentId);
         builder.setContributionValue(contributionValue);
         builder.setContributionTime(contributionTime);
+        builder.setRegistrant(registrant);
         return builder.build();
     }
 }

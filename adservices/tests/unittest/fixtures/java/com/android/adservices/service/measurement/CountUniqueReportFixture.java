@@ -44,7 +44,8 @@ public final class CountUniqueReportFixture {
                 .setDebugKey(ValidCountUniqueParams.DEBUG_KEY.toString())
                 .setContextId(ValidCountUniqueParams.CONTEXT_ID)
                 .setPayload(ValidCountUniqueParams.getDebugPayload())
-                .setApiVersion(ValidCountUniqueParams.API_VERSION);
+                .setApiVersion(ValidCountUniqueParams.API_VERSION)
+                .setRegistrant(ValidCountUniqueParams.REGISTRANT);
     }
 
     public static class ValidCountUniqueParams {
@@ -55,6 +56,7 @@ public final class CountUniqueReportFixture {
         public static final String CONTEXT_ID = "context_id";
         public static final String API = "shared-storage";
         public static final String API_VERSION = "0.1";
+        public static final Uri REGISTRANT = Uri.parse("android-app://com.example");
 
         /** Get sample debug cleartext payload. */
         public static String getDebugPayload() {

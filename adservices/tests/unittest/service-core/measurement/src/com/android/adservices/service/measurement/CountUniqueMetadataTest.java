@@ -33,6 +33,8 @@ public class CountUniqueMetadataTest {
                 .isEqualTo(Uri.parse("https://example.test/cu"));
         assertThat(countUniqueMetadata.getValue()).isEqualTo(1);
         assertThat(countUniqueMetadata.getExpirationTime()).isEqualTo(234L);
+        assertThat(countUniqueMetadata.getRegistrant())
+                .isEqualTo(Uri.parse("android-app://com.example"));
     }
 
     @Test
@@ -42,6 +44,7 @@ public class CountUniqueMetadataTest {
         assertThat(countUniqueMetadata.getReportingOrigin()).isNull();
         assertThat(countUniqueMetadata.getValue()).isNull();
         assertThat(countUniqueMetadata.getExpirationTime()).isNull();
+        assertThat(countUniqueMetadata.getRegistrant()).isNull();
     }
 
     @Test
@@ -64,6 +67,7 @@ public class CountUniqueMetadataTest {
                         .setReportingOrigin(Uri.parse("https://example.test/cu"))
                         .setValue(2)
                         .setExpirationTime(234L)
+                        .setRegistrant(Uri.parse("android-app://com.example2"))
                         .build();
         Set<CountUniqueMetadata> countUniqueMetadataSet1 = Set.of(countUniqueMetadata1);
         Set<CountUniqueMetadata> countUniqueMetadataSet2 = Set.of(countUniqueMetadata2);
@@ -78,6 +82,7 @@ public class CountUniqueMetadataTest {
                 .setReportingOrigin(Uri.parse("https://example.test/cu"))
                 .setValue(1)
                 .setExpirationTime(234L)
+                .setRegistrant(Uri.parse("android-app://com.example"))
                 .build();
     }
 }

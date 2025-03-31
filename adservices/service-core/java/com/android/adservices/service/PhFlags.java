@@ -4020,6 +4020,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public String getMeasurementCountUniqueAggregationCoordinatorOrigin() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_AGGREGATION_COORDINATOR_ORIGIN,
+                getMeasurementDefaultAggregationCoordinatorOrigin());
+    }
+
+    @Override
     public long getMeasurementCountUniqueReportExpiry() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_REPORT_EXPIRY_MS,
