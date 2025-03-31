@@ -21,6 +21,8 @@ import static com.android.adservices.service.profiling.RbATraceProvider.FeatureN
 import static com.android.adservices.service.profiling.TracingNames.CLASS_NAME_ATTRIBUTION_FALLBACK_JOB_SERVICE;
 import static com.android.adservices.service.profiling.TracingNames.METHOD_NAME_ON_START_JOB;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_BACKGROUND_JOB_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB;
 
 import android.app.job.JobInfo;
@@ -34,6 +36,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -48,6 +51,9 @@ import com.android.adservices.service.profiling.RbATraceProvider;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.concurrent.Future;
@@ -63,7 +69,7 @@ public final class AttributionFallbackJobService extends JobService {
             MEASUREMENT_ATTRIBUTION_FALLBACK_JOB.getJobId();
     private static final ListeningExecutorService sBackgroundExecutor =
             AdServicesExecutors.getBackgroundExecutor();
-    private Future mExecutorFuture;
+    private ListenableFuture<Void> mExecutorFuture;
 
     @Override
     public void onCreate() {
@@ -101,36 +107,91 @@ public final class AttributionFallbackJobService extends JobService {
         }
 
         LoggerFactory.getMeasurementLogger().d("AttributionFallbackJobService.onStartJob");
-        mExecutorFuture =
-                sBackgroundExecutor.submit(
-                        () -> {
-                            processPendingAttributions();
+        mExecutorFuture = Futures.submit(this::processPendingAttributions, sBackgroundExecutor);
 
-                            DebugReportingJobService.scheduleIfNeeded(
-                                    getApplicationContext(), /* forceSchedule */ false);
+        Futures.addCallback(
+                mExecutorFuture,
+                new FutureCallback<>() {
+                    @Override
+                    public void onSuccess(Void result) {
+                        onSuccessCallback(params, traceCookie);
+                    }
 
-                            // TODO(b/342687685): fold this service into ReportingJobService
-                            ImmediateAggregateReportingJobService.scheduleIfNeeded(
-                                    getApplicationContext(), /* forceSchedule */ false);
+                    @Override
+                    public void onFailure(Throwable t) {
+                        onFailureCallback(t, params, traceCookie);
+                    }
+                },
+                sBackgroundExecutor);
 
-                            ReportingJobService.scheduleIfNeeded(
-                                    getApplicationContext(), /* forceSchedule */ false);
-
-                            AdServicesJobServiceLogger.getInstance()
-                                    .recordJobFinished(
-                                            MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
-                                            /* isSuccessful */ true,
-                                            /* shouldRetry */ false);
-
-                            jobFinished(params, /* wantsReschedule= */ false);
-                            RbATraceProvider.endAsyncSection(
-                                    MEASUREMENT_API,
-                                    CLASS_NAME_ATTRIBUTION_FALLBACK_JOB_SERVICE,
-                                    METHOD_NAME_ON_START_JOB,
-                                    traceCookie,
-                                    FlagsFactory.getFlags());
-                        });
         return true;
+    }
+
+    private void onSuccessCallback(JobParameters params, int traceCookie) {
+        boolean isSuccessful = true;
+        try {
+            DebugReportingJobService.scheduleIfNeeded(
+                    getApplicationContext(), /* forceSchedule */ false);
+
+            // TODO(b/342687685): fold this service into ReportingJobService
+            ImmediateAggregateReportingJobService.scheduleIfNeeded(
+                    getApplicationContext(), /* forceSchedule */ false);
+
+            ReportingJobService.scheduleIfNeeded(
+                    getApplicationContext(), /* forceSchedule */ false);
+        } catch (Exception e) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "AttributionFallbackJobService: exception during onSuccess callback");
+            isSuccessful = false;
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_BACKGROUND_JOB_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+        } finally {
+            AdServicesJobServiceLogger.getInstance()
+                    .recordJobFinished(
+                            MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
+                            isSuccessful,
+                            /* shouldRetry */ false);
+            RbATraceProvider.endAsyncSection(
+                    MEASUREMENT_API,
+                    CLASS_NAME_ATTRIBUTION_FALLBACK_JOB_SERVICE,
+                    METHOD_NAME_ON_START_JOB,
+                    traceCookie,
+                    FlagsFactory.getFlags());
+            jobFinished(params, /* wantsReschedule= */ false);
+        }
+    }
+
+    private void onFailureCallback(Throwable t, JobParameters params, int traceCookie) {
+        // Futures doesn't distinguish between cancellation vs. failure, so the same callback is
+        // used for both cases. onStopJob calls cancel on the future. Metrics are logged in
+        // onStopJob, so we return early here to avoid double counting. jobFinished does not need to
+        // be called if onStopJob is called.
+        if (mExecutorFuture.isCancelled()) {
+            return;
+        }
+
+        LoggerFactory.getMeasurementLogger()
+                .e(t, "AttributionFallbackJobService: exception during onStartJob background work");
+        ErrorLogUtil.e(
+                t,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_BACKGROUND_JOB_FAILURE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+        boolean shouldRetry = false;
+        AdServicesJobServiceLogger.getInstance()
+                .recordJobFinished(
+                        MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
+                        /* isSuccessful= */ false,
+                        shouldRetry);
+        RbATraceProvider.endAsyncSection(
+                MEASUREMENT_API,
+                CLASS_NAME_ATTRIBUTION_FALLBACK_JOB_SERVICE,
+                METHOD_NAME_ON_START_JOB,
+                traceCookie,
+                FlagsFactory.getFlags());
+
+        jobFinished(params, shouldRetry);
     }
 
     @VisibleForTesting
