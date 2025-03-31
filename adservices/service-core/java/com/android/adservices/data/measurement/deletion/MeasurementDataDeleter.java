@@ -126,6 +126,14 @@ public class MeasurementDataDeleter {
                             }
                             return delete(dao, deletionParam);
                         });
+        // TODO: Needs to be updated if we support App-Web for Count Unique
+        mDatastoreManager.runInTransaction(
+                dao -> {
+                    if (mFlags.getMeasurementEnableCountUniqueService()) {
+                        dao.deleteCountUniqueUninstall(packageName);
+                    }
+                });
+
         return result.orElse(false);
     }
 
