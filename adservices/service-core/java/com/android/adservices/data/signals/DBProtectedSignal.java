@@ -29,6 +29,8 @@ import com.android.adservices.service.signals.evict.EvictionPriority;
 import com.google.auto.value.AutoValue;
 
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Objects;
 
 /** POJO representing a Protected Signal. */
 @AutoValue
@@ -89,6 +91,12 @@ public abstract class DBProtectedSignal {
                 .setEvictionPriority(EvictionPriority.DEFAULT);
     }
 
+    /**
+     * @return A builder populated with the same values as this object.
+     */
+    @NonNull
+    public abstract Builder toBuilder();
+
     /** Creates a DBProtectedSignal. Required by Room for AutoValue classes. */
     @NonNull
     public static DBProtectedSignal create(
@@ -108,6 +116,33 @@ public abstract class DBProtectedSignal {
                 .setPackageName(packageName)
                 .setEvictionPriority(evictionPriority)
                 .build();
+    }
+
+    @Override
+    public final boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof DBProtectedSignal that)) {
+            return false;
+        }
+        return this.getBuyer().equals(that.getBuyer())
+                && Arrays.equals(this.getKey(), that.getKey())
+                && Arrays.equals(this.getValue(), that.getValue())
+                && this.getCreationTime().equals(that.getCreationTime())
+                && this.getPackageName().equals(that.getPackageName())
+                && this.getEvictionPriority().equals(that.getEvictionPriority());
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(
+                getBuyer(),
+                Arrays.hashCode(getKey()),
+                Arrays.hashCode(getValue()),
+                getCreationTime(),
+                getPackageName(),
+                getEvictionPriority());
     }
 
     @AutoValue.Builder

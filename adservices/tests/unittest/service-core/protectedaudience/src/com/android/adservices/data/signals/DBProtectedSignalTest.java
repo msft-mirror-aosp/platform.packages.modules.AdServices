@@ -16,42 +16,52 @@
 
 package com.android.adservices.data.signals;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
+import static android.adservices.common.CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME_1;
+import static android.adservices.common.CommonFixture.VALID_BUYER_1;
+
+import static com.android.adservices.data.signals.DBProtectedSignalFixture.KEY;
+import static com.android.adservices.data.signals.DBProtectedSignalFixture.VALUE;
 
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.service.signals.evict.EvictionPriority;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public class DBProtectedSignalTest {
+@RequiresSdkLevelAtLeastT
+public class DBProtectedSignalTest extends AdServicesUnitTestCase {
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
+    private final EqualsTester mEqualsTester = new EqualsTester(expect);
 
     @Test
     public void testCreateSignal() {
         DBProtectedSignal signal =
                 DBProtectedSignal.create(
                         null,
-                        CommonFixture.VALID_BUYER_1,
-                        DBProtectedSignalFixture.KEY,
+                        VALID_BUYER_1,
+                        KEY,
                         DBProtectedSignalFixture.VALUE,
-                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                        CommonFixture.TEST_PACKAGE_NAME_1,
+                        FIXED_NOW_TRUNCATED_TO_MILLI,
+                        TEST_PACKAGE_NAME_1,
                         EvictionPriority.DEFAULT);
-        assertNull(signal.getId());
-        assertEquals(CommonFixture.VALID_BUYER_1, signal.getBuyer());
-        assertArrayEquals(DBProtectedSignalFixture.KEY, signal.getKey());
-        assertArrayEquals(DBProtectedSignalFixture.VALUE, signal.getValue());
-        assertEquals(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI, signal.getCreationTime());
-        assertEquals(CommonFixture.TEST_PACKAGE_NAME_1, signal.getPackageName());
-        assertEquals(EvictionPriority.DEFAULT, signal.getEvictionPriority());
+
+        expect.withMessage("id").that(signal.getId()).isNull();
+        expect.withMessage("buyer").that(signal.getBuyer()).isEqualTo(VALID_BUYER_1);
+        expect.withMessage("key").that(signal.getKey()).isEqualTo(KEY);
+        expect.withMessage("value").that(signal.getValue()).isEqualTo(VALUE);
+        expect.withMessage("creationTime")
+                .that(signal.getCreationTime())
+                .isEqualTo(FIXED_NOW_TRUNCATED_TO_MILLI);
+        expect.withMessage("packageName")
+                .that(signal.getPackageName())
+                .isEqualTo(TEST_PACKAGE_NAME_1);
+        expect.withMessage("evictionPriority")
+                .that(signal.getEvictionPriority())
+                .isEqualTo(EvictionPriority.DEFAULT);
     }
 
     @Test
@@ -59,94 +69,102 @@ public class DBProtectedSignalTest {
         DBProtectedSignal signal =
                 DBProtectedSignal.builder()
                         .setId(null)
-                        .setBuyer(CommonFixture.VALID_BUYER_1)
-                        .setKey(DBProtectedSignalFixture.KEY)
+                        .setBuyer(VALID_BUYER_1)
+                        .setKey(KEY)
                         .setValue(DBProtectedSignalFixture.VALUE)
-                        .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
-                        .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .setCreationTime(FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .setPackageName(TEST_PACKAGE_NAME_1)
                         .setEvictionPriority(EvictionPriority.EVICT_SOONER)
                         .build();
-        assertNull(signal.getId());
-        assertEquals(CommonFixture.VALID_BUYER_1, signal.getBuyer());
-        assertArrayEquals(DBProtectedSignalFixture.KEY, signal.getKey());
-        assertArrayEquals(DBProtectedSignalFixture.VALUE, signal.getValue());
-        assertEquals(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI, signal.getCreationTime());
-        assertEquals(CommonFixture.TEST_PACKAGE_NAME_1, signal.getPackageName());
-        assertEquals(EvictionPriority.EVICT_SOONER, signal.getEvictionPriority());
+
+        expect.withMessage("id").that(signal.getId()).isNull();
+        expect.withMessage("buyer").that(signal.getBuyer()).isEqualTo(VALID_BUYER_1);
+        expect.withMessage("key").that(signal.getKey()).isEqualTo(KEY);
+        expect.withMessage("value").that(signal.getValue()).isEqualTo(VALUE);
+        expect.withMessage("creationTime")
+                .that(signal.getCreationTime())
+                .isEqualTo(FIXED_NOW_TRUNCATED_TO_MILLI);
+        expect.withMessage("packageName")
+                .that(signal.getPackageName())
+                .isEqualTo(TEST_PACKAGE_NAME_1);
+        expect.withMessage("evictionPriority")
+                .that(signal.getEvictionPriority())
+                .isEqualTo(EvictionPriority.EVICT_SOONER);
     }
 
     @Test
-    public void testEqual() {
+    public void testEqual_sameId() {
         DBProtectedSignal signal1 =
                 DBProtectedSignal.builder()
-                        .setId(null)
-                        .setBuyer(CommonFixture.VALID_BUYER_1)
-                        .setKey(DBProtectedSignalFixture.KEY)
+                        .setId(1L)
+                        .setBuyer(VALID_BUYER_1)
+                        .setKey(KEY)
                         .setValue(DBProtectedSignalFixture.VALUE)
-                        .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
-                        .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .setCreationTime(FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .setPackageName(TEST_PACKAGE_NAME_1)
                         .setEvictionPriority(EvictionPriority.DEFAULT)
                         .build();
         DBProtectedSignal signal2 =
                 DBProtectedSignal.builder()
-                        .setId(null)
-                        .setBuyer(CommonFixture.VALID_BUYER_1)
-                        .setKey(DBProtectedSignalFixture.KEY)
+                        .setId(1L)
+                        .setBuyer(VALID_BUYER_1)
+                        .setKey(KEY)
                         .setValue(DBProtectedSignalFixture.VALUE)
-                        .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
-                        .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .setCreationTime(FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .setPackageName(TEST_PACKAGE_NAME_1)
                         .setEvictionPriority(EvictionPriority.DEFAULT)
                         .build();
-        assertEquals(signal1, signal2);
+
+        mEqualsTester.expectObjectsAreEqual(signal1, signal2);
+    }
+
+    @Test
+    public void testEqual_differentIds() {
+        DBProtectedSignal signal1 =
+                DBProtectedSignal.builder()
+                        .setId(1L)
+                        .setBuyer(VALID_BUYER_1)
+                        .setKey(KEY)
+                        .setValue(DBProtectedSignalFixture.VALUE)
+                        .setCreationTime(FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .setPackageName(TEST_PACKAGE_NAME_1)
+                        .setEvictionPriority(EvictionPriority.DEFAULT)
+                        .build();
+        DBProtectedSignal signal2 =
+                DBProtectedSignal.builder()
+                        .setId(2L)
+                        .setBuyer(VALID_BUYER_1)
+                        .setKey(KEY)
+                        .setValue(DBProtectedSignalFixture.VALUE)
+                        .setCreationTime(FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .setPackageName(TEST_PACKAGE_NAME_1)
+                        .setEvictionPriority(EvictionPriority.DEFAULT)
+                        .build();
+
+        mEqualsTester.expectObjectsAreEqual(signal1, signal2);
     }
 
     @Test
     public void testNotEqual() {
         DBProtectedSignal signal1 =
                 DBProtectedSignal.builder()
-                        .setId(1L)
-                        .setBuyer(CommonFixture.VALID_BUYER_1)
-                        .setKey(DBProtectedSignalFixture.KEY)
+                        .setBuyer(VALID_BUYER_1)
+                        .setKey(KEY)
                         .setValue(DBProtectedSignalFixture.VALUE)
-                        .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
-                        .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .setCreationTime(FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .setPackageName(TEST_PACKAGE_NAME_1)
                         .setEvictionPriority(EvictionPriority.DEFAULT)
                         .build();
         DBProtectedSignal signal2 =
                 DBProtectedSignal.builder()
-                        .setId(2L)
-                        .setBuyer(CommonFixture.VALID_BUYER_1)
-                        .setKey(DBProtectedSignalFixture.KEY)
+                        .setBuyer(CommonFixture.VALID_BUYER_2)
+                        .setKey(KEY)
                         .setValue(DBProtectedSignalFixture.VALUE)
-                        .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
-                        .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .setCreationTime(FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .setPackageName(TEST_PACKAGE_NAME_1)
                         .setEvictionPriority(EvictionPriority.DEFAULT)
                         .build();
-        assertNotEquals(signal1, signal2);
-    }
 
-    @Test
-    public void testHashCode() {
-        DBProtectedSignal signal1 =
-                DBProtectedSignal.builder()
-                        .setId(null)
-                        .setBuyer(CommonFixture.VALID_BUYER_1)
-                        .setKey(DBProtectedSignalFixture.KEY)
-                        .setValue(DBProtectedSignalFixture.VALUE)
-                        .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
-                        .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
-                        .setEvictionPriority(EvictionPriority.DEFAULT)
-                        .build();
-        DBProtectedSignal signal2 =
-                DBProtectedSignal.builder()
-                        .setId(null)
-                        .setBuyer(CommonFixture.VALID_BUYER_1)
-                        .setKey(DBProtectedSignalFixture.KEY)
-                        .setValue(DBProtectedSignalFixture.VALUE)
-                        .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
-                        .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
-                        .setEvictionPriority(EvictionPriority.DEFAULT)
-                        .build();
-        assertEquals(signal1.hashCode(), signal2.hashCode());
+        mEqualsTester.expectObjectsAreNotEqual(signal1, signal2);
     }
 }

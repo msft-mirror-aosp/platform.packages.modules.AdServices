@@ -164,7 +164,7 @@ public class UpdateProcessingOrchestrator {
                             adtech, packageName, creationTime, currentSignalsList, combinedUpdates);
 
             sLogger.v(
-                    "Finished parsing JSON %d signals to add, and %d signals to remove",
+                    "Finished parsing JSON: %d signals to add and %d signals to remove",
                     combinedUpdates.getToAddSize(), combinedUpdates.getToRemoveSize());
 
             mSignalEvictionController.evict(
