@@ -43,6 +43,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.nio.ByteBuffer;
 import java.util.Set;
 
 public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServicesMockitoTestCase {
@@ -69,8 +70,12 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
             Set.of(EVICT_LATER);
     private static final Set<EvictionPriority> EVICTED_SIGNAL_EVICTION_PRIORITIES =
             Set.of(EVICT_SOONER);
-    private static final Set<String> UPDATED_SIGNALS_WITH_EVICTION_PRIORITY =
-            Set.of("signal_1", "signal_2", "signal_3");
+    private static final byte[] BYTES_1 = new byte[] {0x01, 0x02};
+    private static final byte[] BYTES_2 = new byte[] {0x03, 0x04};
+    private static final ByteBuffer BYTE_BUFFER_1 = ByteBuffer.wrap(BYTES_1);
+    private static final ByteBuffer BYTE_BUFFER_2 = ByteBuffer.wrap(BYTES_2);
+    private static final Set<ByteBuffer> UPDATED_SIGNALS_WITH_EVICTION_PRIORITY =
+            Set.of(BYTE_BUFFER_1, BYTE_BUFFER_2);
 
     @Mock private Clock mClockMock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
@@ -153,7 +158,7 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
         mUpdateSignalsProcessReportedLoggerImpl.addUpdatedSignalEvictionPriority(EVICT_LATER);
         mUpdateSignalsProcessReportedLoggerImpl.addEvictedSignalEvictionPriority(EVICT_SOONER);
         mUpdateSignalsProcessReportedLoggerImpl.addUpdatedSignalWithEvictionPriorityForCount(
-                "signal_1");
+                BYTE_BUFFER_1);
 
         mUpdateSignalsProcessReportedLoggerImpl.logUpdateSignalsProcessReportedStats();
 
@@ -181,11 +186,11 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
         mUpdateSignalsProcessReportedLoggerImpl.addEvictedSignalEvictionPriority(EVICT_SOONER);
         mUpdateSignalsProcessReportedLoggerImpl.addEvictedSignalEvictionPriority(EVICT_SOONER);
         mUpdateSignalsProcessReportedLoggerImpl.addUpdatedSignalWithEvictionPriorityForCount(
-                "signal_1");
+                BYTE_BUFFER_1);
         mUpdateSignalsProcessReportedLoggerImpl.addUpdatedSignalWithEvictionPriorityForCount(
-                "signal_1");
+                BYTE_BUFFER_1);
         mUpdateSignalsProcessReportedLoggerImpl.addUpdatedSignalWithEvictionPriorityForCount(
-                "signal_1");
+                BYTE_BUFFER_1);
 
         mUpdateSignalsProcessReportedLoggerImpl.logUpdateSignalsProcessReportedStats();
 

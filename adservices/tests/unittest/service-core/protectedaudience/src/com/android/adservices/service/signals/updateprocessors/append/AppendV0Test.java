@@ -39,14 +39,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.nio.ByteBuffer;
 import java.time.Duration;
@@ -59,7 +61,7 @@ import java.util.Map;
 import java.util.Set;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
-public class AppendV0Test extends AdServicesUnitTestCase {
+public class AppendV0Test extends AdServicesMockitoTestCase {
 
     /*
      * Hardcoding names here since JSON keys are an external
@@ -67,6 +69,8 @@ public class AppendV0Test extends AdServicesUnitTestCase {
      */
     private static final String MAX_SIGNALS = "max_signals";
     private static final String VALUES = "values";
+
+    @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
 
     private final AppendV0 mAppendV0 = new AppendV0();
 
@@ -82,7 +86,11 @@ public class AppendV0Test extends AdServicesUnitTestCase {
         JSONObject updatesJson = new JSONObject();
         updatesJson.put(BASE64_KEY_1, appendJson);
 
-        UpdateOutput output = mAppendV0.processUpdates(updatesJson, Collections.emptyMap());
+        UpdateOutput output =
+                mAppendV0.processUpdates(
+                        updatesJson,
+                        Collections.emptyMap(),
+                        mUpdateSignalsProcessReportedLoggerMock);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
@@ -104,7 +112,11 @@ public class AppendV0Test extends AdServicesUnitTestCase {
         JSONObject updatesJson = new JSONObject();
         updatesJson.put(BASE64_KEY_1, appendJson);
 
-        UpdateOutput output = mAppendV0.processUpdates(updatesJson, Collections.emptyMap());
+        UpdateOutput output =
+                mAppendV0.processUpdates(
+                        updatesJson,
+                        Collections.emptyMap(),
+                        mUpdateSignalsProcessReportedLoggerMock);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
@@ -136,7 +148,11 @@ public class AppendV0Test extends AdServicesUnitTestCase {
         updatesJson.put(BASE64_KEY_1, appendJson1);
         updatesJson.put(BASE64_KEY_2, appendJson2);
 
-        UpdateOutput output = mAppendV0.processUpdates(updatesJson, Collections.emptyMap());
+        UpdateOutput output =
+                mAppendV0.processUpdates(
+                        updatesJson,
+                        Collections.emptyMap(),
+                        mUpdateSignalsProcessReportedLoggerMock);
 
         assertEquals(new HashSet<>(Arrays.asList(BB_KEY_1, BB_KEY_2)), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
@@ -166,7 +182,9 @@ public class AppendV0Test extends AdServicesUnitTestCase {
         DBProtectedSignal toKeep = createSignal(KEY_1, VALUE_2, ID_2, NOW);
         existingSignals.put(BB_KEY_1, new HashSet<>(Arrays.asList(toOverwrite, toKeep)));
 
-        UpdateOutput output = mAppendV0.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output =
+                mAppendV0.processUpdates(
+                        updatesJson, existingSignals, mUpdateSignalsProcessReportedLoggerMock);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertEquals(Arrays.asList(toOverwrite), output.getToRemove());
@@ -196,7 +214,9 @@ public class AppendV0Test extends AdServicesUnitTestCase {
         existingSignals.put(
                 BB_KEY_1, new HashSet<>(Arrays.asList(toOverwrite1, toOverwrite2, toKeep)));
 
-        UpdateOutput output = mAppendV0.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output =
+                mAppendV0.processUpdates(
+                        updatesJson, existingSignals, mUpdateSignalsProcessReportedLoggerMock);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertThat(Arrays.asList(toOverwrite1, toOverwrite2))
@@ -224,7 +244,9 @@ public class AppendV0Test extends AdServicesUnitTestCase {
         DBProtectedSignal existing2 = createSignal(KEY_1, VALUE_2, ID_1, NOW);
         existingSignals.put(BB_KEY_1, new HashSet<>(Arrays.asList(existing1, existing2)));
 
-        UpdateOutput output = mAppendV0.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output =
+                mAppendV0.processUpdates(
+                        updatesJson, existingSignals, mUpdateSignalsProcessReportedLoggerMock);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
@@ -248,6 +270,10 @@ public class AppendV0Test extends AdServicesUnitTestCase {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> mAppendV0.processUpdates(updatesJson, Collections.emptyMap()));
+                () ->
+                        mAppendV0.processUpdates(
+                                updatesJson,
+                                Collections.emptyMap(),
+                                mUpdateSignalsProcessReportedLoggerMock));
     }
 }

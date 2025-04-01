@@ -126,7 +126,11 @@ public class UpdateProcessingOrchestrator {
             UpdateOutput combinedUpdates;
             if (jsonProcessingStatsBuilder == null) {
                 combinedUpdates =
-                        runProcessors(signalUpdates, currentSignalsMap, jsonProcessingStatsBuilder);
+                        runProcessors(
+                                signalUpdates,
+                                currentSignalsMap,
+                                jsonProcessingStatsBuilder,
+                                updateSignalsProcessReportedLogger);
             } else {
                 jsonProcessingStatsBuilder.setJsonSize(
                         computeSize(
@@ -135,7 +139,10 @@ public class UpdateProcessingOrchestrator {
                 try {
                     combinedUpdates =
                             runProcessors(
-                                    signalUpdates, currentSignalsMap, jsonProcessingStatsBuilder);
+                                    signalUpdates,
+                                    currentSignalsMap,
+                                    jsonProcessingStatsBuilder,
+                                    updateSignalsProcessReportedLogger);
                 } catch (IllegalArgumentException e) {
                     jsonProcessingStatsBuilder.setJsonProcessingStatus(
                             JSON_PROCESSING_STATUS_SEMANTIC_ERROR);
@@ -224,7 +231,8 @@ public class UpdateProcessingOrchestrator {
     private UpdateOutput runProcessors(
             SignalUpdates signalUpdates,
             Map<ByteBuffer, Set<DBProtectedSignal>> currentSignalsMap,
-            UpdateSignalsApiCalledStats.Builder jsonProcessingStatsBuilder)
+            UpdateSignalsApiCalledStats.Builder jsonProcessingStatsBuilder,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger)
             throws JSONException {
 
         UpdateOutput combinedUpdates = new UpdateOutput();
@@ -237,7 +245,10 @@ public class UpdateProcessingOrchestrator {
             UpdateOutput output =
                     mUpdateProcessorSelector
                             .getUpdateProcessor(key, signalUpdates.getUpdateSchemaVersion())
-                            .processUpdates(updateJson.get(key), currentSignalsMap);
+                            .processUpdates(
+                                    updateJson.get(key),
+                                    currentSignalsMap,
+                                    updateSignalsProcessReportedLogger);
             combinedUpdates.getToAdd().addAll(output.getToAdd());
             combinedUpdates.getToRemove().addAll(output.getToRemove());
             if (!Collections.disjoint(combinedUpdates.getKeysTouched(), output.getKeysTouched())) {

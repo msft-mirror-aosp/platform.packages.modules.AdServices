@@ -35,15 +35,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import com.google.common.collect.ImmutableMap;
 
 import org.json.JSONObject;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.nio.ByteBuffer;
 import java.time.Duration;
@@ -56,9 +58,11 @@ import java.util.Map;
 import java.util.Set;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
-public class PutIfNotPresentV0Test extends AdServicesUnitTestCase {
+public class PutIfNotPresentV0Test extends AdServicesMockitoTestCase {
 
     private final PutIfNotPresentV0 mPutIfNotPresentV0 = new PutIfNotPresentV0();
+
+    @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
 
     @Test
     public void testPutSingle() throws Exception {
@@ -66,7 +70,10 @@ public class PutIfNotPresentV0Test extends AdServicesUnitTestCase {
         updatesJson.put(BASE64_KEY_1, BASE64_VALUE_1);
 
         UpdateOutput output =
-                mPutIfNotPresentV0.processUpdates(updatesJson, Collections.emptyMap());
+                mPutIfNotPresentV0.processUpdates(
+                        updatesJson,
+                        Collections.emptyMap(),
+                        mUpdateSignalsProcessReportedLoggerMock);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
@@ -82,7 +89,10 @@ public class PutIfNotPresentV0Test extends AdServicesUnitTestCase {
         updatesJson.put(BASE64_KEY_2, BASE64_VALUE_2);
 
         UpdateOutput output =
-                mPutIfNotPresentV0.processUpdates(updatesJson, Collections.emptyMap());
+                mPutIfNotPresentV0.processUpdates(
+                        updatesJson,
+                        Collections.emptyMap(),
+                        mUpdateSignalsProcessReportedLoggerMock);
 
         assertEquals(new HashSet<>(Arrays.asList(BB_KEY_1, BB_KEY_2)), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
@@ -104,7 +114,9 @@ public class PutIfNotPresentV0Test extends AdServicesUnitTestCase {
                 createSignal(KEY_1, VALUE_1, ID_1, NOW.minus(Duration.ofDays(1)));
         existingSignals.put(BB_KEY_1, new HashSet<>(Arrays.asList(toKeep)));
 
-        UpdateOutput output = mPutIfNotPresentV0.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output =
+                mPutIfNotPresentV0.processUpdates(
+                        updatesJson, existingSignals, mUpdateSignalsProcessReportedLoggerMock);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
@@ -119,6 +131,10 @@ public class PutIfNotPresentV0Test extends AdServicesUnitTestCase {
         assertThrows(
                 "Expected exception",
                 IllegalArgumentException.class,
-                () -> mPutIfNotPresentV0.processUpdates(updatesJson, ImmutableMap.of()));
+                () ->
+                        mPutIfNotPresentV0.processUpdates(
+                                updatesJson,
+                                ImmutableMap.of(),
+                                mUpdateSignalsProcessReportedLoggerMock));
     }
 }

@@ -154,7 +154,7 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
         when(mUpdateProcessorSelectorMock.getUpdateProcessor(
                         TEST_PROCESSOR, mFakeFlags.getProtectedSignalsUpdateSchemaVersion()))
                 .thenReturn(
-                        (updates, current) -> {
+                        (updates, current, logger) -> {
                             throw exception;
                         });
 
@@ -675,7 +675,7 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
     }
 
     private UpdateProcessor createFakeProcessor(UpdateOutput toReturn) {
-        return (updates, current) -> toReturn;
+        return (updates, current, logger) -> toReturn;
     }
 
     private void assertUpdateOutputEquals(UpdateOutput expect, UpdateOutput actual) {

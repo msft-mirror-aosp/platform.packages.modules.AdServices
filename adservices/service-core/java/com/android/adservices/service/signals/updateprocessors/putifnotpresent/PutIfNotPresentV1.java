@@ -21,6 +21,7 @@ import com.android.adservices.service.signals.evict.EvictionPriority;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils;
 import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandler;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -58,13 +59,15 @@ public class PutIfNotPresentV1 extends PutIfNotPresent {
             ByteBuffer key,
             Object update,
             Map<ByteBuffer, Set<DBProtectedSignal>> current,
-            UpdateOutput toReturn)
+            UpdateOutput toReturn,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger)
             throws JSONException {
         JSONObject updateObject =
                 UpdateProcessorUtils.validateAndCastToJSONObject(PUT_IF_NOT_PRESENT, update);
         String value = updateObject.getString(VALUE);
         EvictionPriority evictionPriority =
-                mEvictionPriorityHandler.getEvictionPriority(updateObject);
+                mEvictionPriorityHandler.getEvictionPriority(
+                        key, updateObject, updateSignalsProcessReportedLogger);
 
         UpdateProcessorUtils.touchKey(key, toReturn.getKeysTouched());
         // Add the new signal if nothing exists under the key

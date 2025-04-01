@@ -23,18 +23,20 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.util.Collections;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
-public class UpdateEncoderV0Test extends AdServicesUnitTestCase {
+public class UpdateEncoderV0Test extends AdServicesMockitoTestCase {
     private static final String ACTION = "action";
     private static final String ENDPOINT = "endpoint";
 
@@ -42,11 +44,17 @@ public class UpdateEncoderV0Test extends AdServicesUnitTestCase {
 
     private final UpdateEncoderV0 mUpdateEncoderV0 = new UpdateEncoderV0();
 
+    @Mock UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
+
     @Test
     public void testUpdateEmptyEvent() throws JSONException {
         JSONObject updateJson = new JSONObject();
 
-        UpdateOutput output = mUpdateEncoderV0.processUpdates(updateJson, Collections.emptyMap());
+        UpdateOutput output =
+                mUpdateEncoderV0.processUpdates(
+                        updateJson,
+                        Collections.emptyMap(),
+                        mUpdateSignalsProcessReportedLoggerMock);
         assertNull(
                 "Update event should have been skipped due to empty JSON",
                 output.getUpdateEncoderEvent());
@@ -62,7 +70,10 @@ public class UpdateEncoderV0Test extends AdServicesUnitTestCase {
                 "Non-recognized update event should've lead to this exception",
                 IllegalArgumentException.class,
                 () -> {
-                    mUpdateEncoderV0.processUpdates(updateJson, Collections.emptyMap());
+                    mUpdateEncoderV0.processUpdates(
+                            updateJson,
+                            Collections.emptyMap(),
+                            mUpdateSignalsProcessReportedLoggerMock);
                 });
     }
 
@@ -72,7 +83,11 @@ public class UpdateEncoderV0Test extends AdServicesUnitTestCase {
         updateJson.put(ACTION, "REGISTER");
         updateJson.put(ENDPOINT, mEndpointUri);
 
-        UpdateOutput output = mUpdateEncoderV0.processUpdates(updateJson, Collections.emptyMap());
+        UpdateOutput output =
+                mUpdateEncoderV0.processUpdates(
+                        updateJson,
+                        Collections.emptyMap(),
+                        mUpdateSignalsProcessReportedLoggerMock);
         UpdateEncoderEvent event =
                 UpdateEncoderEvent.builder()
                         .setUpdateType(UpdateEncoderEvent.UpdateType.REGISTER)

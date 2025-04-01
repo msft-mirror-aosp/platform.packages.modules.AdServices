@@ -17,8 +17,11 @@
 package com.android.adservices.service.signals.updateprocessors.evictionpriority;
 
 import com.android.adservices.service.signals.evict.EvictionPriority;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 
 import org.json.JSONObject;
+
+import java.nio.ByteBuffer;
 
 /** Handler for the {@link EvictionPriority} update field. */
 public interface EvictionPriorityHandler {
@@ -26,8 +29,13 @@ public interface EvictionPriorityHandler {
     /**
      * Gets the eviction priority from a signal update.
      *
+     * @param key a ByteBuffer wrapped signal key, used for logging purpose.
      * @param update The update.
+     * @param updateSignalsProcessReportedLogger The logger for Signals related telemetry.
      * @return The eviction priority.
      */
-    EvictionPriority getEvictionPriority(JSONObject update);
+    EvictionPriority getEvictionPriority(
+            ByteBuffer key,
+            JSONObject update,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger);
 }

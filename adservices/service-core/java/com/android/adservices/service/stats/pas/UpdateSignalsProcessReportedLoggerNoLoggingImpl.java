@@ -21,6 +21,7 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.Signa
 
 import com.android.adservices.service.signals.evict.EvictionPriority;
 
+import java.nio.ByteBuffer;
 import java.util.Set;
 
 public class UpdateSignalsProcessReportedLoggerNoLoggingImpl
@@ -75,10 +76,10 @@ public class UpdateSignalsProcessReportedLoggerNoLoggingImpl
 
     @Override
     public void setUpdatedSignalsWithEvictionPriorityForCount(
-            Set<String> updatedSignalsWithEvictionPriority) {}
+            Set<ByteBuffer> updatedSignalsWithEvictionPriority) {}
 
     @Override
-    public void addUpdatedSignalWithEvictionPriorityForCount(String key) {}
+    public void addUpdatedSignalWithEvictionPriorityForCount(ByteBuffer key) {}
 
     @Override
     public void setSignalUpdateSchemaVersion(@UpdateSchemaVersion int updateSchemaVersion) {}

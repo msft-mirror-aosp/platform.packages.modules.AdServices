@@ -19,6 +19,7 @@ package com.android.adservices.service.signals.updateprocessors.append;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -50,7 +51,8 @@ public class AppendV0 extends Append {
             ByteBuffer key,
             JSONObject update,
             Map<ByteBuffer, Set<DBProtectedSignal>> current,
-            UpdateOutput toReturn)
+            UpdateOutput toReturn,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger)
             throws JSONException {
         UpdateProcessorUtils.touchKey(key, toReturn.getKeysTouched());
         int maxSignals = update.getInt(MAX_SIGNALS);

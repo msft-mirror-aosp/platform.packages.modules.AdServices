@@ -38,15 +38,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import com.google.common.collect.ImmutableMap;
 
 import org.json.JSONObject;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.nio.ByteBuffer;
 import java.time.Duration;
@@ -59,15 +61,21 @@ import java.util.Map;
 import java.util.Set;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
-public class PutV0Test extends AdServicesUnitTestCase {
+public class PutV0Test extends AdServicesMockitoTestCase {
     private final PutV0 mPutV0 = new PutV0();
+
+    @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
 
     @Test
     public void testPutSingle() throws Exception {
         JSONObject updatesJson = new JSONObject();
         updatesJson.put(BASE64_KEY_1, BASE64_VALUE_1);
 
-        UpdateOutput output = mPutV0.processUpdates(updatesJson, Collections.emptyMap());
+        UpdateOutput output =
+                mPutV0.processUpdates(
+                        updatesJson,
+                        Collections.emptyMap(),
+                        mUpdateSignalsProcessReportedLoggerMock);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
@@ -82,7 +90,11 @@ public class PutV0Test extends AdServicesUnitTestCase {
         updatesJson.put(BASE64_KEY_1, BASE64_VALUE_1);
         updatesJson.put(BASE64_KEY_2, BASE64_VALUE_2);
 
-        UpdateOutput output = mPutV0.processUpdates(updatesJson, Collections.emptyMap());
+        UpdateOutput output =
+                mPutV0.processUpdates(
+                        updatesJson,
+                        Collections.emptyMap(),
+                        mUpdateSignalsProcessReportedLoggerMock);
 
         assertEquals(new HashSet<>(Arrays.asList(BB_KEY_1, BB_KEY_2)), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
@@ -103,7 +115,9 @@ public class PutV0Test extends AdServicesUnitTestCase {
                 createSignal(KEY_1, VALUE_1, ID_1, NOW.minus(Duration.ofDays(1)));
         existingSignals.put(BB_KEY_1, new HashSet<>(Arrays.asList(toOverwrite)));
 
-        UpdateOutput output = mPutV0.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output =
+                mPutV0.processUpdates(
+                        updatesJson, existingSignals, mUpdateSignalsProcessReportedLoggerMock);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertEquals(Arrays.asList(toOverwrite), output.getToRemove());
@@ -125,7 +139,9 @@ public class PutV0Test extends AdServicesUnitTestCase {
                 createSignal(KEY_1, VALUE_2, ID_2, NOW.minus(Duration.ofDays(1)));
         existingSignals.put(BB_KEY_1, new HashSet<>(Arrays.asList(toOverwrite1, toOverwrite2)));
 
-        UpdateOutput output = mPutV0.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output =
+                mPutV0.processUpdates(
+                        updatesJson, existingSignals, mUpdateSignalsProcessReportedLoggerMock);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertThat(Arrays.asList(toOverwrite1, toOverwrite2))
@@ -143,6 +159,10 @@ public class PutV0Test extends AdServicesUnitTestCase {
         assertThrows(
                 "Expected exception",
                 IllegalArgumentException.class,
-                () -> mPutV0.processUpdates(updatesJson, ImmutableMap.of()));
+                () ->
+                        mPutV0.processUpdates(
+                                updatesJson,
+                                ImmutableMap.of(),
+                                mUpdateSignalsProcessReportedLoggerMock));
     }
 }
