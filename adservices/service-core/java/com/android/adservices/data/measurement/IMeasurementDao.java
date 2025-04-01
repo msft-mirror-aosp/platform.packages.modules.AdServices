@@ -936,6 +936,13 @@ public interface IMeasurementDao {
     void deleteCountUniqueMetadata(String key, Uri reportingOrigin) throws DatastoreException;
 
     /**
+     * Delete count unique data on package uninstall
+     *
+     * @param uri package identifier
+     */
+    void deleteCountUniqueUninstall(Uri uri) throws DatastoreException;
+
+    /**
      * Returns total sum of contributions for a reporting site in a given time window
      *
      * @param enrollmentId enrollment of reporting site

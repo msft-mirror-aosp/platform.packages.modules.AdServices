@@ -4338,6 +4338,18 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public void deleteCountUniqueUninstall(Uri uri) throws DatastoreException {
+        deleteRecordsColumnBased(
+                List.of(uri.toString()),
+                CountUniqueReportingContract.TABLE,
+                CountUniqueReportingContract.REGISTRANT);
+        deleteRecordsColumnBased(
+                List.of(uri.toString()),
+                MeasurementTables.CountUniqueMetadataContract.TABLE,
+                MeasurementTables.CountUniqueMetadataContract.REGISTRANT);
+    }
+
+    @Override
     public long sumTotalCountUniqueContributionsInWindow(
             String enrollmentId, long windowStartTime, long windowEndTime)
             throws DatastoreException {

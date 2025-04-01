@@ -3857,6 +3857,156 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    public void testDeleteCountUniqueUninstall_forRegistrant_RemovesReports() {
+        Uri registrant1 = Uri.parse("android-app://com.example1");
+        Uri registrant2 = Uri.parse("android-app://com.example2");
+        Uri reportingOrigin = Uri.parse("https://test.foo");
+
+        CountUniqueMetadata metadata1 =
+                new CountUniqueMetadata.Builder()
+                        .setKey("key1")
+                        .setValue(1)
+                        .setExpirationTime(System.currentTimeMillis())
+                        .setReportingOrigin(reportingOrigin)
+                        .setRegistrant(registrant1)
+                        .build();
+
+        CountUniqueMetadata metadata2 =
+                new CountUniqueMetadata.Builder()
+                        .setKey("key2")
+                        .setValue(1)
+                        .setExpirationTime(System.currentTimeMillis())
+                        .setReportingOrigin(reportingOrigin)
+                        .setRegistrant(registrant2)
+                        .build();
+
+        CountUniqueMetadata metadata3 =
+                new CountUniqueMetadata.Builder()
+                        .setKey("key3")
+                        .setValue(1)
+                        .setExpirationTime(System.currentTimeMillis())
+                        .setReportingOrigin(reportingOrigin)
+                        .setRegistrant(registrant1)
+                        .build();
+
+        CountUniqueReport report1 =
+                createCountUniqueReport(
+                        "report1",
+                        "payload",
+                        reportingOrigin,
+                        CountUniqueReport.ReportDeliveryStatus.PENDING,
+                        CountUniqueReport.ReportDeliveryStatus.PENDING,
+                        System.currentTimeMillis(),
+                        "0.1",
+                        "debug-key",
+                        "context-id",
+                        "test-enrollment",
+                        5,
+                        System.currentTimeMillis(),
+                        registrant1);
+
+        CountUniqueReport report2 =
+                createCountUniqueReport(
+                        "report2",
+                        "payload",
+                        reportingOrigin,
+                        CountUniqueReport.ReportDeliveryStatus.PENDING,
+                        CountUniqueReport.ReportDeliveryStatus.PENDING,
+                        System.currentTimeMillis(),
+                        "0.1",
+                        "debug-key",
+                        "context-id",
+                        "test-enrollment",
+                        5,
+                        System.currentTimeMillis(),
+                        registrant2);
+
+        CountUniqueReport report3 =
+                createCountUniqueReport(
+                        "report3",
+                        "payload",
+                        reportingOrigin,
+                        CountUniqueReport.ReportDeliveryStatus.PENDING,
+                        CountUniqueReport.ReportDeliveryStatus.PENDING,
+                        System.currentTimeMillis(),
+                        "0.1",
+                        "debug-key",
+                        "context-id",
+                        "test-enrollment",
+                        5,
+                        System.currentTimeMillis(),
+                        registrant1);
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertCountUniqueMetadata(metadata1, true);
+                    dao.insertCountUniqueMetadata(metadata2, true);
+                    dao.insertCountUniqueMetadata(metadata3, true);
+                    dao.insertCountUniqueReport(report1);
+                    dao.insertCountUniqueReport(report2);
+                    dao.insertCountUniqueReport(report3);
+                });
+
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.CountUniqueMetadataContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            assertThat(cursor.getCount()).isEqualTo(3);
+        }
+
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.CountUniqueReportingContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            assertThat(cursor.getCount()).isEqualTo(3);
+        }
+
+        mDatastoreManager.runInTransaction((dao) -> dao.deleteCountUniqueUninstall(registrant1));
+
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.CountUniqueMetadataContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            assertThat(cursor.getCount()).isEqualTo(1);
+        }
+
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.CountUniqueReportingContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            assertThat(cursor.getCount()).isEqualTo(1);
+        }
+    }
+
+    @Test
     public void testDeleteExpiredCountUniqueRecords_forOldReports_RemovesReports() {
         String oldReportId = "old-report";
         String reportId = "report";
