@@ -94,7 +94,6 @@ public final class MeasurementImpl {
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
     private final DatastoreManager mDatastoreManager;
     private final ContentResolver mContentResolver;
-    private final ClickVerifier mClickVerifier;
     private final MeasurementDataDeleter mMeasurementDataDeleter;
     private final Flags mFlags;
 
@@ -102,7 +101,6 @@ public final class MeasurementImpl {
     MeasurementImpl(Context context) {
         mContext = context;
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager();
-        mClickVerifier = new ClickVerifier(context);
         mFlags = FlagsFactory.getFlags();
         mMeasurementDataDeleter = new MeasurementDataDeleter(mDatastoreManager, mFlags);
         mContentResolver = mContext.getContentResolver();
@@ -114,12 +112,10 @@ public final class MeasurementImpl {
             Context context,
             Flags flags,
             DatastoreManager datastoreManager,
-            ClickVerifier clickVerifier,
             MeasurementDataDeleter measurementDataDeleter,
             ContentResolver contentResolver) {
         mContext = context;
         mDatastoreManager = datastoreManager;
-        mClickVerifier = clickVerifier;
         mMeasurementDataDeleter = measurementDataDeleter;
         mFlags = flags;
         mContentResolver = contentResolver;
@@ -441,8 +437,8 @@ public final class MeasurementImpl {
         // verified, then the SourceType is demoted to EVENT.
         if (mFlags.getMeasurementIsClickVerificationEnabled()
                 && inputEvent != null
-                && !mClickVerifier.isInputEventVerifiable(
-                        inputEvent, requestTime, sourceRegistrant)) {
+                && !ClickVerifier.getInstance()
+                        .isInputEventVerifiable(inputEvent, requestTime, sourceRegistrant)) {
             return Source.SourceType.EVENT;
         } else {
             return inputEvent == null ? Source.SourceType.EVENT : Source.SourceType.NAVIGATION;

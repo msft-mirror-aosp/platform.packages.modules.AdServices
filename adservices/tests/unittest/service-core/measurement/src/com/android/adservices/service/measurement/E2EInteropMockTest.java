@@ -306,7 +306,6 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
                         mDatastoreManager,
-                        mClickVerifier,
                         mMeasurementDataDeleter,
                         mMockContentResolver);
         mAsyncRegistrationQueueRunner =

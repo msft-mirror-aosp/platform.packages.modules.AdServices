@@ -28,7 +28,6 @@ import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
-import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
@@ -57,7 +56,6 @@ class TestObjectProvider {
 
     static MeasurementImpl getMeasurementImpl(
             DatastoreManager datastoreManager,
-            ClickVerifier clickVerifier,
             MeasurementDataDeleter measurementDataDeleter,
             ContentResolver contentResolver) {
         return spy(
@@ -65,7 +63,6 @@ class TestObjectProvider {
                         null,
                         FlagsFactory.getFlags(),
                         datastoreManager,
-                        clickVerifier,
                         measurementDataDeleter,
                         contentResolver));
     }

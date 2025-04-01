@@ -138,6 +138,7 @@ import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -169,6 +170,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 @SpyStatic(EnrollmentDao.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
+@SpyStatic(ClickVerifier.class)
 @MockStatic(ServiceCompatUtils.class)
 @SetFlagTrue(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
 @SetFlagTrue(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
@@ -334,13 +336,13 @@ public final class ReportAndRegisterEventIntegrationTest extends AdServicesExten
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFakeFlags);
 
+        ExtendedMockito.doReturn(mClickVerifierMock).when(ClickVerifier::getInstance);
         mMeasurementImplSpy =
                 spy(
                         new MeasurementImpl(
                                 mContext,
                                 FakeFlagsFactory.getFlagsForTest(),
                                 mDatastoreManagerSpy,
-                                mClickVerifierMock,
                                 mMeasurementDataDeleterMock,
                                 mContentResolverMock));
         doReturn(mMeasurementImplSpy).when(() -> MeasurementImpl.getInstance());
