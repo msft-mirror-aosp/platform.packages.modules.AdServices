@@ -14552,6 +14552,221 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         assertThat(fetchedAllSourceRegistration.get(1)).isEqualTo(source2);
     }
 
+    @Test
+    public void testCountDistinctReportingOriginsPerEnrollmentInSource() {
+
+        insertSource(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEnrollmentId("id1")
+                        .setRegistrationOrigin(WebUtil.validUri("https://a.example.test"))
+                        .setEventTime(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(23))
+                        .build());
+
+        insertSource(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEnrollmentId("id1")
+                        .setRegistrationOrigin(WebUtil.validUri("https://b.example.test"))
+                        .setEventTime(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(22))
+                        .build());
+
+        // Duplicate reporting origin, not counted as unique in the first test.
+        insertSource(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEnrollmentId("id1")
+                        .setRegistrationOrigin(WebUtil.validUri("https://a.example.test"))
+                        .setEventTime(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(21))
+                        .build());
+
+        // Before time window, not counted.
+        insertSource(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEnrollmentId("id1")
+                        .setRegistrationOrigin(WebUtil.validUri("https://c.example.test"))
+                        .setEventTime(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(27))
+                        .build());
+
+        // After time window, not counted.
+        insertSource(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEnrollmentId("id1")
+                        .setRegistrationOrigin(WebUtil.validUri("https://d.example.test"))
+                        .setEventTime(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(3))
+                        .build());
+
+        insertSource(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEnrollmentId("id1")
+                        .setRegistrationOrigin(WebUtil.validUri("https://e.example.test"))
+                        .setEventTime(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(18))
+                        .build());
+
+        // Different enrollment id, not counted in the first or second test.
+        insertSource(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEnrollmentId("id2")
+                        .setRegistrationOrigin(WebUtil.validUri("https://f.example.test"))
+                        .setEventTime(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(16))
+                        .build());
+
+        assertThat(
+                mDatastoreManager.runInTransactionWithResult(
+                        dao -> dao.countDistinctReportingOriginsPerEnrollmentInSource(
+                                "id1",
+                                System.currentTimeMillis() - TimeUnit.HOURS.toMillis(24),
+                                System.currentTimeMillis()))
+                    .orElseThrow())
+            .isEqualTo(3);
+
+        assertThat(
+                mDatastoreManager.runInTransactionWithResult(
+                        dao -> dao.countDistinctReportingOriginsPerEnrollmentInSource(
+                                "id1",
+                                System.currentTimeMillis() - TimeUnit.HOURS.toMillis(23),
+                                System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1)))
+                    .orElseThrow())
+            .isEqualTo(3);
+
+        assertThat(
+                mDatastoreManager.runInTransactionWithResult(
+                        dao -> dao.countDistinctReportingOriginsPerEnrollmentInSource(
+                                "id2",
+                                System.currentTimeMillis() - TimeUnit.HOURS.toMillis(24),
+                                System.currentTimeMillis()))
+                    .orElseThrow())
+            .isEqualTo(1);
+    }
+
+    @Test
+    public void testCountDistinctReportingOriginsPerEnrollmentXDestinationInSource() {
+        final String enrollmentId1 = "id1";
+
+        List<Uri> webDestination1 = List.of(Uri.parse("https://wd1.test"));
+
+        List<Uri> appDestination1 = List.of(Uri.parse("android-app://test.ad1"));
+
+        insertSource(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEnrollmentId(enrollmentId1)
+                        .setRegistrationOrigin(WebUtil.validUri("https://a.example.test"))
+                        .setEventTime(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(23))
+                        .setWebDestinations(webDestination1)
+                        .setAppDestinations(appDestination1)
+                        .build());
+
+        insertSource(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEnrollmentId(enrollmentId1)
+                        .setRegistrationOrigin(WebUtil.validUri("https://b.example.test"))
+                        .setEventTime(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(22))
+                        .setWebDestinations(webDestination1)
+                        .setAppDestinations(appDestination1)
+                        .build());
+
+        // Duplicate reporting origin, not counted as unique in the first test.
+        insertSource(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEnrollmentId(enrollmentId1)
+                        .setRegistrationOrigin(WebUtil.validUri("https://a.example.test"))
+                        .setEventTime(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(21))
+                        .setWebDestinations(webDestination1)
+                        .setAppDestinations(appDestination1)
+                        .build());
+
+        // Different web destination
+        insertSource(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEnrollmentId(enrollmentId1)
+                        .setRegistrationOrigin(WebUtil.validUri("https://c.example.test"))
+                        .setEventTime(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(20))
+                        .setWebDestinations(List.of(Uri.parse("https://wd2.test")))
+                        .setAppDestinations(appDestination1)
+                        .build());
+
+        // Different enrollment id
+        insertSource(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEnrollmentId("id2")
+                        .setRegistrationOrigin(WebUtil.validUri("https://d.example.test"))
+                        .setEventTime(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(19))
+                        .setWebDestinations(webDestination1)
+                        .setAppDestinations(appDestination1)
+                        .build());
+
+        // Before time window
+        insertSource(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEnrollmentId(enrollmentId1)
+                        .setRegistrationOrigin(WebUtil.validUri("https://e.example.test"))
+                        .setEventTime(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(28))
+                        .setWebDestinations(webDestination1)
+                        .setAppDestinations(appDestination1)
+                        .build());
+
+        // After time window
+        insertSource(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEnrollmentId(enrollmentId1)
+                        .setRegistrationOrigin(WebUtil.validUri("https://f.example.test"))
+                        .setEventTime(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(3))
+                        .setWebDestinations(webDestination1)
+                        .setAppDestinations(appDestination1)
+                        .build());
+
+        // Different app destination
+        insertSource(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEnrollmentId(enrollmentId1)
+                        .setRegistrationOrigin(WebUtil.validUri("https://g.example.test"))
+                        .setEventTime(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(18))
+                        .setWebDestinations(webDestination1)
+                        .setAppDestinations(List.of(Uri.parse("android-app://test.ad2")))
+                        .build());
+
+        assertThat(
+                mDatastoreManager.runInTransactionWithResult(
+                        dao -> dao.countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                                enrollmentId1,
+                                EventSurfaceType.WEB,
+                                "https://wd1.test",
+                                System.currentTimeMillis() - TimeUnit.HOURS.toMillis(24),
+                                System.currentTimeMillis()))
+                    .orElseThrow())
+            .isEqualTo(3);
+
+        assertThat(
+                mDatastoreManager.runInTransactionWithResult(
+                        dao -> dao.countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                                enrollmentId1,
+                                EventSurfaceType.APP,
+                                "android-app://test.ad1",
+                                System.currentTimeMillis() - TimeUnit.HOURS.toMillis(24),
+                                System.currentTimeMillis()))
+                    .orElseThrow())
+            .isEqualTo(3);
+
+        assertThat(
+                mDatastoreManager.runInTransactionWithResult(
+                        dao -> dao.countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                                enrollmentId1,
+                                EventSurfaceType.WEB,
+                                "https://wd1.test",
+                                System.currentTimeMillis() - TimeUnit.HOURS.toMillis(22),
+                                System.currentTimeMillis() + TimeUnit.HOURS.toMillis(2)))
+                    .orElseThrow())
+            .isEqualTo(2);
+
+        assertThat(
+                mDatastoreManager.runInTransactionWithResult(
+                        dao -> dao.countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                                enrollmentId1,
+                                EventSurfaceType.APP,
+                                "android-app://test.ad1",
+                                System.currentTimeMillis() - TimeUnit.HOURS.toMillis(22),
+                                System.currentTimeMillis() + TimeUnit.HOURS.toMillis(2)))
+                    .orElseThrow())
+            .isEqualTo(2);
+    }
+
     /** Test that records in TriggerContract Table are fetched properly. */
     @Test
     public void testFetchAllTriggerRegistrations_pass() {

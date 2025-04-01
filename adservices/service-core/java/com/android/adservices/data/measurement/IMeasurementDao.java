@@ -279,6 +279,26 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Gets the count of distinct reporting origins in the Source table in the past day with
+     * matching enrollment id.
+     */
+    int countDistinctReportingOriginsPerEnrollmentInSource(
+            String enrollmentId, long windowStartTime, long windowEndTime)
+            throws DatastoreException;
+
+    /**
+     * Gets the count of distinct reporting origins in the Source table in the past day with
+     * matching enrollment id and destination site.
+     */
+    int countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+            String enrollmentId,
+            @EventSurfaceType int destinationType,
+            String destination,
+            long windowStartTime,
+            long windowEndTime)
+            throws DatastoreException;
+
+    /**
      * Updates the {@link Trigger.Status} value for the provided {@link Trigger}.
      *
      * @param triggerIds trigger to update
