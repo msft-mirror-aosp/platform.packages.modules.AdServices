@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.stats.pas;
 
+import static com.android.adservices.service.signals.SignalUpdates.UpdateSchemaVersion;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SignalEvictorType;
 
 import com.android.adservices.service.signals.evict.EvictionPriority;
@@ -82,6 +83,6 @@ public interface UpdateSignalsProcessReportedLogger {
     /** Adds a key in the update JSON who have an eviction priority assigned. */
     void addUpdatedSignalWithEvictionPriorityForCount(String key);
 
-    /** Sets the X-UPDATE-SCHEMA-VERSION from the update schema response header */
-    void setSignalUpdateSchemaVersion(int updateSchemaVersion);
+    /** Sets the update signal schema version from the update schema response header */
+    void setSignalUpdateSchemaVersion(@UpdateSchemaVersion int updateSchemaVersion);
 }

@@ -48,6 +48,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
 import static org.junit.Assert.assertEquals;
@@ -115,6 +116,7 @@ import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
+import com.android.adservices.service.stats.ProdDebugEnabledStats;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -129,6 +131,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
@@ -211,6 +214,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
 
     private AdServicesLogger mAdServicesLoggerSpy;
 
+    @Captor private ArgumentCaptor<ProdDebugEnabledStats> prodDebugEnabledStatsArgumentCaptor;
+
     @Mock
     private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
 
@@ -280,6 +285,40 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
         doNothing().when(mCoordinatorOriginUriValidator).validate(any(Uri.class));
 
         mGetAdSelectionDataRunner = initRunner(mLegacyFakeFlags, mAdsRelevanceExecutionLogger);
+    }
+
+    @Test
+    public void testRunner_getAdSelectionData_LogsProdDebugEnabled() throws Exception {
+        mocker.mockGetFlags(mLegacyFakeFlags);
+        doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
+                .when(mObliviousHttpEncryptorMock)
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
+        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger();
+
+        createAndPersistDBCustomAudiencesWithAdRenderId();
+        GetAdSelectionDataInput inputParams =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        GetAdSelectionDataTestCallback callback =
+                invokeGetAdSelectionData(mGetAdSelectionDataRunner, inputParams);
+
+        assertWithMessage("Call failed with response " + callback.mFledgeErrorResponse)
+                .that(callback.mIsSuccess)
+                .isTrue();
+
+        assertWithMessage("GetAdSelectionDataResponse")
+                .that(callback.mGetAdSelectionDataResponse)
+                .isNotNull();
+
+        verify(mAdServicesLoggerSpy, times(1))
+                .logProdDebugEnabledStats(prodDebugEnabledStatsArgumentCaptor.capture());
+
+        assertWithMessage("Prod debug enabled logged")
+                .that(prodDebugEnabledStatsArgumentCaptor.getValue().isProdDebugEnabled())
+                .isTrue();
     }
 
     @Test
@@ -1593,6 +1632,48 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                 AuctionServerDataCompressor.CompressedData.create(buyer1data),
                 BUYER_2,
                 AuctionServerDataCompressor.CompressedData.create(buyer2data));
+    }
+
+    @Test
+    public void testRunner_createPayload_LogsProdDebugEnabled() throws Exception {
+        mocker.mockGetFlags(mLegacyFakeFlags);
+
+        byte[] buyer1data = new byte[] {2, 3};
+        byte[] buyer2data = new byte[] {1};
+        ImmutableMap<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerInputs =
+                ImmutableMap.of(
+                        BUYER_1,
+                        AuctionServerDataCompressor.CompressedData.create(buyer1data),
+                        BUYER_2,
+                        AuctionServerDataCompressor.CompressedData.create(buyer2data));
+
+        long adSelectionId = 234L;
+        AuctionServerDebugConfiguration auctionServerDebugConfiguration =
+                AuctionServerDebugConfiguration.builder()
+                        .setUnlimitedEgressEnabled(false)
+                        .setDebugReportingEnabled(false)
+                        .setProdDebugEnabled(true)
+                        .build();
+
+        AuctionServerPayloadInfo auctionServerPayloadInfo =
+                AuctionServerPayloadInfo.builder()
+                        .setAdSelectionDataId(adSelectionId)
+                        .setAuctionServerDebugConfiguration(auctionServerDebugConfiguration)
+                        .setPackageName(CALLER_PACKAGE_NAME)
+                        .setCompressedBuyerInput(buyerInputs)
+                        .build();
+
+        GetAdSelectionDataApiCalledStats.Builder builder =
+                GetAdSelectionDataApiCalledStats.builder();
+        mGetAdSelectionDataRunner.createPayload(
+                auctionServerPayloadInfo, builder, SELLER_CONFIGURATION);
+
+        verify(mAdServicesLoggerSpy, times(1))
+                .logProdDebugEnabledStats(prodDebugEnabledStatsArgumentCaptor.capture());
+
+        assertWithMessage("Prod debug enabled logged")
+                .that(prodDebugEnabledStatsArgumentCaptor.getValue().isProdDebugEnabled())
+                .isTrue();
     }
 
     private GetAdSelectionDataRunner initRunner(

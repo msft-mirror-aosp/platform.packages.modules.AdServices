@@ -55,6 +55,8 @@ import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
+import com.google.common.collect.ImmutableList;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -439,6 +441,8 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                                 mUpdateSignalsApiCalledStats,
                                 mUpdateSignalsProcessReportedLoggerMock));
         verifyNoMoreInteractions(mSignalEvictionControllerMock, mForcedEncoderMock);
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setSignalUpdateSchemaVersion(mFakeFlags.getProtectedSignalsUpdateSchemaVersion());
         assertEquals(
                 JSON_PROCESSING_STATUS_SEMANTIC_ERROR,
                 mUpdateSignalsApiCalledStats.build().getJsonProcessingStatus());
@@ -614,6 +618,39 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
         List<DBProtectedSignal> expected = Arrays.asList(createSignal(KEY_1, VALUE));
         verify(mProtectedSignalsDaoMock).insertAndDelete(ADTECH, NOW, expected, expected);
         verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(ADTECH);
+    }
+
+    @Test
+    public void testUpdatesProcessor_shouldRecord() throws Exception {
+        int schemaVersion = mFakeFlags.getProtectedSignalsUpdateSchemaVersion();
+        JSONObject json = new JSONObject();
+        json.put(TEST_PROCESSOR, new JSONObject());
+        SignalUpdates signalUpdates =
+                SignalUpdates.builder()
+                        .setUpdateJson(json)
+                        .setUpdateSchemaVersion(schemaVersion)
+                        .build();
+        when(mProtectedSignalsDaoMock.getSignalsByBuyer(any())).thenReturn(Collections.emptyList());
+        UpdateOutput toReturn = new UpdateOutput();
+        toReturn.getKeysTouched()
+                .addAll(ImmutableList.of(ByteBuffer.wrap(KEY_1), ByteBuffer.wrap(KEY_2)));
+        toReturn.getToAdd().add(DBProtectedSignal.builder().setKey(KEY_1).setValue(VALUE));
+        toReturn.getToRemove().add(createSignal(KEY_2, VALUE));
+        when(mUpdateProcessorSelectorMock.getUpdateProcessor(TEST_PROCESSOR, schemaVersion))
+                .thenReturn(createFakeProcessor(toReturn));
+
+        mUpdateProcessingOrchestrator.processUpdates(
+                ADTECH,
+                PACKAGE,
+                NOW,
+                signalUpdates,
+                DEV_CONTEXT,
+                /* jsonProcessingStatsBuilder= */ null,
+                mUpdateSignalsProcessReportedLoggerMock);
+
+        verify(mUpdateSignalsProcessReportedLoggerMock).setSignalsWrittenAndValuesCount(2);
+        verify(mUpdateSignalsProcessReportedLoggerMock).setKeysStoredCount(2);
+        verify(mUpdateSignalsProcessReportedLoggerMock).setSignalUpdateSchemaVersion(schemaVersion);
     }
 
     private DBProtectedSignal createSignal(byte[] key, byte[] value) {

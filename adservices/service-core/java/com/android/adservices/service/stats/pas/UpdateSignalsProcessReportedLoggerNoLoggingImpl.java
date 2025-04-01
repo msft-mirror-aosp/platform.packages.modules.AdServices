@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.stats.pas;
 
+import static com.android.adservices.service.signals.SignalUpdates.UpdateSchemaVersion;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SignalEvictorType;
 
 import com.android.adservices.service.signals.evict.EvictionPriority;
@@ -80,5 +81,5 @@ public class UpdateSignalsProcessReportedLoggerNoLoggingImpl
     public void addUpdatedSignalWithEvictionPriorityForCount(String key) {}
 
     @Override
-    public void setSignalUpdateSchemaVersion(int updateSchemaVersion) {}
+    public void setSignalUpdateSchemaVersion(@UpdateSchemaVersion int updateSchemaVersion) {}
 }
