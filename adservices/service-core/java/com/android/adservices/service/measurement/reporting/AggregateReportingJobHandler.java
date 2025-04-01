@@ -507,6 +507,10 @@ public class AggregateReportingJobHandler {
 
     private void updateAppReportHistory(AggregateReport aggregateReport, IMeasurementDao dao)
             throws DatastoreException {
+        // Skip update for Null Aggregate Reports
+        if (aggregateReport.getSourceId() == null) {
+            return;
+        }
         Pair<List<Uri>, List<Uri>> destinations =
                 dao.getSourceDestinations(aggregateReport.getSourceId());
         List<Uri> appDestinations = destinations.first;
