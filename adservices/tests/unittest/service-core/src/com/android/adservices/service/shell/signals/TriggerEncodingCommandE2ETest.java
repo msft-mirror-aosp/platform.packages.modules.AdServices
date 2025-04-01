@@ -98,7 +98,7 @@ import com.android.adservices.service.stats.NoOpLoggerImpl;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelperImpl;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLoggerImpl;
-import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerImpl;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerFactory;
 import com.android.adservices.shared.testing.BroadcastReceiverSyncCallback;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
@@ -191,7 +191,7 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
     private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     private ProtectedSignalsServiceImpl mProtectedSignalsService;
     @Mock private ConsentManager mConsentManagerMock;
-    @Mock private UpdateSignalsProcessReportedLoggerImpl mUpdateSignalsProcessReportedLoggerMock;
+
     private ProtectedSignalsDao mProtectedSignalsDao;
     @Mock ForcedEncoder mForcedEncoder;
 
@@ -306,7 +306,8 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                                 new FledgeApiThrottleFilter(
                                         Throttler.newInstance(mMockFlags), logger)),
                         EnrollmentDao.getInstance(),
-                        mUpdateSignalsProcessReportedLoggerMock);
+                        new UpdateSignalsProcessReportedLoggerFactory(
+                                /* pasProductMetricsV1Enabled= */ false));
         when(mConsentManagerMock.isPasConsentGiven()).thenReturn(true);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(false);
