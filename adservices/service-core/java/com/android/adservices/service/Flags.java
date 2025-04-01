@@ -6031,6 +6031,14 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
     }
 
+    /** Default value for the enablement the new apis for data migration. */
+    @FeatureFlag boolean DEFAULT_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED = false;
+
+    /** Returns the default value of the enablement of adservices data migration. */
+    default boolean getAdServicesConsentDataMigrationEnabled() {
+        return DEFAULT_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED;
+    }
+
     /** Default value for the enablement the R notification default consent fix. */
     @FeatureFlag boolean DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED = false;
 
