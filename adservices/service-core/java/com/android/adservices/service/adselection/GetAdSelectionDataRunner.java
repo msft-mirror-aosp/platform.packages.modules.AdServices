@@ -98,6 +98,7 @@ import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
+import com.android.adservices.service.stats.ProdDebugEnabledStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -609,7 +610,8 @@ public class GetAdSelectionDataRunner {
         throw new UncheckedTimeoutException(GET_AD_SELECTION_DATA_TIMED_OUT);
     }
 
-    private AuctionServerPayloadFormattedData createPayload(
+    @VisibleForTesting
+    AuctionServerPayloadFormattedData createPayload(
             AuctionServerPayloadInfo auctionServerPayloadInfo,
             GetAdSelectionDataApiCalledStats.Builder apiCalledStatsBuilder,
             @Nullable SellerConfiguration sellerConfiguration) {
@@ -625,6 +627,11 @@ public class GetAdSelectionDataRunner {
                         auctionServerPayloadInfo.getPackageName(),
                         auctionServerPayloadInfo.getAdSelectionDataId(),
                         auctionServerPayloadInfo.getAuctionServerDebugConfiguration());
+        mAdServicesLogger.logProdDebugEnabledStats(
+                ProdDebugEnabledStats.create(
+                        auctionServerPayloadInfo
+                                .getAuctionServerDebugConfiguration()
+                                .isProdDebugEnabled()));
         sLogger.v("ProtectedAuctionInput composed");
         AuctionServerPayloadFormattedData formattedData =
                 applyPayloadFormatter(protectedAudienceInput, sellerConfiguration);
@@ -692,6 +699,8 @@ public class GetAdSelectionDataRunner {
                         .setEnableUnlimitedEgress(
                                 auctionServerDebugConfiguration.isUnlimitedEgressEnabled())
                         .setProdDebug(auctionServerDebugConfiguration.isProdDebugEnabled());
+
+
         ConsentedDebugConfiguration consentedDebugConfiguration =
                 auctionServerDebugConfiguration.getConsentedDebugConfiguration();
         if (consentedDebugConfiguration != null) {

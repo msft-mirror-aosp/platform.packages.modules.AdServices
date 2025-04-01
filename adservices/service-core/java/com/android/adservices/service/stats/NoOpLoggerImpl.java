@@ -272,4 +272,7 @@ public class NoOpLoggerImpl implements AdServicesLogger {
     @Override
     public void logReportingWithDestinationPerformedStats(
             ReportingWithDestinationPerformedStats stats) {}
+
+    @Override
+    public void logProdDebugEnabledStats(ProdDebugEnabledStats stats) {}
 }

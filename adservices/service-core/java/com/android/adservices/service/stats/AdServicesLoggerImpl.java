@@ -477,6 +477,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
         mStatsdAdServicesLogger.logReportingWithDestinationPerformedStats(stats);
     }
 
+    @Override
+    public void logProdDebugEnabledStats(ProdDebugEnabledStats stats) {
+        mStatsdAdServicesLogger.logProdDebugEnabledStats(stats);
+    }
+
     /** Logs api call error status using {@code CobaltLogger}. */
     @VisibleForTesting
     // used by testCobaltLogAppNameApiError_nullPackageName only
