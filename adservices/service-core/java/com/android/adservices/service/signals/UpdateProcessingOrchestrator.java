@@ -177,6 +177,7 @@ public class UpdateProcessingOrchestrator {
         }
     }
 
+    // TODO: b/407576879 - Clean up inefficient list mutation
     private List<DBProtectedSignal> updateProtectedSignalInMemory(
             AdTechIdentifier adTech,
             String packageName,

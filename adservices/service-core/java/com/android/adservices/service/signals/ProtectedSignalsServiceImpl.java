@@ -159,7 +159,13 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                                                 .getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds(),
                                                         context)
                                                 .createInstance()),
-                                new SignalEvictionController(),
+                                new SignalEvictionController(
+                                        FlagsFactory.getFlags()
+                                                .getProtectedSignalsMaxSignalSizePerBuyerBytes(),
+                                        FlagsFactory.getFlags()
+                                                .getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes(),
+                                        FlagsFactory.getFlags()
+                                                .getProtectedSignalsEnablePrioritizedEviction()),
                                 new ForcedEncoderFactory(
                                                 FlagsFactory.getFlags()
                                                         .getFledgeEnableForcedEncodingAfterSignalsUpdate(),
