@@ -82,6 +82,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerFactory;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
@@ -132,6 +133,11 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     @Mock private CallingAppUidSupplier mCallingAppUidSupplierMock;
     @Mock private ProtectedSignalsServiceFilter mProtectedSignalsServiceFilterMock;
     @Mock private EnrollmentDao mEnrollmentDaoMock;
+
+    @Mock
+    private UpdateSignalsProcessReportedLoggerFactory
+            mUpdateSignalsProcessReportedLoggerFactoryMock;
+
     @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
 
     @Captor ArgumentCaptor<FledgeErrorResponse> mErrorCaptor;
@@ -147,6 +153,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     @Before
     public void setup() {
         mocker.mockGetDebugFlags(mFakeDebugFlags);
+        when(mUpdateSignalsProcessReportedLoggerFactoryMock.getLoggerInstance())
+                .thenReturn(mUpdateSignalsProcessReportedLoggerMock);
         mInOrder = inOrder(mUpdateSignalsProcessReportedLoggerMock);
         mUpdateSignalsCallback = new SyncUpdateSignalsCallback();
         logApiCallStatsCallback = mocker.mockLogApiCallStats(mAdServicesLoggerMock);
@@ -165,7 +173,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         mCallingAppUidSupplierMock,
                         mProtectedSignalsServiceFilterMock,
                         mEnrollmentDaoMock,
-                        mUpdateSignalsProcessReportedLoggerMock);
+                        mUpdateSignalsProcessReportedLoggerFactoryMock);
 
         mDevContext = DevContext.builder(PACKAGE).setDeviceDevOptionsEnabled(false).build();
         mInput = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
@@ -319,7 +327,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         mCallingAppUidSupplierMock,
                         mProtectedSignalsServiceFilterMock,
                         mEnrollmentDaoMock,
-                        mUpdateSignalsProcessReportedLoggerMock);
+                        mUpdateSignalsProcessReportedLoggerFactoryMock);
 
         protectedSignalsService.updateSignals(mInput, mUpdateSignalsCallback);
 

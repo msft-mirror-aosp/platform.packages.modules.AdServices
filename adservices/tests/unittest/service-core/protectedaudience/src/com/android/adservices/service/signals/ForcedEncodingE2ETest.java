@@ -87,7 +87,7 @@ import com.android.adservices.service.signals.updateprocessors.evictionpriority.
 import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEventHandler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerImpl;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerFactory;
 import com.android.adservices.shared.testing.BroadcastReceiverSyncCallback;
 import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
@@ -166,9 +166,6 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     @Mock private AdServicesLoggerImpl mAdServicesLoggerImplMock;
     @Mock private Clock mMockClock;
-
-    @Mock
-    private UpdateSignalsProcessReportedLoggerImpl mUpdateSignalsProcessReportedLoggerImplMock;
 
     @Spy
     private FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
@@ -360,7 +357,8 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                         CallingAppUidSupplierProcessImpl.create(),
                         mProtectedSignalsServiceFilter,
                         mEnrollmentDao,
-                        mUpdateSignalsProcessReportedLoggerImplMock);
+                        new UpdateSignalsProcessReportedLoggerFactory(
+                                /* pasProductMetricsV1Enabled= */ false));
 
         doNothing()
                 .when(
