@@ -22,6 +22,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -49,7 +50,10 @@ public class UpdateEncoderV0 extends UpdateEncoder {
 
     @Override
     public UpdateOutput processUpdates(
-            Object updates, Map<ByteBuffer, Set<DBProtectedSignal>> current) throws JSONException {
+            Object updates,
+            Map<ByteBuffer, Set<DBProtectedSignal>> current,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger)
+            throws JSONException {
         UpdateOutput toReturn = new UpdateOutput();
         JSONObject updatesObject =
                 UpdateProcessorUtils.validateAndCastToJSONObject(UPDATE_ENCODER, updates);

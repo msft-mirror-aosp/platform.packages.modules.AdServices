@@ -16,28 +16,39 @@
 
 package com.android.adservices.service.signals.updateprocessors.evictionpriority;
 
-import static org.junit.Assert.assertThrows;
+import static com.android.adservices.service.signals.SignalsFixture.BB_KEY_1;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.signals.evict.EvictionPriority;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.json.JSONObject;
 import org.junit.Test;
+import org.mockito.Mock;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
-public class EvictionPriorityHandlerImplTest extends AdServicesUnitTestCase {
+public class EvictionPriorityHandlerImplTest extends AdServicesMockitoTestCase {
     private static final String EVICTION_PRIORITY = "eviction_priority";
 
     private final EvictionPriorityHandler mEvictionPriorityHandler =
             new EvictionPriorityHandlerImpl();
 
+    @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
+
     @Test
     public void testGetEvictionPriority_noEvictionPriority() {
         JSONObject update = new JSONObject();
 
-        EvictionPriority evictionPriority = mEvictionPriorityHandler.getEvictionPriority(update);
+        EvictionPriority evictionPriority =
+                mEvictionPriorityHandler.getEvictionPriority(
+                        BB_KEY_1, update, mUpdateSignalsProcessReportedLoggerMock);
 
+        verifyNoMoreInteractions(mUpdateSignalsProcessReportedLoggerMock);
         expect.withMessage("evictionPriority")
                 .that(evictionPriority)
                 .isEqualTo(EvictionPriority.DEFAULT);
@@ -52,7 +63,11 @@ public class EvictionPriorityHandlerImplTest extends AdServicesUnitTestCase {
         assertThrows(
                 "Expected exception",
                 IllegalArgumentException.class,
-                () -> mEvictionPriorityHandler.getEvictionPriority(update));
+                () ->
+                        mEvictionPriorityHandler.getEvictionPriority(
+                                BB_KEY_1, update, mUpdateSignalsProcessReportedLoggerMock));
+
+        verifyNoMoreInteractions(mUpdateSignalsProcessReportedLoggerMock);
     }
 
     @Test
@@ -64,7 +79,11 @@ public class EvictionPriorityHandlerImplTest extends AdServicesUnitTestCase {
         assertThrows(
                 "Expected exception",
                 IllegalArgumentException.class,
-                () -> mEvictionPriorityHandler.getEvictionPriority(update));
+                () ->
+                        mEvictionPriorityHandler.getEvictionPriority(
+                                BB_KEY_1, update, mUpdateSignalsProcessReportedLoggerMock));
+
+        verifyNoMoreInteractions(mUpdateSignalsProcessReportedLoggerMock);
     }
 
     @Test
@@ -77,7 +96,11 @@ public class EvictionPriorityHandlerImplTest extends AdServicesUnitTestCase {
         assertThrows(
                 "Expected exception",
                 IllegalArgumentException.class,
-                () -> mEvictionPriorityHandler.getEvictionPriority(update));
+                () ->
+                        mEvictionPriorityHandler.getEvictionPriority(
+                                BB_KEY_1, update, mUpdateSignalsProcessReportedLoggerMock));
+
+        verifyNoMoreInteractions(mUpdateSignalsProcessReportedLoggerMock);
     }
 
     @Test
@@ -85,8 +108,14 @@ public class EvictionPriorityHandlerImplTest extends AdServicesUnitTestCase {
         JSONObject update = new JSONObject();
         update.put(EVICTION_PRIORITY, EvictionPriority.EVICT_SOONER.name());
 
-        EvictionPriority evictionPriority = mEvictionPriorityHandler.getEvictionPriority(update);
+        EvictionPriority evictionPriority =
+                mEvictionPriorityHandler.getEvictionPriority(
+                        BB_KEY_1, update, mUpdateSignalsProcessReportedLoggerMock);
 
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .addUpdatedSignalWithEvictionPriorityForCount(BB_KEY_1);
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .addUpdatedSignalEvictionPriority(EvictionPriority.EVICT_SOONER);
         expect.withMessage("evictionPriority")
                 .that(evictionPriority)
                 .isEqualTo(EvictionPriority.EVICT_SOONER);

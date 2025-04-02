@@ -17,6 +17,7 @@
 package com.android.adservices.service.signals.updateprocessors;
 
 import com.android.adservices.data.signals.DBProtectedSignal;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 
 import org.json.JSONException;
 
@@ -31,10 +32,14 @@ public interface UpdateProcessor {
      * @param updates A JSONObject or JSONArray describing the updates to be made by this processor.
      * @param current A map from keys to signals currently under those keys. Note that byte buffers
      *     must have been generated with .wrap().
+     * @param updateSignalsProcessReportedLogger A logger for recording PAS telemetry Atoms.
      * @return An output object describing: 1. Which keys this processor has modified or could have
      *     modified. 2. Which signals should be removed. 3. Which signals should be added.
      * @throws JSONException In the event the passed in JSON is invalid
      */
-    UpdateOutput processUpdates(Object updates, Map<ByteBuffer, Set<DBProtectedSignal>> current)
+    UpdateOutput processUpdates(
+            Object updates,
+            Map<ByteBuffer, Set<DBProtectedSignal>> current,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger)
             throws JSONException;
 }

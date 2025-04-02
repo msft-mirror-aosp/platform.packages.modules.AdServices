@@ -19,6 +19,7 @@ package com.android.adservices.service.signals.updateprocessors.putifnotpresent;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -43,7 +44,8 @@ public class PutIfNotPresentV0 extends PutIfNotPresent {
             ByteBuffer key,
             Object update,
             Map<ByteBuffer, Set<DBProtectedSignal>> current,
-            UpdateOutput toReturn) {
+            UpdateOutput toReturn,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
         String value = UpdateProcessorUtils.validateAndCastToString(PUT_IF_NOT_PRESENT, update);
         UpdateProcessorUtils.touchKey(key, toReturn.getKeysTouched());
         // Add the new signal if nothing exists under the key

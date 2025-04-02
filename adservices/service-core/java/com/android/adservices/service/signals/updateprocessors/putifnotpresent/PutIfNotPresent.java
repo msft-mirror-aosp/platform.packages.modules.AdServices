@@ -20,6 +20,7 @@ import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessor;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,14 +41,22 @@ public abstract class PutIfNotPresent implements UpdateProcessor {
 
     @Override
     public UpdateOutput processUpdates(
-            Object updates, Map<ByteBuffer, Set<DBProtectedSignal>> current) throws JSONException {
+            Object updates,
+            Map<ByteBuffer, Set<DBProtectedSignal>> current,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger)
+            throws JSONException {
         UpdateOutput toReturn = new UpdateOutput();
         JSONObject updatesObject =
                 UpdateProcessorUtils.validateAndCastToJSONObject(PUT_IF_NOT_PRESENT, updates);
         for (Iterator<String> iter = updatesObject.keys(); iter.hasNext(); ) {
             String stringKey = iter.next();
             ByteBuffer key = UpdateProcessorUtils.decodeKey(PUT_IF_NOT_PRESENT, stringKey);
-            processKey(key, updatesObject.get(stringKey), current, toReturn);
+            processKey(
+                    key,
+                    updatesObject.get(stringKey),
+                    current,
+                    toReturn,
+                    updateSignalsProcessReportedLogger);
         }
         return toReturn;
     }
@@ -57,6 +66,7 @@ public abstract class PutIfNotPresent implements UpdateProcessor {
             ByteBuffer key,
             Object update,
             Map<ByteBuffer, Set<DBProtectedSignal>> current,
-            UpdateOutput toReturn)
+            UpdateOutput toReturn,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger)
             throws JSONException;
 }
