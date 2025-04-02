@@ -24,6 +24,7 @@ java_defaults {
         "android.test.base.stubs.system",
     ],
     test_suites: [
+        "mts-adservices",
         "general-tests",
     ],
     lint: {
@@ -40,6 +41,7 @@ java_defaults {
         "android.ext.adservices",
     ],
     test_suites: [
+        "mts-adservices",
         "general-tests",
     ],
 }
