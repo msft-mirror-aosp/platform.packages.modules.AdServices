@@ -266,8 +266,7 @@ public class EventReportingJobHandler {
         // uninstalled then we skip sending the report.
         if (mFlags.getMeasurementEnableMinReportLifespanForUninstall()
                 && eventReportCreatedBeforeLifespan(eventReport.getTriggerTime())
-                && (!anyPublisherAppInstalled(eventReport)
-                        || !anyTriggerDestinationAppInstalled(eventReport))) {
+                && (!anySourceAppInstalled(eventReport) || !anyTriggerAppInstalled(eventReport))) {
             mDatastoreManager.runInTransaction(dao -> dao.deleteEventReport(eventReport));
             setAndLogReportingStatus(
                     reportingStatus,
@@ -529,17 +528,24 @@ public class EventReportingJobHandler {
                 < mTimeSource.currentTimeMillis();
     }
 
-    private boolean anyTriggerDestinationAppInstalled(EventReport eventReport) {
-        return Applications.anyAppsInstalled(mContext, eventReport.getAttributionDestinations());
+    private boolean anyTriggerAppInstalled(EventReport eventReport) {
+        Optional<Trigger> triggerOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getTrigger(eventReport.getTriggerId()));
+        return triggerOpt.isPresent()
+                && Applications.anyAppsInstalled(
+                        mContext, List.of(triggerOpt.get().getRegistrant()));
     }
 
-    private boolean anyPublisherAppInstalled(EventReport eventReport) {
+    private boolean anySourceAppInstalled(EventReport eventReport) {
         Optional<Source> sourceOpt =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> dao.getSource(eventReport.getSourceId()));
         return sourceOpt.isPresent()
-                && Applications.anyAppsInstalled(mContext, List.of(sourceOpt.get().getPublisher()));
+                && Applications.anyAppsInstalled(
+                        mContext, List.of(sourceOpt.get().getRegistrant()));
     }
+
 
     private void setAndLogReportingStatus(
             ReportingStatus reportingStatus,

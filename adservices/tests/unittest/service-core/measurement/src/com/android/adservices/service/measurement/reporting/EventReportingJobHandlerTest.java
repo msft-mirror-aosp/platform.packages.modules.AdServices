@@ -106,6 +106,7 @@ public class EventReportingJobHandlerTest {
     private static final String SOURCE_ID = "source-id";
     private static final String TRIGGER_ID = "trigger-id";
     private static final String EVENT_REPORT_ID = "eventReportId";
+    private static final Uri REGISTRANT = Uri.parse("android-app://registrant");
     protected static Context sContext;
     DatastoreManager mDatastoreManager;
 
@@ -570,13 +571,22 @@ public class EventReportingJobHandlerTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setId(SOURCE_ID)
                         .setCoarseEventReportDestinations(true)
+                        .setRegistrant(REGISTRANT)
                         .setPublisher(publisher)
                         .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .build();
+
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId(TRIGGER_ID)
+                        .setRegistrant(REGISTRANT)
                         .build();
 
         EventReport eventReport =
                 new EventReport.Builder()
                         .setId("eventReportId")
+                        .setSourceId(SOURCE_ID)
+                        .setTriggerId(TRIGGER_ID)
                         .setSourceEventId(new UnsignedLong(1234L))
                         .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
                         .setStatus(EventReport.Status.PENDING)
@@ -597,19 +607,16 @@ public class EventReportingJobHandlerTest {
 
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
 
-        ApplicationInfo applicationInfo1 = new ApplicationInfo();
-        applicationInfo1.packageName = ATTRIBUTION_DESTINATIONS.get(0).getHost();
-        ApplicationInfo applicationInfo2 = new ApplicationInfo();
-        applicationInfo2.packageName = publisher.getHost();
+        ApplicationInfo applicationInfo = new ApplicationInfo();
+        applicationInfo.packageName = REGISTRANT.getHost();
 
         when(sContext.getPackageManager()).thenReturn(mPackageManager);
 
-        when(mMeasurementDao.getSource(SOURCE_ID)).thenReturn(source);
+        when(mMeasurementDao.getSource(eventReport.getSourceId())).thenReturn(source);
+        when(mMeasurementDao.getTrigger(eventReport.getTriggerId())).thenReturn(trigger);
 
-        when(mPackageManager.getApplicationInfo(ATTRIBUTION_DESTINATIONS.get(0).getHost(), 0))
-                .thenReturn(applicationInfo1);
-        when(mPackageManager.getApplicationInfo(publisher.getHost(), 0))
-                .thenReturn(applicationInfo2);
+        when(mPackageManager.getApplicationInfo(REGISTRANT.getHost(), 0))
+                .thenReturn(applicationInfo);
 
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
@@ -620,7 +627,7 @@ public class EventReportingJobHandlerTest {
 
         doNothing()
                 .when(mMeasurementDao)
-                .markAggregateReportStatus(eventReport.getId(), AggregateReport.Status.DELIVERED);
+                .markAggregateReportStatus(eventReport.getId(), EventReport.Status.DELIVERED);
         ReportingStatus status = new ReportingStatus();
 
         mSpyEventReportingJobHandler.performReport(eventReport.getId(), status);
