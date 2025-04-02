@@ -4705,6 +4705,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableItemsProcessedPerJobLogging() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING,
+                MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING);
+    }
+
+    @Override
     public int getMeasurementMaxLengthOfTriggerContextId() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID,

@@ -435,6 +435,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_FIFO_DESTI
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
@@ -994,6 +995,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
@@ -1786,6 +1788,14 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS,
                 MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS,
                 Flags::getMeasurementEventFallbackReportingJobPeriodMs);
+    }
+
+    @Test
+    public void testGetMeasurementEnableItemsProcessedPerJobLogging() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING,
+                MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING,
+                Flags::getMeasurementEnableItemsProcessedPerJobLogging);
     }
 
     @Test
