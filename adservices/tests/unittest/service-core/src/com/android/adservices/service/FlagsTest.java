@@ -920,6 +920,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetAdServicesConsentDataMigrationEnabled() {
+        testFeatureFlag(
+                "DEFAULT_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED",
+                Flags::getAdServicesConsentDataMigrationEnabled);
+    }
+
+    @Test
     public void testGetMeasurementMaxReinstallReattributionWindowSeconds() {
         testFlag(
                 "getMeasurementMaxReinstallReattributionWindowSeconds",

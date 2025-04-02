@@ -49,6 +49,7 @@ android_test {
         "cts",
         "mts-adservices",
         "general-tests",
+        "mcts-adservices",
     ],
     jarjar_rules: ":test-service-jarjar-rules",
 }

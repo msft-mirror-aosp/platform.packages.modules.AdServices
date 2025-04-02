@@ -1724,6 +1724,10 @@ public final class FlagsConstants {
     public static final String KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED =
             "adservices_consent_business_logic_migration_enabled";
 
+    /** Key for enabling adservices consent data migration apis. */
+    public static final String KEY_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED =
+            "Ui__adservices_consent_data_migration_enabled";
+
     /** Key for enabling R notification default consent fix. */
     public static final String KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED =
             "r_notification_default_consent_fix_enabled";

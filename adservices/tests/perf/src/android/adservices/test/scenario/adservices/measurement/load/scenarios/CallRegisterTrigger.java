@@ -19,6 +19,7 @@ package android.adservices.test.scenario.adservices.measurement.load.scenarios;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.annotation.NonNull;
 import android.net.Uri;
+import android.os.Trace;
 import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
@@ -29,10 +30,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Scenario
 @RunWith(JUnit4.class)
 public class CallRegisterTrigger extends AbstractTestAction {
+    AtomicInteger mCookieGenerator = new AtomicInteger();
 
     @Test
     public void registerTrigger() {
@@ -50,6 +53,10 @@ public class CallRegisterTrigger extends AbstractTestAction {
     private void runRegisterTrigger() {
         final String path = SERVER_BASE_URI + ":" + DEFAULT_PORT + TRIGGER_PATH;
 
+        int cookie = mCookieGenerator.getAndIncrement();
+        // TODO(b/407757222): Migrate to RbATrace after the flag rollout.
+        Trace.beginAsyncSection("CallRegisterTrigger#runRegisterTrigger", cookie);
+
         Stopwatch timer = Stopwatch.createStarted();
         MEASUREMENT_MANAGER.registerTrigger(
                 Uri.parse(path),
@@ -65,6 +72,8 @@ public class CallRegisterTrigger extends AbstractTestAction {
                                                 .formatted(
                                                         timer.elapsed(TimeUnit.MILLISECONDS),
                                                         sdkOption.get())));
+                        // TODO(b/407757222): Migrate to RbATrace after the flag rollout.
+                        Trace.endAsyncSection("CallRegisterTrigger#runRegisterTrigger", cookie);
                     }
 
                     @Override
@@ -78,6 +87,8 @@ public class CallRegisterTrigger extends AbstractTestAction {
                                                         timer.elapsed(TimeUnit.MILLISECONDS),
                                                         sdkOption.get(),
                                                         error.getMessage())));
+                        // TODO(b/407757222): Migrate to RbATrace after the flag rollout.
+                        Trace.endAsyncSection("CallRegisterTrigger#runRegisterTrigger", cookie);
                     }
                 });
     }

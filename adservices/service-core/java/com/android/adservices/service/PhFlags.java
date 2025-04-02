@@ -18,6 +18,7 @@ package com.android.adservices.service;
 
 import static com.android.adservices.service.DeviceConfigFlagsHelper.getDeviceConfigFlag;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_CEL_SAMPLING_CONFIG;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG;
@@ -4121,6 +4122,9 @@ public final class PhFlags implements Flags {
         uxMap.put(
                 KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED,
                 getAdServicesConsentBusinessLogicMigrationEnabled());
+        uxMap.put(
+                KEY_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED,
+                getAdServicesConsentDataMigrationEnabled());
         return uxMap;
     }
 
@@ -5392,5 +5396,12 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY,
                 DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY);
+    }
+
+    @Override
+    public boolean getAdServicesConsentDataMigrationEnabled() {
+        return getDeviceConfigFlag(
+                KEY_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED,
+                DEFAULT_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED);
     }
 }

@@ -54,7 +54,6 @@ public class E2EMockTest extends E2EAbstractMockTest {
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
                         mDatastoreManager,
-                        mClickVerifier,
                         mMeasurementDataDeleter,
                         mMockContentResolver);
 

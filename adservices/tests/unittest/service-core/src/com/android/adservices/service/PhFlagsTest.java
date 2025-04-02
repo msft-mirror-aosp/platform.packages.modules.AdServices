@@ -49,6 +49,7 @@ import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_RESET_TO
 import static com.android.adservices.service.Flags.DEBUG_UX;
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_TTL_MS;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_VERSION_MAPPINGS;
 import static com.android.adservices.service.Flags.DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
@@ -605,6 +606,7 @@ import static com.android.adservices.service.Flags.UI_OTA_STRINGS_MANIFEST_FILE_
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_APK_SHA_CERTS;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT;
@@ -6237,6 +6239,14 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED,
                 DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED,
                 Flags::getAdServicesConsentBusinessLogicMigrationEnabled);
+    }
+
+    @Test
+    public void testGetAdServicesConsentDataMigrationEnabled() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED,
+                DEFAULT_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED,
+                Flags::getAdServicesConsentDataMigrationEnabled);
     }
 
     @Test
