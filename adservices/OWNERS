@@ -22,3 +22,11 @@ per-file *Flags*.java = set noparent
 per-file *Flags*.java = file:platform/packages/modules/AdServices:/adservices/OWNERS_COMMON_INFRA
 per-file CachedFlags.java = arpanah@google.com, lmohanan@google.com, feifeiji@google.com
 
+# Common frameworks are owned by the Infra team.
+per-file service-core/java/com/android/adservices/cobalt/** = file:platform/packages/modules/AdServices:/adservices/OWNERS_COMMON_INFRA
+per-file service-core/java/com/android/adservices/concurrency/** = file:platform/packages/modules/AdServices:/adservices/OWNERS_COMMON_INFRA
+per-file service-core/java/com/android/adservices/download/** = file:platform/packages/modules/AdServices:/adservices/OWNERS_COMMON_INFRA
+per-file service-core/java/com/android/adservices/errorlogging/** = file:platform/packages/modules/AdServices:/adservices/OWNERS_COMMON_INFRA
+per-file service-core/java/com/android/adservices/metriclogger/** = file:platform/packages/modules/AdServices:/adservices/OWNERS_COMMON_INFRA
+per-file service-core/java/com/android/adservices/spe/** = file:platform/packages/modules/AdServices:/adservices/OWNERS_COMMON_INFRA
+
