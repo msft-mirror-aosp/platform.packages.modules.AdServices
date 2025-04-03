@@ -21,8 +21,8 @@ import android.os.Process;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Assume;
 import org.junit.Before;
@@ -32,14 +32,11 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
 public final class AdServicesExecutorTest extends AdServicesUnitTestCase {
-    // Command to kill the adservices process
-    public static final String KILL_ADSERVICES_CMD =
-            "su 0 killall -9 com.google.android.adservices.api";
-
     @Before
     public void setup() {
         Assume.assumeTrue(Build.isDebuggable());
-        ShellUtils.runShellCommand(KILL_ADSERVICES_CMD);
+        // Kill adservices process to avoid interfering from other tests.
+        AdservicesTestHelper.killAdservicesProcess(mContext);
     }
 
     @Test
