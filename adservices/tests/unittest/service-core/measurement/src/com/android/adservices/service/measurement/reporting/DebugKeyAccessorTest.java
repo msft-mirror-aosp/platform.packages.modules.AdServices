@@ -336,7 +336,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeys_webToWebWithSameRegistrant_debugKeysPresent() throws Exception {
+    public void getDebugKeys_W2W_WithSameRegistrant_debugKeysPresent() throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -363,8 +363,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeys_webToWebNoJoinKeysAndDifferentRegistrants_debugKeysAbsent()
-            throws Exception {
+    public void getDebugKeys_W2W_NoJoinKeysAndDiffRegistrants_debugKeysAbsent() throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -391,7 +390,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeys_webToWebDiffJoinKeysSameRegFalseArDebug_debugKeysAbsent()
+    public void getDebugKeys_W2W_DiffJoinKeysSameRegFalseArDebug_debugKeysAbsent()
             throws Exception {
         Trigger trigger =
                 createTrigger(
@@ -419,7 +418,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeys_webToWebSameJoinKeysAndDifferentRegistrants_debugKeysPresent()
+    public void getDebugKeys_W2W_SameJoinKeysAndDiffRegistrants_debugKeysPresent()
             throws Exception {
         Trigger trigger =
                 createTrigger(
@@ -457,7 +456,47 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeys_webToWebOnlySourceJoinKeyAndDifferentRegistrants_debugKeysAbsent()
+    public void
+            getDebugKeys_W2W_SameJoinKeysAndDiffRegistrants_debugKeysPresent_adtechsHavePermission()
+                    throws Exception {
+        when(mMockFlags.getMeasurementEnableDebugJoinKeysOpenAccess()).thenReturn(true);
+        Trigger trigger =
+                createTrigger(
+                        /* destinationType= */ EventSurfaceType.WEB,
+                        /* adIdPermission= */ false,
+                        /* arDebugPermission= */ true,
+                        /* registrant= */ Uri.parse("https://com.registrant1"),
+                        /* debugJoinKey= */ "debug-join-key",
+                        /* platformAdId= */ null,
+                        /* debugAdId= */ null);
+        Source source =
+                createSource(
+                        /* publisherType= */ EventSurfaceType.WEB,
+                        /* adIdPermission= */ false,
+                        /* arDebugPermission= */ true,
+                        /* registrant= */ Uri.parse("https://com.registrant2"),
+                        /* debugJoinKey= */ "debug-join-key",
+                        /* platformAdId= */ null,
+                        /* debugAdId= */ null);
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertThat(SOURCE_DEBUG_KEY).isEqualTo(debugKeyPair.first);
+        assertThat(TRIGGER_DEBUG_KEY).isEqualTo(debugKeyPair.second);
+        MsmtDebugKeysMatchStats stats =
+                MsmtDebugKeysMatchStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_WEB)
+                        .setMatched(true)
+                        .setDebugJoinKeyHashedValue(54L)
+                        .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(source.getRegistrant().toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
+    }
+
+    @Test
+    public void getDebugKeys_W2W_OnlySourceJoinKeyAndDiffRegistrants_debugKeysAbsent()
             throws Exception {
         Trigger trigger =
                 createTrigger(
@@ -485,8 +524,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeys_webToWebDiffJoinKeysAndDifferentRegistrants_debugKeysAbsent()
-            throws Exception {
+    public void getDebugKeys_W2W_DiffJoinKeysAndDiffRegistrants_debugKeysAbsent() throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -523,7 +561,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeys_webToWebSameRegistrantWithArDebugOnSource_sourceDebugKeysPresent()
+    public void getDebugKeys_W2W_SameRegistrantWithArDebugOnSource_sourceDebugKeysPresent()
             throws Exception {
         Trigger trigger =
                 createTrigger(
@@ -551,7 +589,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeys_enableBothSideDebugKeys_webToWebNoSourceDebugKey_debugKeysNotPresent()
+    public void getDebugKeys_enableBothSideDebugKeys_W2W_NoSourceDebugKey_debugKeysNotPresent()
             throws Exception {
         when(mMockFlags.getMeasurementEnableBothSideDebugKeysInReports()).thenReturn(true);
         Trigger trigger =
@@ -585,7 +623,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeys_enableBothSideDebugKeys_webToWebNoTriggerDebugKey_debugKeysNotPresent()
+    public void getDebugKeys_enableBothSideDebugKeys_W2W_NoTriggerDebugKey_debugKeysNotPresent()
             throws Exception {
         when(mMockFlags.getMeasurementEnableBothSideDebugKeysInReports()).thenReturn(true);
         Trigger trigger =
@@ -619,7 +657,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeys_enableBothSideDebugKeys_webToWeb_debugKeysPresent() throws Exception {
+    public void getDebugKeys_enableBothSideDebugKeys_W2W_debugKeysPresent() throws Exception {
         when(mMockFlags.getMeasurementEnableBothSideDebugKeysInReports()).thenReturn(true);
         Trigger trigger =
                 getValidTriggerBuilder()
@@ -702,6 +740,45 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
         assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtDebugKeysMatchStats stats =
+                MsmtDebugKeysMatchStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(true)
+                        .setDebugJoinKeyHashedValue(54L)
+                        .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
+    }
+
+    @Test
+    public void getDebugKeys_appToWebJoinKeysMatch_debugKeysPresent_adtechsHavePermission()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableDebugJoinKeysOpenAccess()).thenReturn(true);
+        Source source =
+                createSource(
+                        /* publisherType= */ EventSurfaceType.APP,
+                        /* adIdPermission= */ true,
+                        /* arDebugPermission= */ true,
+                        /* registrant= */ ValidSourceParams.REGISTRANT,
+                        /* debugJoinKey= */ "debug-join-key",
+                        /* platformAdId= */ null,
+                        /* debugAdId= */ null);
+        Trigger trigger =
+                createTrigger(
+                        /* destinationType= */ EventSurfaceType.WEB,
+                        /* adIdPermission= */ false,
+                        /* arDebugPermission= */ true,
+                        /* registrant= */ ValidTriggerParams.REGISTRANT,
+                        /* debugJoinKey= */ "debug-join-key",
+                        /* platformAdId= */ null,
+                        /* debugAdId= */ null);
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertThat(SOURCE_DEBUG_KEY).isEqualTo(debugKeyPair.first);
+        assertThat(TRIGGER_DEBUG_KEY).isEqualTo(debugKeyPair.second);
         MsmtDebugKeysMatchStats stats =
                 MsmtDebugKeysMatchStats.builder()
                         .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
@@ -975,6 +1052,45 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    public void getDebugKeys_webToAppJoinKeysMatch_debugKeysPresent_adtechsHavePermission()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableDebugJoinKeysOpenAccess()).thenReturn(true);
+        Source source =
+                createSource(
+                        /* publisherType= */ EventSurfaceType.WEB,
+                        /* adIdPermission= */ false,
+                        /* arDebugPermission= */ true,
+                        /* registrant= */ ValidSourceParams.REGISTRANT,
+                        /* debugJoinKey= */ "debug-join-key",
+                        /* platformAdId= */ null,
+                        /* debugAdId= */ null);
+        Trigger trigger =
+                createTrigger(
+                        /* destinationType= */ EventSurfaceType.APP,
+                        /* adIdPermission= */ true,
+                        /* arDebugPermission= */ false,
+                        /* registrant= */ ValidTriggerParams.REGISTRANT,
+                        /* debugJoinKey= */ "debug-join-key",
+                        /* platformAdId= */ null,
+                        /* debugAdId= */ null);
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertThat(SOURCE_DEBUG_KEY).isEqualTo(debugKeyPair.first);
+        assertThat(TRIGGER_DEBUG_KEY).isEqualTo(debugKeyPair.second);
+        MsmtDebugKeysMatchStats stats =
+                MsmtDebugKeysMatchStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(true)
+                        .setDebugJoinKeyHashedValue(54L)
+                        .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
+    }
+
+    @Test
     public void getDebugKeys_webToAppOnlySourceJoinKeyProvided_debugKeysAbsent() throws Exception {
         Source source =
                 createSource(
@@ -1199,7 +1315,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeys_webToWebNotAllowListedDiffRegJoinKeysMatch_debugKeysAbsent()
+    public void getDebugKeys_W2W_NotAllowListedDiffRegJoinKeysMatch_debugKeysAbsent()
             throws Exception {
         when(mMockFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
                 .thenReturn("some_random_enrollment1,some_random_enrollment2");
@@ -1474,8 +1590,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeysForVerbose_webToWebWithSameRegistrant_debugKeysPresent()
-            throws Exception {
+    public void getDebugKeysForVerbose_W2W_WithSameRegistrant_debugKeysPresent() throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -1502,7 +1617,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeysForVerbose_webToWebTriggerNoArDebugPermission_debugKeysAbsent()
+    public void getDebugKeysForVerbose_W2W_TriggerNoArDebugPermission_debugKeysAbsent()
             throws Exception {
         Trigger trigger =
                 createTrigger(
@@ -1530,9 +1645,8 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void
-            getDebugKeysForVerbose_webToWebSameJoinKeysAndDifferentRegistrants_debugKeysPresent()
-                    throws Exception {
+    public void getDebugKeysForVerbose_W2W_SameJoinKeysAndDiffRegistrants_debugKeysPresent()
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -1553,8 +1667,8 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
                         null);
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        assertThat(SOURCE_DEBUG_KEY).isEqualTo(debugKeyPair.first);
+        assertThat(TRIGGER_DEBUG_KEY).isEqualTo(debugKeyPair.second);
         MsmtDebugKeysMatchStats stats =
                 MsmtDebugKeysMatchStats.builder()
                         .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
@@ -1569,7 +1683,47 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeysForVerbose_webToWebNoJoinKeyDiffRegistrants_sourceDebugKeyAbsent()
+    public void
+            getDebugKeysForVerbose_W2W_SameJoinKeysAndDiffRegistrants_debugKeysPresent_adtechsHavePermission()
+                    throws Exception {
+        when(mMockFlags.getMeasurementEnableDebugJoinKeysOpenAccess()).thenReturn(true);
+        Trigger trigger =
+                createTrigger(
+                        /* destinationType= */ EventSurfaceType.WEB,
+                        /* adIdPermission= */ false,
+                        /* arDebugPermission= */ true,
+                        /* registrant= */ Uri.parse("https://com.registrant1"),
+                        /* debugJoinKey= */ "debug-join-key",
+                        /* platformAdId= */ null,
+                        /* debugAdId= */ null);
+        Source source =
+                createSource(
+                        /* publisherType= */ EventSurfaceType.WEB,
+                        /* adIdPermission= */ false,
+                        /* arDebugPermission= */ true,
+                        /* registrant= */ Uri.parse("https://com.registrant2"),
+                        /* debugJoinKey= */ "debug-join-key",
+                        /* platformAdId= */ null,
+                        /* debugAdId= */ null);
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertThat(SOURCE_DEBUG_KEY).isEqualTo(debugKeyPair.first);
+        assertThat(TRIGGER_DEBUG_KEY).isEqualTo(debugKeyPair.second);
+        MsmtDebugKeysMatchStats stats =
+                MsmtDebugKeysMatchStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_WEB)
+                        .setMatched(true)
+                        .setDebugJoinKeyHashedValue(54L)
+                        .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(source.getRegistrant().toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_W2W_NoJoinKeyDiffRegistrants_sourceDebugKeyAbsent()
             throws Exception {
         Trigger trigger =
                 createTrigger(
@@ -1597,9 +1751,8 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void
-            getDebugKeysForVerbose_webToWebDiffJoinKeysDifferentRegistrants_sourceDebugKeyAbsent()
-                    throws Exception {
+    public void getDebugKeysForVerbose_W2W_DiffJoinKeysDiffRegistrants_sourceDebugKeyAbsent()
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -1636,7 +1789,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeysForVerbose_webToWebSameRegistrantWithArDebug_debugKeysPresent()
+    public void getDebugKeysForVerbose_W2W_SameRegistrantWithArDebug_debugKeysPresent()
             throws Exception {
         Trigger trigger =
                 createTrigger(
@@ -1664,9 +1817,8 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void
-            getDebugKeysForVerbose_webToWebNotAllowListDiffRegJoinKeysMatch_sourceDebugKeyAbsent()
-                    throws Exception {
+    public void getDebugKeysForVerbose_W2W_NotAllowListDiffRegJoinKeysMatch_sourceDebugKeyAbsent()
+            throws Exception {
         when(mMockFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
                 .thenReturn("some_random_enrollment1,some_random_enrollment2");
         Source source =
@@ -1690,7 +1842,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         assertNull(debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        assertThat(TRIGGER_DEBUG_KEY).isEqualTo(debugKeyPair.second);
         verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
     }
 
@@ -1773,6 +1925,46 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtDebugKeysMatchStats stats =
+                MsmtDebugKeysMatchStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(true)
+                        .setDebugJoinKeyHashedValue(54L)
+                        .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
+    }
+
+    @Test
+    public void
+            getDebugKeysForVerbose_appToWebJoinKeysMatch_debugKeysPresent_adtechsHavePermission()
+                    throws Exception {
+        when(mMockFlags.getMeasurementEnableDebugJoinKeysOpenAccess()).thenReturn(true);
+        Source source =
+                createSource(
+                        /* publisherType= */ EventSurfaceType.APP,
+                        /* adIdPermission= */ true,
+                        /* arDebugPermission= */ true,
+                        /* registrant= */ ValidSourceParams.REGISTRANT,
+                        /* debugJoinKey= */ "debug-join-key",
+                        /* platformAdId= */ null,
+                        /* debugAdId= */ null);
+        Trigger trigger =
+                createTrigger(
+                        /* destinationType= */ EventSurfaceType.WEB,
+                        /* adIdPermission= */ false,
+                        /* arDebugPermission= */ true,
+                        /* registrant= */ ValidTriggerParams.REGISTRANT,
+                        /* debugJoinKey= */ "debug-join-key",
+                        /* platformAdId= */ null,
+                        /* debugAdId= */ null);
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertThat(SOURCE_DEBUG_KEY).isEqualTo(debugKeyPair.first);
+        assertThat(TRIGGER_DEBUG_KEY).isEqualTo(debugKeyPair.second);
         MsmtDebugKeysMatchStats stats =
                 MsmtDebugKeysMatchStats.builder()
                         .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
@@ -1960,6 +2152,48 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtDebugKeysMatchStats stats =
+                MsmtDebugKeysMatchStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(true)
+                        .setDebugJoinKeyHashedValue(54L)
+                        .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
+    }
+
+    @Test
+    public void
+            getDebugKeysForVerbose_webToAppJoinKeysMatch_debugKeysPresent_adtechsHavePermission()
+                    throws Exception {
+        when(mMockFlags.getMeasurementEnableDebugJoinKeysOpenAccess()).thenReturn(true);
+        Source source =
+                createSource(
+                        /* publisherType= */ EventSurfaceType.WEB,
+                        /* adIdPermission= */ false,
+                        /* arDebugPermission= */ true,
+                        /* registrant= */ ValidSourceParams.REGISTRANT,
+                        /* debugJoinKey= */ "debug-join-key",
+                        /* platformAdId= */ null,
+                        /* debugAdId= */ null);
+
+        Trigger trigger =
+                createTrigger(
+                        /* destinationType= */ EventSurfaceType.APP,
+                        /* adIdPermission= */ true,
+                        /* arDebugPermission= */ false,
+                        /* registrant= */ ValidTriggerParams.REGISTRANT,
+                        /* debugJoinKey= */ "debug-join-key",
+                        /* platformAdId= */ null,
+                        /* debugAdId= */ null);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertThat(SOURCE_DEBUG_KEY).isEqualTo(debugKeyPair.first);
+        assertThat(TRIGGER_DEBUG_KEY).isEqualTo(debugKeyPair.second);
         MsmtDebugKeysMatchStats stats =
                 MsmtDebugKeysMatchStats.builder()
                         .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
@@ -3927,7 +4161,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeys_xnaWebToWebWithSameRegistrant_debugKeysPresent() throws Exception {
+    public void getDebugKeys_xna_W2W_WithSameRegistrant_debugKeysPresent() throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -3957,7 +4191,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeys_xnaWebToWebSameJoinKeysAndDifferentRegistrants_debugKeysAbsent()
+    public void getDebugKeys_xna_W2W_SameJoinKeysAndDiffRegistrants_debugKeysAbsent()
             throws Exception {
         Trigger trigger =
                 createTrigger(
@@ -4454,7 +4688,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeysForVerbose_xnaWebToWebWithSameRegistrant_debugKeysPresent()
+    public void getDebugKeysForVerbose_xna_W2W_WithSameRegistrant_debugKeysPresent()
             throws Exception {
         Trigger trigger =
                 createTrigger(
