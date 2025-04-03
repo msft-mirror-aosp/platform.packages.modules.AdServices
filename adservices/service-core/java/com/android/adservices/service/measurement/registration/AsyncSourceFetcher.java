@@ -1112,18 +1112,12 @@ public class AsyncSourceFetcher {
         builder.setRegistrationOrigin(registrationUriOrigin.get());
         builder.setPlatformAdId(asyncRegistration.getPlatformAdId());
 
-        boolean isHeaderErrorDebugReportEnabled =
-                FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        headers.get(SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_INFO),
-                        mFlags);
-        String registrationHeaderStr = null;
         try {
             List<String> field =
                     headers.get(SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE);
 
             // Check the source registration header size. Only one header is accepted.
             if (field == null || field.size() != 1) {
-                registrationHeaderStr = field == null ? null : field.toString();
                 asyncFetchStatus.setEntityStatus(EntityStatus.HEADER_ERROR);
                 LoggerFactory.getMeasurementLogger()
                         .d(
@@ -1134,24 +1128,13 @@ public class AsyncSourceFetcher {
                                                 .HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE,
                                         enrollmentId,
                                         sourceId));
-                FetcherUtil.sendHeaderErrorDebugReport(
-                        isHeaderErrorDebugReportEnabled,
-                        mDebugReportApi,
-                        mDatastoreManager,
-                        asyncRegistration.getTopOrigin(),
-                        registrationUriOrigin.get(),
-                        asyncRegistration.getRegistrant(),
-                        SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE,
-                        enrollmentId,
-                        registrationHeaderStr);
                 return Optional.empty();
             }
 
             // Validate the source header parameters.
-            registrationHeaderStr = field.get(0);
             boolean isValid =
                     parseValidateSource(
-                            registrationHeaderStr,
+                            field.get(0),
                             asyncRegistration,
                             builder,
                             enrollmentId,
@@ -1168,16 +1151,6 @@ public class AsyncSourceFetcher {
                                                 .HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE,
                                         enrollmentId,
                                         sourceId));
-                FetcherUtil.sendHeaderErrorDebugReport(
-                        isHeaderErrorDebugReportEnabled,
-                        mDebugReportApi,
-                        mDatastoreManager,
-                        asyncRegistration.getTopOrigin(),
-                        registrationUriOrigin.get(),
-                        asyncRegistration.getRegistrant(),
-                        SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE,
-                        enrollmentId,
-                        registrationHeaderStr);
                 return Optional.empty();
             }
 
@@ -1194,17 +1167,8 @@ public class AsyncSourceFetcher {
                             SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE,
                             enrollmentId,
                             sourceId);
-            FetcherUtil.sendHeaderErrorDebugReport(
-                    isHeaderErrorDebugReportEnabled,
-                    mDebugReportApi,
-                    mDatastoreManager,
-                    asyncRegistration.getTopOrigin(),
-                    registrationUriOrigin.get(),
-                    asyncRegistration.getRegistrant(),
-                    SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE,
-                    enrollmentId,
-                    registrationHeaderStr);
             return Optional.empty();
+
         } catch (IllegalArgumentException | ArithmeticException e) {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
             LoggerFactory.getMeasurementLogger()
@@ -1214,16 +1178,6 @@ public class AsyncSourceFetcher {
                                     + " or ArithmeticException. Enrollment ID: %s, Source ID: %s",
                             enrollmentId,
                             sourceId);
-            FetcherUtil.sendHeaderErrorDebugReport(
-                    isHeaderErrorDebugReportEnabled,
-                    mDebugReportApi,
-                    mDatastoreManager,
-                    asyncRegistration.getTopOrigin(),
-                    registrationUriOrigin.get(),
-                    asyncRegistration.getRegistrant(),
-                    SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE,
-                    enrollmentId,
-                    registrationHeaderStr);
             return Optional.empty();
         }
     }
@@ -1367,7 +1321,50 @@ public class AsyncSourceFetcher {
             LoggerFactory.getMeasurementLogger()
                     .e(e, "AsyncSourceFetcher: Failure when handling count unique header");
         }
-        return parseSource(asyncRegistration, enrollmentId.get(), headers, asyncFetchStatus);
+
+        Optional<Source> source =
+                parseSource(asyncRegistration, enrollmentId.get(), headers, asyncFetchStatus);
+        if (asyncRegistration.getRegistrationUri() != null
+                && asyncFetchStatus.getEntityStatus() != EntityStatus.SUCCESS) {
+            generateHeaderErrorDebugReport(asyncRegistration, headers, enrollmentId.get());
+        }
+        return source;
+    }
+
+    public void generateHeaderErrorDebugReport(
+            AsyncRegistration asyncRegistration,
+            Map<String, List<String>> headers,
+            String enrollmentId) {
+        List<String> field =
+                headers.get(SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE);
+        String registrationHeaderStr;
+
+        if (field == null) {
+            registrationHeaderStr = null;
+        } else if (field.size() != 1) {
+            registrationHeaderStr = field.toString();
+        } else {
+            registrationHeaderStr = field.get(0);
+        }
+
+        Optional<Uri> registrationUriOrigin =
+                WebAddresses.originAndScheme(asyncRegistration.getRegistrationUri());
+
+        boolean isHeaderErrorDebugReportEnabled =
+                FetcherUtil.isHeaderErrorDebugReportEnabled(
+                        headers.get(SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_INFO),
+                        mFlags);
+
+        FetcherUtil.sendHeaderErrorDebugReport(
+                isHeaderErrorDebugReportEnabled,
+                mDebugReportApi,
+                mDatastoreManager,
+                asyncRegistration.getTopOrigin(),
+                registrationUriOrigin.get(),
+                asyncRegistration.getRegistrant(),
+                SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE,
+                enrollmentId,
+                registrationHeaderStr);
     }
 
     private boolean isCountUniqueEnabled(AsyncRegistration asyncRegistration) {
