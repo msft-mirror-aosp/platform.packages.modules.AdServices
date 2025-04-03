@@ -30,6 +30,12 @@
         <option name="test-file-name" value="CtsSdkSandboxInprocessTests.apk" />
     </target_preparer>
 
+    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <!-- TODO: 402723919 - Use AdServicesFlagSetter to set restrictions for individual tests -->
+        <option name="run-command" value="device_config put adservices sdksandbox_enforce_restrictions true" />
+        <option name="teardown-command" value="device_config put adservices sdksandbox_enforce_restrictions false" />
+    </target_preparer>
+
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="package" value="com.android.sdksandbox.tests.cts.inprocesstests" />
         <option name="instrumentation-arg"
