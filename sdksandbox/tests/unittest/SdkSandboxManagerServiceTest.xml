@@ -33,8 +33,11 @@
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
+        <!-- TODO(b/402723919): Use AdServicesFlagSetter to set the flags for testing-->
+        <option name="run-command" value="device_config put adservices sdksandbox_enforce_restrictions true" />
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
         <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
+        <option name="teardown-command" value="device_config put adservices sdksandbox_enforce_restrictions false" />
     </target_preparer>
 
     <object type="module_controller"
