@@ -173,6 +173,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME =
             "measurement_null_agg_report_rate_excl_source_registration_time";
 
+    public static final String KEY_MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING =
+            "Measurement__enable_items_processed_per_job_logging";
+
     public static final String KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID =
             "measurement_max_length_of_trigger_context_id";
 

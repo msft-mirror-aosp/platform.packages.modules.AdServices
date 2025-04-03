@@ -4723,6 +4723,20 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME;
     }
 
+    /**
+     * Default value for whether to enable the logging of measurement items processed per background
+     * job.
+     */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING = false;
+
+    /**
+     * Returns whether to enable the logging of items processed information per measurement
+     * background job.
+     */
+    default boolean getMeasurementEnableItemsProcessedPerJobLogging() {
+        return MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING;
+    }
+
     /** Default U18 UX feature flag. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
