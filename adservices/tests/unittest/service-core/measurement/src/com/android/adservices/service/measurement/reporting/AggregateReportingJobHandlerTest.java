@@ -119,6 +119,7 @@ public class AggregateReportingJobHandlerTest {
     private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(928762L);
 
     private static final String TRIGGER_CONTEXT_ID = "test_context_id";
+    private static final Uri REGISTRANT = Uri.parse("android-app://registrant");
 
     protected static Context sContext;
 
@@ -213,7 +214,6 @@ public class AggregateReportingJobHandlerTest {
 
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         when(mMockFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
-        when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
     }
@@ -507,6 +507,8 @@ public class AggregateReportingJobHandlerTest {
         AggregateReport aggregateReport =
                 new AggregateReport.Builder()
                         .setId(AGGREGATE_REPORT_ID)
+                        .setSourceId(SOURCE_ID)
+                        .setTriggerId(TRIGGER_ID)
                         .setStatus(AggregateReport.Status.PENDING)
                         .setEnrollmentId(ENROLLMENT_ID)
                         .setSourceDebugKey(SOURCE_DEBUG_KEY)
@@ -519,10 +521,24 @@ public class AggregateReportingJobHandlerTest {
                         .setTriggerTime(currentTime - TimeUnit.HOURS.toMillis(25))
                         .build();
 
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setId(SOURCE_ID)
+                        .setRegistrant(REGISTRANT)
+                        .build();
+
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId(TRIGGER_ID)
+                        .setRegistrant(REGISTRANT)
+                        .build();
+
         JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
 
         when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
                 .thenReturn(aggregateReport);
+        when(mMeasurementDao.getSource(aggregateReport.getSourceId())).thenReturn(source);
+        when(mMeasurementDao.getTrigger(aggregateReport.getTriggerId())).thenReturn(trigger);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyAggregateReportingJobHandler)
                 .makeHttpPostRequest(eq(REPORTING_URI), any(), eq(null), anyString());
@@ -530,17 +546,13 @@ public class AggregateReportingJobHandlerTest {
                 .when(mSpyAggregateReportingJobHandler)
                 .createReportJsonPayload(any(), eq(REPORTING_URI), any());
 
-        ApplicationInfo applicationInfo1 = new ApplicationInfo();
-        applicationInfo1.packageName = APP_DESTINATION.getHost();
-        ApplicationInfo applicationInfo2 = new ApplicationInfo();
-        applicationInfo2.packageName = publisher.getHost();
+        ApplicationInfo applicationInfo = new ApplicationInfo();
+        applicationInfo.packageName = REGISTRANT.getHost();
 
         when(sContext.getPackageManager()).thenReturn(mPackageManager);
 
-        when(mPackageManager.getApplicationInfo(APP_DESTINATION.getHost(), 0))
-                .thenReturn(applicationInfo1);
-        when(mPackageManager.getApplicationInfo(publisher.getHost(), 0))
-                .thenReturn(applicationInfo2);
+        when(mPackageManager.getApplicationInfo(REGISTRANT.getHost(), 0))
+                .thenReturn(applicationInfo);
 
         doNothing()
                 .when(mMeasurementDao)

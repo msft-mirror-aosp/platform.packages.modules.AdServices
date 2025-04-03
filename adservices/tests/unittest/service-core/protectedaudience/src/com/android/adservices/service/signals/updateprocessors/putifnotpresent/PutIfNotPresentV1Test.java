@@ -40,6 +40,7 @@ import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.evict.EvictionPriority;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandler;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import com.google.common.collect.ImmutableList;
@@ -66,6 +67,7 @@ public class PutIfNotPresentV1Test extends AdServicesMockitoTestCase {
     private static final String VALUE = "value";
     private static final String EVICTION_PRIORITY = "eviction_priority";
     @Mock private EvictionPriorityHandler mEvictionPriorityHandlerMock;
+    @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
 
     private PutIfNotPresentV1 mPutIfNotPresentV1;
 
@@ -80,15 +82,20 @@ public class PutIfNotPresentV1Test extends AdServicesMockitoTestCase {
         putIfNotPresentJson.put(VALUE, BASE64_VALUE_1);
         putIfNotPresentJson.put(EVICTION_PRIORITY, EvictionPriority.EVICT_SOONER);
 
-        when(mEvictionPriorityHandlerMock.getEvictionPriority(putIfNotPresentJson))
+        when(mEvictionPriorityHandlerMock.getEvictionPriority(
+                        BB_KEY_1, putIfNotPresentJson, mUpdateSignalsProcessReportedLoggerMock))
                 .thenReturn(EvictionPriority.EVICT_SOONER);
 
         JSONObject updatesJson = new JSONObject();
         updatesJson.put(BASE64_KEY_1, putIfNotPresentJson);
 
-        UpdateOutput output = mPutIfNotPresentV1.processUpdates(updatesJson, ImmutableMap.of());
+        UpdateOutput output =
+                mPutIfNotPresentV1.processUpdates(
+                        updatesJson, ImmutableMap.of(), mUpdateSignalsProcessReportedLoggerMock);
 
-        verify(mEvictionPriorityHandlerMock).getEvictionPriority(putIfNotPresentJson);
+        verify(mEvictionPriorityHandlerMock)
+                .getEvictionPriority(
+                        BB_KEY_1, putIfNotPresentJson, mUpdateSignalsProcessReportedLoggerMock);
         expect.withMessage("keysTouched").that(output.getKeysTouched()).containsExactly(BB_KEY_1);
         expect.withMessage("toRemove").that(output.getToRemove()).isEmpty();
         List<DBProtectedSignal.Builder> expectedToAdd =
@@ -106,24 +113,31 @@ public class PutIfNotPresentV1Test extends AdServicesMockitoTestCase {
         putIfNotPresentJson1.put(VALUE, BASE64_VALUE_1);
         putIfNotPresentJson1.put(EVICTION_PRIORITY, EvictionPriority.EVICT_SOONER);
 
-        when(mEvictionPriorityHandlerMock.getEvictionPriority(putIfNotPresentJson1))
-                .thenReturn(EvictionPriority.EVICT_SOONER);
-
         JSONObject putIfNotPresentJson2 = new JSONObject();
         putIfNotPresentJson2.put(VALUE, BASE64_VALUE_2);
         putIfNotPresentJson2.put(EVICTION_PRIORITY, EvictionPriority.EVICT_LATER);
 
-        when(mEvictionPriorityHandlerMock.getEvictionPriority(putIfNotPresentJson2))
+        when(mEvictionPriorityHandlerMock.getEvictionPriority(
+                        BB_KEY_1, putIfNotPresentJson1, mUpdateSignalsProcessReportedLoggerMock))
+                .thenReturn(EvictionPriority.EVICT_SOONER);
+        when(mEvictionPriorityHandlerMock.getEvictionPriority(
+                        BB_KEY_2, putIfNotPresentJson2, mUpdateSignalsProcessReportedLoggerMock))
                 .thenReturn(EvictionPriority.EVICT_LATER);
 
         JSONObject updatesJson = new JSONObject();
         updatesJson.put(BASE64_KEY_1, putIfNotPresentJson1);
         updatesJson.put(BASE64_KEY_2, putIfNotPresentJson2);
 
-        UpdateOutput output = mPutIfNotPresentV1.processUpdates(updatesJson, ImmutableMap.of());
+        UpdateOutput output =
+                mPutIfNotPresentV1.processUpdates(
+                        updatesJson, ImmutableMap.of(), mUpdateSignalsProcessReportedLoggerMock);
 
-        verify(mEvictionPriorityHandlerMock).getEvictionPriority(putIfNotPresentJson1);
-        verify(mEvictionPriorityHandlerMock).getEvictionPriority(putIfNotPresentJson2);
+        verify(mEvictionPriorityHandlerMock)
+                .getEvictionPriority(
+                        BB_KEY_1, putIfNotPresentJson1, mUpdateSignalsProcessReportedLoggerMock);
+        verify(mEvictionPriorityHandlerMock)
+                .getEvictionPriority(
+                        BB_KEY_2, putIfNotPresentJson2, mUpdateSignalsProcessReportedLoggerMock);
         expect.withMessage("keysTouched")
                 .that(output.getKeysTouched())
                 .containsExactly(BB_KEY_1, BB_KEY_2);
@@ -147,7 +161,8 @@ public class PutIfNotPresentV1Test extends AdServicesMockitoTestCase {
         putIfNotPresentJson.put(VALUE, BASE64_VALUE_1);
         putIfNotPresentJson.put(EVICTION_PRIORITY, EvictionPriority.EVICT_SOONER);
 
-        when(mEvictionPriorityHandlerMock.getEvictionPriority(putIfNotPresentJson))
+        when(mEvictionPriorityHandlerMock.getEvictionPriority(
+                        BB_KEY_1, putIfNotPresentJson, mUpdateSignalsProcessReportedLoggerMock))
                 .thenReturn(EvictionPriority.EVICT_SOONER);
 
         JSONObject updatesJson = new JSONObject();
@@ -158,9 +173,13 @@ public class PutIfNotPresentV1Test extends AdServicesMockitoTestCase {
         Map<ByteBuffer, Set<DBProtectedSignal>> existingSignals =
                 ImmutableMap.of(BB_KEY_1, ImmutableSet.of(toKeep));
 
-        UpdateOutput output = mPutIfNotPresentV1.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output =
+                mPutIfNotPresentV1.processUpdates(
+                        updatesJson, existingSignals, mUpdateSignalsProcessReportedLoggerMock);
 
-        verify(mEvictionPriorityHandlerMock).getEvictionPriority(putIfNotPresentJson);
+        verify(mEvictionPriorityHandlerMock)
+                .getEvictionPriority(
+                        BB_KEY_1, putIfNotPresentJson, mUpdateSignalsProcessReportedLoggerMock);
         expect.withMessage("keysTouched").that(output.getKeysTouched()).containsExactly(BB_KEY_1);
         expect.withMessage("toRemove").that(output.getToRemove()).isEmpty();
         expect.withMessage("toAdd").that(output.getToAdd()).isEmpty();
@@ -174,6 +193,10 @@ public class PutIfNotPresentV1Test extends AdServicesMockitoTestCase {
         assertThrows(
                 "Expected exception",
                 IllegalArgumentException.class,
-                () -> mPutIfNotPresentV1.processUpdates(updatesJson, ImmutableMap.of()));
+                () ->
+                        mPutIfNotPresentV1.processUpdates(
+                                updatesJson,
+                                ImmutableMap.of(),
+                                mUpdateSignalsProcessReportedLoggerMock));
     }
 }

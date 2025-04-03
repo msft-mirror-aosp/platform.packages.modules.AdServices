@@ -27,6 +27,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils.SignalEvictorType;
 import com.android.adservices.shared.util.Clock;
 
+import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -47,7 +48,7 @@ public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProc
     private Set<EvictionPriority> mUpdatedSignalEvictionPriorities;
     private Set<EvictionPriority> mEvictedSignalEvictionPriorities;
     private int mPerBuyerEvictedSignalSize;
-    private Set<String> mUpdatedSignalsWithEvictionPriority;
+    private Set<ByteBuffer> mUpdatedSignalsWithEvictionPriority;
     private int mSignalUpdateSchemaVersion;
 
     /** Constructs a {@link UpdateSignalsProcessReportedLoggerImpl} instance. */
@@ -185,12 +186,12 @@ public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProc
 
     @Override
     public void setUpdatedSignalsWithEvictionPriorityForCount(
-            Set<String> updatedSignalsWithEvictionPriority) {
+            Set<ByteBuffer> updatedSignalsWithEvictionPriority) {
         mUpdatedSignalsWithEvictionPriority = new HashSet<>(updatedSignalsWithEvictionPriority);
     }
 
     @Override
-    public void addUpdatedSignalWithEvictionPriorityForCount(String key) {
+    public void addUpdatedSignalWithEvictionPriorityForCount(ByteBuffer key) {
         mUpdatedSignalsWithEvictionPriority.add(key);
     }
 

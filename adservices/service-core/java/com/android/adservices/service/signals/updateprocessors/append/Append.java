@@ -20,6 +20,7 @@ import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessor;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -54,7 +55,10 @@ public abstract class Append implements UpdateProcessor {
 
     @Override
     public UpdateOutput processUpdates(
-            Object updates, Map<ByteBuffer, Set<DBProtectedSignal>> current) throws JSONException {
+            Object updates,
+            Map<ByteBuffer, Set<DBProtectedSignal>> current,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger)
+            throws JSONException {
         UpdateOutput toReturn = new UpdateOutput();
         JSONObject updatesObject =
                 UpdateProcessorUtils.validateAndCastToJSONObject(APPEND, updates);
@@ -63,7 +67,7 @@ public abstract class Append implements UpdateProcessor {
             String stringKey = iter.next();
             ByteBuffer key = UpdateProcessorUtils.decodeKey(APPEND, stringKey);
             JSONObject update = updatesObject.getJSONObject(stringKey);
-            processKey(key, update, current, toReturn);
+            processKey(key, update, current, toReturn, updateSignalsProcessReportedLogger);
         }
         return toReturn;
     }
@@ -73,7 +77,8 @@ public abstract class Append implements UpdateProcessor {
             ByteBuffer key,
             JSONObject update,
             Map<ByteBuffer, Set<DBProtectedSignal>> current,
-            UpdateOutput toReturn)
+            UpdateOutput toReturn,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger)
             throws JSONException;
 
     /** Delete excess signals to make room for the new ones. */

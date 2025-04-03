@@ -19,6 +19,7 @@ package com.android.adservices.service.signals.updateprocessors.remove;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -43,7 +44,10 @@ public class RemoveV0 extends Remove {
 
     @Override
     public UpdateOutput processUpdates(
-            Object updates, Map<ByteBuffer, Set<DBProtectedSignal>> current) throws JSONException {
+            Object updates,
+            Map<ByteBuffer, Set<DBProtectedSignal>> current,
+            UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLogger)
+            throws JSONException {
         UpdateOutput toReturn = new UpdateOutput();
         JSONArray updatesArray = UpdateProcessorUtils.validateAndCastToJSONArray(REMOVE, updates);
         for (int i = 0; i < updatesArray.length(); i++) {

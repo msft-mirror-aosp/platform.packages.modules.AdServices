@@ -3104,6 +3104,13 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
+    public final boolean getMeasurementEnableItemsProcessedPerJobLogging() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING,
+                MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING);
+    }
+
+    @Override
     public final int getMeasurementMaxLengthOfTriggerContextId() {
         return mBackend.getFlag(
                 KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID,

@@ -44,7 +44,6 @@ import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithE
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
-import com.android.adservices.service.signals.evict.FifoSignalEvictor;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessor;
@@ -154,7 +153,7 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
         when(mUpdateProcessorSelectorMock.getUpdateProcessor(
                         TEST_PROCESSOR, mFakeFlags.getProtectedSignalsUpdateSchemaVersion()))
                 .thenReturn(
-                        (updates, current) -> {
+                        (updates, current, logger) -> {
                             throw exception;
                         });
 
@@ -580,10 +579,10 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
 
         SignalEvictionController signalEvictionController =
                 new SignalEvictionController(
-                        List.of(new FifoSignalEvictor()),
                         mFakeFlags.getProtectedSignalsMaxSignalSizePerBuyerBytes(),
                         mFakeFlags
-                                .getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes()) {
+                                .getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes(),
+                        mFakeFlags.getProtectedSignalsEnablePrioritizedEviction()) {
                     @Override
                     public void evict(
                             AdTechIdentifier adTech,
@@ -675,7 +674,7 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
     }
 
     private UpdateProcessor createFakeProcessor(UpdateOutput toReturn) {
-        return (updates, current) -> toReturn;
+        return (updates, current, logger) -> toReturn;
     }
 
     private void assertUpdateOutputEquals(UpdateOutput expect, UpdateOutput actual) {

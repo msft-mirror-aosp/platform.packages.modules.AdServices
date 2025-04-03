@@ -102,6 +102,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_D
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
@@ -478,6 +479,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementMaxLengthPerBudgetName()",
                 MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME,
                 Flags::getMeasurementMaxLengthPerBudgetName);
+    }
+
+    @Test
+    public void testGetMeasurementEnableItemsProcessedPerJobLogging() {
+        testFlag(
+                "getMeasurementEnableItemsProcessedPerJobLogging()",
+                MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING,
+                Flags::getMeasurementEnableItemsProcessedPerJobLogging);
     }
 
     @Test

@@ -298,9 +298,6 @@ public class DebugReportingJobHandler {
     }
 
     private String getAppPackageName(DebugReport debugReport) {
-        if (!mFlags.getMeasurementEnableAppPackageNameLogging()) {
-            return "";
-        }
         Uri sourceRegistrant = debugReport.getRegistrant();
         if (sourceRegistrant == null) {
             LoggerFactory.getMeasurementLogger().d("Source registrant is null on debug report");

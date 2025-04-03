@@ -17,8 +17,11 @@
 package com.android.adservices.service.signals.updateprocessors.evictionpriority;
 
 import com.android.adservices.service.signals.evict.EvictionPriority;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 
 import org.json.JSONObject;
+
+import java.nio.ByteBuffer;
 
 /**
  * No-op implementation of {@link EvictionPriorityHandler} used if prioritized eviction is disabled.
@@ -26,7 +29,10 @@ import org.json.JSONObject;
 public class EvictionPriorityHandlerNoOpImpl implements EvictionPriorityHandler {
 
     @Override
-    public EvictionPriority getEvictionPriority(JSONObject update) {
+    public EvictionPriority getEvictionPriority(
+            ByteBuffer key,
+            JSONObject update,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
         return EvictionPriority.DEFAULT;
     }
 }

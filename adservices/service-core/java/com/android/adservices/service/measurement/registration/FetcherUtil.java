@@ -628,14 +628,6 @@ public class FetcherUtil {
         return elements.contains(origin);
     }
 
-    static String getSourceRegistrantToLog(AsyncRegistration asyncRegistration) {
-        if (asyncRegistration.isSourceRequest()) {
-            return asyncRegistration.getRegistrant().toString();
-        }
-
-        return "";
-    }
-
     static void emitHeaderMetrics(
             long headerSizeLimitBytes,
             AdServicesLogger logger,
@@ -662,7 +654,7 @@ public class FetcherUtil {
                                 getStatus(asyncFetchStatus),
                                 getFailureType(asyncFetchStatus),
                                 asyncFetchStatus.getRegistrationDelay(),
-                                getSourceRegistrantToLog(asyncRegistration),
+                                asyncRegistration.getRegistrant().toString(),
                                 asyncFetchStatus.getRetryCount(),
                                 asyncFetchStatus.isRedirectOnly(),
                                 asyncFetchStatus.isPARequest(),
