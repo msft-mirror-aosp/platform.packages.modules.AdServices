@@ -171,14 +171,24 @@ public class EnrollmentDao implements IEnrollmentDao {
         LogUtil.v("Seeding enrollment database");
 
         if (!isSeeded()) {
-            boolean success = true;
+            boolean wasAllSuccess = true;
             for (EnrollmentData enrollment : PreEnrolledAdTechForTest.getList()) {
-                success = success && insert(enrollment);
+                boolean success = insert(enrollment);
+                wasAllSuccess = success && wasAllSuccess;
+                if (!success) {
+                    LogUtil.e(
+                            "Enrollment database specific seed insertion failed: %s",
+                            enrollment.toString());
+                } else {
+                    LogUtil.v(
+                            "Enrollment database specific seed insertion succeeded: %s",
+                            enrollment.toString());
+                }
             }
 
-            LogUtil.v("Enrollment database seed insertion status: %s", success);
+            LogUtil.v("Enrollment database seed insertion status: %s", wasAllSuccess);
 
-            if (success) {
+            if (wasAllSuccess) {
                 SharedPreferences prefs = getPrefs();
                 SharedPreferences.Editor edit = prefs.edit();
                 edit.putBoolean(IS_SEEDED, true);
@@ -189,11 +199,13 @@ public class EnrollmentDao implements IEnrollmentDao {
                     ErrorLogUtil.e(
                             AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_SHARED_PREFERENCES_SEED_SAVE_FAILURE,
                             AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+                } else {
+                    LogUtil.v("Enrollment database seeded successfully");
                 }
+            } else {
+                LogUtil.e("Enrollment database seed insertion partially or completely failed");
             }
         }
-
-        LogUtil.v("Enrollment database seeding complete");
     }
 
     @VisibleForTesting
@@ -210,6 +222,8 @@ public class EnrollmentDao implements IEnrollmentDao {
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_SHARED_PREFERENCES_SEED_SAVE_FAILURE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+        } else {
+            LogUtil.v("Enrollment database unseeded successfully");
         }
     }
 
@@ -1565,6 +1579,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                 success ? TransactionStatus.SUCCESS : TransactionStatus.DATASTORE_EXCEPTION,
                 getEnrollmentRecordCountForLogging(),
                 getLatencyMs(startTime));
+        LogUtil.v("overwriteData success: %s", success);
         return success;
     }
 
