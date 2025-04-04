@@ -2080,6 +2080,72 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public int countDistinctReportingOriginsPerEnrollmentInSource(
+            String enrollmentId, long windowStartTime, long windowEndTime)
+            throws DatastoreException {
+
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT COUNT(DISTINCT %1$s) FROM %2$s WHERE %3$s = ? AND %4$s > ? AND %4$s"
+                                + " <= ?",
+                        SourceContract.REGISTRATION_ORIGIN,
+                        SourceContract.TABLE,
+                        SourceContract.ENROLLMENT_ID,
+                        SourceContract.EVENT_TIME);
+        return (int)
+                DatabaseUtils.longForQuery(
+                        mSQLTransaction.getDatabase(),
+                        query,
+                        new String[] {
+                            enrollmentId,
+                            String.valueOf(windowStartTime),
+                            String.valueOf(windowEndTime)
+                        });
+    }
+
+    @Override
+    public int countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+            String enrollmentId,
+            @EventSurfaceType int destinationType,
+            String destination,
+            long windowStartTime,
+            long windowEndTime)
+            throws DatastoreException {
+
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "WITH source_ids AS ("
+                                + "SELECT %1$s FROM %2$s "
+                                + "WHERE %3$s = ? AND %4$s = ?"
+                                + ") "
+                                + "SELECT COUNT(DISTINCT %5$s) FROM %6$s "
+                                + "WHERE %7$s IN source_ids AND %8$s = ? "
+                                + "AND %9$s > ? AND %9$s <= ?",
+                        SourceDestination.SOURCE_ID, // 1
+                        SourceDestination.TABLE, // 2
+                        SourceDestination.DESTINATION, // 3
+                        SourceDestination.DESTINATION_TYPE, // 4
+                        SourceContract.REGISTRATION_ORIGIN, // 5
+                        SourceContract.TABLE, // 6
+                        SourceContract.ID, // 7
+                        SourceContract.ENROLLMENT_ID, // 8
+                        SourceContract.EVENT_TIME); // 9
+        return (int)
+                DatabaseUtils.longForQuery(
+                        mSQLTransaction.getDatabase(),
+                        query,
+                        new String[] {
+                            destination,
+                            String.valueOf(destinationType),
+                            enrollmentId,
+                            String.valueOf(windowStartTime),
+                            String.valueOf(windowEndTime)
+                        });
+    }
+
+    @Override
     public List<AggregateReport> fetchMatchingAggregateReports(
             @NonNull Collection<String> sourceIds, @NonNull Collection<String> triggerIds)
             throws DatastoreException {
