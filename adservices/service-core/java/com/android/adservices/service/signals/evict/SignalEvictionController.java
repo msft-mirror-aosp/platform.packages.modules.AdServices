@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.signals.evict;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_FIFO;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_PRIORITIZED_FIFO;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_UNSPECIFIED;
+
 import android.adservices.common.AdTechIdentifier;
 
 import androidx.annotation.VisibleForTesting;
@@ -66,7 +70,6 @@ public class SignalEvictionController {
             UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
         sLogger.v("Start running signal eviction.");
         for (SignalEvictor evictor : mSignalEvictors) {
-            // TODO: b/402995096 - Set evictorsUsed metric here once available.
             if (!evictor.evict(
                     adTech,
                     updatedSignals,
@@ -77,6 +80,10 @@ public class SignalEvictionController {
                 sLogger.v("Eviction finished.");
                 break;
             }
+
+            // Logs the evictor that did the exact eviction.
+            // On the other hand, if the eviction did not happen, do not log the evictor.
+            updateSignalsProcessReportedLogger.addSignalEvictorUsed(getEvictorType(evictor));
         }
     }
 
@@ -86,5 +93,15 @@ public class SignalEvictionController {
         } else {
             return ImmutableList.of(new FifoSignalEvictor());
         }
+    }
+
+    private static int getEvictorType(SignalEvictor evictor) {
+        if (evictor instanceof FifoSignalEvictor) {
+            return SIGNAL_EVICTOR_FIFO;
+        }
+        if (evictor instanceof PrioritizedFifoSignalEvictor) {
+            return SIGNAL_EVICTOR_PRIORITIZED_FIFO;
+        }
+        return SIGNAL_EVICTOR_UNSPECIFIED;
     }
 }
