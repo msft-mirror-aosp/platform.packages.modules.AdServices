@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.stats.pas;
 
+import static com.android.adservices.service.signals.SignalUpdates.UpdateSchemaVersion;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.PER_BUYER_SIGNAL_SIZE_BUCKETS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_UNSET;
@@ -26,6 +27,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils.SignalEvictorType;
 import com.android.adservices.shared.util.Clock;
 
+import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -46,7 +48,7 @@ public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProc
     private Set<EvictionPriority> mUpdatedSignalEvictionPriorities;
     private Set<EvictionPriority> mEvictedSignalEvictionPriorities;
     private int mPerBuyerEvictedSignalSize;
-    private Set<String> mUpdatedSignalsWithEvictionPriority;
+    private Set<ByteBuffer> mUpdatedSignalsWithEvictionPriority;
     private int mSignalUpdateSchemaVersion;
 
     /** Constructs a {@link UpdateSignalsProcessReportedLoggerImpl} instance. */
@@ -184,17 +186,17 @@ public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProc
 
     @Override
     public void setUpdatedSignalsWithEvictionPriorityForCount(
-            Set<String> updatedSignalsWithEvictionPriority) {
+            Set<ByteBuffer> updatedSignalsWithEvictionPriority) {
         mUpdatedSignalsWithEvictionPriority = new HashSet<>(updatedSignalsWithEvictionPriority);
     }
 
     @Override
-    public void addUpdatedSignalWithEvictionPriorityForCount(String key) {
+    public void addUpdatedSignalWithEvictionPriorityForCount(ByteBuffer key) {
         mUpdatedSignalsWithEvictionPriority.add(key);
     }
 
     @Override
-    public void setSignalUpdateSchemaVersion(int updateSchemaVersion) {
+    public void setSignalUpdateSchemaVersion(@UpdateSchemaVersion int updateSchemaVersion) {
         mSignalUpdateSchemaVersion = updateSchemaVersion;
     }
 }

@@ -3104,6 +3104,13 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
+    public final boolean getMeasurementEnableItemsProcessedPerJobLogging() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING,
+                MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING);
+    }
+
+    @Override
     public final int getMeasurementMaxLengthOfTriggerContextId() {
         return mBackend.getFlag(
                 KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID,
@@ -3480,6 +3487,13 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
+    public final boolean getAdServicesConsentDataMigrationEnabled() {
+        return mBackend.getFlag(
+                KEY_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED,
+                DEFAULT_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED);
+    }
+
+    @Override
     public final String getMddEnrollmentManifestFileUrl() {
         return mBackend.getFlag(
                 KEY_MDD_ENROLLMENT_MANIFEST_FILE_URL, MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL);
@@ -3720,6 +3734,13 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
         return mBackend.getFlag(
                 KEY_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST,
                 DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST);
+    }
+
+    @Override
+    public String getMeasurementCountUniqueAggregationCoordinatorOrigin() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_AGGREGATION_COORDINATOR_ORIGIN,
+                getMeasurementDefaultAggregationCoordinatorOrigin());
     }
 
     @Override

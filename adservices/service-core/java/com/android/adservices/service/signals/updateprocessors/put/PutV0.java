@@ -19,6 +19,7 @@ package com.android.adservices.service.signals.updateprocessors.put;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -43,7 +44,8 @@ public class PutV0 extends Put {
             ByteBuffer key,
             Object update,
             Map<ByteBuffer, Set<DBProtectedSignal>> current,
-            UpdateOutput toReturn) {
+            UpdateOutput toReturn,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
         String value = UpdateProcessorUtils.validateAndCastToString(PUT, update);
         UpdateProcessorUtils.touchKey(key, toReturn.getKeysTouched());
         // Remove any existing signals for the key

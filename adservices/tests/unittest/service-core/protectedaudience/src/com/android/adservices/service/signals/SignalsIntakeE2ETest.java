@@ -96,7 +96,7 @@ import com.android.adservices.service.signals.updateprocessors.evictionpriority.
 import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEventHandler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerFactory;
 import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.util.Clock;
@@ -154,7 +154,6 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
     @Mock private FledgeApiThrottleFilter mFledgeApiThrottleFilterMock;
     @Mock private AdServicesHttpsClient mAdServicesHttpsClientMock;
     @Mock private DevContextFilter mDevContextFilterMock;
-    @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
     @Mock private DatastoreManager mDatastoreManager;
     @Mock private Clock mMockClock;
 
@@ -342,7 +341,8 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
                         CallingAppUidSupplierProcessImpl.create(),
                         mProtectedSignalsServiceFilter,
                         mEnrollmentDao,
-                        mUpdateSignalsProcessReportedLoggerMock);
+                        new UpdateSignalsProcessReportedLoggerFactory(
+                                /* pasProductMetricsV1Enabled= */ false));
     }
 
     @Test

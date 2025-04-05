@@ -3947,6 +3947,11 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST;
     }
 
+    /** Returns the default measurement count unique aggregation coordinator origin. */
+    default String getMeasurementCountUniqueAggregationCoordinatorOrigin() {
+        return getMeasurementDefaultAggregationCoordinatorOrigin();
+    }
+
     /** Kill switch to guard backward-compatible logging. See go/rbc-ww-logging */
     @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean COMPAT_LOGGING_KILL_SWITCH = false;
@@ -4716,6 +4721,20 @@ public interface Flags extends ModuleSharedFlags {
      */
     default float getMeasurementNullAggReportRateExclSourceRegistrationTime() {
         return MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME;
+    }
+
+    /**
+     * Default value for whether to enable the logging of measurement items processed per background
+     * job.
+     */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING = false;
+
+    /**
+     * Returns whether to enable the logging of items processed information per measurement
+     * background job.
+     */
+    default boolean getMeasurementEnableItemsProcessedPerJobLogging() {
+        return MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING;
     }
 
     /** Default U18 UX feature flag. */
@@ -6024,6 +6043,14 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the default value of the enablement of adservices business logic migration. */
     default boolean getAdServicesConsentBusinessLogicMigrationEnabled() {
         return DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
+    }
+
+    /** Default value for the enablement the new apis for data migration. */
+    @FeatureFlag boolean DEFAULT_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED = false;
+
+    /** Returns the default value of the enablement of adservices data migration. */
+    default boolean getAdServicesConsentDataMigrationEnabled() {
+        return DEFAULT_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED;
     }
 
     /** Default value for the enablement the R notification default consent fix. */

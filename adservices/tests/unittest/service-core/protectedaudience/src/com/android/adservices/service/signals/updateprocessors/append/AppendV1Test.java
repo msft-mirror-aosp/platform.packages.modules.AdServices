@@ -42,6 +42,7 @@ import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.evict.EvictionPriority;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandler;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import com.google.common.collect.ImmutableList;
@@ -72,7 +73,7 @@ public class AppendV1Test extends AdServicesMockitoTestCase {
     private static final String EVICTION_PRIORITY = "eviction_priority";
 
     @Mock private EvictionPriorityHandler mEvictionPriorityHandlerMock;
-
+    @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
     private AppendV1 mAppendV1;
 
     @Before
@@ -90,15 +91,19 @@ public class AppendV1Test extends AdServicesMockitoTestCase {
         appendJson.put(MAX_SIGNALS, 1);
         appendJson.put(EVICTION_PRIORITY, EvictionPriority.EVICT_SOONER);
 
-        when(mEvictionPriorityHandlerMock.getEvictionPriority(appendJson))
+        when(mEvictionPriorityHandlerMock.getEvictionPriority(
+                        BB_KEY_1, appendJson, mUpdateSignalsProcessReportedLoggerMock))
                 .thenReturn(EvictionPriority.EVICT_SOONER);
 
         JSONObject updatesJson = new JSONObject();
         updatesJson.put(BASE64_KEY_1, appendJson);
 
-        UpdateOutput output = mAppendV1.processUpdates(updatesJson, ImmutableMap.of());
+        UpdateOutput output =
+                mAppendV1.processUpdates(
+                        updatesJson, ImmutableMap.of(), mUpdateSignalsProcessReportedLoggerMock);
 
-        verify(mEvictionPriorityHandlerMock).getEvictionPriority(appendJson);
+        verify(mEvictionPriorityHandlerMock)
+                .getEvictionPriority(BB_KEY_1, appendJson, mUpdateSignalsProcessReportedLoggerMock);
         expect.withMessage("keysTouched").that(output.getKeysTouched()).containsExactly(BB_KEY_1);
         expect.withMessage("toRemove").that(output.getToRemove()).isEmpty();
         List<DBProtectedSignal.Builder> expectedToAdd =
@@ -121,15 +126,19 @@ public class AppendV1Test extends AdServicesMockitoTestCase {
         appendJson.put(MAX_SIGNALS, 2);
         appendJson.put(EVICTION_PRIORITY, EvictionPriority.EVICT_SOONER);
 
-        when(mEvictionPriorityHandlerMock.getEvictionPriority(appendJson))
+        when(mEvictionPriorityHandlerMock.getEvictionPriority(
+                        BB_KEY_1, appendJson, mUpdateSignalsProcessReportedLoggerMock))
                 .thenReturn(EvictionPriority.EVICT_SOONER);
 
         JSONObject updatesJson = new JSONObject();
         updatesJson.put(BASE64_KEY_1, appendJson);
 
-        UpdateOutput output = mAppendV1.processUpdates(updatesJson, ImmutableMap.of());
+        UpdateOutput output =
+                mAppendV1.processUpdates(
+                        updatesJson, ImmutableMap.of(), mUpdateSignalsProcessReportedLoggerMock);
 
-        verify(mEvictionPriorityHandlerMock).getEvictionPriority(appendJson);
+        verify(mEvictionPriorityHandlerMock)
+                .getEvictionPriority(BB_KEY_1, appendJson, mUpdateSignalsProcessReportedLoggerMock);
         expect.withMessage("keysTouched").that(output.getKeysTouched()).containsExactly(BB_KEY_1);
         expect.withMessage("toRemove").that(output.getToRemove()).isEmpty();
         List<DBProtectedSignal.Builder> expectedToAdd =
@@ -159,25 +168,32 @@ public class AppendV1Test extends AdServicesMockitoTestCase {
         appendJson1.put(MAX_SIGNALS, 2);
         appendJson1.put(EVICTION_PRIORITY, EvictionPriority.EVICT_SOONER);
 
-        when(mEvictionPriorityHandlerMock.getEvictionPriority(appendJson1))
-                .thenReturn(EvictionPriority.EVICT_SOONER);
-
         JSONObject appendJson2 = new JSONObject();
         appendJson2.put(VALUES, valuesJson2);
         appendJson2.put(MAX_SIGNALS, 1);
         appendJson2.put(EVICTION_PRIORITY, EvictionPriority.EVICT_LATER);
 
-        when(mEvictionPriorityHandlerMock.getEvictionPriority(appendJson2))
+        when(mEvictionPriorityHandlerMock.getEvictionPriority(
+                        BB_KEY_1, appendJson1, mUpdateSignalsProcessReportedLoggerMock))
+                .thenReturn(EvictionPriority.EVICT_SOONER);
+        when(mEvictionPriorityHandlerMock.getEvictionPriority(
+                        BB_KEY_2, appendJson2, mUpdateSignalsProcessReportedLoggerMock))
                 .thenReturn(EvictionPriority.EVICT_LATER);
 
         JSONObject updatesJson = new JSONObject();
         updatesJson.put(BASE64_KEY_1, appendJson1);
         updatesJson.put(BASE64_KEY_2, appendJson2);
 
-        UpdateOutput output = mAppendV1.processUpdates(updatesJson, ImmutableMap.of());
+        UpdateOutput output =
+                mAppendV1.processUpdates(
+                        updatesJson, ImmutableMap.of(), mUpdateSignalsProcessReportedLoggerMock);
 
-        verify(mEvictionPriorityHandlerMock).getEvictionPriority(appendJson1);
-        verify(mEvictionPriorityHandlerMock).getEvictionPriority(appendJson2);
+        verify(mEvictionPriorityHandlerMock)
+                .getEvictionPriority(
+                        BB_KEY_1, appendJson1, mUpdateSignalsProcessReportedLoggerMock);
+        verify(mEvictionPriorityHandlerMock)
+                .getEvictionPriority(
+                        BB_KEY_2, appendJson2, mUpdateSignalsProcessReportedLoggerMock);
         expect.withMessage("keysTouched")
                 .that(output.getKeysTouched())
                 .containsExactly(BB_KEY_1, BB_KEY_2);
@@ -209,7 +225,8 @@ public class AppendV1Test extends AdServicesMockitoTestCase {
         appendJson.put(MAX_SIGNALS, 2);
         appendJson.put(EVICTION_PRIORITY, EvictionPriority.EVICT_SOONER);
 
-        when(mEvictionPriorityHandlerMock.getEvictionPriority(appendJson))
+        when(mEvictionPriorityHandlerMock.getEvictionPriority(
+                        BB_KEY_1, appendJson, mUpdateSignalsProcessReportedLoggerMock))
                 .thenReturn(EvictionPriority.EVICT_SOONER);
 
         JSONObject updatesJson = new JSONObject();
@@ -221,9 +238,12 @@ public class AppendV1Test extends AdServicesMockitoTestCase {
         Map<ByteBuffer, Set<DBProtectedSignal>> existingSignals =
                 ImmutableMap.of(BB_KEY_1, ImmutableSet.of(toOverwrite, toKeep));
 
-        UpdateOutput output = mAppendV1.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output =
+                mAppendV1.processUpdates(
+                        updatesJson, existingSignals, mUpdateSignalsProcessReportedLoggerMock);
 
-        verify(mEvictionPriorityHandlerMock).getEvictionPriority(appendJson);
+        verify(mEvictionPriorityHandlerMock)
+                .getEvictionPriority(BB_KEY_1, appendJson, mUpdateSignalsProcessReportedLoggerMock);
         expect.withMessage("keysTouched").that(output.getKeysTouched()).containsExactly(BB_KEY_1);
         expect.withMessage("toRemove").that(output.getToRemove()).containsExactly(toOverwrite);
         List<DBProtectedSignal.Builder> expectedToAdd =
@@ -245,7 +265,8 @@ public class AppendV1Test extends AdServicesMockitoTestCase {
         appendJson.put(MAX_SIGNALS, 2);
         appendJson.put(EVICTION_PRIORITY, EvictionPriority.EVICT_SOONER);
 
-        when(mEvictionPriorityHandlerMock.getEvictionPriority(appendJson))
+        when(mEvictionPriorityHandlerMock.getEvictionPriority(
+                        BB_KEY_1, appendJson, mUpdateSignalsProcessReportedLoggerMock))
                 .thenReturn(EvictionPriority.EVICT_SOONER);
 
         JSONObject updatesJson = new JSONObject();
@@ -259,9 +280,12 @@ public class AppendV1Test extends AdServicesMockitoTestCase {
         Map<ByteBuffer, Set<DBProtectedSignal>> existingSignals =
                 ImmutableMap.of(BB_KEY_1, ImmutableSet.of(toOverwrite1, toOverwrite2, toKeep));
 
-        UpdateOutput output = mAppendV1.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output =
+                mAppendV1.processUpdates(
+                        updatesJson, existingSignals, mUpdateSignalsProcessReportedLoggerMock);
 
-        verify(mEvictionPriorityHandlerMock).getEvictionPriority(appendJson);
+        verify(mEvictionPriorityHandlerMock)
+                .getEvictionPriority(BB_KEY_1, appendJson, mUpdateSignalsProcessReportedLoggerMock);
         expect.withMessage("keysTouched").that(output.getKeysTouched()).containsExactly(BB_KEY_1);
         expect.withMessage("toRemove")
                 .that(output.getToRemove())
@@ -285,7 +309,8 @@ public class AppendV1Test extends AdServicesMockitoTestCase {
         appendJson.put(MAX_SIGNALS, 3);
         appendJson.put(EVICTION_PRIORITY, EvictionPriority.EVICT_SOONER);
 
-        when(mEvictionPriorityHandlerMock.getEvictionPriority(appendJson))
+        when(mEvictionPriorityHandlerMock.getEvictionPriority(
+                        BB_KEY_1, appendJson, mUpdateSignalsProcessReportedLoggerMock))
                 .thenReturn(EvictionPriority.EVICT_SOONER);
 
         JSONObject updatesJson = new JSONObject();
@@ -297,9 +322,12 @@ public class AppendV1Test extends AdServicesMockitoTestCase {
         Map<ByteBuffer, Set<DBProtectedSignal>> existingSignals =
                 ImmutableMap.of(BB_KEY_1, ImmutableSet.of(existing1, existing2));
 
-        UpdateOutput output = mAppendV1.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output =
+                mAppendV1.processUpdates(
+                        updatesJson, existingSignals, mUpdateSignalsProcessReportedLoggerMock);
 
-        verify(mEvictionPriorityHandlerMock).getEvictionPriority(appendJson);
+        verify(mEvictionPriorityHandlerMock)
+                .getEvictionPriority(BB_KEY_1, appendJson, mUpdateSignalsProcessReportedLoggerMock);
         expect.withMessage("keysTouched").that(output.getKeysTouched()).containsExactly(BB_KEY_1);
         expect.withMessage("toRemove").that(output.getToRemove()).isEmpty();
         List<DBProtectedSignal.Builder> expectedToAdd =
@@ -327,6 +355,10 @@ public class AppendV1Test extends AdServicesMockitoTestCase {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> mAppendV1.processUpdates(updatesJson, ImmutableMap.of()));
+                () ->
+                        mAppendV1.processUpdates(
+                                updatesJson,
+                                ImmutableMap.of(),
+                                mUpdateSignalsProcessReportedLoggerMock));
     }
 }

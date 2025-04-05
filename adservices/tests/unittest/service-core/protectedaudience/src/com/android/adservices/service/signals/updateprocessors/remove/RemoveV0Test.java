@@ -27,13 +27,15 @@ import static com.android.adservices.service.signals.SignalsFixture.createSignal
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.json.JSONArray;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -44,15 +46,21 @@ import java.util.Map;
 import java.util.Set;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
-public class RemoveV0Test extends AdServicesUnitTestCase {
+public class RemoveV0Test extends AdServicesMockitoTestCase {
     private final RemoveV0 mRemoveV0 = new RemoveV0();
+
+    @Mock UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
 
     @Test
     public void testRemoveSingleNotPresent() throws Exception {
         JSONArray updatesJson = new JSONArray();
         updatesJson.put(BASE64_KEY_1);
 
-        UpdateOutput output = mRemoveV0.processUpdates(updatesJson, Collections.emptyMap());
+        UpdateOutput output =
+                mRemoveV0.processUpdates(
+                        updatesJson,
+                        Collections.emptyMap(),
+                        mUpdateSignalsProcessReportedLoggerMock);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertTrue(output.getToRemove().isEmpty());
@@ -68,7 +76,9 @@ public class RemoveV0Test extends AdServicesUnitTestCase {
         DBProtectedSignal toRemove = createSignal(KEY_1, VALUE_1, ID_1, NOW);
         existingSignals.put(BB_KEY_1, new HashSet<>(Arrays.asList(toRemove)));
 
-        UpdateOutput output = mRemoveV0.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output =
+                mRemoveV0.processUpdates(
+                        updatesJson, existingSignals, mUpdateSignalsProcessReportedLoggerMock);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertEquals(Arrays.asList(toRemove), output.getToRemove());
@@ -84,7 +94,9 @@ public class RemoveV0Test extends AdServicesUnitTestCase {
         DBProtectedSignal toRemove = createSignal(KEY_1, VALUE_1, ID_1, NOW);
         existingSignals.put(BB_KEY_1, new HashSet<>(Arrays.asList(toRemove)));
 
-        UpdateOutput output = mRemoveV0.processUpdates(updatesJson, existingSignals);
+        UpdateOutput output =
+                mRemoveV0.processUpdates(
+                        updatesJson, existingSignals, mUpdateSignalsProcessReportedLoggerMock);
 
         assertEquals(Collections.singleton(BB_KEY_1), output.getKeysTouched());
         assertEquals(Arrays.asList(toRemove), output.getToRemove());

@@ -25,6 +25,7 @@ import android.adservices.common.CommonFixture;
 
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.signals.evict.EvictionPriority;
 
 import com.google.common.truth.Expect;
 
@@ -108,6 +109,23 @@ public final class SignalsFixture {
                 .setCreationTime(creationTime)
                 .setKey(key)
                 .setValue(value)
+                .build();
+    }
+
+    public static DBProtectedSignal createSignal(
+            byte[] key,
+            byte[] value,
+            long id,
+            Instant creationTime,
+            EvictionPriority evictionPriority) {
+        return DBProtectedSignal.builder()
+                .setId(id)
+                .setBuyer(ADTECH)
+                .setPackageName(PACKAGE)
+                .setCreationTime(creationTime)
+                .setKey(key)
+                .setValue(value)
+                .setEvictionPriority(evictionPriority)
                 .build();
     }
 

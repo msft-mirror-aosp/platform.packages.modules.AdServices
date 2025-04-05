@@ -2080,6 +2080,72 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public int countDistinctReportingOriginsPerEnrollmentInSource(
+            String enrollmentId, long windowStartTime, long windowEndTime)
+            throws DatastoreException {
+
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT COUNT(DISTINCT %1$s) FROM %2$s WHERE %3$s = ? AND %4$s > ? AND %4$s"
+                                + " <= ?",
+                        SourceContract.REGISTRATION_ORIGIN,
+                        SourceContract.TABLE,
+                        SourceContract.ENROLLMENT_ID,
+                        SourceContract.EVENT_TIME);
+        return (int)
+                DatabaseUtils.longForQuery(
+                        mSQLTransaction.getDatabase(),
+                        query,
+                        new String[] {
+                            enrollmentId,
+                            String.valueOf(windowStartTime),
+                            String.valueOf(windowEndTime)
+                        });
+    }
+
+    @Override
+    public int countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+            String enrollmentId,
+            @EventSurfaceType int destinationType,
+            String destination,
+            long windowStartTime,
+            long windowEndTime)
+            throws DatastoreException {
+
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "WITH source_ids AS ("
+                                + "SELECT %1$s FROM %2$s "
+                                + "WHERE %3$s = ? AND %4$s = ?"
+                                + ") "
+                                + "SELECT COUNT(DISTINCT %5$s) FROM %6$s "
+                                + "WHERE %7$s IN source_ids AND %8$s = ? "
+                                + "AND %9$s > ? AND %9$s <= ?",
+                        SourceDestination.SOURCE_ID, // 1
+                        SourceDestination.TABLE, // 2
+                        SourceDestination.DESTINATION, // 3
+                        SourceDestination.DESTINATION_TYPE, // 4
+                        SourceContract.REGISTRATION_ORIGIN, // 5
+                        SourceContract.TABLE, // 6
+                        SourceContract.ID, // 7
+                        SourceContract.ENROLLMENT_ID, // 8
+                        SourceContract.EVENT_TIME); // 9
+        return (int)
+                DatabaseUtils.longForQuery(
+                        mSQLTransaction.getDatabase(),
+                        query,
+                        new String[] {
+                            destination,
+                            String.valueOf(destinationType),
+                            enrollmentId,
+                            String.valueOf(windowStartTime),
+                            String.valueOf(windowEndTime)
+                        });
+    }
+
+    @Override
     public List<AggregateReport> fetchMatchingAggregateReports(
             @NonNull Collection<String> sourceIds, @NonNull Collection<String> triggerIds)
             throws DatastoreException {
@@ -4246,6 +4312,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(CountUniqueReportingContract.API_VERSION, report.getApiVersion());
         values.put(CountUniqueReportingContract.DEBUG_KEY, report.getDebugKey());
         values.put(CountUniqueReportingContract.CONTEXT_ID, report.getContextId());
+        values.put(CountUniqueReportingContract.REGISTRANT, report.getRegistrant().toString());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -4274,6 +4341,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.CountUniqueMetadataContract.EXPIRATION_TIME,
                 metadata.getExpirationTime());
+        values.put(
+                MeasurementTables.CountUniqueMetadataContract.REGISTRANT,
+                metadata.getRegistrant().toString());
         mSQLTransaction
                 .getDatabase()
                 .insertWithOnConflict(
@@ -4331,6 +4401,18 @@ class MeasurementDao implements IMeasurementDao {
         }
         LoggerFactory.getMeasurementLogger()
                 .d("MeasurementDao: CountUniqueMetadata: row deleted: " + rows);
+    }
+
+    @Override
+    public void deleteCountUniqueUninstall(Uri uri) throws DatastoreException {
+        deleteRecordsColumnBased(
+                List.of(uri.toString()),
+                CountUniqueReportingContract.TABLE,
+                CountUniqueReportingContract.REGISTRANT);
+        deleteRecordsColumnBased(
+                List.of(uri.toString()),
+                MeasurementTables.CountUniqueMetadataContract.TABLE,
+                MeasurementTables.CountUniqueMetadataContract.REGISTRANT);
     }
 
     @Override

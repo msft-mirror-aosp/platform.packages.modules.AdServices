@@ -16,10 +16,12 @@
 
 package com.android.adservices.service.stats.pas;
 
+import static com.android.adservices.service.signals.SignalUpdates.UpdateSchemaVersion;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SignalEvictorType;
 
 import com.android.adservices.service.signals.evict.EvictionPriority;
 
+import java.nio.ByteBuffer;
 import java.util.Set;
 
 public class UpdateSignalsProcessReportedLoggerNoLoggingImpl
@@ -74,11 +76,11 @@ public class UpdateSignalsProcessReportedLoggerNoLoggingImpl
 
     @Override
     public void setUpdatedSignalsWithEvictionPriorityForCount(
-            Set<String> updatedSignalsWithEvictionPriority) {}
+            Set<ByteBuffer> updatedSignalsWithEvictionPriority) {}
 
     @Override
-    public void addUpdatedSignalWithEvictionPriorityForCount(String key) {}
+    public void addUpdatedSignalWithEvictionPriorityForCount(ByteBuffer key) {}
 
     @Override
-    public void setSignalUpdateSchemaVersion(int updateSchemaVersion) {}
+    public void setSignalUpdateSchemaVersion(@UpdateSchemaVersion int updateSchemaVersion) {}
 }

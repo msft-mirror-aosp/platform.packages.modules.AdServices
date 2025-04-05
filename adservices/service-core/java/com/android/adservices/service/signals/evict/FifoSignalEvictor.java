@@ -68,6 +68,7 @@ public class FifoSignalEvictor implements SignalEvictor {
 
         updatedSignals.sort(CREATION_TIME_COMPARATOR.reversed());
 
+        // TODO: b/407576879 - Clean up inefficient list mutation
         while (currentSignalSize > maxAllowedSignalSize) {
             DBProtectedSignal oldestSignal = updatedSignals.remove(updatedSignals.size() - 1);
             combinedUpdates.getToRemove().add(oldestSignal);

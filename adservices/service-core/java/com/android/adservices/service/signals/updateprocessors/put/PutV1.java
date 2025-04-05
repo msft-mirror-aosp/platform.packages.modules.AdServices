@@ -21,6 +21,7 @@ import com.android.adservices.service.signals.evict.EvictionPriority;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils;
 import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandler;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -58,12 +59,14 @@ public class PutV1 extends Put {
             ByteBuffer key,
             Object update,
             Map<ByteBuffer, Set<DBProtectedSignal>> current,
-            UpdateOutput toReturn)
+            UpdateOutput toReturn,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger)
             throws JSONException {
         JSONObject updateObject = UpdateProcessorUtils.validateAndCastToJSONObject(PUT, update);
         String value = updateObject.getString(VALUE);
         EvictionPriority evictionPriority =
-                mEvictionPriorityHandler.getEvictionPriority(updateObject);
+                mEvictionPriorityHandler.getEvictionPriority(
+                        key, updateObject, updateSignalsProcessReportedLogger);
 
         UpdateProcessorUtils.touchKey(key, toReturn.getKeysTouched());
         // Remove any existing signals for the key

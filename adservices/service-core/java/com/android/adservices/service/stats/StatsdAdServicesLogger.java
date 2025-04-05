@@ -55,6 +55,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.NUMBER_OF_TYPES_OF_REPORTING_URL_RECEIVED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.PERSIST_AD_SELECTION_RESULT_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.PROD_DEBUG_ENABLED_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORTING_WITH_DESTINATION_PERFORMED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_IMPRESSION_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
@@ -1075,6 +1076,11 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getReportingType(),
                 stats.getDestination(),
                 stats.getStatus());
+    }
+
+    @Override
+    public void logProdDebugEnabledStats(ProdDebugEnabledStats stats) {
+        AdServicesStatsLog.write(PROD_DEBUG_ENABLED_REPORTED, stats.isProdDebugEnabled());
     }
 
     @NonNull

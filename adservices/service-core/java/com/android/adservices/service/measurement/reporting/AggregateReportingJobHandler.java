@@ -40,6 +40,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.exception.CryptoException;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
+import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
@@ -229,9 +230,6 @@ public class AggregateReportingJobHandler {
     }
 
     private String getAppPackageName(AggregateReport report) {
-        if (!mFlags.getMeasurementEnableAppPackageNameLogging()) {
-            return "";
-        }
         if (report.getSourceId() == null) {
             LoggerFactory.getMeasurementLogger().d("SourceId is null on aggregate report.");
             return "";
@@ -312,8 +310,8 @@ public class AggregateReportingJobHandler {
         // Aggregate Report on device for more than minimum lifespan
         if (mFlags.getMeasurementEnableMinReportLifespanForUninstall()
                 && aggregateReportCreatedBeforeLifespan(aggregateReport.getTriggerTime())
-                && (!anyPublisherAppInstalled(aggregateReport)
-                        || !anyTriggerDestinationAppInstalled(aggregateReport))) {
+                && (!anySourceAppInstalled(aggregateReport)
+                        || !anyTriggerAppInstalled(aggregateReport))) {
             mDatastoreManager.runInTransaction(dao -> dao.deleteAggregateReport(aggregateReport));
             setAndLogReportingStatus(
                     reportingStatus,
@@ -507,6 +505,10 @@ public class AggregateReportingJobHandler {
 
     private void updateAppReportHistory(AggregateReport aggregateReport, IMeasurementDao dao)
             throws DatastoreException {
+        // Skip update for Null Aggregate Reports
+        if (aggregateReport.getSourceId() == null) {
+            return;
+        }
         Pair<List<Uri>, List<Uri>> destinations =
                 dao.getSourceDestinations(aggregateReport.getSourceId());
         List<Uri> appDestinations = destinations.first;
@@ -528,13 +530,22 @@ public class AggregateReportingJobHandler {
                 < mTimeSource.currentTimeMillis();
     }
 
-    private boolean anyTriggerDestinationAppInstalled(AggregateReport aggregateReport) {
-        return Applications.anyAppsInstalled(
-                mContext, List.of(aggregateReport.getAttributionDestination()));
+    private boolean anyTriggerAppInstalled(AggregateReport aggregateReport) {
+        Optional<Trigger> triggerOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getTrigger(aggregateReport.getTriggerId()));
+        return triggerOpt.isPresent()
+                && Applications.anyAppsInstalled(
+                        mContext, List.of(triggerOpt.get().getRegistrant()));
     }
 
-    private boolean anyPublisherAppInstalled(AggregateReport aggregateReport) {
-        return Applications.anyAppsInstalled(mContext, List.of(aggregateReport.getPublisher()));
+    private boolean anySourceAppInstalled(AggregateReport aggregateReport) {
+        Optional<Source> sourceOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getSource(aggregateReport.getSourceId()));
+        return sourceOpt.isPresent()
+                && Applications.anyAppsInstalled(
+                        mContext, List.of(sourceOpt.get().getRegistrant()));
     }
 
     /** Creates the JSON payload for the POST request from the AggregateReport. */

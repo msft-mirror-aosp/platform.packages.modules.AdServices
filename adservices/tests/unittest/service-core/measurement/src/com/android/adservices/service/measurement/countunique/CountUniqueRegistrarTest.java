@@ -181,6 +181,9 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
             assertWithMessage("r.getContributionTime()")
                     .that(r.getContributionTime())
                     .isEqualTo(asyncRegistration.getRequestTime());
+            assertWithMessage("r.getRegistrant()")
+                    .that(r.getRegistrant())
+                    .isEqualTo(asyncRegistration.getRegistrant());
         }
     }
 
@@ -264,6 +267,9 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
             assertWithMessage("r.getContributionTime()")
                     .that(r.getContributionTime())
                     .isEqualTo(asyncRegistration.getRequestTime());
+            assertWithMessage("r.getRegistrant()")
+                    .that(r.getRegistrant())
+                    .isEqualTo(asyncRegistration.getRegistrant());
         }
     }
 
@@ -517,6 +523,9 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
             assertWithMessage("r.getContributionTime()")
                     .that(r.getContributionTime())
                     .isEqualTo(asyncRegistration.getRequestTime());
+            assertWithMessage("r.getRegistrant()")
+                    .that(r.getRegistrant())
+                    .isEqualTo(asyncRegistration.getRegistrant());
         }
     }
 
@@ -633,6 +642,9 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
             assertWithMessage("r.getContributionTime()")
                     .that(r.getContributionTime())
                     .isEqualTo(asyncRegistration.getRequestTime());
+            assertWithMessage("r.getRegistrant()")
+                    .that(r.getRegistrant())
+                    .isEqualTo(asyncRegistration.getRegistrant());
         }
     }
 
@@ -709,6 +721,9 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
             assertWithMessage("r.getContributionTime()")
                     .that(r.getContributionTime())
                     .isEqualTo(asyncRegistration.getRequestTime());
+            assertWithMessage("r.getRegistrant()")
+                    .that(r.getRegistrant())
+                    .isEqualTo(asyncRegistration.getRegistrant());
         }
     }
 
@@ -775,6 +790,9 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
             assertWithMessage("r.getContributionTime()")
                     .that(r.getContributionTime())
                     .isEqualTo(asyncRegistration.getRequestTime());
+            assertWithMessage("r.getRegistrant()")
+                    .that(r.getRegistrant())
+                    .isEqualTo(asyncRegistration.getRegistrant());
         }
     }
 
@@ -821,6 +839,9 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
                     .that(m.getReportingOrigin())
                     .isEqualTo(REGISTRATION_URI);
             assertThat(asyncRegistration.getRequestTime() <= m.getExpirationTime()).isTrue();
+            assertWithMessage("m.getRegistrant()")
+                    .that(m.getRegistrant())
+                    .isEqualTo(asyncRegistration.getRegistrant());
         }
     }
 
@@ -865,6 +886,9 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
                     .that(m.getReportingOrigin())
                     .isEqualTo(REGISTRATION_URI);
             assertThat(asyncRegistration.getRequestTime() <= m.getExpirationTime()).isTrue();
+            assertWithMessage("m.getRegistrant()")
+                    .that(m.getRegistrant())
+                    .isEqualTo(asyncRegistration.getRegistrant());
         }
     }
 
@@ -907,6 +931,9 @@ public class CountUniqueRegistrarTest extends AdServicesExtendedMockitoTestCase 
                     .that(m.getReportingOrigin())
                     .isEqualTo(REGISTRATION_URI);
             assertThat(asyncRegistration.getRequestTime() <= m.getExpirationTime()).isTrue();
+            assertWithMessage("m.getRegistrant()")
+                    .that(m.getRegistrant())
+                    .isEqualTo(asyncRegistration.getRegistrant());
         }
     }
 

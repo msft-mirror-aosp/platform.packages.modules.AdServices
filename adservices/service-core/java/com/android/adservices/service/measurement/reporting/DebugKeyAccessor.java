@@ -111,6 +111,7 @@ public class DebugKeyAccessor {
     /** Returns DebugKey according to the permissions set */
     public Pair<UnsignedLong, UnsignedLong> getDebugKeysForVerboseTriggerDebugReport(
             @Nullable Source source, @NonNull Trigger trigger) throws DatastoreException {
+        // TODO: b/403297148 Refactor getDebugKeysForVerboseTriggerDebugReport
         if (source == null) {
             if (trigger.getDestinationType() == EventSurfaceType.WEB
                     && trigger.hasArDebugPermission()) {
@@ -154,7 +155,7 @@ public class DebugKeyAccessor {
                     }
                 } else {
                     // Send source_debug_key when condition meets.
-                    if (canMatchJoinKeys(source, trigger)) {
+                    if (canMatchJoinKeys(source, trigger, attributionType)) {
                         // Attempted to match, so assigning a non-null value to emit metric
                         joinKeyHash = 0L;
                         if (source.getDebugJoinKey().equals(trigger.getDebugJoinKey())) {
@@ -182,7 +183,7 @@ public class DebugKeyAccessor {
                             trigger)) {
                         sourceDebugKey = source.getDebugKey();
                     }
-                } else if (canMatchJoinKeys(source, trigger)) {
+                } else if (canMatchJoinKeys(source, trigger, attributionType)) {
                     // Attempted to match, so assigning a non-null value to emit metric
                     joinKeyHash = 0L;
                     if (source.getDebugJoinKey().equals(trigger.getDebugJoinKey())) {
@@ -209,7 +210,7 @@ public class DebugKeyAccessor {
                             trigger)) {
                         sourceDebugKey = source.getDebugKey();
                     }
-                } else if (canMatchJoinKeys(source, trigger)) {
+                } else if (canMatchJoinKeys(source, trigger, attributionType)) {
                     // Attempted to match, so assigning a non-null value to emit metric
                     joinKeyHash = 0L;
                     if (source.getDebugJoinKey().equals(trigger.getDebugJoinKey())) {
@@ -308,7 +309,12 @@ public class DebugKeyAccessor {
         }
     }
 
-    private boolean canMatchJoinKeys(Source source, Trigger trigger) {
+    private boolean canMatchJoinKeys(Source source, Trigger trigger, int attributionType) {
+        if (mFlags.getMeasurementEnableDebugJoinKeysOpenAccess()) {
+            if (!checkSourceAndTriggerPermissions(source, trigger, attributionType)) {
+                return false;
+            }
+        }
         Set<String> allowedEnrollmentsString =
                 new HashSet<>(
                         AllowLists.splitAllowList(
@@ -358,7 +364,7 @@ public class DebugKeyAccessor {
     private boolean canRelyOnDebugJoinKey(int attributionType, Source source, Trigger trigger) {
         boolean doDebugJoinKeysMatch = false;
         Long joinKeyHash = null;
-        if (canMatchJoinKeys(source, trigger)) {
+        if (canMatchJoinKeys(source, trigger, attributionType)) {
             // Attempted to match, so assigning a non-null value to emit metric
             joinKeyHash = 0L;
             if (source.getDebugJoinKey().equals(trigger.getDebugJoinKey())) {
@@ -390,6 +396,18 @@ public class DebugKeyAccessor {
             triggerDebugKey = trigger.getDebugKey();
         }
         return new Pair<>(sourceDebugKey, triggerDebugKey);
+    }
+
+    private boolean checkSourceAndTriggerPermissions(
+            Source source, Trigger trigger, int attributionType) {
+        if (attributionType == AttributionType.SOURCE_WEB_TRIGGER_WEB) {
+            return source.hasArDebugPermission() && trigger.hasArDebugPermission();
+        } else if (attributionType == AttributionType.SOURCE_WEB_TRIGGER_APP) {
+            return source.hasArDebugPermission() && trigger.hasAdIdPermission();
+        } else if (attributionType == AttributionType.SOURCE_APP_TRIGGER_WEB) {
+            return source.hasAdIdPermission() && trigger.hasArDebugPermission();
+        }
+        return false;
     }
 
     private boolean isEnrollmentAllowedAdIdDebugging(Source source, Trigger trigger) {

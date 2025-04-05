@@ -21,6 +21,7 @@ import com.android.adservices.service.signals.evict.EvictionPriority;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorUtils;
 import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandler;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -63,7 +64,8 @@ public class AppendV1 extends Append {
             ByteBuffer key,
             JSONObject update,
             Map<ByteBuffer, Set<DBProtectedSignal>> current,
-            UpdateOutput toReturn)
+            UpdateOutput toReturn,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger)
             throws JSONException {
         UpdateProcessorUtils.touchKey(key, toReturn.getKeysTouched());
         int maxSignals = update.getInt(MAX_SIGNALS);
@@ -78,7 +80,9 @@ public class AppendV1 extends Append {
         deleteSignals(key, maxSignals, values, current, toReturn);
 
         // Add all the signals
-        EvictionPriority evictionPriority = mEvictionPriorityHandler.getEvictionPriority(update);
+        EvictionPriority evictionPriority =
+                mEvictionPriorityHandler.getEvictionPriority(
+                        key, update, updateSignalsProcessReportedLogger);
         addSignals(
                 UpdateProcessorUtils.getByteArrayFromBuffer(key),
                 values,

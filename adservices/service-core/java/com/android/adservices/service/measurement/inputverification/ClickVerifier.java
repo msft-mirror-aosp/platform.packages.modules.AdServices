@@ -30,6 +30,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementClickVerificationStats;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.auto.value.AutoValue;
@@ -50,7 +51,33 @@ public class ClickVerifier {
     @NonNull private LoadingCache<MotionEventWrapper, Long> mUnverifiedMotionEventsPreviouslyUsed;
     @NonNull private LoadingCache<KeyEventWrapper, Long> mUnverifiedKeyEventsPreviouslyUsed;
 
-    public ClickVerifier(Context context) {
+    // Lazy initialization holder class idiom for static fields as described in Effective Java Item
+    // 83 - this is needed because otherwise the singleton would be initialized in unit tests, even
+    // when they (correctly) call newInstance() instead of getInstance().
+    private static final class FieldHolder {
+        private static ClickVerifier sSingleton;
+
+        static {
+            sSingleton = new ClickVerifier(ApplicationContextSingleton.get());
+        }
+    }
+
+    /** Returns the singleton instance of the ClickVerifier. */
+    public static ClickVerifier getInstance() {
+        return FieldHolder.sSingleton;
+    }
+
+    /** Factory method - should only be used for tests. */
+    @VisibleForTesting
+    public static ClickVerifier createInstanceForTest(
+            @NonNull InputManager inputManager,
+            @NonNull Flags flags,
+            @NonNull AdServicesLogger adServicesLogger) {
+        FieldHolder.sSingleton = new ClickVerifier(inputManager, flags, adServicesLogger);
+        return FieldHolder.sSingleton;
+    }
+
+    private ClickVerifier(Context context) {
         mInputManager = context.getSystemService(InputManager.class);
         mFlags = FlagsFactory.getFlags();
         mAdServicesLogger = AdServicesLoggerImpl.getInstance();
@@ -97,8 +124,7 @@ public class ClickVerifier {
                                 });
     }
 
-    @VisibleForTesting
-    ClickVerifier(
+    private ClickVerifier(
             @NonNull InputManager inputManager,
             @NonNull Flags flags,
             @NonNull AdServicesLogger adServicesLogger) {

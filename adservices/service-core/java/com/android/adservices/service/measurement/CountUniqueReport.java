@@ -43,6 +43,7 @@ public class CountUniqueReport {
     private String mEnrollmentId;
     private Integer mContributionValue;
     private Long mContributionTime;
+    private Uri mRegistrant;
 
     @IntDef(
             value = {
@@ -70,6 +71,7 @@ public class CountUniqueReport {
         mEnrollmentId = null;
         mContributionValue = null;
         mContributionTime = null;
+        mRegistrant = null;
     }
 
     @Override
@@ -88,7 +90,8 @@ public class CountUniqueReport {
                 && mDebugReportStatus == countUniqueReport.mDebugReportStatus
                 && Objects.equals(mEnrollmentId, countUniqueReport.mEnrollmentId)
                 && Objects.equals(mContributionValue, countUniqueReport.mContributionValue)
-                && Objects.equals(mContributionTime, countUniqueReport.mContributionTime);
+                && Objects.equals(mContributionTime, countUniqueReport.mContributionTime)
+                && Objects.equals(mRegistrant, countUniqueReport.mRegistrant);
     }
 
     @Override
@@ -105,7 +108,8 @@ public class CountUniqueReport {
                 mDebugReportStatus,
                 mEnrollmentId,
                 mContributionValue,
-                mContributionTime);
+                mContributionTime,
+                mRegistrant);
     }
 
     /** Report id for the report */
@@ -168,6 +172,11 @@ public class CountUniqueReport {
     /** Timestamp at which contribution is made */
     public Long getContributionTime() {
         return mContributionTime;
+    }
+
+    /** Registrant used to store report */
+    public Uri getRegistrant() {
+        return mRegistrant;
     }
 
     public static class Builder {
@@ -247,6 +256,12 @@ public class CountUniqueReport {
         /** See {@link CountUniqueReport#getContributionTime()} */
         public Builder setContributionTime(@NonNull Long contributionTime) {
             mReport.mContributionTime = contributionTime;
+            return this;
+        }
+
+        /** See {@link CountUniqueReport#getRegistrant()} */
+        public Builder setRegistrant(@NonNull Uri registrant) {
+            mReport.mRegistrant = registrant;
             return this;
         }
 

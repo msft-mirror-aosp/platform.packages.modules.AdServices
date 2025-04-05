@@ -173,6 +173,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME =
             "measurement_null_agg_report_rate_excl_source_registration_time";
 
+    public static final String KEY_MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING =
+            "Measurement__enable_items_processed_per_job_logging";
+
     public static final String KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID =
             "measurement_max_length_of_trigger_context_id";
 
@@ -1507,6 +1510,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_COUNT_UNIQUE_MAX_CONTRIBUTION_LONG_WINDOW_MS =
             "MeasurementCountUnique__max_contribution_long_window_ms";
 
+    public static final String KEY_MEASUREMENT_COUNT_UNIQUE_AGGREGATION_COORDINATOR_ORIGIN =
+            "MeasurementCountUnique__aggregation_coordinator_origin";
+
     public static final String KEY_MEASUREMENT_COUNT_UNIQUE_REPORT_EXPIRY_MS =
             "MeasurementCountUnique__report_expiry_ms";
 
@@ -1720,6 +1726,10 @@ public final class FlagsConstants {
     /** Key for enabling adservices apis v2. */
     public static final String KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED =
             "adservices_consent_business_logic_migration_enabled";
+
+    /** Key for enabling adservices consent data migration apis. */
+    public static final String KEY_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED =
+            "Ui__adservices_consent_data_migration_enabled";
 
     /** Key for enabling R notification default consent fix. */
     public static final String KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED =

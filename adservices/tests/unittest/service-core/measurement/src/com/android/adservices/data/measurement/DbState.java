@@ -666,6 +666,7 @@ public class DbState {
                 .setContributionValue(cJSON.optInt("contribution_value"))
                 .setDebugReportStatus(cJSON.optInt("debug_report_status"))
                 .setEnrollmentId(cJSON.optString("enrollment_id"))
+                .setRegistrant(Uri.parse(cJSON.getString("registrant")))
                 .build();
     }
 

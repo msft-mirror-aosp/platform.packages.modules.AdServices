@@ -300,4 +300,7 @@ public interface AdServicesLogger {
 
     /** Logs stats for ReportingWithDestinationPerformedStats */
     void logReportingWithDestinationPerformedStats(ReportingWithDestinationPerformedStats stats);
+
+    /** Logs prod debug enabled stats. */
+    void logProdDebugEnabledStats(ProdDebugEnabledStats stats);
 }

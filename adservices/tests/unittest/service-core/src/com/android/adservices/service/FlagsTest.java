@@ -95,12 +95,14 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEBUG_JOIN_KEYS_NONCOMPLIANT_ADTECHS_SAMPLE_RATE;
+import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
@@ -477,6 +479,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementMaxLengthPerBudgetName()",
                 MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME,
                 Flags::getMeasurementMaxLengthPerBudgetName);
+    }
+
+    @Test
+    public void testGetMeasurementEnableItemsProcessedPerJobLogging() {
+        testFlag(
+                "getMeasurementEnableItemsProcessedPerJobLogging()",
+                MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING,
+                Flags::getMeasurementEnableItemsProcessedPerJobLogging);
     }
 
     @Test
@@ -919,6 +929,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetAdServicesConsentDataMigrationEnabled() {
+        testFeatureFlag(
+                "DEFAULT_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED",
+                Flags::getAdServicesConsentDataMigrationEnabled);
+    }
+
+    @Test
     public void testGetMeasurementMaxReinstallReattributionWindowSeconds() {
         testFlag(
                 "getMeasurementMaxReinstallReattributionWindowSeconds",
@@ -1191,6 +1208,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementCountUniqueAppAllowlist",
                 DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST,
                 Flags::getMeasurementCountUniqueAppAllowlist);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueAggregationCoordinatorOrigin() {
+        testFlag(
+                "getMeasurementCountUniqueAggregationCoordinatorOrigin",
+                MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
+                Flags::getMeasurementCountUniqueAggregationCoordinatorOrigin);
     }
 
     @Test

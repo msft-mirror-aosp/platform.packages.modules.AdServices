@@ -98,7 +98,7 @@ import com.android.adservices.service.stats.NoOpLoggerImpl;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelperImpl;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLoggerImpl;
-import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerImpl;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerFactory;
 import com.android.adservices.shared.testing.BroadcastReceiverSyncCallback;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
@@ -109,6 +109,7 @@ import com.android.adservices.shared.testing.concurrency.SimpleSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import com.google.common.collect.ImmutableList;
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.RecordedRequest;
@@ -191,7 +192,7 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
     private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     private ProtectedSignalsServiceImpl mProtectedSignalsService;
     @Mock private ConsentManager mConsentManagerMock;
-    @Mock private UpdateSignalsProcessReportedLoggerImpl mUpdateSignalsProcessReportedLoggerMock;
+
     private ProtectedSignalsDao mProtectedSignalsDao;
     @Mock ForcedEncoder mForcedEncoder;
 
@@ -276,7 +277,12 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                                                 /* isCompletionBroadcastEnabled= */ true,
                                                 mForcedEncoder,
                                                 false),
-                                        new SignalEvictionController(),
+                                        new SignalEvictionController(
+                                                ImmutableList.of(),
+                                                mFakeFlags
+                                                        .getProtectedSignalsMaxSignalSizePerBuyerBytes(),
+                                                mFakeFlags
+                                                        .getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes()),
                                         mForcedEncoder),
                                 new AdTechUriValidator(
                                         "caller",
@@ -306,7 +312,8 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                                 new FledgeApiThrottleFilter(
                                         Throttler.newInstance(mMockFlags), logger)),
                         EnrollmentDao.getInstance(),
-                        mUpdateSignalsProcessReportedLoggerMock);
+                        new UpdateSignalsProcessReportedLoggerFactory(
+                                /* pasProductMetricsV1Enabled= */ false));
         when(mConsentManagerMock.isPasConsentGiven()).thenReturn(true);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(false);

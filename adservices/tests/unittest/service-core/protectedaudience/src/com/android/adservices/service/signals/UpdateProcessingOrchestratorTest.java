@@ -44,7 +44,6 @@ import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithE
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
-import com.android.adservices.service.signals.evict.FifoSignalEvictor;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessor;
@@ -54,6 +53,8 @@ import com.android.adservices.service.signals.updateprocessors.updateencoder.Upd
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+
+import com.google.common.collect.ImmutableList;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -152,7 +153,7 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
         when(mUpdateProcessorSelectorMock.getUpdateProcessor(
                         TEST_PROCESSOR, mFakeFlags.getProtectedSignalsUpdateSchemaVersion()))
                 .thenReturn(
-                        (updates, current) -> {
+                        (updates, current, logger) -> {
                             throw exception;
                         });
 
@@ -439,6 +440,8 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                                 mUpdateSignalsApiCalledStats,
                                 mUpdateSignalsProcessReportedLoggerMock));
         verifyNoMoreInteractions(mSignalEvictionControllerMock, mForcedEncoderMock);
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setSignalUpdateSchemaVersion(mFakeFlags.getProtectedSignalsUpdateSchemaVersion());
         assertEquals(
                 JSON_PROCESSING_STATUS_SEMANTIC_ERROR,
                 mUpdateSignalsApiCalledStats.build().getJsonProcessingStatus());
@@ -576,10 +579,10 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
 
         SignalEvictionController signalEvictionController =
                 new SignalEvictionController(
-                        List.of(new FifoSignalEvictor()),
                         mFakeFlags.getProtectedSignalsMaxSignalSizePerBuyerBytes(),
                         mFakeFlags
-                                .getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes()) {
+                                .getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes(),
+                        mFakeFlags.getProtectedSignalsEnablePrioritizedEviction()) {
                     @Override
                     public void evict(
                             AdTechIdentifier adTech,
@@ -616,6 +619,39 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
         verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(ADTECH);
     }
 
+    @Test
+    public void testUpdatesProcessor_shouldRecord() throws Exception {
+        int schemaVersion = mFakeFlags.getProtectedSignalsUpdateSchemaVersion();
+        JSONObject json = new JSONObject();
+        json.put(TEST_PROCESSOR, new JSONObject());
+        SignalUpdates signalUpdates =
+                SignalUpdates.builder()
+                        .setUpdateJson(json)
+                        .setUpdateSchemaVersion(schemaVersion)
+                        .build();
+        when(mProtectedSignalsDaoMock.getSignalsByBuyer(any())).thenReturn(Collections.emptyList());
+        UpdateOutput toReturn = new UpdateOutput();
+        toReturn.getKeysTouched()
+                .addAll(ImmutableList.of(ByteBuffer.wrap(KEY_1), ByteBuffer.wrap(KEY_2)));
+        toReturn.getToAdd().add(DBProtectedSignal.builder().setKey(KEY_1).setValue(VALUE));
+        toReturn.getToRemove().add(createSignal(KEY_2, VALUE));
+        when(mUpdateProcessorSelectorMock.getUpdateProcessor(TEST_PROCESSOR, schemaVersion))
+                .thenReturn(createFakeProcessor(toReturn));
+
+        mUpdateProcessingOrchestrator.processUpdates(
+                ADTECH,
+                PACKAGE,
+                NOW,
+                signalUpdates,
+                DEV_CONTEXT,
+                /* jsonProcessingStatsBuilder= */ null,
+                mUpdateSignalsProcessReportedLoggerMock);
+
+        verify(mUpdateSignalsProcessReportedLoggerMock).setSignalsWrittenAndValuesCount(2);
+        verify(mUpdateSignalsProcessReportedLoggerMock).setKeysStoredCount(2);
+        verify(mUpdateSignalsProcessReportedLoggerMock).setSignalUpdateSchemaVersion(schemaVersion);
+    }
+
     private DBProtectedSignal createSignal(byte[] key, byte[] value) {
         return DBProtectedSignal.builder()
                 .setBuyer(ADTECH)
@@ -638,7 +674,7 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
     }
 
     private UpdateProcessor createFakeProcessor(UpdateOutput toReturn) {
-        return (updates, current) -> toReturn;
+        return (updates, current, logger) -> toReturn;
     }
 
     private void assertUpdateOutputEquals(UpdateOutput expect, UpdateOutput actual) {

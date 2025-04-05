@@ -20,6 +20,7 @@ import android.adservices.common.AdServicesOutcomeReceiver;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
+import android.os.Trace;
 import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 import android.view.InputDevice;
@@ -34,10 +35,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Scenario
 @RunWith(JUnit4.class)
 public class CallRegisterSource extends AbstractTestAction {
+    AtomicInteger mCookieGenerator = new AtomicInteger();
 
     @Test
     public void registerSourceView() {
@@ -68,6 +71,17 @@ public class CallRegisterSource extends AbstractTestAction {
     private void runRegisterSource(@Nullable MotionEvent clickEvent) {
         final String path = SERVER_BASE_URI + ":" + DEFAULT_PORT + SOURCE_PATH;
 
+        int cookie = mCookieGenerator.getAndIncrement();
+        // TODO(b/407757222): Migrate to RbATrace after the flag rollout.
+        final String metricSuffix;
+        if (clickEvent == null) {
+            metricSuffix = "_view";
+        } else {
+            metricSuffix = "_click";
+        }
+
+        Trace.beginAsyncSection("Test_CallRegisterSource#runRegisterSource" + metricSuffix, cookie);
+
         Stopwatch timer = Stopwatch.createStarted();
         MEASUREMENT_MANAGER.registerSource(
                 Uri.parse(path),
@@ -84,6 +98,9 @@ public class CallRegisterSource extends AbstractTestAction {
                                                 .formatted(
                                                         timer.elapsed(TimeUnit.MILLISECONDS),
                                                         sdkOption.get())));
+                        // TODO(b/407757222): Migrate to RbATrace after the flag rollout.
+                        Trace.endAsyncSection(
+                                "Test_CallRegisterSource#runRegisterSource" + metricSuffix, cookie);
                     }
 
                     @Override
@@ -97,6 +114,9 @@ public class CallRegisterSource extends AbstractTestAction {
                                                         timer.elapsed(TimeUnit.MILLISECONDS),
                                                         sdkOption.get(),
                                                         error.getMessage())));
+                        // TODO(b/407757222): Migrate to RbATrace after the flag rollout.
+                        Trace.endAsyncSection(
+                                "Test_CallRegisterSource#runRegisterSource" + metricSuffix, cookie);
                     }
                 });
     }

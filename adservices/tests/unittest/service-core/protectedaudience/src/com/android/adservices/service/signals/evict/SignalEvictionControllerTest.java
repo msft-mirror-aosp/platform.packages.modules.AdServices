@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.signals.evict;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_FIFO;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_PRIORITIZED_FIFO;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_UNSPECIFIED;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.verify;
@@ -24,69 +28,126 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.util.List;
 
-public class SignalEvictionControllerTest {
-    @Rule public MockitoRule rule = MockitoJUnit.rule();
-    @Mock private SignalEvictor mSignalEvictorMock1;
-    @Mock private SignalEvictor mSignalEvictorMock2;
-    @Mock private SignalEvictor mSignalEvictorMock3;
+@RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
+public class SignalEvictionControllerTest extends AdServicesMockitoTestCase {
+    @Mock private SignalEvictor mSignalEvictorMock;
+    @Mock private FifoSignalEvictor mFifoSignalEvictorMock;
+    @Mock private PrioritizedFifoSignalEvictor mPrioritizedFifoSignalEvictorMock;
     @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
     private SignalEvictionController mController;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
         mController =
                 new SignalEvictionController(
-                        List.of(mSignalEvictorMock1, mSignalEvictorMock2, mSignalEvictorMock3),
-                        100,
-                        200);
+                        List.of(
+                                mSignalEvictorMock,
+                                mFifoSignalEvictorMock,
+                                mPrioritizedFifoSignalEvictorMock),
+                        /* maxAllowedSignalSize= */ 100,
+                        /* maxAllowedSignalSizeWithOversubscription= */ 200);
     }
 
     @Test
-    public void evict_3Evictor_firstReturnFalse() {
-        when(mSignalEvictorMock1.evict(any(), any(), any(), anyInt(), anyInt(), any()))
+    public void evict_3Evictor_mSignalEvictorMockReturnFalse() {
+        when(mSignalEvictorMock.evict(any(), any(), any(), anyInt(), anyInt(), any()))
                 .thenReturn(false);
 
         mController.evict(
                 CommonFixture.VALID_BUYER_1,
-                List.of(),
+                /* updatedSignals= */ List.of(),
                 new UpdateOutput(),
                 mUpdateSignalsProcessReportedLoggerMock);
 
-        verify(mSignalEvictorMock1).evict(any(), any(), any(), anyInt(), anyInt(), any());
-        verifyNoMoreInteractions(mSignalEvictorMock2, mSignalEvictorMock3);
+        verify(mSignalEvictorMock).evict(any(), any(), any(), anyInt(), anyInt(), any());
+        verifyNoMoreInteractions(
+                mFifoSignalEvictorMock,
+                mPrioritizedFifoSignalEvictorMock,
+                mUpdateSignalsProcessReportedLoggerMock);
     }
 
     @Test
-    public void evict_3Evictor_firstReturnTrueAndSecondReturnFalse() {
-        when(mSignalEvictorMock1.evict(any(), any(), any(), anyInt(), anyInt(), any()))
+    public void evict_3Evictor_mFifoSignalEvictorMockReturnFalse() {
+        when(mSignalEvictorMock.evict(any(), any(), any(), anyInt(), anyInt(), any()))
                 .thenReturn(true);
-        when(mSignalEvictorMock2.evict(any(), any(), any(), anyInt(), anyInt(), any()))
+        when(mFifoSignalEvictorMock.evict(any(), any(), any(), anyInt(), anyInt(), any()))
                 .thenReturn(false);
 
         mController.evict(
                 CommonFixture.VALID_BUYER_1,
-                List.of(),
+                /* updatedSignals= */ List.of(),
                 new UpdateOutput(),
                 mUpdateSignalsProcessReportedLoggerMock);
 
-        verify(mSignalEvictorMock1).evict(any(), any(), any(), anyInt(), anyInt(), any());
-        verify(mSignalEvictorMock2).evict(any(), any(), any(), anyInt(), anyInt(), any());
-        verifyNoMoreInteractions(mSignalEvictorMock3);
+        verify(mSignalEvictorMock).evict(any(), any(), any(), anyInt(), anyInt(), any());
+        verify(mFifoSignalEvictorMock).evict(any(), any(), any(), anyInt(), anyInt(), any());
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .addSignalEvictorUsed(SIGNAL_EVICTOR_UNSPECIFIED);
+        verifyNoMoreInteractions(mPrioritizedFifoSignalEvictorMock);
+    }
+
+    @Test
+    public void evict_3Evictor_mPrioritizedFifoSignalEvictorMockReturnFalse() {
+        when(mSignalEvictorMock.evict(any(), any(), any(), anyInt(), anyInt(), any()))
+                .thenReturn(true);
+        when(mFifoSignalEvictorMock.evict(any(), any(), any(), anyInt(), anyInt(), any()))
+                .thenReturn(true);
+        when(mPrioritizedFifoSignalEvictorMock.evict(
+                        any(), any(), any(), anyInt(), anyInt(), any()))
+                .thenReturn(false);
+
+        mController.evict(
+                CommonFixture.VALID_BUYER_1,
+                /* updatedSignals= */ List.of(),
+                new UpdateOutput(),
+                mUpdateSignalsProcessReportedLoggerMock);
+
+        verify(mSignalEvictorMock).evict(any(), any(), any(), anyInt(), anyInt(), any());
+        verify(mFifoSignalEvictorMock).evict(any(), any(), any(), anyInt(), anyInt(), any());
+        verify(mPrioritizedFifoSignalEvictorMock)
+                .evict(any(), any(), any(), anyInt(), anyInt(), any());
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .addSignalEvictorUsed(SIGNAL_EVICTOR_UNSPECIFIED);
+        verify(mUpdateSignalsProcessReportedLoggerMock).addSignalEvictorUsed(SIGNAL_EVICTOR_FIFO);
+        verifyNoMoreInteractions(mUpdateSignalsProcessReportedLoggerMock);
+    }
+
+    @Test
+    public void evict_3Evictor_usedAllEvictors() {
+        when(mSignalEvictorMock.evict(any(), any(), any(), anyInt(), anyInt(), any()))
+                .thenReturn(true);
+        when(mFifoSignalEvictorMock.evict(any(), any(), any(), anyInt(), anyInt(), any()))
+                .thenReturn(true);
+        when(mPrioritizedFifoSignalEvictorMock.evict(
+                        any(), any(), any(), anyInt(), anyInt(), any()))
+                .thenReturn(true);
+
+        mController.evict(
+                CommonFixture.VALID_BUYER_1,
+                /* updatedSignals= */ List.of(),
+                new UpdateOutput(),
+                mUpdateSignalsProcessReportedLoggerMock);
+
+        verify(mSignalEvictorMock).evict(any(), any(), any(), anyInt(), anyInt(), any());
+        verify(mFifoSignalEvictorMock).evict(any(), any(), any(), anyInt(), anyInt(), any());
+        verify(mPrioritizedFifoSignalEvictorMock)
+                .evict(any(), any(), any(), anyInt(), anyInt(), any());
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .addSignalEvictorUsed(SIGNAL_EVICTOR_UNSPECIFIED);
+        verify(mUpdateSignalsProcessReportedLoggerMock).addSignalEvictorUsed(SIGNAL_EVICTOR_FIFO);
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .addSignalEvictorUsed(SIGNAL_EVICTOR_PRIORITIZED_FIFO);
+        verifyNoMoreInteractions(mUpdateSignalsProcessReportedLoggerMock);
     }
 }

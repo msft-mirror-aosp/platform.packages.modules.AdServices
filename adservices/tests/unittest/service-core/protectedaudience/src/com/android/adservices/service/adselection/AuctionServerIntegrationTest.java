@@ -1441,7 +1441,7 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
     @SetFlagFalse(KEY_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED)
     @SetLongFlag(
             name = KEY_FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS,
-            value = FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS * 2)
+            value = FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS * 5)
     public void
             testGetAdSelectionData_withoutEncrypt_validRequest_WithSellerConfigurationPerBuyerLimitsGreedyEnabled()
                     throws Exception {

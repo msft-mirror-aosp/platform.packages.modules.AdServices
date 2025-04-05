@@ -16,41 +16,47 @@
 
 package com.android.adservices.service.signals.evict;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_FIFO;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_PRIORITIZED_FIFO;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_UNSPECIFIED;
+
 import android.adservices.common.AdTechIdentifier;
+
+import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.signals.DBProtectedSignal;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
-import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.common.collect.ImmutableList;
 
 import java.util.List;
 
 /** Controller to run a series of {@link SignalEvictor}s in a water fall modal. */
 public class SignalEvictionController {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-
-    private final List<SignalEvictor> mSignalEvictors;
     private final int mMaxAllowedSignalSize;
     private final int mMaxAllowedSignalSizeWithOversubscription;
+    private final List<SignalEvictor> mSignalEvictors;
+
+    public SignalEvictionController(
+            int maxAllowedSignalSize,
+            int maxAllowedSignalSizeWithOversubscription,
+            boolean enablePrioritizedEviction) {
+        mMaxAllowedSignalSize = maxAllowedSignalSize;
+        mMaxAllowedSignalSizeWithOversubscription = maxAllowedSignalSizeWithOversubscription;
+        mSignalEvictors = getSignalEvictors(enablePrioritizedEviction);
+    }
 
     @VisibleForTesting
     public SignalEvictionController(
-            List<SignalEvictor> signalEvictors,
+            List<SignalEvictor> evictors,
             int maxAllowedSignalSize,
             int maxAllowedSignalSizeWithOversubscription) {
-        mSignalEvictors = signalEvictors;
+        mSignalEvictors = evictors;
         mMaxAllowedSignalSize = maxAllowedSignalSize;
         mMaxAllowedSignalSizeWithOversubscription = maxAllowedSignalSizeWithOversubscription;
-    }
-
-    public SignalEvictionController() {
-        this(
-                List.of(new FifoSignalEvictor()),
-                FlagsFactory.getFlags().getProtectedSignalsMaxSignalSizePerBuyerBytes(),
-                FlagsFactory.getFlags()
-                        .getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes());
     }
 
     /**
@@ -74,6 +80,28 @@ public class SignalEvictionController {
                 sLogger.v("Eviction finished.");
                 break;
             }
+
+            // Logs the evictor that did the exact eviction.
+            // On the other hand, if the eviction did not happen, do not log the evictor.
+            updateSignalsProcessReportedLogger.addSignalEvictorUsed(getEvictorType(evictor));
         }
+    }
+
+    private static List<SignalEvictor> getSignalEvictors(boolean enablePrioritizedEviction) {
+        if (enablePrioritizedEviction) {
+            return ImmutableList.of(new PrioritizedFifoSignalEvictor());
+        } else {
+            return ImmutableList.of(new FifoSignalEvictor());
+        }
+    }
+
+    private static int getEvictorType(SignalEvictor evictor) {
+        if (evictor instanceof FifoSignalEvictor) {
+            return SIGNAL_EVICTOR_FIFO;
+        }
+        if (evictor instanceof PrioritizedFifoSignalEvictor) {
+            return SIGNAL_EVICTOR_PRIORITIZED_FIFO;
+        }
+        return SIGNAL_EVICTOR_UNSPECIFIED;
     }
 }

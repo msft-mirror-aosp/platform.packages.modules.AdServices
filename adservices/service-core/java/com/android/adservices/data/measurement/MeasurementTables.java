@@ -361,6 +361,7 @@ public final class MeasurementTables {
         String ENROLLMENT_ID = "enrollment_id";
         String CONTRIBUTION_VALUE = "contribution_value";
         String CONTRIBUTION_TIME = "contribution_time";
+        String REGISTRANT = "registrant";
     }
 
     /** Contract for Count Unique API Metadata */
@@ -371,6 +372,7 @@ public final class MeasurementTables {
         String KEY = "key";
         String VALUE = "value";
         String EXPIRATION_TIME = "expiration_time";
+        String REGISTRANT = "registrant";
     }
 
     public static final String CREATE_TABLE_ASYNC_REGISTRATION_V6 =
@@ -1573,6 +1575,8 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + CountUniqueReportingContract.CONTRIBUTION_TIME
                     + " INTEGER, "
+                    + CountUniqueReportingContract.REGISTRANT
+                    + " TEXT, "
                     + "PRIMARY KEY("
                     + CountUniqueReportingContract.REPORT_ID
                     + "))";
@@ -1589,6 +1593,8 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + MeasurementTables.CountUniqueMetadataContract.EXPIRATION_TIME
                     + " INTEGER, "
+                    + MeasurementTables.CountUniqueMetadataContract.REGISTRANT
+                    + " TEXT, "
                     + "PRIMARY KEY ("
                     + MeasurementTables.CountUniqueMetadataContract.KEY
                     + ", "

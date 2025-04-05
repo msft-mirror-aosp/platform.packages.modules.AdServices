@@ -18,6 +18,7 @@ package com.android.adservices.service;
 
 import static com.android.adservices.service.DeviceConfigFlagsHelper.getDeviceConfigFlag;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_CEL_SAMPLING_CONFIG;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG;
@@ -4020,6 +4021,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public String getMeasurementCountUniqueAggregationCoordinatorOrigin() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_AGGREGATION_COORDINATOR_ORIGIN,
+                getMeasurementDefaultAggregationCoordinatorOrigin());
+    }
+
+    @Override
     public long getMeasurementCountUniqueReportExpiry() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_REPORT_EXPIRY_MS,
@@ -4114,6 +4122,9 @@ public final class PhFlags implements Flags {
         uxMap.put(
                 KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED,
                 getAdServicesConsentBusinessLogicMigrationEnabled());
+        uxMap.put(
+                KEY_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED,
+                getAdServicesConsentDataMigrationEnabled());
         return uxMap;
     }
 
@@ -4691,6 +4702,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME,
                 MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME);
+    }
+
+    @Override
+    public boolean getMeasurementEnableItemsProcessedPerJobLogging() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING,
+                MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING);
     }
 
     @Override
@@ -5385,5 +5403,12 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY,
                 DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY);
+    }
+
+    @Override
+    public boolean getAdServicesConsentDataMigrationEnabled() {
+        return getDeviceConfigFlag(
+                KEY_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED,
+                DEFAULT_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED);
     }
 }
