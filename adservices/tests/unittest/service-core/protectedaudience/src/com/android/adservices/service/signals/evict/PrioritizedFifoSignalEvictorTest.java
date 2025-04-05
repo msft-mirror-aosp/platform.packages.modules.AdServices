@@ -24,9 +24,13 @@ import static com.android.adservices.service.signals.SignalsFixture.KEY_1;
 import static com.android.adservices.service.signals.SignalsFixture.KEY_2;
 import static com.android.adservices.service.signals.SignalsFixture.VALUE_1;
 import static com.android.adservices.service.signals.SignalsFixture.VALUE_2;
+import static com.android.adservices.service.signals.evict.EvictionPriority.DEFAULT;
+import static com.android.adservices.service.signals.evict.EvictionPriority.EVICT_LATER;
+import static com.android.adservices.service.signals.evict.EvictionPriority.EVICT_SOONER;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
@@ -39,34 +43,37 @@ import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeast
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
 public class PrioritizedFifoSignalEvictorTest extends AdServicesMockitoTestCase {
     @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
 
+    private ArgumentCaptor<EvictionPriority> mEvictedPriorityCaptor;
+
     PrioritizedFifoSignalEvictor mPrioritizedFifoSignalEvictor = new PrioritizedFifoSignalEvictor();
+
+    @Before
+    public void setUp() {
+        mEvictedPriorityCaptor = ArgumentCaptor.forClass(EvictionPriority.class);
+    }
 
     @Test
     public void testEvict_lowerPriorityCreatedEarlier_evictedFirst() {
         DBProtectedSignal lowerPriorityCreatedEarlier =
                 SignalsFixture.createSignal(
-                        KEY_1,
-                        VALUE_1,
-                        ID_1,
-                        Instant.ofEpochMilli(100L),
-                        EvictionPriority.EVICT_SOONER);
+                        KEY_1, VALUE_1, ID_1, Instant.ofEpochMilli(100L), EVICT_SOONER);
         DBProtectedSignal higherPriorityCreatedLater =
                 SignalsFixture.createSignal(
-                        KEY_2,
-                        VALUE_2,
-                        ID_2,
-                        Instant.ofEpochMilli(200L),
-                        EvictionPriority.EVICT_LATER);
+                        KEY_2, VALUE_2, ID_2, Instant.ofEpochMilli(200L), EVICT_LATER);
 
         List<DBProtectedSignal> signals =
                 Lists.newArrayList(lowerPriorityCreatedEarlier, higherPriorityCreatedLater);
@@ -89,28 +96,22 @@ public class PrioritizedFifoSignalEvictorTest extends AdServicesMockitoTestCase 
         List<DBProtectedSignal> expectedSignalsAfterEviction =
                 ImmutableList.of(higherPriorityCreatedLater);
         verifyUpdateSignalsProcessReportedLoggerArguments(
-                1,
+                /* evictionRulesCount= */ 1,
                 SignalSizeCalculator.calculate(expectedSignalsAfterEviction),
                 SignalSizeCalculator.maxSignalsSizeBytes(expectedSignalsAfterEviction),
-                SignalSizeCalculator.minSignalsSizeBytes(expectedSignalsAfterEviction));
+                SignalSizeCalculator.minSignalsSizeBytes(expectedSignalsAfterEviction),
+                /* evictedSignalsPriorities= */ Set.of(EVICT_SOONER),
+                SignalSizeCalculator.calculate(lowerPriorityCreatedEarlier));
     }
 
     @Test
     public void testEvict_lowerPriorityCreatedLater_evictedFirst() {
         DBProtectedSignal lowerPriorityCreatedLater =
                 SignalsFixture.createSignal(
-                        KEY_1,
-                        VALUE_1,
-                        ID_1,
-                        Instant.ofEpochMilli(200L),
-                        EvictionPriority.EVICT_SOONER);
+                        KEY_1, VALUE_1, ID_1, Instant.ofEpochMilli(200L), EVICT_SOONER);
         DBProtectedSignal higherPriorityCreatedEarlier =
                 SignalsFixture.createSignal(
-                        KEY_2,
-                        VALUE_2,
-                        ID_2,
-                        Instant.ofEpochMilli(100L),
-                        EvictionPriority.EVICT_LATER);
+                        KEY_2, VALUE_2, ID_2, Instant.ofEpochMilli(100L), EVICT_LATER);
 
         List<DBProtectedSignal> signals =
                 Lists.newArrayList(lowerPriorityCreatedLater, higherPriorityCreatedEarlier);
@@ -133,28 +134,22 @@ public class PrioritizedFifoSignalEvictorTest extends AdServicesMockitoTestCase 
         List<DBProtectedSignal> expectedSignalsAfterEviction =
                 ImmutableList.of(higherPriorityCreatedEarlier);
         verifyUpdateSignalsProcessReportedLoggerArguments(
-                1,
+                /* evictionRulesCount= */ 1,
                 SignalSizeCalculator.calculate(expectedSignalsAfterEviction),
                 SignalSizeCalculator.maxSignalsSizeBytes(expectedSignalsAfterEviction),
-                SignalSizeCalculator.minSignalsSizeBytes(expectedSignalsAfterEviction));
+                SignalSizeCalculator.minSignalsSizeBytes(expectedSignalsAfterEviction),
+                /* evictedSignalsPriorities= */ Set.of(EVICT_SOONER),
+                SignalSizeCalculator.calculate(lowerPriorityCreatedLater));
     }
 
     @Test
     public void testEvict_samePriorityCreatedEarlier_evictedFirst() {
         DBProtectedSignal samePriorityCreatedEarlier =
                 SignalsFixture.createSignal(
-                        KEY_1,
-                        VALUE_1,
-                        ID_1,
-                        Instant.ofEpochMilli(100L),
-                        EvictionPriority.EVICT_SOONER);
+                        KEY_1, VALUE_1, ID_1, Instant.ofEpochMilli(100L), EVICT_SOONER);
         DBProtectedSignal samePriorityCreatedLater =
                 SignalsFixture.createSignal(
-                        KEY_2,
-                        VALUE_2,
-                        ID_2,
-                        Instant.ofEpochMilli(200L),
-                        EvictionPriority.EVICT_SOONER);
+                        KEY_2, VALUE_2, ID_2, Instant.ofEpochMilli(200L), EVICT_SOONER);
 
         List<DBProtectedSignal> signals =
                 Lists.newArrayList(samePriorityCreatedEarlier, samePriorityCreatedLater);
@@ -177,21 +172,63 @@ public class PrioritizedFifoSignalEvictorTest extends AdServicesMockitoTestCase 
         List<DBProtectedSignal> expectedSignalsAfterEviction =
                 ImmutableList.of(samePriorityCreatedLater);
         verifyUpdateSignalsProcessReportedLoggerArguments(
-                1,
+                /* evictionRulesCount= */ 1,
                 SignalSizeCalculator.calculate(expectedSignalsAfterEviction),
                 SignalSizeCalculator.maxSignalsSizeBytes(expectedSignalsAfterEviction),
-                SignalSizeCalculator.minSignalsSizeBytes(expectedSignalsAfterEviction));
+                SignalSizeCalculator.minSignalsSizeBytes(expectedSignalsAfterEviction),
+                /* evictedSignalsPriorities= */ Set.of(EVICT_SOONER),
+                SignalSizeCalculator.calculate(samePriorityCreatedEarlier));
+    }
+
+    @Test
+    public void testEvict_evictedMultipleSignals() {
+        DBProtectedSignal defaultPriorityCreatedEarlier =
+                SignalsFixture.createSignal(
+                        KEY_1, VALUE_1, ID_1, Instant.ofEpochMilli(100L), EVICT_SOONER);
+        DBProtectedSignal defaultPriorityCreatedLater =
+                SignalsFixture.createSignal(
+                        KEY_2, VALUE_2, ID_2, Instant.ofEpochMilli(200L), DEFAULT);
+        DBProtectedSignal laterPriorityCreatedEarlier =
+                SignalsFixture.createSignal(
+                        KEY_2, VALUE_2, ID_2, Instant.ofEpochMilli(100L), EVICT_LATER);
+
+        UpdateOutput updateOutput = new UpdateOutput();
+
+        assertWithMessage("Eviction result")
+                .that(
+                        mPrioritizedFifoSignalEvictor.evict(
+                                VALID_BUYER_1,
+                                Lists.newArrayList(
+                                        defaultPriorityCreatedEarlier,
+                                        defaultPriorityCreatedLater,
+                                        laterPriorityCreatedEarlier),
+                                updateOutput,
+                                SignalSizeCalculator.calculate(laterPriorityCreatedEarlier) + 1,
+                                SignalSizeCalculator.calculate(laterPriorityCreatedEarlier) + 1,
+                                mUpdateSignalsProcessReportedLoggerMock))
+                .isTrue();
+
+        List<DBProtectedSignal> expectedSignalsAfterEviction =
+                ImmutableList.of(laterPriorityCreatedEarlier);
+        List<DBProtectedSignal> evictedSignals =
+                ImmutableList.of(defaultPriorityCreatedEarlier, defaultPriorityCreatedLater);
+        expect.withMessage("toRemove")
+                .that(updateOutput.getToRemove())
+                .containsExactlyElementsIn(evictedSignals);
+        verifyUpdateSignalsProcessReportedLoggerArguments(
+                /* evictionRulesCount= */ 2,
+                SignalSizeCalculator.calculate(expectedSignalsAfterEviction),
+                SignalSizeCalculator.maxSignalsSizeBytes(expectedSignalsAfterEviction),
+                SignalSizeCalculator.minSignalsSizeBytes(expectedSignalsAfterEviction),
+                /* evictedSignalsPriorities= */ Set.of(EVICT_SOONER, DEFAULT),
+                SignalSizeCalculator.calculate(evictedSignals));
     }
 
     @Test
     public void testEvict_signalSizeBelowMax_isNotEvicted() {
         DBProtectedSignal signal =
                 SignalsFixture.createSignal(
-                        KEY_1,
-                        VALUE_1,
-                        ID_1,
-                        Instant.ofEpochMilli(200L),
-                        EvictionPriority.EVICT_SOONER);
+                        KEY_1, VALUE_1, ID_1, Instant.ofEpochMilli(200L), EVICT_SOONER);
         int signalSize = SignalSizeCalculator.calculate(signal);
 
         List<DBProtectedSignal> signals = Lists.newArrayList(signal);
@@ -210,21 +247,19 @@ public class PrioritizedFifoSignalEvictorTest extends AdServicesMockitoTestCase 
 
         expect.withMessage("toRemove").that(updateOutput.getToRemove()).isEmpty();
         verifyUpdateSignalsProcessReportedLoggerArguments(
-                0,
+                /* evictionRulesCount= */ 0,
                 signalSize,
                 SignalSizeCalculator.maxSignalsSizeBytes(signals),
-                SignalSizeCalculator.minSignalsSizeBytes(signals));
+                SignalSizeCalculator.minSignalsSizeBytes(signals),
+                /* evictedSignalsPriorities= */ Set.of(),
+                /* evictedSignalSize= */ 0);
     }
 
     @Test
     public void testEvict_signalSizeBetweenMaxAndOversubscribe_isNotEvicted() {
         DBProtectedSignal signal =
                 SignalsFixture.createSignal(
-                        KEY_1,
-                        VALUE_1,
-                        ID_1,
-                        Instant.ofEpochMilli(200L),
-                        EvictionPriority.EVICT_SOONER);
+                        KEY_1, VALUE_1, ID_1, Instant.ofEpochMilli(200L), EVICT_SOONER);
         int signalSize = SignalSizeCalculator.calculate(signal);
 
         List<DBProtectedSignal> signals = Lists.newArrayList(signal);
@@ -243,23 +278,33 @@ public class PrioritizedFifoSignalEvictorTest extends AdServicesMockitoTestCase 
 
         expect.withMessage("toRemove").that(updateOutput.getToRemove()).isEmpty();
         verifyUpdateSignalsProcessReportedLoggerArguments(
-                0,
+                /* evictionRulesCount= */ 0,
                 signalSize,
                 SignalSizeCalculator.maxSignalsSizeBytes(signals),
-                SignalSizeCalculator.minSignalsSizeBytes(signals));
+                SignalSizeCalculator.minSignalsSizeBytes(signals),
+                /* evictedSignalsPriorities= */ Set.of(),
+                /* evictedSignalSize= */ 0);
     }
 
-    // TODO: b/402995096 - Verify new eviction metrics are set here once available.
     private void verifyUpdateSignalsProcessReportedLoggerArguments(
             int evictionRulesCount,
             int perBuyerSignalSize,
             float maxRawProtectedSignalsSizeBytes,
-            float minRawProtectedSignalsSizeBytes) {
+            float minRawProtectedSignalsSizeBytes,
+            Set<EvictionPriority> evictedSignalsPriorities,
+            int evictedSignalSize) {
         verify(mUpdateSignalsProcessReportedLoggerMock).setEvictionRulesCount(evictionRulesCount);
         verify(mUpdateSignalsProcessReportedLoggerMock).setPerBuyerSignalSize(perBuyerSignalSize);
         verify(mUpdateSignalsProcessReportedLoggerMock)
                 .setMaxRawProtectedSignalsSizeBytes(maxRawProtectedSignalsSizeBytes);
         verify(mUpdateSignalsProcessReportedLoggerMock)
                 .setMinRawProtectedSignalsSizeBytes(minRawProtectedSignalsSizeBytes);
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setPerBuyerEvictedSignalSize(evictedSignalSize);
+        verify(mUpdateSignalsProcessReportedLoggerMock, times(evictedSignalsPriorities.size()))
+                .addEvictedSignalEvictionPriority(mEvictedPriorityCaptor.capture());
+        expect.withMessage("Expecting evicted signal priorities to be logged.")
+                .that(new HashSet<>(mEvictedPriorityCaptor.getAllValues()))
+                .containsExactlyElementsIn(evictedSignalsPriorities);
     }
 }

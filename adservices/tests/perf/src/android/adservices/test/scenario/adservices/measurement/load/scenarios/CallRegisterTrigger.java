@@ -55,7 +55,7 @@ public class CallRegisterTrigger extends AbstractTestAction {
 
         int cookie = mCookieGenerator.getAndIncrement();
         // TODO(b/407757222): Migrate to RbATrace after the flag rollout.
-        Trace.beginAsyncSection("CallRegisterTrigger#runRegisterTrigger", cookie);
+        Trace.beginAsyncSection("Test_CallRegisterTrigger#runRegisterTrigger", cookie);
 
         Stopwatch timer = Stopwatch.createStarted();
         MEASUREMENT_MANAGER.registerTrigger(
@@ -73,7 +73,8 @@ public class CallRegisterTrigger extends AbstractTestAction {
                                                         timer.elapsed(TimeUnit.MILLISECONDS),
                                                         sdkOption.get())));
                         // TODO(b/407757222): Migrate to RbATrace after the flag rollout.
-                        Trace.endAsyncSection("CallRegisterTrigger#runRegisterTrigger", cookie);
+                        Trace.endAsyncSection(
+                                "Test_CallRegisterTrigger#runRegisterTrigger", cookie);
                     }
 
                     @Override
@@ -88,7 +89,8 @@ public class CallRegisterTrigger extends AbstractTestAction {
                                                         sdkOption.get(),
                                                         error.getMessage())));
                         // TODO(b/407757222): Migrate to RbATrace after the flag rollout.
-                        Trace.endAsyncSection("CallRegisterTrigger#runRegisterTrigger", cookie);
+                        Trace.endAsyncSection(
+                                "Test_CallRegisterTrigger#runRegisterTrigger", cookie);
                     }
                 });
     }

@@ -56,6 +56,7 @@ public class PrioritizedFifoSignalEvictor implements SignalEvictor {
         sLogger.v("Start prioritized FIFO eviction.");
         int currentSignalSize = SignalSizeCalculator.calculate(updatedSignals);
         int numSignalsToEvict = 0;
+        int initialSignalSize = currentSignalSize;
 
         if (currentSignalSize <= maxAllowedSignalSizeWithOversubscription) {
             sLogger.v("Signal size within the limit, skipping the prioritized FIFO eviction.");
@@ -64,7 +65,8 @@ public class PrioritizedFifoSignalEvictor implements SignalEvictor {
                     numSignalsToEvict,
                     currentSignalSize,
                     SignalSizeCalculator.maxSignalsSizeBytes(updatedSignals),
-                    SignalSizeCalculator.minSignalsSizeBytes(updatedSignals));
+                    SignalSizeCalculator.minSignalsSizeBytes(updatedSignals),
+                    initialSignalSize - currentSignalSize);
             return false;
         }
 
@@ -72,9 +74,11 @@ public class PrioritizedFifoSignalEvictor implements SignalEvictor {
 
         while (currentSignalSize > maxAllowedSignalSize
                 && numSignalsToEvict < updatedSignals.size()) {
-            currentSignalSize -=
-                    SignalSizeCalculator.calculate(updatedSignals.get(numSignalsToEvict));
+            DBProtectedSignal toEvictSignal = updatedSignals.get(numSignalsToEvict);
+            currentSignalSize -= SignalSizeCalculator.calculate(toEvictSignal);
             numSignalsToEvict++;
+            updateSignalsProcessReportedLogger.addEvictedSignalEvictionPriority(
+                    toEvictSignal.getEvictionPriority());
         }
 
         combinedUpdates.getToRemove().addAll(updatedSignals.subList(0, numSignalsToEvict));
@@ -87,7 +91,8 @@ public class PrioritizedFifoSignalEvictor implements SignalEvictor {
                 numSignalsToEvict,
                 currentSignalSize,
                 SignalSizeCalculator.maxSignalsSizeBytes(updatedSignalsAfterEviction),
-                SignalSizeCalculator.minSignalsSizeBytes(updatedSignalsAfterEviction));
+                SignalSizeCalculator.minSignalsSizeBytes(updatedSignalsAfterEviction),
+                initialSignalSize - currentSignalSize);
 
         sLogger.v(
                 "Finished prioritized FIFO signal Eviction, %d signals to add, and %d signals to"
@@ -102,7 +107,8 @@ public class PrioritizedFifoSignalEvictor implements SignalEvictor {
             int evictionRulesCount,
             int currentSignalSize,
             float maxRawProtectedSignalsSizeBytes,
-            float minRawProtectedSignalsSizeBytes) {
+            float minRawProtectedSignalsSizeBytes,
+            int totalEvictedSignalSize) {
         updateSignalsProcessReportedLogger.setEvictionRulesCount(evictionRulesCount);
         updateSignalsProcessReportedLogger.setPerBuyerSignalSize(currentSignalSize);
 
@@ -110,5 +116,6 @@ public class PrioritizedFifoSignalEvictor implements SignalEvictor {
                 maxRawProtectedSignalsSizeBytes);
         updateSignalsProcessReportedLogger.setMinRawProtectedSignalsSizeBytes(
                 minRawProtectedSignalsSizeBytes);
+        updateSignalsProcessReportedLogger.setPerBuyerEvictedSignalSize(totalEvictedSignalSize);
     }
 }
