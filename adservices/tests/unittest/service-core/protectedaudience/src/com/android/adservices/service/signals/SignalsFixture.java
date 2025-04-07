@@ -22,10 +22,14 @@ import static org.junit.Assert.assertEquals;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
+import android.adservices.common.FledgeErrorResponse;
+import android.adservices.signals.UpdateSignalsCallback;
+import android.os.IBinder;
 
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.signals.evict.EvictionPriority;
+import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 
 import com.google.common.truth.Expect;
 
@@ -191,7 +195,27 @@ public final class SignalsFixture {
                         signal.getPackageName()));
     }
 
-    private static String toBase64(byte[] in) {
+    /**
+     * Converts a byte array to a base 64 integer string.
+     *
+     * @param in The byte array.
+     * @return The integer string.
+     */
+    public static String toBase64(byte[] in) {
         return Base64.getEncoder().encodeToString(in);
+    }
+
+    public static final class UpdateSignalsSyncCallback
+            extends FailableOnResultSyncCallback<Void, FledgeErrorResponse>
+            implements UpdateSignalsCallback {
+        @Override
+        public void onSuccess() {
+            injectResult(null);
+        }
+
+        @Override
+        public IBinder asBinder() {
+            throw new RuntimeException("Unexpected call!");
+        }
     }
 }

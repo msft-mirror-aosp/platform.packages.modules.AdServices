@@ -61,9 +61,7 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.signals.UpdateSignalsCallback;
 import android.adservices.signals.UpdateSignalsInput;
 import android.net.Uri;
-import android.os.IBinder;
 import android.os.LimitExceededException;
-import android.os.RemoteException;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
@@ -78,6 +76,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.signals.SignalsFixture.UpdateSignalsSyncCallback;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
@@ -86,7 +85,6 @@ import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogg
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
-import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -147,7 +145,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     private DevContext mDevContext;
     private UpdateSignalsInput mInput;
     private ResultSyncCallback<ApiCallStats> logApiCallStatsCallback;
-    private SyncUpdateSignalsCallback mUpdateSignalsCallback;
+    private UpdateSignalsSyncCallback mUpdateSignalsCallback;
     private InOrder mInOrder;
 
     @Before
@@ -156,7 +154,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
         when(mUpdateSignalsProcessReportedLoggerFactoryMock.getLoggerInstance())
                 .thenReturn(mUpdateSignalsProcessReportedLoggerMock);
         mInOrder = inOrder(mUpdateSignalsProcessReportedLoggerMock);
-        mUpdateSignalsCallback = new SyncUpdateSignalsCallback();
+        mUpdateSignalsCallback = new UpdateSignalsSyncCallback();
         logApiCallStatsCallback = mocker.mockLogApiCallStats(mAdServicesLoggerMock);
 
         mProtectedSignalsService =
@@ -698,18 +696,4 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
         assertThat(apiCallStats.getLatencyMillisecond()).isAtLeast(0);
     }
 
-    private static final class SyncUpdateSignalsCallback
-            extends FailableOnResultSyncCallback<Void, FledgeErrorResponse>
-            implements UpdateSignalsCallback {
-
-        @Override
-        public void onSuccess() throws RemoteException {
-            injectResult(null);
-        }
-
-        @Override
-        public IBinder asBinder() {
-            throw new RuntimeException("Unexpected call!");
-        }
-    }
 }
