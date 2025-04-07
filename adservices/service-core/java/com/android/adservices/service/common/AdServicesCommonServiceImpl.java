@@ -63,10 +63,12 @@ import static com.android.adservices.service.ui.constants.DebugMessages.SET_AD_S
 import static com.android.adservices.service.ui.constants.DebugMessages.UNAUTHORIZED_CALLER_MESSAGE;
 
 import android.adservices.adid.AdId;
+import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStates;
 import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesStates;
+import android.adservices.common.AdsPersonalizationStatusParams;
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.ConsentStatus;
 import android.adservices.common.EnableAdServicesResponse;
@@ -74,6 +76,7 @@ import android.adservices.common.GetAdServicesCommonStatesParams;
 import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IAdServicesCommonService;
 import android.adservices.common.IAdServicesCommonStatesCallback;
+import android.adservices.common.IAdsPersonalizationCallback;
 import android.adservices.common.IEnableAdServicesCallback;
 import android.adservices.common.IRequestAdServicesModuleOverridesCallback;
 import android.adservices.common.IRequestAdServicesModuleUserChoicesCallback;
@@ -713,6 +716,49 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         LogUtil.e(
                                 "requestAdServicesModuleUserChoices() failed to complete: "
                                         + e.getMessage());
+                    }
+                });
+    }
+
+    /**
+     * Updates {@link AdServicesCommonManager.AdsPersonalizationStatus} in Adservices. This status
+     * will be used by {@link AdIdWorker} in {@link AdId} generation.
+     */
+    @Override
+    @RequiresPermission(anyOf = {UPDATE_PRIVILEGED_AD_ID})
+    public void setAdsPersonalizationStatus(
+            @NonNull AdsPersonalizationStatusParams adsPersonalizationStatusParams,
+            @NonNull IAdsPersonalizationCallback callback) {
+        boolean authorizedCaller =
+                PermissionHelper.hasSetAdsPersonalizationStatusPermission(mContext);
+        int callerUid = Binder.getCallingUid();
+
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        if (!authorizedCaller) {
+                            LogUtil.w(
+                                    "Caller %d is not authorized to set ads personalization"
+                                            + " status!",
+                                    callerUid);
+                            callback.onFailure(STATUS_UNAUTHORIZED);
+                            return;
+                        }
+
+                        // return successfully for now, will update the status bit in following cl.
+                        callback.onResult("Success");
+                    } catch (Exception e) {
+                        LogUtil.e(e, "setAdsPersonalizationStatus() failed to complete.");
+                        ErrorLogUtil.e(
+                                e,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_UPDATE_AD_ID_API_ERROR,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
+
+                        try {
+                            callback.onFailure(STATUS_INTERNAL_ERROR);
+                        } catch (RemoteException ex) {
+                            LogUtil.e("Unable to send result to the callback " + ex.getMessage());
+                        }
                     }
                 });
     }

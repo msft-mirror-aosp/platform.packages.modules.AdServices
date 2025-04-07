@@ -6290,6 +6290,14 @@ public interface Flags extends ModuleSharedFlags {
     /** Feature flag to enable log sampling infra. */
     @FeatureFlag boolean DEFAULT_ENABLE_LOG_SAMPLING_INFRA = false;
 
+    /** Feature flag to enable set ads personalization status api. */
+    @FeatureFlag boolean DEFAULT_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS = false;
+
+    /** Returns if set ads personalization status is enabled. */
+    default boolean getUiEnableSetAdsPersonalizationStatus() {
+        return DEFAULT_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS;
+    }
+
     /** Returns if log sampling infra is enabled. */
     default boolean getEnableLogSamplingInfra() {
         return DEFAULT_ENABLE_LOG_SAMPLING_INFRA;
