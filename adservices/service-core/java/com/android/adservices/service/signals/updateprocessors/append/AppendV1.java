@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.signals.updateprocessors.append;
 
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.LoggerFactory.Logger;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.evict.EvictionPriority;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
@@ -53,6 +55,8 @@ public class AppendV1 extends Append {
     public static final String TOO_MANY_SIGNALS_ERROR =
             "Attempting to append %d than with a max_signals of %d";
 
+    private static final Logger sLogger = LoggerFactory.getFledgeLogger();
+
     private final EvictionPriorityHandler mEvictionPriorityHandler;
 
     public AppendV1(EvictionPriorityHandler evictionPriorityHandler) {
@@ -79,10 +83,15 @@ public class AppendV1 extends Append {
         // Delete enough signals to make room for the new ones.
         deleteSignals(key, maxSignals, values, current, toReturn);
 
-        // Add all the signals
+        // Read new signal properties from the update.
         EvictionPriority evictionPriority =
                 mEvictionPriorityHandler.getEvictionPriority(
                         key, update, updateSignalsProcessReportedLogger);
+
+        // Update existing signals for the key with properties from this update.
+        updateExistingSignals(key, evictionPriority, current, toReturn);
+
+        // Add the new signals.
         addSignals(
                 UpdateProcessorUtils.getByteArrayFromBuffer(key),
                 values,
@@ -90,11 +99,33 @@ public class AppendV1 extends Append {
                 toReturn);
     }
 
-    /** Add all the new signals. */
+    /** Update existing signals. */
+    private void updateExistingSignals(
+            ByteBuffer key,
+            EvictionPriority evictionPriority,
+            Map<ByteBuffer, Set<DBProtectedSignal>> current,
+            UpdateOutput toReturn) {
+        if (!current.containsKey(key)) {
+            sLogger.v("No existing signals found for key, skipping existing signal updates");
+            return;
+        }
+        Set<DBProtectedSignal> currentSignals = current.get(key);
+        for (DBProtectedSignal currentSignal : currentSignals) {
+            if (!currentSignal.getEvictionPriority().equals(evictionPriority)) {
+                // TODO: b/408444491 - Eliminate ID overwrite and existing signal remove after
+                //                     changing ProtectedSignalsDao to use upserts.
+                DBProtectedSignal.Builder updatedSignalBuilder =
+                        currentSignal.toBuilder().setId(null).setEvictionPriority(evictionPriority);
+                toReturn.getToAdd().add(updatedSignalBuilder);
+                toReturn.getToRemove().add(currentSignal);
+            }
+        }
+    }
+
+    /** Add new signals. */
     private void addSignals(
             byte[] key, JSONArray values, EvictionPriority evictionPriority, UpdateOutput toReturn)
             throws JSONException {
-        // Add the new signals.
         for (int i = 0; i < values.length(); i++) {
             DBProtectedSignal.Builder newSignalBuilder =
                     DBProtectedSignal.builder()

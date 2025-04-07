@@ -1,0 +1,59 @@
+/*
+ * Copyright (C) 2025 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.adservices.service.signals.updateprocessors.updateproperties;
+
+import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.when;
+
+import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.service.signals.SignalUpdates.UpdateSchemaVersion;
+import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerFactory;
+import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerNoOpImpl;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+
+@RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
+public class UpdatePropertiesFactoryTest extends AdServicesMockitoTestCase {
+    @Mock private EvictionPriorityHandlerFactory mEvictionPriorityHandlerFactoryMock;
+
+    private UpdatePropertiesFactory mUpdatePropertiesFactory;
+
+    @Before
+    public void setup() {
+        when(mEvictionPriorityHandlerFactoryMock.getHandler())
+                .thenReturn(new EvictionPriorityHandlerNoOpImpl());
+        mUpdatePropertiesFactory = new UpdatePropertiesFactory(mEvictionPriorityHandlerFactoryMock);
+    }
+
+    @Test
+    public void testGetUpdateProcessor_supportedVersions() {
+        expect.withMessage("v1 processor")
+                .that(mUpdatePropertiesFactory.getUpdateProcessor(UpdateSchemaVersion.V1))
+                .isInstanceOf(UpdatePropertiesV1.class);
+    }
+
+    @Test
+    public void testGetUpdateProcessor_unsupportedVersion() {
+        assertThrows(
+                "Expected exception",
+                IllegalArgumentException.class,
+                () -> mUpdatePropertiesFactory.getUpdateProcessor(UpdateSchemaVersion.V0));
+    }
+}

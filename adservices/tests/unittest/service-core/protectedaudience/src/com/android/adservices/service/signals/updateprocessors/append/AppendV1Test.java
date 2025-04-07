@@ -233,8 +233,14 @@ public class AppendV1Test extends AdServicesMockitoTestCase {
         updatesJson.put(BASE64_KEY_1, appendJson);
 
         DBProtectedSignal toOverwrite =
-                createSignal(KEY_1, VALUE_1, ID_1, NOW.minus(Duration.ofDays(1)));
-        DBProtectedSignal toKeep = createSignal(KEY_1, VALUE_2, ID_2, NOW);
+                createSignal(
+                        KEY_1,
+                        VALUE_1,
+                        ID_1,
+                        NOW.minus(Duration.ofDays(1)),
+                        EvictionPriority.EVICT_SOONER);
+        DBProtectedSignal toKeep =
+                createSignal(KEY_1, VALUE_2, ID_2, NOW, EvictionPriority.EVICT_SOONER);
         Map<ByteBuffer, Set<DBProtectedSignal>> existingSignals =
                 ImmutableMap.of(BB_KEY_1, ImmutableSet.of(toOverwrite, toKeep));
 
@@ -273,10 +279,21 @@ public class AppendV1Test extends AdServicesMockitoTestCase {
         updatesJson.put(BASE64_KEY_1, appendJson);
 
         DBProtectedSignal toOverwrite1 =
-                createSignal(KEY_1, VALUE_1, ID_1, NOW.minus(Duration.ofDays(1)));
+                createSignal(
+                        KEY_1,
+                        VALUE_1,
+                        ID_1,
+                        NOW.minus(Duration.ofDays(1)),
+                        EvictionPriority.EVICT_SOONER);
         DBProtectedSignal toOverwrite2 =
-                createSignal(KEY_1, VALUE_1, ID_2, NOW.minus(Duration.ofDays(2)));
-        DBProtectedSignal toKeep = createSignal(KEY_1, VALUE_2, ID_3, NOW);
+                createSignal(
+                        KEY_1,
+                        VALUE_1,
+                        ID_2,
+                        NOW.minus(Duration.ofDays(2)),
+                        EvictionPriority.EVICT_SOONER);
+        DBProtectedSignal toKeep =
+                createSignal(KEY_1, VALUE_2, ID_3, NOW, EvictionPriority.EVICT_SOONER);
         Map<ByteBuffer, Set<DBProtectedSignal>> existingSignals =
                 ImmutableMap.of(BB_KEY_1, ImmutableSet.of(toOverwrite1, toOverwrite2, toKeep));
 
@@ -300,7 +317,7 @@ public class AppendV1Test extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testAddToExisting() throws Exception {
+    public void testAddToExistingWithNewProperties() throws Exception {
         JSONArray valuesJson = new JSONArray();
         valuesJson.put(BASE64_VALUE_1);
 
@@ -317,8 +334,14 @@ public class AppendV1Test extends AdServicesMockitoTestCase {
         updatesJson.put(BASE64_KEY_1, appendJson);
 
         DBProtectedSignal existing1 =
-                createSignal(KEY_1, VALUE_1, ID_1, NOW.minus(Duration.ofDays(1)));
-        DBProtectedSignal existing2 = createSignal(KEY_1, VALUE_2, ID_1, NOW);
+                createSignal(
+                        KEY_1,
+                        VALUE_1,
+                        ID_1,
+                        NOW.minus(Duration.ofDays(1)),
+                        EvictionPriority.EVICT_LATER);
+        DBProtectedSignal existing2 =
+                createSignal(KEY_1, VALUE_2, ID_1, NOW, EvictionPriority.EVICT_LATER);
         Map<ByteBuffer, Set<DBProtectedSignal>> existingSignals =
                 ImmutableMap.of(BB_KEY_1, ImmutableSet.of(existing1, existing2));
 
@@ -329,13 +352,17 @@ public class AppendV1Test extends AdServicesMockitoTestCase {
         verify(mEvictionPriorityHandlerMock)
                 .getEvictionPriority(BB_KEY_1, appendJson, mUpdateSignalsProcessReportedLoggerMock);
         expect.withMessage("keysTouched").that(output.getKeysTouched()).containsExactly(BB_KEY_1);
-        expect.withMessage("toRemove").that(output.getToRemove()).isEmpty();
+        expect.withMessage("toRemove")
+                .that(output.getToRemove())
+                .containsExactly(existing1, existing2);
         List<DBProtectedSignal.Builder> expectedToAdd =
                 ImmutableList.of(
                         DBProtectedSignal.builder()
                                 .setKey(KEY_1)
                                 .setValue(VALUE_1)
-                                .setEvictionPriority(EvictionPriority.EVICT_SOONER));
+                                .setEvictionPriority(EvictionPriority.EVICT_SOONER),
+                        existing1.toBuilder().setEvictionPriority(EvictionPriority.EVICT_SOONER),
+                        existing2.toBuilder().setEvictionPriority(EvictionPriority.EVICT_SOONER));
         expectThatSignalBuilderListsAreEqual(expect, "toAdd", output.getToAdd(), expectedToAdd);
     }
 
