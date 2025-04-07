@@ -112,6 +112,13 @@ public class CountUniqueReportingJobTest extends AdServicesJobTestCase {
     }
 
     @Test
+    public void testGetJobPolicyString() {
+        assertWithMessage("getJobPolicyString() for CountUniqueReportingJob")
+                .that(mCountUniqueReportingJob.getJobPolicyString(/* jobId= */ 0))
+                .isNull();
+    }
+
+    @Test
     public void testSchedule_spe() {
         CountUniqueReportingJob.schedule();
 
