@@ -6376,6 +6376,12 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY;
     }
 
+    String DEFAULT_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY = "";
+
+    default String getSpeCountUniqueReportingJobPolicy() {
+        return DEFAULT_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
     ////////////////////////////////////////////////////////////////////////////////////////////////

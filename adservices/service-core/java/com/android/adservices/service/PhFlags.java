@@ -5422,4 +5422,11 @@ public final class PhFlags implements Flags {
                 KEY_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS,
                 DEFAULT_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS);
     }
+
+    @Override
+    public String getSpeCountUniqueReportingJobPolicy() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY,
+                Flags.DEFAULT_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY);
+    }
 }

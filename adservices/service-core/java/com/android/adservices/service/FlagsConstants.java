@@ -1860,4 +1860,7 @@ public final class FlagsConstants {
     /** Key for enable set ads personalization status api. */
     public static final String KEY_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS =
             "Ui__enable_set_ads_personalization_status";
+
+    public static final String KEY_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY =
+            "Spe__count_unique_reporting_job_policy";
 }

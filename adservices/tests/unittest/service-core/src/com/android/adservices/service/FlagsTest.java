@@ -1680,6 +1680,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getMeasurementDebugJoinKeysNoncompliantAdtechsSampleRate);
     }
 
+    @Test
+    public void testGetSpeCountUniqueReportingJobPolicy() {
+        testFlag(
+                "getSpeCountUniqueReportingJobPolicy",
+                Flags.DEFAULT_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY,
+                Flags::getSpeCountUniqueReportingJobPolicy);
+    }
+
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {
         String name = field.getName();
         Annotation annotation = field.getAnnotation(annotationClass);

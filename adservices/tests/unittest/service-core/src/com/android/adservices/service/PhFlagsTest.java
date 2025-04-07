@@ -6695,6 +6695,14 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mFlagsTestHelper.mockGetAdServicesFlag(name, value);
     }
 
+    @Test
+    public void testGetSpeCountUniqueReportingJobPolicy() {
+        mFlagsTestHelper.testConfigFlag(
+                FlagsConstants.KEY_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY,
+                Flags.DEFAULT_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY,
+                Flags::getSpeCountUniqueReportingJobPolicy);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: do NOT add new tests below, only helper methods                                      //
     ////////////////////////////////////////////////////////////////////////////////////////////////
