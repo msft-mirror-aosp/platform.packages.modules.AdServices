@@ -387,6 +387,10 @@ public final class JSScriptEngineTest extends AdServicesExtendedMockitoTestCase 
                                         mNoOpRetryStrategy));
 
         assertThat(outerException).hasCauseThat().isInstanceOf(JSExecutionException.class);
+
+        // Waiting after expected failure to allow jsSandbox cleanup...
+        Thread.sleep(1000);
+
         // assert that we can recover from this exception
         assertThat(
                         callJSEngine(
