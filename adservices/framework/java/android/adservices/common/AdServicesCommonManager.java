@@ -789,8 +789,7 @@ public class AdServicesCommonManager {
      * Updates {@link AdsPersonalizationStatus} in Adservices when the device account change. This
      * API is used by AdIdProvider.
      *
-     * @param adsPersonalizationStatusParams the param that contains {@link
-     *     AdsPersonalizationStatus}.
+     * @param adsPersonalizationStatus the param that contains {@link AdsPersonalizationStatus}.
      * @param executor the executor for the callback.
      * @param callback the callback in type {@link OutcomeReceiver}, available on Android T and
      *     above.
@@ -804,17 +803,16 @@ public class AdServicesCommonManager {
     @RequiresPermission(UPDATE_PRIVILEGED_AD_ID)
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     public void setAdsPersonalizationStatus(
-            @NonNull AdsPersonalizationStatusParams adsPersonalizationStatusParams,
+            @AdsPersonalizationStatus int adsPersonalizationStatus,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Boolean, Exception> callback) {
-        Objects.requireNonNull(adsPersonalizationStatusParams);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
 
         IAdServicesCommonService service = getService();
         try {
             service.setAdsPersonalizationStatus(
-                    adsPersonalizationStatusParams,
+                    adsPersonalizationStatus,
                     new IAdsPersonalizationCallback.Stub() {
                         @Override
                         public void onResult(String message) {
@@ -833,7 +831,7 @@ public class AdServicesCommonManager {
             LogUtil.e(
                     e,
                     "RemoteException calling setAdsPersonalizationStatus with %s",
-                    adsPersonalizationStatusParams);
+                    adsPersonalizationStatus);
             executor.execute(
                     () -> callback.onError(new IllegalStateException("Internal Error!", e)));
         }
