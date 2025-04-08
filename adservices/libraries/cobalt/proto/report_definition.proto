@@ -50,9 +50,9 @@ option java_package = "com.google.cobalt";
 // A ReportDefinition defines a Cobalt Report to be generated.
 // An instance of ReportDefinition is always associated with an instance of
 // MetricDefinition called the owning MetricDefinition.
-// Next ID: 33
+// Next ID: 34
 message ReportDefinition {
-  reserved 4, 5, 6, 7, 8, 9, 11, 14, 15, 16, 12, 20, 21, 30, 31, 101, 102;
+  reserved 4, 5, 6, 7, 8, 9, 11, 12, 14, 15, 16, 20, 21, 30, 31, 101, 102;
   reserved "aggregation_type", "aggregation_window", "candidate_lis", "dp_release_config",
       "expected_population_size", "expected_string_set_size", "export_location_override",
       "local_privacy_noise_level", "output_location", "percentiles", "threshold", "window_size",
@@ -73,7 +73,7 @@ message ReportDefinition {
   uint32 id = 2;
 
   // A Report has one of the following types.
-  // Next standard report type ID: 22
+  // Next standard report type ID: 23
   enum ReportType {
     reserved 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 19, 9999;
     reserved "CUSTOM_RAW_DUMP", "EVENT_COMPONENT_OCCURRENCE_COUNT", "HIGH_FREQUENCY_STRING_COUNTS",
@@ -401,6 +401,15 @@ message ReportDefinition {
     //   - system_profile_selection (SELECT_FIRST and SELECT LAST will maintain
     //     uniqueness, REPORT_ALL may be useful in some cases)
     UNIQUE_DEVICE_STRING_COUNTS = 21;
+
+    // Experimental. DO NOT USE!
+    // Input metric types: STRUCT
+    //
+    // Local aggregation period: DAYS_1, DAYS_7, DAYS_28 or DAYS_30
+    //
+    // ReportDefinition fields particular to this type:
+    //   - aggregates: (1 or more)
+    STRUCT = 22;
   }
   ReportType report_type = 3;
 
@@ -507,7 +516,7 @@ message ReportDefinition {
     // Numerical statistic aggregation procedures to be used with reports
     // of type UNIQUE_DEVICE_HISTOGRAMS, HOURLY_VALUE_HISTOGRAMS,
     // UNIQUE_DEVICE_NUMERIC_STATS and HOURLY_VALUE_NUMERIC_STATS.
-    // TODO(fxbug.dev/87151): Rename these to remove the '_PROCEDURE' suffix.
+    // TODO(b/42168241): Rename these to remove the '_PROCEDURE' suffix.
     SUM_PROCEDURE = 1;
     MIN_PROCEDURE = 2;
     MAX_PROCEDURE = 3;
@@ -592,6 +601,76 @@ message ReportDefinition {
   // the system profile that is currently active on the device.
   bool expedited_sending = 29;
 
+  message AggregateDefinition {
+    uint32 id = 1;
+
+    // If this field is left unspecified, the value of for will be used.
+    // If for is not specified, this field is required.
+    string name = 2;
+
+    // This field must match the name of one of the corresponding metric's struct fields.
+    string for = 3;
+
+    // This field is filled in by the registry parser based on the value of for.
+    uint32 for_id = 4;
+
+    enum AggregationFunction {
+      UNSPECIFIED_AGGREGATION_FUNCTION = 0;
+
+      // local usage:
+      //  - Can be used with BOOL, ENUM or STRING fields.
+      //
+      // global usage:
+      //  - Requires the local aggregation function to be GROUP_BY.
+      GROUP_BY = 1;
+
+      // local usage:
+      //  - COUNT counts the number of occurrences of groups.
+      //  - |for| must be left unspecified.
+      //
+      // global usage:
+      //  - Counts the number of devices in each group. The local aggregation function must be left
+      //  unspecified.
+      COUNT = 2;
+
+      // global usage:
+      //  - Requires the local aggregation function to return a numeric value.
+      SUM = 3;
+
+      // global usage:
+      //  - Requires the local aggregation function to return a numeric value.
+      MEAN = 4;
+    }
+
+    // The on-device function computed on the metric during the aggregation window.
+    AggregationFunction local = 5;
+
+    // The server-side function computed on data received from devices.
+    AggregationFunction global = 6;
+
+    // Maximum of distinct values that Cobalt must keep on any single device for this GROUP_BY
+    // aggregate. The first distinct_values_max_per_device values seen by the device are kept
+    // and subsequent ones are discarded.
+    //
+    // This is a required field for aggregates of string fields.
+    uint64 distinct_values_max_per_device = 7;
+
+    // The path to a list of candidate strings for a GROUP_BY aggregate referring to a STRING field.
+    // The path should be relative to the root of the Cobalt registry, for
+    // instance "$CUSTOMER/$PROJECT/candidate_strings.txt". String candidate
+    // files should ideally be placed in the same registry and directory as the
+    // project that uses it.
+    //
+    // The empty string, "", is added to the candidate list implicitly by Cobalt
+    // and does not need to be added to the list.
+    //
+    // If string_candidate_file is not set for the corresponding metric field, this field is
+    // required.
+    string string_candidate_file = 8;
+  }
+
+  repeated AggregateDefinition aggregates = 33;
+
   ///////////////////  Fields used by all report types ///////////////////
   // Next id: 109
 
@@ -652,10 +731,12 @@ message ReportDefinition {
     // Lower values correspond to higher privacy.
     // Epsilon must be > 0.
     double epsilon = 1;
+
     // This field represents the risk of the epsilon guarantee not holding. This
     // is usually set as 1 over the expected number of participating devices.
     // Delta must be > 0 and < 1.
     double delta = 2;
+
     // The generated report will exclude an Observation if there are not at
     // least |reporting_threshold| number of distinct devices reporting
     // Observations with the same ObservationMetadata.
@@ -676,7 +757,6 @@ message ReportDefinition {
     // If true, skip validating the |poisson_mean| value. This is meant to be used only
     // in end-to-end tests where the traffic volume would not allow a reasonable |poisson_mean|.
     bool skip_poisson_mean_validation_test_only = 5;
-
 
     // The report fields that affect how a device participates in a private
     // report.
@@ -724,9 +804,9 @@ enum SystemProfileSelectionPolicy {
   // Use the default value. For reports of type FLEETWIDE_OCCURRENCE_COUNTS,
   // FLEETWIDE_HISTOGRAMS, FLEETWIDE_MEANS, UNIQUE_DEVICE_NUMERIC_STATS,
   // HOURLY_VALUE_NUMERIC_STATS, and STRING_COUNTS this will resolve to
-  // 'REPORT_ALL' and should not be changed. For all other report types,
-  // SELECT_DEFAULT must not be used.
-  SELECT_DEFAULT = 0;
+  // 'REPORT_ALL' and should not be changed. This must be set for all other
+  // report types.
+  SYSTEM_PROFILE_SELECTION_POLICY_UNSET = 0;
 
   // Always report the last SystemProfile seen in the aggregation window. This
   // will be the last SystemProfile seen *at the time of an event* in the
@@ -811,8 +891,8 @@ enum ReleaseStage {
 //
 // Then, the buckets are defined as follows:
 // Bucket 0 is the underflow bucket: (-infinity, floor)
-// Bucket i for 0 < i < n+1: [a[i-1], a[i])
-// Bucket n+1 is the overflow bucket: [a[n], +infinity)
+// Bucket i for 0 < i < n+1: [ceiling(a[i-1]), ceiling(a[i]))
+// Bucket n+1 is the overflow bucket: [ceiling(a[n]), +infinity)
 //
 // Examples:
 // floor = 0
@@ -843,7 +923,33 @@ enum ReleaseStage {
 // Then, the buckets are:
 // (-infinity, 0), [0, 100), [100, 1000), [1000, 10000), [10000, +infinity)
 //
+// When the step_multiplier is between 1 and 2, some buckets will have a width of zero
+// after the bucket bounds are rounded up. These zero-width buckets are considered "impossible"
+// because they shouldn't have any data. Any data that falls into these impossible buckets, whether
+// it's due to reporting errors or generated noise, is discarded.
+//
+// Examples:
+// floor = 0
+// num_buckets = 3
+// initial_step = 1
+// step_multiplier = 1.1
+// Then, the pre-ceiling buckets are:
+// (-infinity, 0), [0, 1), [1, 1.10), [1.10, 1.21), [1.21, +infinity)
+// the buckets after ceiling are:
+// (-infinity, 0), [0, 1), [1, 2), ^[2, 2)^, [2, +infinity)
+//
+// floor = 0
+// num_buckets = 3
+// initial_step = 10
+// step_multiplier = 1.1
+// Then, the pre-ceiling buckets are:
+// (-infinity, 0), [0, 10), [10, 11.00), [11.00, 12.10), [12.10, +infinity)
+// the buckets after ceiling are:
+// (-infinity, 0), [0, 10), [10, 11), [11, 13), [13, +infinity)
 message ExponentialIntegerBuckets {
+  reserved 4;
+  reserved "step_multiplier";
+
   int64 floor = 1;
 
   // num_buckets must be at least 1.
@@ -852,8 +958,8 @@ message ExponentialIntegerBuckets {
   // Must be at least one.
   uint32 initial_step = 3;
 
-  // Must be at least one.
-  uint32 step_multiplier = 4;
+  // Must be greater than one.
+  float step_multiplier_float = 5;
 }
 
 // LinearIntegerBuckets is used to define a partition of the integers into a
@@ -867,7 +973,7 @@ message ExponentialIntegerBuckets {
 // [floor + step_size * (i-1), floor + step_size * i)
 //
 // Example: floor = 0, num_buckets = 3, step_size = 10.
-// (-infinity, 0), [0, 10), [10, 20), [20, 30), [30, +inifinity)
+// (-infinity, 0), [0, 10), [10, 20), [20, 30), [30, +infinity)
 message LinearIntegerBuckets {
   int64 floor = 1;
 

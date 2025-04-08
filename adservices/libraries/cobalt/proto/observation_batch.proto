@@ -32,7 +32,7 @@ option java_package = "com.google.cobalt";
 // ObservationMetadata describes the parts of an observation other than the
 // secret payload.
 message ObservationMetadata {
-  // next id: 8
+  // next id: 9
 
   // An Observation is for a particular Cobalt Report.
   // The following four values together specify that metric.
@@ -55,7 +55,14 @@ message ObservationMetadata {
   uint32 day_index = 4;
 
   // The profile of the client system on which the Observation was collected.
+  // After b/373463829 is fixed, this field will not be
+  // populated in the input from the client and will be populated by the
+  // shuffler.
   SystemProfile system_profile = 5;
+
+  // The index of the system profile in the Envelope. This field will only be
+  // populated in the input from the client.
+  uint32 system_profile_index = 8;
 
   // We used to have a field called |backend|.
   reserved 6;
