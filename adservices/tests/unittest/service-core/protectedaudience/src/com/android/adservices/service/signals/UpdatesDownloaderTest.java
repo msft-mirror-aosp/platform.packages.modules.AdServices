@@ -46,6 +46,7 @@ import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -119,9 +120,12 @@ public class UpdatesDownloaderTest extends AdServicesExtendedMockitoTestCase {
                         CommonFixture.TEST_PACKAGE_NAME_1,
                         UPDATE_SCHEMA_VERSION_HEADER,
                         String.valueOf(mFakeFlags.getProtectedSignalsUpdateSchemaVersion()));
+        ImmutableSet<String> responseHeaderKeys = ImmutableSet.of(UPDATE_SCHEMA_VERSION_HEADER);
+
         AdServicesHttpClientRequest request =
                 AdServicesHttpClientRequest.builder()
                         .setRequestProperties(requestProperties)
+                        .setResponseHeaderKeys(responseHeaderKeys)
                         .setUri(URI)
                         .setDevContext(DEV_CONTEXT)
                         .build();
@@ -240,9 +244,12 @@ public class UpdatesDownloaderTest extends AdServicesExtendedMockitoTestCase {
                         CommonFixture.TEST_PACKAGE_NAME_1,
                         UPDATE_SCHEMA_VERSION_HEADER,
                         String.valueOf(mFakeFlags.getProtectedSignalsUpdateSchemaVersion()));
+        ImmutableSet<String> responseHeaderKeys = ImmutableSet.of(UPDATE_SCHEMA_VERSION_HEADER);
+
         AdServicesHttpClientRequest request =
                 AdServicesHttpClientRequest.builder()
                         .setRequestProperties(requestProperties)
+                        .setResponseHeaderKeys(responseHeaderKeys)
                         .setUri(URI)
                         .setDevContext(DEV_CONTEXT)
                         .build();

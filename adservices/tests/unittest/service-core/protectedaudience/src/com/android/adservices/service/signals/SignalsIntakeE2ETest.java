@@ -106,6 +106,7 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.mockwebserver.MockResponse;
@@ -843,9 +844,11 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
                         CommonFixture.TEST_PACKAGE_NAME,
                         UPDATE_SCHEMA_VERSION_HEADER,
                         String.valueOf(mFakeFlags.getProtectedSignalsUpdateSchemaVersion()));
+        ImmutableSet<String> responseHeaderKeys = ImmutableSet.of(UPDATE_SCHEMA_VERSION_HEADER);
         AdServicesHttpClientRequest expected =
                 AdServicesHttpClientRequest.builder()
                         .setRequestProperties(requestProperties)
+                        .setResponseHeaderKeys(responseHeaderKeys)
                         .setUri(URI)
                         .setDevContext(DevContext.createForDevOptionsDisabled())
                         .build();
