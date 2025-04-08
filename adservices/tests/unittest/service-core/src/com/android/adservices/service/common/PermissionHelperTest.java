@@ -280,4 +280,19 @@ public final class PermissionHelperTest extends AdServicesMockitoTestCase {
         // /*useSandboxCheck =*/ true,
         // SDK_PACKAGE_NAME)).isFalse();
     }
+
+    @Test
+    public void testSetAdsPersonalizationStatus() {
+        Context mockContextGrant =
+                getMockContext(
+                        AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID, mMockPackageManagerGrant);
+        assertThat(PermissionHelper.hasSetAdsPersonalizationStatusPermission(mockContextGrant))
+                .isTrue();
+
+        // The mMockPackageManagerDeny is used to deny the other setup, but using it here for better
+        // readability.
+        Context mockContextDeny = getMockContext("not_granted_permission", mMockPackageManagerDeny);
+        assertThat(PermissionHelper.hasSetAdsPersonalizationStatusPermission(mockContextDeny))
+                .isFalse();
+    }
 }

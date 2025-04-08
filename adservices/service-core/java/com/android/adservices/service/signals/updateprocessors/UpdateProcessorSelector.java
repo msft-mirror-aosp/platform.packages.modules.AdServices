@@ -21,6 +21,7 @@ import static com.android.adservices.service.signals.updateprocessors.put.Put.PU
 import static com.android.adservices.service.signals.updateprocessors.putifnotpresent.PutIfNotPresent.PUT_IF_NOT_PRESENT;
 import static com.android.adservices.service.signals.updateprocessors.remove.Remove.REMOVE;
 import static com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoder.UPDATE_ENCODER;
+import static com.android.adservices.service.signals.updateprocessors.updateproperties.UpdateProperties.UPDATE_PROPERTIES;
 
 import com.android.adservices.service.signals.SignalUpdates.UpdateSchemaVersion;
 import com.android.adservices.service.signals.updateprocessors.append.AppendFactory;
@@ -29,6 +30,7 @@ import com.android.adservices.service.signals.updateprocessors.put.PutFactory;
 import com.android.adservices.service.signals.updateprocessors.putifnotpresent.PutIfNotPresentFactory;
 import com.android.adservices.service.signals.updateprocessors.remove.RemoveFactory;
 import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderFactory;
+import com.android.adservices.service.signals.updateprocessors.updateproperties.UpdatePropertiesFactory;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -46,7 +48,9 @@ public class UpdateProcessorSelector {
                         PUT_IF_NOT_PRESENT,
                                 new PutIfNotPresentFactory(evictionPriorityHandlerFactory),
                         REMOVE, new RemoveFactory(),
-                        UPDATE_ENCODER, new UpdateEncoderFactory());
+                        UPDATE_ENCODER, new UpdateEncoderFactory(),
+                        UPDATE_PROPERTIES,
+                                new UpdatePropertiesFactory(evictionPriorityHandlerFactory));
     }
 
     /**

@@ -16,6 +16,7 @@
 
 package android.adservices.cts;
 
+import static android.adservices.common.AdServicesCommonManager.ADS_PERSONALZATION_ENABLED;
 import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_DISABLED;
 import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_ENABLED;
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN;
@@ -30,6 +31,7 @@ import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesStates;
+import android.adservices.common.AdsPersonalizationStatusParams;
 import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
 import android.adservices.common.UpdateAdServicesModuleStatesParams;
@@ -212,5 +214,20 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
         expect.that(state.isPrivacySandboxUiRequest()).isTrue();
 
         mCommonManager.enableAdServices(state, CALLBACK_EXECUTOR, receiver);
+    }
+
+    @Test
+    @SuppressWarnings("VisibleForTests")
+    // TODO(b/343741206): Remove suppress warning once the lint is fixed.
+    public void testSetAdsPersonalizationStatus() {
+        OutcomeReceiverForTests<Boolean> receiver = new OutcomeReceiverForTests<>();
+
+        AdsPersonalizationStatusParams params =
+                new AdsPersonalizationStatusParams(ADS_PERSONALZATION_ENABLED);
+
+        // last set value should be the returned value
+        expect.that(params.getAdsPersonalizationStatus()).isEqualTo(ADS_PERSONALZATION_ENABLED);
+
+        mCommonManager.setAdsPersonalizationStatus(params, CALLBACK_EXECUTOR, receiver);
     }
 }

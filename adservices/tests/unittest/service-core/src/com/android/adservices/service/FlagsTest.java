@@ -55,6 +55,7 @@ import static com.android.adservices.service.Flags.DEFAULT_SPE_MDD_CHARGING_JOB_
 import static com.android.adservices.service.Flags.DEFAULT_SPE_MDD_MAINTENANCE_JOB_POLICY;
 import static com.android.adservices.service.Flags.DEFAULT_SPE_MDD_WIFI_CHARGING_JOB_POLICY;
 import static com.android.adservices.service.Flags.DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY;
+import static com.android.adservices.service.Flags.DEFAULT_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
 import static com.android.adservices.service.Flags.ENABLE_GET_BINDING_UID_IMPORTANCE;
@@ -1479,6 +1480,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getSpeMeasurementAsyncRegistrationFallbackJobPolicy",
                 DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY,
                 Flags::getSpeMeasurementAsyncRegistrationFallbackJobPolicy);
+    }
+
+    @Test
+    public void testGetUiEnableSetAdsPersonalizationStatus() {
+        testFlag(
+                "getUiEnableSetAdsPersonalizationStatus",
+                DEFAULT_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS,
+                Flags::getUiEnableSetAdsPersonalizationStatus);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
