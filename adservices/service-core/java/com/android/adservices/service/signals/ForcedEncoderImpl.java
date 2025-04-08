@@ -49,7 +49,7 @@ public class ForcedEncoderImpl implements ForcedEncoder {
     private final Clock mClock;
 
     @VisibleForTesting
-    ForcedEncoderImpl(
+    public ForcedEncoderImpl(
             long fledgeForcedEncodingAfterSignalsUpdateCooldownSeconds,
             EncoderLogicHandler encoderLogicHandler,
             EncodedPayloadDao encodedPayloadDao,

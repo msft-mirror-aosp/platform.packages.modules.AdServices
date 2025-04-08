@@ -45,7 +45,7 @@ public class ForcedEncoderFactory {
      *
      * @return a {@link ForcedEncoder}.
      */
-    ForcedEncoder createInstance() {
+    public ForcedEncoder createInstance() {
         if (mFledgeEnableForcedEncodingAfterSignalsUpdate) {
             return new ForcedEncoderImpl(
                     mFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds, mContext);
