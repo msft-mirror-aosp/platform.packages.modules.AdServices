@@ -16,6 +16,7 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
+import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_ENABLE_CONSENT_DATA_MIGRATION_API;
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API;
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED;
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED;
@@ -69,6 +70,7 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
     private static final List<String> ACONFIG_ONLY_ALLOWLIST =
             List.of(
                     FLAG_AD_ID_CACHE_ENABLED,
+                    FLAG_ADSERVICES_ENABLE_CONSENT_DATA_MIGRATION_API,
                     FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED,
                     FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED,
                     FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED,

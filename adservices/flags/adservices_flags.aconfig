@@ -8,6 +8,15 @@ container: "com.android.adservices"
 ####################################################################################################
 
 flag {
+    name: "adservices_enable_consent_data_migration_api"
+    namespace: "adservices_aconfig"
+    bug: "404905080"
+    description: "Enables adservices APIs that allow callers to get module state and user choice data from adservices."
+    is_exported: true
+    is_fixed_read_only: true
+}
+
+flag {
     name: "adservices_enable_per_module_overrides_api"
     namespace: "adservices_aconfig"
     bug: "346669688"
