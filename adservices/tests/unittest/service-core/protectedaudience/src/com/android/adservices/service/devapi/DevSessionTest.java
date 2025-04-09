@@ -18,6 +18,8 @@ package com.android.adservices.service.devapi;
 
 import static com.android.adservices.service.devapi.DevSessionState.IN_DEV;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
@@ -25,6 +27,8 @@ import com.android.adservices.devapi.DevSessionFixture;
 import com.android.adservices.service.proto.DevSessionStorage;
 
 import org.junit.Test;
+
+import java.util.regex.Pattern;
 
 public final class DevSessionTest extends AdServicesUnitTestCase {
 
@@ -44,12 +48,52 @@ public final class DevSessionTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testBuilder_withDefaultValues_emptyAppAllowlistPattern() {
+        DevSession devSession = DevSession.builder().setState(IN_DEV).build();
+
+        assertThat("anything%^&123").doesNotMatch(devSession.getNonDebuggableAppAllowlistPattern());
+        assertThat("").matches(devSession.getNonDebuggableAppAllowlistPattern());
+    }
+
+    @Test
+    public void testFromProto_withUninitializedPattern_emptyAppAllowlistPattern() {
+        DevSessionStorage proto =
+                DevSessionStorage.newBuilder()
+                        .setState(DevSessionStorage.State.IN_DEV)
+                        .setIsStorageInitialized(true)
+                        .setServerAuctionTestKeysEnabled(false)
+                        .setNonDebuggableAppAllowlistPattern("")
+                        .build();
+
+        DevSession devSession = DevSession.fromProto(proto);
+
+        assertThat("anything%^&123").doesNotMatch(devSession.getNonDebuggableAppAllowlistPattern());
+        assertThat("").matches(devSession.getNonDebuggableAppAllowlistPattern());
+    }
+
+    @Test
     public void testBuilder_withServerAuctionTestKeysEnabled() {
         DevSession devSession =
                 DevSession.builder().setState(IN_DEV).setServerAuctionTestKeysEnabled(true).build();
 
         expect.that(devSession.getState()).isEqualTo(IN_DEV);
         expect.that(devSession.isServerAuctionTestKeysEnabled()).isEqualTo(true);
+    }
+
+    @Test
+    public void testBuilder_withAppAllowlistPattern() {
+        String patternString = "com\\.example\\..*";
+        DevSession devSession =
+                DevSession.builder()
+                        .setState(IN_DEV)
+                        .setNonDebuggableAppAllowlistPatternString(patternString)
+                        .build();
+
+        expect.that(devSession.getState()).isEqualTo(IN_DEV);
+        expect.that(devSession.getNonDebuggableAppAllowlistPattern().pattern())
+                .isEqualTo(patternString);
+        assertThat("com.example.foo").matches(devSession.getNonDebuggableAppAllowlistPattern());
+        assertThat("com.example").doesNotMatch(devSession.getNonDebuggableAppAllowlistPattern());
     }
 
     @Test

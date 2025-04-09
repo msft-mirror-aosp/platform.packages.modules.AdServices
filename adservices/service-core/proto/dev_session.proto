@@ -23,7 +23,8 @@ option java_package = "com.android.adservices.service.proto";
 message DevSessionStorage {
   // The state of the developer session.
   enum State {
-    // No state is known. This could be the value when first reading dev session state.
+    // No state is known. This could be the value when first reading dev session
+    // state.
     UNKNOWN = 0;
     // We are in production.
     IN_PROD = 1;
@@ -39,4 +40,9 @@ message DevSessionStorage {
   bool is_storage_initialized = 3;
   // If server auction test keys are enabled.
   bool server_auction_test_keys_enabled = 4;
+  // The non-debuggable app allowlist for the current dev session.
+  // This is a regex pattern that matches the package names of apps that are
+  // allowed to use the dev session.
+  // This is in addition to allowing debuggable apps.
+  optional string non_debuggable_app_allowlist_pattern = 5;
 }
