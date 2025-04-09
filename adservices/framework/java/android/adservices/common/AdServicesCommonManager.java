@@ -475,6 +475,47 @@ public class AdServicesCommonManager {
             "android.adservices.common.action.VIEW_ADSERVICES_CONSENT_PAGE";
 
     /**
+     * Gets module states for the AdServices Modules. {@link AdServicesCommonManager.ModuleState}
+     * describes the possible module states. Callback Returns {@link
+     * AdServicesModuleStatesResponse}.
+     *
+     * @param executor the executor for the callback.
+     * @param callback callback function to return modules states.
+     * @hide
+     */
+    @SystemApi
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_CONSENT_DATA_MIGRATION_API)
+    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    public void getAdServicesModuleStates(
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<AdServicesModuleStatesResponse, Exception> callback) {
+        Objects.requireNonNull(executor, "executor cannot be null");
+        Objects.requireNonNull(callback, "callback cannot be null");
+
+        final IAdServicesCommonService service = getService();
+        try {
+            service.getAdServicesModuleStates(
+                    new IGetAdServicesModuleStatesCallback.Stub() {
+                        @Override
+                        public void onSuccess(AdServicesModuleStatesResponse response) {
+                            callback.onResult(response);
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode) {
+                            callback.onError(
+                                    new IllegalStateException(
+                                            "Internal Error! status code: " + statusCode));
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e(e, "RemoteException");
+            executor.execute(
+                    () -> callback.onError(new IllegalStateException("Internal Error!", e)));
+        }
+    }
+
+    /**
      * Sets overrides for the AdServices Module(s).
      *
      * <p>This API can enable/disable AdServices modules. Setting a module to off will hide the
@@ -517,6 +558,49 @@ public class AdServicesCommonManager {
 
                         @Override
                         public void onFailure(int statusCode) throws RemoteException {
+                            callback.onError(
+                                    new IllegalStateException(
+                                            "Internal Error! status code: " + statusCode));
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e(e, "RemoteException");
+            executor.execute(
+                    () -> callback.onError(new IllegalStateException("Internal Error!", e)));
+        }
+    }
+
+    /**
+     * Gets the user choices for AdServices Modules.
+     *
+     * <p>This API gets the user consent value for each AdServices module (PAS, Measurement, Topic,
+     * etc). {@link AdServicesCommonManager.ModuleUserChoice} Describes the possible user choices.
+     * Callback returns {@link AdServicesUserChoicesResponse}.
+     *
+     * @param executor the executor for the callback.
+     * @param callback callback function to return module user choices.
+     * @hide
+     */
+    @SystemApi
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_CONSENT_DATA_MIGRATION_API)
+    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    public void getAdServicesModuleUserChoices(
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<AdServicesUserChoicesResponse, Exception> callback) {
+        Objects.requireNonNull(executor, "executor cannot be null");
+        Objects.requireNonNull(callback, "callback cannot be null");
+
+        final IAdServicesCommonService service = getService();
+        try {
+            service.getAdServicesModuleUserChoices(
+                    new IGetAdServicesUserChoicesCallback.Stub() {
+                        @Override
+                        public void onSuccess(AdServicesUserChoicesResponse response) {
+                            callback.onResult(response);
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode) {
                             callback.onError(
                                     new IllegalStateException(
                                             "Internal Error! status code: " + statusCode));

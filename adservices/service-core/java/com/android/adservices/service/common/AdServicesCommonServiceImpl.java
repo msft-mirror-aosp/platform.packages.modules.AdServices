@@ -66,8 +66,10 @@ import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStates;
 import android.adservices.common.AdServicesCommonStatesResponse;
+import android.adservices.common.AdServicesModuleStatesResponse;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesStates;
+import android.adservices.common.AdServicesUserChoicesResponse;
 import android.adservices.common.AdsPersonalizationStatusParams;
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.ConsentStatus;
@@ -78,6 +80,8 @@ import android.adservices.common.IAdServicesCommonService;
 import android.adservices.common.IAdServicesCommonStatesCallback;
 import android.adservices.common.IAdsPersonalizationCallback;
 import android.adservices.common.IEnableAdServicesCallback;
+import android.adservices.common.IGetAdServicesModuleStatesCallback;
+import android.adservices.common.IGetAdServicesUserChoicesCallback;
 import android.adservices.common.IRequestAdServicesModuleOverridesCallback;
 import android.adservices.common.IRequestAdServicesModuleUserChoicesCallback;
 import android.adservices.common.IUpdateAdIdCallback;
@@ -540,6 +544,51 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                 });
     }
 
+    @Override
+    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    public void getAdServicesModuleStates(IGetAdServicesModuleStatesCallback callback) {
+        Objects.requireNonNull(callback, "Callback cannot be null");
+        final long serviceStartTime = mClock.elapsedRealtime();
+        int callingUid = Binder.getCallingUidOrThrow();
+        boolean authorizedCaller = PermissionHelper.hasAccessAdServicesStatePermission(mContext);
+
+        sBackgroundExecutor.execute(
+                () -> {
+                    int resultCode = STATUS_SUCCESS;
+                    try {
+                        // Check permissions
+                        if (!authorizedCaller) {
+                            LogUtil.e(UNAUTHORIZED_CALLER_MESSAGE);
+                            callback.onFailure(STATUS_UNAUTHORIZED);
+                            return;
+                        }
+
+                        ConsentManager consentManager = ConsentManager.getInstance();
+                        if (!mFlags.getAdServicesConsentBusinessLogicMigrationEnabled()) {
+                            LogUtil.d("business logic migration not enabled");
+                            callback.onFailure(STATUS_KILLSWITCH_ENABLED);
+                        }
+                        LogUtil.d("getting module states");
+                        AdServicesModuleStatesResponse.Builder responseBuilder =
+                                new AdServicesModuleStatesResponse.Builder()
+                                        .setModuleStates(
+                                                consentManager
+                                                        .getEnrollmentData()
+                                                        .getModuleStates());
+
+                        callback.onSuccess(responseBuilder.build());
+                    } catch (Exception e) {
+                        LogUtil.e("get error " + e.getMessage());
+                        try {
+                            callback.onFailure(STATUS_INTERNAL_ERROR);
+                        } catch (RemoteException ex) {
+                            LogUtil.e("Unable to send result to the callback " + ex.getMessage());
+                        }
+                    }
+                    // TODO(b/405376309):implement logging
+                });
+    }
+
     /** Sets AdServices feature states. */
     @Override
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
@@ -753,7 +802,49 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                 e,
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_UPDATE_AD_ID_API_ERROR,
                                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
+                        try {
+                            callback.onFailure(STATUS_INTERNAL_ERROR);
+                        } catch (RemoteException ex) {
+                            LogUtil.e("Unable to send result to the callback " + ex.getMessage());
+                        }
+                    }
+                });
+    }
 
+    @Override
+    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    public void getAdServicesModuleUserChoices(IGetAdServicesUserChoicesCallback callback) {
+        Objects.requireNonNull(callback, "Callback cannot be null");
+        final long serviceStartTime = mClock.elapsedRealtime();
+        int callingUid = Binder.getCallingUidOrThrow();
+        boolean authorizedCaller = PermissionHelper.hasAccessAdServicesStatePermission(mContext);
+
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        // Check permissions
+                        if (!authorizedCaller) {
+                            LogUtil.e(UNAUTHORIZED_CALLER_MESSAGE);
+                            callback.onFailure(STATUS_UNAUTHORIZED);
+                            return;
+                        }
+
+                        ConsentManager consentManager = ConsentManager.getInstance();
+                        if (!mFlags.getAdServicesConsentBusinessLogicMigrationEnabled()) {
+                            LogUtil.d("business logic migration not enabled");
+                            callback.onFailure(STATUS_KILLSWITCH_ENABLED);
+                        }
+                        LogUtil.d("getting user choices");
+                        AdServicesUserChoicesResponse.Builder responseBuilder =
+                                new AdServicesUserChoicesResponse.Builder()
+                                        .setUserChoices(
+                                                consentManager
+                                                        .getEnrollmentData()
+                                                        .getUserChoices());
+
+                        callback.onSuccess(responseBuilder.build());
+                    } catch (Exception e) {
+                        LogUtil.e("get error " + e.getMessage());
                         try {
                             callback.onFailure(STATUS_INTERNAL_ERROR);
                         } catch (RemoteException ex) {

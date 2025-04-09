@@ -48,7 +48,7 @@ option java_package = "com.google.cobalt";
 //
 // A MetricDefinition is used to define a Metric.
 //
-// Next ID: 27
+// Next ID: 28
 message MetricDefinition {
   reserved 6, 7, 9, 13, 14, 15, 17, 21, 23, 24;
   reserved "event_codes", "event_code_buffer_max", "max_event_code", "parts", "proto_name",
@@ -70,7 +70,7 @@ message MetricDefinition {
   uint32 id = 4;
 
   // A Metric has one of the following types.
-  // Next ID: 12
+  // Next ID: 13
   enum MetricType {
     reserved 1, 2, 3, 4, 5, 6, 7, 9999;
     reserved "CUSTOM", "ELAPSED_TIME", "EVENT_COUNT", "EVENT_OCCURRED", "FRAME_RATE",
@@ -111,6 +111,13 @@ message MetricDefinition {
     // - metric_semantics (required)
     // - string_candidate_file. (required)
     STRING = 11;
+
+    // Experimental. DO NOT USE!
+    // Records an instance of a defined structure.
+    //
+    // MetricDefinition fields:
+    // - struct_fields (0 or more):
+    STRUCT = 12;
   }
 
   MetricType metric_type = 5;
@@ -198,6 +205,10 @@ message MetricDefinition {
   repeated MetricSemantics metric_semantics = 20;
 
   // The path to a list of candidate strings for a metric of type STRING.
+  // The path should be relative to the root of the Cobalt registry, for
+  // instance "$CUSTOMER/$PROJECT/candidate_strings.txt". String candidate
+  // files should ideally be placed in the same registry and directory as the
+  // project that uses it.
   //
   // This is a required field for metrics of type STRING.
   string string_candidate_file = 22;
@@ -256,6 +267,38 @@ message MetricDefinition {
   // Report IDs that have been previously used and deleted from this metric.
   // These IDs must not be reused in new reports.
   repeated uint32 deleted_report_ids = 26;
+
+  message StructField {
+    uint32 id = 1;
+    string name = 2;
+
+    enum FieldType {
+      FIELD_TYPE_UNSPECIFIED = 0;
+
+      BOOL = 1;
+
+      ENUM = 2;
+
+      STRING = 3;
+    }
+
+    FieldType type = 3;
+
+    // This is a required field for fields of type enum.
+    map<uint32, string> enum = 4;
+
+    // The path to a list of candidate strings for a GROUP_BY aggregate referring to a STRING field.
+    // The path should be relative to the root of the Cobalt registry, for
+    // instance "$CUSTOMER/$PROJECT/candidate_strings.txt". String candidate
+    // files should ideally be placed in the same registry and directory as the
+    // project that uses it.
+    //
+    // If string_candidate_file is set for this struct field, it does not need to be set for
+    // aggregates in reports.
+    string string_candidate_file = 5;
+  }
+
+  repeated StructField struct_fields = 27;
 }
 
 enum MetricUnits {
