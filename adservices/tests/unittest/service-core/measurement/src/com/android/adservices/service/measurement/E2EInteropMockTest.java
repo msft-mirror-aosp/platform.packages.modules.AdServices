@@ -36,6 +36,13 @@ import com.android.adservices.service.measurement.registration.AsyncRegistration
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
+import co.nstant.in.cbor.CborDecoder;
+import co.nstant.in.cbor.CborException;
+import co.nstant.in.cbor.model.Array;
+import co.nstant.in.cbor.model.ByteString;
+import co.nstant.in.cbor.model.DataItem;
+import co.nstant.in.cbor.model.UnicodeString;
+
 import com.google.common.collect.ImmutableSet;
 
 import org.json.JSONArray;
@@ -59,13 +66,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-
-import co.nstant.in.cbor.CborDecoder;
-import co.nstant.in.cbor.CborException;
-import co.nstant.in.cbor.model.Array;
-import co.nstant.in.cbor.model.ByteString;
-import co.nstant.in.cbor.model.DataItem;
-import co.nstant.in.cbor.model.UnicodeString;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
@@ -449,6 +449,11 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
         AsyncFetchStatus status = new AsyncFetchStatus();
         Optional<Source> maybeSource =
                 mAsyncSourceFetcher.parseSource(asyncRegistration, enrollmentId, headers, status);
+        if (asyncRegistration.getRegistrationUri() != null
+                && status.getEntityStatus() != AsyncFetchStatus.EntityStatus.SUCCESS) {
+            mAsyncSourceFetcher.generateHeaderErrorDebugReport(
+                    asyncRegistration, headers, enrollmentId);
+        }
 
         if (maybeSource.isPresent()) {
             Assert.assertTrue(
