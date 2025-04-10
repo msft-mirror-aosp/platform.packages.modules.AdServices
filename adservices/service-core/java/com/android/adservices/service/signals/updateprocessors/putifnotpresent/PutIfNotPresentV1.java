@@ -66,7 +66,7 @@ public class PutIfNotPresentV1 extends PutIfNotPresent {
                 UpdateProcessorUtils.validateAndCastToJSONObject(PUT_IF_NOT_PRESENT, update);
         String value = updateObject.getString(VALUE);
         EvictionPriority evictionPriority =
-                mEvictionPriorityHandler.getEvictionPriority(
+                mEvictionPriorityHandler.getEvictionPriorityFromUpdate(
                         key, updateObject, updateSignalsProcessReportedLogger);
 
         UpdateProcessorUtils.touchKey(key, toReturn.getKeysTouched());
