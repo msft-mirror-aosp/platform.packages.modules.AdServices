@@ -17,6 +17,8 @@
 package com.android.adservices.service.signals.endtoends;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.CommonFixture.FIXED_EARLIER_ONE_DAY;
+import static android.adservices.common.CommonFixture.FIXED_NEXT_ONE_DAY;
 import static android.adservices.common.CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
@@ -25,10 +27,19 @@ import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWIT
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_PRODUCT_METRICS_V1_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLE_PRIORITIZED_EVICTION;
+import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES;
+import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_UPDATE_SCHEMA_VERSION;
 import static com.android.adservices.service.signals.SignalsFixture.KEY_1;
+import static com.android.adservices.service.signals.SignalsFixture.KEY_2;
+import static com.android.adservices.service.signals.SignalsFixture.KEY_3;
+import static com.android.adservices.service.signals.SignalsFixture.KEY_4;
 import static com.android.adservices.service.signals.SignalsFixture.VALUE_1;
+import static com.android.adservices.service.signals.SignalsFixture.VALUE_2;
 import static com.android.adservices.service.signals.SignalsFixture.toBase64;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIGNAL_EVICTOR_PRIORITIZED_FIFO;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_SMALL;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_UNSET;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_VERY_SMALL;
 
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -73,7 +84,6 @@ import com.android.adservices.service.signals.UpdateSignalsOrchestrator;
 import com.android.adservices.service.signals.UpdatesDownloader;
 import com.android.adservices.service.signals.evict.EvictionPriority;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
-import com.android.adservices.service.signals.evict.SignalSizeCalculator;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerFactory;
 import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEventHandler;
@@ -100,6 +110,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
 
@@ -230,8 +241,6 @@ public class PrioritizedEvictionE2ETest extends AdServicesExtendedMockitoTestCas
 
     @Test
     public void testUpdateSignals_simplePut() throws Exception {
-        when(mClockMock.instant()).thenReturn(SIGNAL.getCreationTime());
-
         String updateJson =
                 String.format(
                         Locale.ENGLISH,
@@ -249,21 +258,16 @@ public class PrioritizedEvictionE2ETest extends AdServicesExtendedMockitoTestCas
                         toBase64(SIGNAL.getValue()),
                         SIGNAL.getEvictionPriority());
 
-        mockSignalUpdateServer(updateJson, UpdateSchemaVersion.V1);
-        Uri signalsUri = mMockWebServerRule.uriForPath(SIGNALS_PATH);
-
-        UpdateSignalsInput updateSignalsInput =
-                new UpdateSignalsInput.Builder(signalsUri, SIGNAL.getPackageName()).build();
-        UpdateSignalsSyncCallback callback = new UpdateSignalsSyncCallback();
-        mService.updateSignals(updateSignalsInput, callback);
-
-        callback.assertResultReceived();
+        when(mClockMock.instant()).thenReturn(SIGNAL.getCreationTime());
         List<DBProtectedSignal> updatedSignals =
-                mProtectedSignalsDao.getSignalsByBuyer(SIGNAL.getBuyer());
+                updateAndReturnPersistedBuyerSignals(
+                        updateJson,
+                        UpdateSchemaVersion.V1,
+                        SIGNAL.getPackageName(),
+                        SIGNAL.getBuyer());
 
         expect.withMessage("updatedSignals").that(updatedSignals).containsExactly(SIGNAL);
 
-        int updatedSignalsSizeBytes = SignalSizeCalculator.calculate(updatedSignals);
         UpdateSignalsProcessReportedStats expectedStats =
                 UpdateSignalsProcessReportedStats.builder()
                         .setUpdateSignalsProcessLatencyMillis(0)
@@ -273,14 +277,14 @@ public class PrioritizedEvictionE2ETest extends AdServicesExtendedMockitoTestCas
                         .setValuesStoredCount(1)
                         .setEvictionRulesCount(0)
                         .setPerBuyerSignalSize(SIZE_VERY_SMALL)
-                        .setMeanRawProtectedSignalsSizeBytes(updatedSignalsSizeBytes)
-                        .setMinRawProtectedSignalsSizeBytes(updatedSignalsSizeBytes)
-                        .setMaxRawProtectedSignalsSizeBytes(updatedSignalsSizeBytes)
+                        .setMeanRawProtectedSignalsSizeBytes(5)
+                        .setMinRawProtectedSignalsSizeBytes(5)
+                        .setMaxRawProtectedSignalsSizeBytes(5)
                         .setSignalEvictorsUsed(ImmutableSet.of())
                         .setUpdatedSignalEvictionPriorities(
                                 ImmutableSet.of(SIGNAL.getEvictionPriority()))
                         .setEvictedSignalEvictionPriorities(ImmutableSet.of())
-                        .setPerBuyerEvictedSignalSize(0)
+                        .setPerBuyerEvictedSignalSize(SIZE_UNSET)
                         .setUpdatedSignalsWithEvictionPriorityCount(1)
                         .setSignalUpdateSchemaVersion(UpdateSchemaVersion.V1)
                         .build();
@@ -289,8 +293,6 @@ public class PrioritizedEvictionE2ETest extends AdServicesExtendedMockitoTestCas
 
     @Test
     public void testUpdateSignals_simplePutIfNotPresent() throws Exception {
-        when(mClockMock.instant()).thenReturn(SIGNAL.getCreationTime());
-
         String updateJson =
                 String.format(
                         Locale.ENGLISH,
@@ -308,21 +310,16 @@ public class PrioritizedEvictionE2ETest extends AdServicesExtendedMockitoTestCas
                         toBase64(SIGNAL.getValue()),
                         SIGNAL.getEvictionPriority());
 
-        mockSignalUpdateServer(updateJson, UpdateSchemaVersion.V1);
-        Uri signalsUri = mMockWebServerRule.uriForPath(SIGNALS_PATH);
-
-        UpdateSignalsInput updateSignalsInput =
-                new UpdateSignalsInput.Builder(signalsUri, SIGNAL.getPackageName()).build();
-        UpdateSignalsSyncCallback callback = new UpdateSignalsSyncCallback();
-        mService.updateSignals(updateSignalsInput, callback);
-
-        callback.assertResultReceived();
+        when(mClockMock.instant()).thenReturn(SIGNAL.getCreationTime());
         List<DBProtectedSignal> updatedSignals =
-                mProtectedSignalsDao.getSignalsByBuyer(SIGNAL.getBuyer());
+                updateAndReturnPersistedBuyerSignals(
+                        updateJson,
+                        UpdateSchemaVersion.V1,
+                        SIGNAL.getPackageName(),
+                        SIGNAL.getBuyer());
 
         expect.withMessage("updatedSignals").that(updatedSignals).containsExactly(SIGNAL);
 
-        int updatedSignalsSizeBytes = SignalSizeCalculator.calculate(updatedSignals);
         UpdateSignalsProcessReportedStats expectedStats =
                 UpdateSignalsProcessReportedStats.builder()
                         .setUpdateSignalsProcessLatencyMillis(0)
@@ -332,14 +329,14 @@ public class PrioritizedEvictionE2ETest extends AdServicesExtendedMockitoTestCas
                         .setValuesStoredCount(1)
                         .setEvictionRulesCount(0)
                         .setPerBuyerSignalSize(SIZE_VERY_SMALL)
-                        .setMeanRawProtectedSignalsSizeBytes(updatedSignalsSizeBytes)
-                        .setMinRawProtectedSignalsSizeBytes(updatedSignalsSizeBytes)
-                        .setMaxRawProtectedSignalsSizeBytes(updatedSignalsSizeBytes)
+                        .setMeanRawProtectedSignalsSizeBytes(5)
+                        .setMinRawProtectedSignalsSizeBytes(5)
+                        .setMaxRawProtectedSignalsSizeBytes(5)
                         .setSignalEvictorsUsed(ImmutableSet.of())
                         .setUpdatedSignalEvictionPriorities(
                                 ImmutableSet.of(SIGNAL.getEvictionPriority()))
                         .setEvictedSignalEvictionPriorities(ImmutableSet.of())
-                        .setPerBuyerEvictedSignalSize(0)
+                        .setPerBuyerEvictedSignalSize(SIZE_UNSET)
                         .setUpdatedSignalsWithEvictionPriorityCount(1)
                         .setSignalUpdateSchemaVersion(UpdateSchemaVersion.V1)
                         .build();
@@ -348,8 +345,6 @@ public class PrioritizedEvictionE2ETest extends AdServicesExtendedMockitoTestCas
 
     @Test
     public void testUpdateSignals_simpleAppend() throws Exception {
-        when(mClockMock.instant()).thenReturn(SIGNAL.getCreationTime());
-
         String updateJson =
                 String.format(
                         Locale.ENGLISH,
@@ -368,21 +363,16 @@ public class PrioritizedEvictionE2ETest extends AdServicesExtendedMockitoTestCas
                         toBase64(SIGNAL.getValue()),
                         SIGNAL.getEvictionPriority());
 
-        mockSignalUpdateServer(updateJson, UpdateSchemaVersion.V1);
-        Uri signalsUri = mMockWebServerRule.uriForPath(SIGNALS_PATH);
-
-        UpdateSignalsInput updateSignalsInput =
-                new UpdateSignalsInput.Builder(signalsUri, SIGNAL.getPackageName()).build();
-        UpdateSignalsSyncCallback callback = new UpdateSignalsSyncCallback();
-        mService.updateSignals(updateSignalsInput, callback);
-
-        callback.assertResultReceived();
+        when(mClockMock.instant()).thenReturn(SIGNAL.getCreationTime());
         List<DBProtectedSignal> updatedSignals =
-                mProtectedSignalsDao.getSignalsByBuyer(SIGNAL.getBuyer());
+                updateAndReturnPersistedBuyerSignals(
+                        updateJson,
+                        UpdateSchemaVersion.V1,
+                        SIGNAL.getPackageName(),
+                        SIGNAL.getBuyer());
 
         expect.withMessage("updatedSignals").that(updatedSignals).containsExactly(SIGNAL);
 
-        int updatedSignalsSizeBytes = SignalSizeCalculator.calculate(updatedSignals);
         UpdateSignalsProcessReportedStats expectedStats =
                 UpdateSignalsProcessReportedStats.builder()
                         .setUpdateSignalsProcessLatencyMillis(0)
@@ -392,14 +382,14 @@ public class PrioritizedEvictionE2ETest extends AdServicesExtendedMockitoTestCas
                         .setValuesStoredCount(1)
                         .setEvictionRulesCount(0)
                         .setPerBuyerSignalSize(SIZE_VERY_SMALL)
-                        .setMeanRawProtectedSignalsSizeBytes(updatedSignalsSizeBytes)
-                        .setMinRawProtectedSignalsSizeBytes(updatedSignalsSizeBytes)
-                        .setMaxRawProtectedSignalsSizeBytes(updatedSignalsSizeBytes)
+                        .setMeanRawProtectedSignalsSizeBytes(5)
+                        .setMinRawProtectedSignalsSizeBytes(5)
+                        .setMaxRawProtectedSignalsSizeBytes(5)
                         .setSignalEvictorsUsed(ImmutableSet.of())
                         .setUpdatedSignalEvictionPriorities(
                                 ImmutableSet.of(SIGNAL.getEvictionPriority()))
                         .setEvictedSignalEvictionPriorities(ImmutableSet.of())
-                        .setPerBuyerEvictedSignalSize(0)
+                        .setPerBuyerEvictedSignalSize(SIZE_UNSET)
                         .setUpdatedSignalsWithEvictionPriorityCount(1)
                         .setSignalUpdateSchemaVersion(UpdateSchemaVersion.V1)
                         .build();
@@ -408,8 +398,6 @@ public class PrioritizedEvictionE2ETest extends AdServicesExtendedMockitoTestCas
 
     @Test
     public void testUpdateSignals_simpleRemove() throws Exception {
-        when(mClockMock.instant()).thenReturn(SIGNAL.getCreationTime());
-
         mProtectedSignalsDao.insertAndDelete(
                 SIGNAL.getBuyer(),
                 SIGNAL.getCreationTime(),
@@ -430,17 +418,13 @@ public class PrioritizedEvictionE2ETest extends AdServicesExtendedMockitoTestCas
                         """,
                         toBase64(SIGNAL.getKey()));
 
-        mockSignalUpdateServer(updateJson, UpdateSchemaVersion.V1);
-        Uri signalsUri = mMockWebServerRule.uriForPath(SIGNALS_PATH);
-
-        UpdateSignalsInput updateSignalsInput =
-                new UpdateSignalsInput.Builder(signalsUri, SIGNAL.getPackageName()).build();
-        UpdateSignalsSyncCallback callback = new UpdateSignalsSyncCallback();
-        mService.updateSignals(updateSignalsInput, callback);
-
-        callback.assertResultReceived();
+        when(mClockMock.instant()).thenReturn(SIGNAL.getCreationTime());
         List<DBProtectedSignal> updatedSignals =
-                mProtectedSignalsDao.getSignalsByBuyer(SIGNAL.getBuyer());
+                updateAndReturnPersistedBuyerSignals(
+                        updateJson,
+                        UpdateSchemaVersion.V1,
+                        SIGNAL.getPackageName(),
+                        SIGNAL.getBuyer());
 
         expect.withMessage("updatedSignals").that(updatedSignals).isEmpty();
 
@@ -452,14 +436,14 @@ public class PrioritizedEvictionE2ETest extends AdServicesExtendedMockitoTestCas
                         .setKeysStoredCount(1)
                         .setValuesStoredCount(1)
                         .setEvictionRulesCount(0)
-                        .setPerBuyerSignalSize(0)
+                        .setPerBuyerSignalSize(SIZE_UNSET)
                         .setMeanRawProtectedSignalsSizeBytes(0)
                         .setMinRawProtectedSignalsSizeBytes(0)
                         .setMaxRawProtectedSignalsSizeBytes(0)
                         .setSignalEvictorsUsed(ImmutableSet.of())
                         .setUpdatedSignalEvictionPriorities(ImmutableSet.of())
                         .setEvictedSignalEvictionPriorities(ImmutableSet.of())
-                        .setPerBuyerEvictedSignalSize(0)
+                        .setPerBuyerEvictedSignalSize(SIZE_UNSET)
                         .setUpdatedSignalsWithEvictionPriorityCount(0)
                         .setSignalUpdateSchemaVersion(UpdateSchemaVersion.V1)
                         .build();
@@ -468,8 +452,6 @@ public class PrioritizedEvictionE2ETest extends AdServicesExtendedMockitoTestCas
 
     @Test
     public void testUpdateSignals_simpleUpdateProperties() throws Exception {
-        when(mClockMock.instant()).thenReturn(SIGNAL.getCreationTime());
-
         mProtectedSignalsDao.insertAndDelete(
                 SIGNAL.getBuyer(),
                 SIGNAL.getCreationTime(),
@@ -495,23 +477,18 @@ public class PrioritizedEvictionE2ETest extends AdServicesExtendedMockitoTestCas
                         toBase64(SIGNAL.getKey()),
                         EvictionPriority.EVICT_LATER);
 
-        mockSignalUpdateServer(updateJson, UpdateSchemaVersion.V1);
-        Uri signalsUri = mMockWebServerRule.uriForPath(SIGNALS_PATH);
-
-        UpdateSignalsInput updateSignalsInput =
-                new UpdateSignalsInput.Builder(signalsUri, SIGNAL.getPackageName()).build();
-        UpdateSignalsSyncCallback callback = new UpdateSignalsSyncCallback();
-        mService.updateSignals(updateSignalsInput, callback);
-
-        callback.assertResultReceived();
+        when(mClockMock.instant()).thenReturn(SIGNAL.getCreationTime());
         List<DBProtectedSignal> updatedSignals =
-                mProtectedSignalsDao.getSignalsByBuyer(SIGNAL.getBuyer());
+                updateAndReturnPersistedBuyerSignals(
+                        updateJson,
+                        UpdateSchemaVersion.V1,
+                        SIGNAL.getPackageName(),
+                        SIGNAL.getBuyer());
 
         DBProtectedSignal expectedSignal =
                 SIGNAL.toBuilder().setEvictionPriority(EvictionPriority.EVICT_LATER).build();
         expect.withMessage("updatedSignals").that(updatedSignals).containsExactly(expectedSignal);
 
-        int updatedSignalsSizeBytes = SignalSizeCalculator.calculate(updatedSignals);
         UpdateSignalsProcessReportedStats expectedStats =
                 UpdateSignalsProcessReportedStats.builder()
                         .setUpdateSignalsProcessLatencyMillis(0)
@@ -521,18 +498,150 @@ public class PrioritizedEvictionE2ETest extends AdServicesExtendedMockitoTestCas
                         .setValuesStoredCount(2)
                         .setEvictionRulesCount(0)
                         .setPerBuyerSignalSize(SIZE_VERY_SMALL)
-                        .setMeanRawProtectedSignalsSizeBytes((float) updatedSignalsSizeBytes / 2)
-                        .setMinRawProtectedSignalsSizeBytes(updatedSignalsSizeBytes)
-                        .setMaxRawProtectedSignalsSizeBytes(updatedSignalsSizeBytes)
+                        .setMeanRawProtectedSignalsSizeBytes(2.5f)
+                        .setMinRawProtectedSignalsSizeBytes(5)
+                        .setMaxRawProtectedSignalsSizeBytes(5)
                         .setSignalEvictorsUsed(ImmutableSet.of())
                         .setUpdatedSignalEvictionPriorities(
                                 ImmutableSet.of(EvictionPriority.EVICT_LATER))
                         .setEvictedSignalEvictionPriorities(ImmutableSet.of())
-                        .setPerBuyerEvictedSignalSize(0)
+                        .setPerBuyerEvictedSignalSize(SIZE_UNSET)
                         .setUpdatedSignalsWithEvictionPriorityCount(1)
                         .setSignalUpdateSchemaVersion(UpdateSchemaVersion.V1)
                         .build();
         verifyExpectedStatsLogged(expectedStats);
+    }
+
+    /**
+     * Tests prioritized eviction following a Put update.
+     *
+     * <ol>
+     *   <li>Initially, the DB contains: [signalToEvict1, signalToEvict2, signalToRetain1,
+     *       signalToRetain2], with a total size of 24 bytes.
+     *   <li>newSignal is added via Put, increasing the total size to 29 bytes and triggering
+     *       eviction.
+     *   <li>signalToEvict1 has the lowest priority and is evicted, lowering the total size to 22.
+     *   <li>signalToEvict2 and signalToRetain1 have the next lowest priority, but signalToEvict2 is
+     *       older; signalToEvict2 is evicted, lowering the total size to 17 and ending eviction.
+     *   <li>Finally, the DB contains: [signalToRetain1, signalToRetain2, newSignal].
+     * </ol>
+     */
+    @Test
+    @SetIntegerFlag(name = KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES, value = 18)
+    @SetIntegerFlag(
+            name = KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES,
+            value = 25)
+    public void testUpdateSignals_putAboveMaxSignalSize_triggersEviction() throws Exception {
+        DBProtectedSignal signalToEvict1 = SIGNAL.toBuilder().setValue(VALUE_2).build();
+        DBProtectedSignal signalToEvict2 =
+                SIGNAL.toBuilder()
+                        .setKey(KEY_2)
+                        .setEvictionPriority(EvictionPriority.DEFAULT)
+                        .build();
+        DBProtectedSignal signalToRetain1 =
+                SIGNAL.toBuilder()
+                        .setKey(KEY_2)
+                        .setValue(VALUE_2)
+                        .setEvictionPriority(EvictionPriority.DEFAULT)
+                        .setCreationTime(FIXED_NEXT_ONE_DAY.truncatedTo(ChronoUnit.MILLIS))
+                        .build();
+        DBProtectedSignal signalToRetain2 =
+                SIGNAL.toBuilder()
+                        .setKey(KEY_3)
+                        .setEvictionPriority(EvictionPriority.EVICT_LATER)
+                        .setCreationTime(FIXED_EARLIER_ONE_DAY.truncatedTo(ChronoUnit.MILLIS))
+                        .build();
+
+        List<DBProtectedSignal> expectedInitialSignals =
+                ImmutableList.of(signalToEvict1, signalToEvict2, signalToRetain1, signalToRetain2);
+
+        mProtectedSignalsDao.insertAndDelete(
+                SIGNAL.getBuyer(),
+                SIGNAL.getCreationTime(),
+                expectedInitialSignals,
+                /* signalsToDelete= */ ImmutableList.of());
+
+        List<DBProtectedSignal> initialSignals =
+                mProtectedSignalsDao.getSignalsByBuyer(SIGNAL.getBuyer());
+        assertWithMessage("initialSignals")
+                .that(initialSignals)
+                .containsExactlyElementsIn(expectedInitialSignals);
+
+        DBProtectedSignal newSignal =
+                SIGNAL.toBuilder()
+                        .setKey(KEY_4)
+                        .setEvictionPriority(EvictionPriority.EVICT_LATER)
+                        .build();
+
+        String updateJson =
+                String.format(
+                        Locale.ENGLISH,
+                        """
+                        {
+                          "put": {
+                            "%s": {
+                              "value": "%s",
+                              "eviction_priority": "%s"
+                            }
+                          }
+                        }
+                        """,
+                        toBase64(newSignal.getKey()),
+                        toBase64(newSignal.getValue()),
+                        newSignal.getEvictionPriority());
+
+        when(mClockMock.instant()).thenReturn(newSignal.getCreationTime());
+        List<DBProtectedSignal> updatedSignals =
+                updateAndReturnPersistedBuyerSignals(
+                        updateJson,
+                        UpdateSchemaVersion.V1,
+                        SIGNAL.getPackageName(),
+                        SIGNAL.getBuyer());
+
+        List<DBProtectedSignal> expectedUpdatedSignals =
+                ImmutableList.of(signalToRetain1, signalToRetain2, newSignal);
+        expect.withMessage("updatedSignals")
+                .that(updatedSignals)
+                .containsExactlyElementsIn(expectedUpdatedSignals);
+
+        UpdateSignalsProcessReportedStats expectedStats =
+                UpdateSignalsProcessReportedStats.builder()
+                        .setUpdateSignalsProcessLatencyMillis(0)
+                        .setAdservicesApiStatusCode(STATUS_SUCCESS)
+                        .setSignalsWrittenCount(1)
+                        .setKeysStoredCount(1)
+                        .setValuesStoredCount(1)
+                        .setEvictionRulesCount(2)
+                        .setPerBuyerSignalSize(SIZE_SMALL)
+                        .setMeanRawProtectedSignalsSizeBytes(17)
+                        .setMinRawProtectedSignalsSizeBytes(5)
+                        .setMaxRawProtectedSignalsSizeBytes(7)
+                        .setSignalEvictorsUsed(ImmutableSet.of(SIGNAL_EVICTOR_PRIORITIZED_FIFO))
+                        .setUpdatedSignalEvictionPriorities(
+                                ImmutableSet.of(EvictionPriority.EVICT_LATER))
+                        .setEvictedSignalEvictionPriorities(
+                                ImmutableSet.of(
+                                        EvictionPriority.EVICT_SOONER, EvictionPriority.DEFAULT))
+                        .setPerBuyerEvictedSignalSize(SIZE_SMALL)
+                        .setUpdatedSignalsWithEvictionPriorityCount(1)
+                        .setSignalUpdateSchemaVersion(UpdateSchemaVersion.V1)
+                        .build();
+        verifyExpectedStatsLogged(expectedStats);
+    }
+
+    private List<DBProtectedSignal> updateAndReturnPersistedBuyerSignals(
+            String updateJson, int updateSchemaVersion, String packageName, AdTechIdentifier buyer)
+            throws Exception {
+        mockSignalUpdateServer(updateJson, updateSchemaVersion);
+        Uri signalsUri = mMockWebServerRule.uriForPath(SIGNALS_PATH);
+
+        UpdateSignalsInput updateSignalsInput =
+                new UpdateSignalsInput.Builder(signalsUri, packageName).build();
+        UpdateSignalsSyncCallback callback = new UpdateSignalsSyncCallback();
+        mService.updateSignals(updateSignalsInput, callback);
+
+        callback.assertResultReceived();
+        return mProtectedSignalsDao.getSignalsByBuyer(buyer);
     }
 
     private void mockSignalUpdateServer(String updateJson, int updateSchemaVersion)
