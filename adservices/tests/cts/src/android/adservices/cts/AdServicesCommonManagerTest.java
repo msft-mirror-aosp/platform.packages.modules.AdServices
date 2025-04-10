@@ -31,7 +31,6 @@ import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesStates;
-import android.adservices.common.AdsPersonalizationStatusParams;
 import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
 import android.adservices.common.UpdateAdServicesModuleStatesParams;
@@ -222,12 +221,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     public void testSetAdsPersonalizationStatus() {
         OutcomeReceiverForTests<Boolean> receiver = new OutcomeReceiverForTests<>();
 
-        AdsPersonalizationStatusParams params =
-                new AdsPersonalizationStatusParams(ADS_PERSONALZATION_ENABLED);
-
-        // last set value should be the returned value
-        expect.that(params.getAdsPersonalizationStatus()).isEqualTo(ADS_PERSONALZATION_ENABLED);
-
-        mCommonManager.setAdsPersonalizationStatus(params, CALLBACK_EXECUTOR, receiver);
+        mCommonManager.setAdsPersonalizationStatus(
+                ADS_PERSONALZATION_ENABLED, CALLBACK_EXECUTOR, receiver);
     }
 }
