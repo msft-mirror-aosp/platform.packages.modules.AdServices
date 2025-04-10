@@ -37,7 +37,7 @@ public abstract class DevSession {
             DevSession.builder().setState(DevSessionState.UNKNOWN).build();
 
     /** Default app allowlist pattern which matches empty input. */
-    private static final String DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN = "^$";
+    public static final String DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN = "^$";
 
     public DevSession() {
         // Constructor for AutoValue.

@@ -20,6 +20,7 @@ import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_DEV
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.devapi.DevSession;
 import com.android.adservices.service.devapi.DevSessionController;
 import com.android.adservices.service.devapi.DevSessionControllerResult;
 import com.android.adservices.service.shell.AbstractShellCommand;
@@ -35,6 +36,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Pattern;
 
 public final class DevSessionCommand extends AbstractShellCommand {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
@@ -121,9 +123,12 @@ public final class DevSessionCommand extends AbstractShellCommand {
 
         DevSessionControllerResult result;
         try {
+            // TODO(b/408870635): Add support for non-debuggable app allowlist.
             Future<DevSessionControllerResult> future =
                     shouldSetDevSessionEnabled
-                            ? mDevSessionController.startDevSession(setServerAuctionTestKeysEnabled)
+                            ? mDevSessionController.startDevSession(
+                                    setServerAuctionTestKeysEnabled,
+                                    Pattern.compile(DevSession.DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN))
                             : mDevSessionController.endDevSession();
             result = future.get(TIMEOUT_SEC, TimeUnit.SECONDS);
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
