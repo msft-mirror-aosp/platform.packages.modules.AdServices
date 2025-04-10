@@ -60,4 +60,30 @@ public final class CommonFlagsConstants {
      */
     public static final String KEY_FLAG_INITIALIZATION_TIMEOUT_MS =
             "ProcessStable__flag_initialization_timeout_ms";
+
+    /** The default allow list for process stable flag framework. */
+    public static final String DEFAULT_PROCESS_STABLE_ALLOW_LIST = "";
+
+    /** The flag key for the default allow list for process stable flag framework. */
+    public static final String KEY_PROCESS_STABLE_ALLOW_LIST =
+            "ProcessStable__allow_list_flag_names";
+
+    /** The default deny list for process stable flag framework. */
+    public static final String DEFAULT_PROCESS_STABLE_DENY_LIST = "";
+
+    /** The flag key for the default deny list for process stable flag framework. */
+    public static final String KEY_PROCESS_STABLE_DENY_LIST = "ProcessStable__deny_list_flag_names";
+
+    /**
+     * The default state if killing AdServices process is enabled for Process-Stable flags
+     * framework.
+     */
+    public static final boolean DEFAULT_PROCESS_STABLE_ENABLE_KILL_PROCESS_ON_FLAG_UPDATE = false;
+
+    /**
+     * Key for the state if killing AdServices process is enabled for Process-Stable flags
+     * framework.
+     */
+    public static final String KEY_PROCESS_STABLE_ENABLE_KILL_PROCESS_ON_FLAG_UPDATE =
+            "ProcessStable__enable_kill_process_on_flag_update";
 }
