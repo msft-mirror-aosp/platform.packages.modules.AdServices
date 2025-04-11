@@ -33,6 +33,7 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -556,7 +557,7 @@ public class PrioritizedEvictionE2ETest extends AdServicesExtendedMockitoTestCas
     private void verifyExpectedStatsLogged(UpdateSignalsProcessReportedStats expectedStats) {
         ArgumentCaptor<UpdateSignalsProcessReportedStats> statsCaptor =
                 ArgumentCaptor.forClass(UpdateSignalsProcessReportedStats.class);
-        verify(mAdServicesLoggerImplMock)
+        verify(mAdServicesLoggerImplMock, timeout(500))
                 .logUpdateSignalsProcessReportedStats(statsCaptor.capture());
         UpdateSignalsProcessReportedStats stats = statsCaptor.getValue();
 
