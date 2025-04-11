@@ -16,13 +16,16 @@
 package com.android.adservices.tests.enrollmentctsroot;
 
 import android.adservices.common.AdServicesCommonManager;
+import android.adservices.common.AdServicesModuleStatesResponse;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdServicesUserChoicesResponse;
 import android.adservices.common.Module;
 import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdServicesModuleStatesParams;
 import android.adservices.common.UpdateAdServicesUserChoicesParams;
+import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
 
@@ -111,6 +114,55 @@ public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
                                         }
                                     });
                             return "requestAdServicesModuleUserChoices";
+                        });
+        int response = responseFuture.get();
+        expect.that(response).isEqualTo(AdServicesStatusUtils.STATUS_SUCCESS);
+    }
+
+    @Test
+    public void testGetAdServicesModuleUserChoices() throws Exception {
+        ListenableFuture<Integer> responseFuture =
+                CallbackToFutureAdapter.getFuture(
+                        completer -> {
+                            mCommonManager.getAdServicesModuleUserChoices(
+                                    Executors.newCachedThreadPool(),
+                                    new OutcomeReceiver<>() {
+                                        @Override
+                                        public void onResult(AdServicesUserChoicesResponse result) {
+                                            completer.set(AdServicesStatusUtils.STATUS_SUCCESS);
+                                        }
+
+                                        @Override
+                                        public void onError(Exception error) {
+                                            completer.set(AdServicesStatusUtils.STATUS_IO_ERROR);
+                                        }
+                                    });
+                            return "getAdServicesModuleUserChoices";
+                        });
+        int response = responseFuture.get();
+        expect.that(response).isEqualTo(AdServicesStatusUtils.STATUS_SUCCESS);
+    }
+
+    @Test
+    public void testGetAdServicesModuleStates() throws Exception {
+        ListenableFuture<Integer> responseFuture =
+                CallbackToFutureAdapter.getFuture(
+                        completer -> {
+                            mCommonManager.getAdServicesModuleStates(
+                                    Executors.newCachedThreadPool(),
+                                    new OutcomeReceiver<>() {
+                                        @Override
+                                        public void onResult(
+                                                AdServicesModuleStatesResponse result) {
+                                            completer.set(AdServicesStatusUtils.STATUS_SUCCESS);
+                                        }
+
+                                        @Override
+                                        public void onError(Exception error) {
+                                            completer.set(AdServicesStatusUtils.STATUS_IO_ERROR);
+                                        }
+                                    });
+                            return "getAdServicesModuleStates";
                         });
         int response = responseFuture.get();
         expect.that(response).isEqualTo(AdServicesStatusUtils.STATUS_SUCCESS);
