@@ -38,6 +38,8 @@ public abstract class SdkSandboxActivityAuthority {
                 new SdkSandboxActivityAuthorityImpl();
     }
 
+    private static String sCachedSdkSandboxPackageName = null;
+
     /** Returns a Single instance of this class, instantiated lazily. */
     @NonNull
     public static SdkSandboxActivityAuthority getInstance() {
@@ -65,7 +67,7 @@ public abstract class SdkSandboxActivityAuthority {
                 && intent.getAction().equals(SdkSandboxManager.ACTION_START_SANDBOXED_ACTIVITY)) {
             return true;
         }
-        final String sandboxPackageName = context.getPackageManager().getSdkSandboxPackageName();
+        final String sandboxPackageName = getCachedSdkSandboxPackageName(context);
         if (intent.getPackage() != null && intent.getPackage().equals(sandboxPackageName)) {
             return true;
         }
@@ -99,6 +101,13 @@ public abstract class SdkSandboxActivityAuthority {
                             + intent);
         }
         return contextInfo;
+    }
+
+    private static String getCachedSdkSandboxPackageName(@NonNull Context context) {
+        if (sCachedSdkSandboxPackageName == null) {
+            sCachedSdkSandboxPackageName = context.getPackageManager().getSdkSandboxPackageName();
+        }
+        return sCachedSdkSandboxPackageName;
     }
 
     private static class SdkSandboxActivityAuthorityImpl extends SdkSandboxActivityAuthority {}
