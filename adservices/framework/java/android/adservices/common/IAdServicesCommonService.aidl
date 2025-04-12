@@ -18,7 +18,6 @@ package android.adservices.common;
 
 
 import android.adservices.common.AdServicesStates;
-import android.adservices.common.AdsPersonalizationStatusParams;
 import android.adservices.common.UpdateAdServicesModuleStatesParams;
 import android.adservices.common.UpdateAdServicesUserChoicesParams;
 
@@ -67,7 +66,7 @@ interface IAdServicesCommonService {
         in IRequestAdServicesModuleUserChoicesCallback callback);
 
     void setAdsPersonalizationStatus(
-        in AdsPersonalizationStatusParams params,
+        in int adsPersonalizationStatus,
         in IAdsPersonalizationCallback callback);
 
     void getAdServicesModuleStates(

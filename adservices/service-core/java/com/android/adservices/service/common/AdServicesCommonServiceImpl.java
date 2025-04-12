@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesCommonManager.AdsPersonalizationStatus;
 import static android.adservices.common.AdServicesCommonManager.MODULE_MEASUREMENT;
 import static android.adservices.common.AdServicesCommonManager.MODULE_ON_DEVICE_PERSONALIZATION;
 import static android.adservices.common.AdServicesCommonManager.MODULE_PROTECTED_APP_SIGNALS;
@@ -70,7 +71,6 @@ import android.adservices.common.AdServicesModuleStatesResponse;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesStates;
 import android.adservices.common.AdServicesUserChoicesResponse;
-import android.adservices.common.AdsPersonalizationStatusParams;
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.ConsentStatus;
 import android.adservices.common.EnableAdServicesResponse;
@@ -776,7 +776,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     @Override
     @RequiresPermission(anyOf = {UPDATE_PRIVILEGED_AD_ID})
     public void setAdsPersonalizationStatus(
-            @NonNull AdsPersonalizationStatusParams adsPersonalizationStatusParams,
+            @AdsPersonalizationStatus int adsPersonalizationStatus,
             @NonNull IAdsPersonalizationCallback callback) {
         boolean authorizedCaller =
                 PermissionHelper.hasSetAdsPersonalizationStatusPermission(mContext);

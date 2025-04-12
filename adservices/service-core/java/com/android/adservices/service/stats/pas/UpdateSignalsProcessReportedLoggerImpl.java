@@ -44,7 +44,7 @@ public class UpdateSignalsProcessReportedLoggerImpl implements UpdateSignalsProc
     private int mPerBuyerSignalSize;
     private float mMaxRawProtectedSignalsSizeBytes;
     private float mMinRawProtectedSignalsSizeBytes;
-    private Set<Integer> mSignalEvictorsUsed;
+    private Set<@SignalEvictorType Integer> mSignalEvictorsUsed;
     private Set<EvictionPriority> mUpdatedSignalEvictionPriorities;
     private Set<EvictionPriority> mEvictedSignalEvictionPriorities;
     private int mPerBuyerEvictedSignalSize;
