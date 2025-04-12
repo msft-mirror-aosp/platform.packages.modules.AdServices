@@ -21,11 +21,13 @@ import static com.android.adservices.service.signals.updateprocessors.put.Put.PU
 import static com.android.adservices.service.signals.updateprocessors.putifnotpresent.PutIfNotPresent.PUT_IF_NOT_PRESENT;
 import static com.android.adservices.service.signals.updateprocessors.remove.Remove.REMOVE;
 import static com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoder.UPDATE_ENCODER;
+import static com.android.adservices.service.signals.updateprocessors.updateproperties.UpdateProperties.UPDATE_PROPERTIES;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.service.signals.SignalUpdates.UpdateSchemaVersion;
 import com.android.adservices.service.signals.updateprocessors.append.Append;
 import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerFactory;
 import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerNoOpImpl;
@@ -33,6 +35,7 @@ import com.android.adservices.service.signals.updateprocessors.put.Put;
 import com.android.adservices.service.signals.updateprocessors.putifnotpresent.PutIfNotPresent;
 import com.android.adservices.service.signals.updateprocessors.remove.Remove;
 import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoder;
+import com.android.adservices.service.signals.updateprocessors.updateproperties.UpdateProperties;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.junit.Before;
@@ -41,9 +44,6 @@ import org.mockito.Mock;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
 public class UpdateProcessorSelectorTest extends AdServicesMockitoTestCase {
-
-    private static final String VALID_KEY = "append";
-
     @Mock private EvictionPriorityHandlerFactory mEvictionPriorityHandlerFactoryMock;
     public UpdateProcessorSelector mUpdateProcessorSelector;
 
@@ -62,8 +62,7 @@ public class UpdateProcessorSelectorTest extends AdServicesMockitoTestCase {
                 IllegalArgumentException.class,
                 () ->
                         mUpdateProcessorSelector.getUpdateProcessor(
-                                "Not a valid update type",
-                                mFakeFlags.getProtectedSignalsUpdateSchemaVersion()));
+                                "Not a valid update type", UpdateSchemaVersion.V1));
     }
 
     @Test
@@ -71,41 +70,39 @@ public class UpdateProcessorSelectorTest extends AdServicesMockitoTestCase {
         assertThrows(
                 "Expected exception",
                 IllegalArgumentException.class,
-                () -> mUpdateProcessorSelector.getUpdateProcessor(VALID_KEY, -1));
+                () -> mUpdateProcessorSelector.getUpdateProcessor(APPEND, -1));
     }
 
     @Test
     public void testValidInputs() {
         expect.withMessage(APPEND)
-                .that(
-                        mUpdateProcessorSelector.getUpdateProcessor(
-                                APPEND, mFakeFlags.getProtectedSignalsUpdateSchemaVersion()))
+                .that(mUpdateProcessorSelector.getUpdateProcessor(APPEND, UpdateSchemaVersion.V1))
                 .isInstanceOf(Append.class);
 
         expect.withMessage(PUT)
-                .that(
-                        mUpdateProcessorSelector.getUpdateProcessor(
-                                PUT, mFakeFlags.getProtectedSignalsUpdateSchemaVersion()))
+                .that(mUpdateProcessorSelector.getUpdateProcessor(PUT, UpdateSchemaVersion.V1))
                 .isInstanceOf(Put.class);
 
         expect.withMessage(PUT_IF_NOT_PRESENT)
                 .that(
                         mUpdateProcessorSelector.getUpdateProcessor(
-                                PUT_IF_NOT_PRESENT,
-                                mFakeFlags.getProtectedSignalsUpdateSchemaVersion()))
+                                PUT_IF_NOT_PRESENT, UpdateSchemaVersion.V1))
                 .isInstanceOf(PutIfNotPresent.class);
 
         expect.withMessage(REMOVE)
-                .that(
-                        mUpdateProcessorSelector.getUpdateProcessor(
-                                REMOVE, mFakeFlags.getProtectedSignalsUpdateSchemaVersion()))
+                .that(mUpdateProcessorSelector.getUpdateProcessor(REMOVE, UpdateSchemaVersion.V1))
                 .isInstanceOf(Remove.class);
 
         expect.withMessage(UPDATE_ENCODER)
                 .that(
                         mUpdateProcessorSelector.getUpdateProcessor(
-                                UPDATE_ENCODER,
-                                mFakeFlags.getProtectedSignalsUpdateSchemaVersion()))
+                                UPDATE_ENCODER, UpdateSchemaVersion.V1))
                 .isInstanceOf(UpdateEncoder.class);
+
+        expect.withMessage(UPDATE_ENCODER)
+                .that(
+                        mUpdateProcessorSelector.getUpdateProcessor(
+                                UPDATE_PROPERTIES, UpdateSchemaVersion.V1))
+                .isInstanceOf(UpdateProperties.class);
     }
 }

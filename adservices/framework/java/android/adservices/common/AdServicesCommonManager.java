@@ -220,6 +220,23 @@ public class AdServicesCommonManager {
     }
 
     /**
+     * Result codes that are common across various APIs.
+     *
+     * @hide
+     */
+    @IntDef(value = {ADS_PERSONALZATION_ENABLED, ADS_PERSONALZATION_DISABLED})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface AdsPersonalizationStatus {}
+
+    /** User opted in state */
+    @FlaggedApi(Flags.FLAG_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS)
+    public static final int ADS_PERSONALZATION_ENABLED = 0;
+
+    /** User opted out state */
+    @FlaggedApi(Flags.FLAG_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS)
+    public static final int ADS_PERSONALZATION_DISABLED = 1;
+
+    /**
      * Create AdServicesCommonManager.
      *
      * @hide
@@ -458,6 +475,47 @@ public class AdServicesCommonManager {
             "android.adservices.common.action.VIEW_ADSERVICES_CONSENT_PAGE";
 
     /**
+     * Gets module states for the AdServices Modules. {@link AdServicesCommonManager.ModuleState}
+     * describes the possible module states. Callback Returns {@link
+     * AdServicesModuleStatesResponse}.
+     *
+     * @param executor the executor for the callback.
+     * @param callback callback function to return modules states.
+     * @hide
+     */
+    @SystemApi
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_CONSENT_DATA_MIGRATION_API)
+    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    public void getAdServicesModuleStates(
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<AdServicesModuleStatesResponse, Exception> callback) {
+        Objects.requireNonNull(executor, "executor cannot be null");
+        Objects.requireNonNull(callback, "callback cannot be null");
+
+        final IAdServicesCommonService service = getService();
+        try {
+            service.getAdServicesModuleStates(
+                    new IGetAdServicesModuleStatesCallback.Stub() {
+                        @Override
+                        public void onSuccess(AdServicesModuleStatesResponse response) {
+                            callback.onResult(response);
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode) {
+                            callback.onError(
+                                    new IllegalStateException(
+                                            "Internal Error! status code: " + statusCode));
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e(e, "RemoteException");
+            executor.execute(
+                    () -> callback.onError(new IllegalStateException("Internal Error!", e)));
+        }
+    }
+
+    /**
      * Sets overrides for the AdServices Module(s).
      *
      * <p>This API can enable/disable AdServices modules. Setting a module to off will hide the
@@ -500,6 +558,49 @@ public class AdServicesCommonManager {
 
                         @Override
                         public void onFailure(int statusCode) throws RemoteException {
+                            callback.onError(
+                                    new IllegalStateException(
+                                            "Internal Error! status code: " + statusCode));
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e(e, "RemoteException");
+            executor.execute(
+                    () -> callback.onError(new IllegalStateException("Internal Error!", e)));
+        }
+    }
+
+    /**
+     * Gets the user choices for AdServices Modules.
+     *
+     * <p>This API gets the user consent value for each AdServices module (PAS, Measurement, Topic,
+     * etc). {@link AdServicesCommonManager.ModuleUserChoice} Describes the possible user choices.
+     * Callback returns {@link AdServicesUserChoicesResponse}.
+     *
+     * @param executor the executor for the callback.
+     * @param callback callback function to return module user choices.
+     * @hide
+     */
+    @SystemApi
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_CONSENT_DATA_MIGRATION_API)
+    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    public void getAdServicesModuleUserChoices(
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<AdServicesUserChoicesResponse, Exception> callback) {
+        Objects.requireNonNull(executor, "executor cannot be null");
+        Objects.requireNonNull(callback, "callback cannot be null");
+
+        final IAdServicesCommonService service = getService();
+        try {
+            service.getAdServicesModuleUserChoices(
+                    new IGetAdServicesUserChoicesCallback.Stub() {
+                        @Override
+                        public void onSuccess(AdServicesUserChoicesResponse response) {
+                            callback.onResult(response);
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode) {
                             callback.onError(
                                     new IllegalStateException(
                                             "Internal Error! status code: " + statusCode));
@@ -679,6 +780,58 @@ public class AdServicesCommonManager {
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException calling updateAdIdCache with %s", updateAdIdRequest);
+            executor.execute(
+                    () -> callback.onError(new IllegalStateException("Internal Error!", e)));
+        }
+    }
+
+    /**
+     * Updates {@link AdsPersonalizationStatus} in Adservices when the device account change. This
+     * API is used by AdIdProvider.
+     *
+     * @param adsPersonalizationStatus the param that contains {@link AdsPersonalizationStatus}.
+     * @param executor the executor for the callback.
+     * @param callback the callback in type {@link OutcomeReceiver}, available on Android T and
+     *     above.
+     * @throws IllegalStateException when service is not available or the feature is not enabled, or
+     *     if there is any {@code Binder} invocation error.
+     * @throws SecurityException when the caller is not authorized to call this API.
+     * @hide
+     */
+    @SystemApi
+    @FlaggedApi(Flags.FLAG_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS)
+    @RequiresPermission(UPDATE_PRIVILEGED_AD_ID)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    public void setAdsPersonalizationStatus(
+            @AdsPersonalizationStatus int adsPersonalizationStatus,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Boolean, Exception> callback) {
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(callback);
+
+        IAdServicesCommonService service = getService();
+        try {
+            service.setAdsPersonalizationStatus(
+                    adsPersonalizationStatus,
+                    new IAdsPersonalizationCallback.Stub() {
+                        @Override
+                        public void onResult(String message) {
+                            executor.execute(() -> callback.onResult(true));
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode) {
+                            executor.execute(
+                                    () ->
+                                            callback.onError(
+                                                    AdServicesStatusUtils.asException(statusCode)));
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e(
+                    e,
+                    "RemoteException calling setAdsPersonalizationStatus with %s",
+                    adsPersonalizationStatus);
             executor.execute(
                     () -> callback.onError(new IllegalStateException("Internal Error!", e)));
         }

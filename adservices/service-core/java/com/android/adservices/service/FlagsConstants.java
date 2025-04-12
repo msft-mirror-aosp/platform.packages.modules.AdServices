@@ -1856,4 +1856,11 @@ public final class FlagsConstants {
     /** Key for job policy for Measurement async registration fallback job. */
     public static final String KEY_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY =
             "Spe__measurement_async_registration_fallback_job_policy";
+
+    /** Key for enable set ads personalization status api. */
+    public static final String KEY_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS =
+            "Ui__enable_set_ads_personalization_status";
+
+    public static final String KEY_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY =
+            "Spe__count_unique_reporting_job_policy";
 }

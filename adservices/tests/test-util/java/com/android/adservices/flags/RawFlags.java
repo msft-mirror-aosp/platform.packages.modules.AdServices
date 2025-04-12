@@ -3813,4 +3813,18 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
                 KEY_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY,
                 DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY);
     }
+
+    @Override
+    public boolean getUiEnableSetAdsPersonalizationStatus() {
+        return mBackend.getFlag(
+                KEY_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS,
+                DEFAULT_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS);
+    }
+
+    @Override
+    public String getSpeCountUniqueReportingJobPolicy() {
+        return mBackend.getFlag(
+                KEY_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY,
+                DEFAULT_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY);
+    }
 }

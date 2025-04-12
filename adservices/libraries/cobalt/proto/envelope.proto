@@ -15,6 +15,7 @@ syntax = "proto3";
 
 package cobalt;
 
+import "common.proto";
 import "observation_batch.proto";
 
 option java_multiple_files = true;
@@ -31,12 +32,18 @@ option java_package = "com.google.cobalt";
 // An envelope contains multiple ObservationBatches. An encrypted Envelope
 // is the unit sent from an Encoder client to a Shuffler.
 message Envelope {
-  // We used to put a SystemProfile into an Envelope but we no longer do.
-  // Now we only put SystemProfiles into ObservationBatches.
+  // For a while, system profiles were included in each observation batch. They
+  // are now once again included in the envelope to reduce costs. See
+  // b/373463829.
   reserved 3;
   reserved "system_profile";
 
   repeated ObservationBatch batch = 1;
+
+  // Each ObservationBatch will contain an integer index that indicates which
+  // entry in `system_profiles` applies to that batch. Each system profile will
+  // be unique and may be shared by multiple batches.
+  repeated SystemProfile system_profiles = 5;
 
   // If api_key contains the right secret string, this allows Cobalt to identify
   // that this envelope comes from a valid Cobalt client.

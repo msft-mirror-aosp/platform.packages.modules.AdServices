@@ -16,10 +16,10 @@
 
 package com.android.adservices.data.signals;
 
-import static com.google.common.truth.Truth.assertWithMessage;
-
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
+
+import com.google.common.truth.Expect;
 
 public class DBEncodedPayloadFixture {
 
@@ -45,16 +45,16 @@ public class DBEncodedPayloadFixture {
      * Asserts that the two non-null {@link DBEncodedPayload} objects are equal, as persisted in the
      * database.
      */
-    public static void assertDBEncodedPayloadsAreEqual(
-            DBEncodedPayload expected, DBEncodedPayload actual) {
-        assertWithMessage("Expected DBEncodedPayload").that(expected).isNotNull();
-        assertWithMessage("Actual DBEncodedPayload").that(actual).isNotNull();
-        assertWithMessage("Buyer").that(actual.getBuyer()).isEqualTo(expected.getBuyer());
-        assertWithMessage("Version").that(actual.getVersion()).isEqualTo(expected.getVersion());
-        assertWithMessage("Creation time (in milliseconds from epoch)")
+    public static void expectDBEncodedPayloadsAreEqual(
+            Expect expect, DBEncodedPayload actual, DBEncodedPayload expected) {
+        expect.withMessage("Expected DBEncodedPayload").that(expected).isNotNull();
+        expect.withMessage("Actual DBEncodedPayload").that(actual).isNotNull();
+        expect.withMessage("Buyer").that(actual.getBuyer()).isEqualTo(expected.getBuyer());
+        expect.withMessage("Version").that(actual.getVersion()).isEqualTo(expected.getVersion());
+        expect.withMessage("Creation time (in milliseconds from epoch)")
                 .that(actual.getCreationTime().toEpochMilli())
                 .isEqualTo(expected.getCreationTime().toEpochMilli());
-        assertWithMessage("Encoded payload")
+        expect.withMessage("Encoded payload")
                 .that(actual.getEncodedPayload())
                 .isEqualTo(expected.getEncodedPayload());
     }

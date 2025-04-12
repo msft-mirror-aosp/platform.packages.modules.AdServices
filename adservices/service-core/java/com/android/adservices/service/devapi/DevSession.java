@@ -18,6 +18,8 @@ package com.android.adservices.service.devapi;
 
 import com.google.auto.value.AutoValue;
 
+import java.util.regex.Pattern;
+
 /**
  * Represents the current state of developer mode on the device.
  *
@@ -34,6 +36,9 @@ public abstract class DevSession {
     public static final DevSession UNKNOWN =
             DevSession.builder().setState(DevSessionState.UNKNOWN).build();
 
+    /** Default app allowlist pattern which matches empty input. */
+    private static final String DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN = "^$";
+
     public DevSession() {
         // Constructor for AutoValue.
     }
@@ -43,6 +48,14 @@ public abstract class DevSession {
 
     /** Returns true if server auction test keys are enabled */
     public abstract boolean isServerAuctionTestKeysEnabled();
+
+    /** Returns the non-debuggable app allowlist pattern string for the current dev session. */
+    public abstract String getNonDebuggableAppAllowlistPatternString();
+
+    /** Returns the non-debuggable app allowlist pattern for the current dev session. */
+    public Pattern getNonDebuggableAppAllowlistPattern() {
+        return Pattern.compile(getNonDebuggableAppAllowlistPatternString());
+    }
 
     /**
      * Creates a new {@link DevSession} instance from the given proto.
@@ -60,6 +73,8 @@ public abstract class DevSession {
         return builder()
                 .setState(DevSessionState.values()[proto.getState().getNumber()])
                 .setServerAuctionTestKeysEnabled(proto.getServerAuctionTestKeysEnabled())
+                .setNonDebuggableAppAllowlistPatternString(
+                        proto.getNonDebuggableAppAllowlistPattern())
                 .build();
     }
 
@@ -77,12 +92,16 @@ public abstract class DevSession {
                                 devSession.getState().ordinal()))
                 .setIsStorageInitialized(true)
                 .setServerAuctionTestKeysEnabled(devSession.isServerAuctionTestKeysEnabled())
+                .setNonDebuggableAppAllowlistPattern(
+                        devSession.getNonDebuggableAppAllowlistPatternString())
                 .build();
     }
 
     /** Returns a new builder for creating a {@link DevSession} instance. */
     public static Builder builder() {
-        return new AutoValue_DevSession.Builder().setServerAuctionTestKeysEnabled(false);
+        return new AutoValue_DevSession.Builder()
+                .setServerAuctionTestKeysEnabled(false)
+                .setNonDebuggableAppAllowlistPatternString(DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN);
     }
 
     /** Returns a {@link DevSession} for a newly initialized state, e.g. first read. */
@@ -98,6 +117,9 @@ public abstract class DevSession {
 
         /** Enables/disables server auction test keys. */
         public abstract Builder setServerAuctionTestKeysEnabled(boolean enabled);
+
+        /** Sets the app allowlist pattern for the current dev session. */
+        public abstract Builder setNonDebuggableAppAllowlistPatternString(String patternString);
 
         /** Creates a new {@link DevSession} instance with the configured properties. */
         public abstract DevSession build();

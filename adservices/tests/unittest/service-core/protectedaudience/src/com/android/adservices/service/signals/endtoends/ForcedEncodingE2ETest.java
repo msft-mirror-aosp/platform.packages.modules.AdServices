@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.signals;
+package com.android.adservices.service.signals.endtoends;
 
 import static android.adservices.common.CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
@@ -81,6 +81,14 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.IsolateSettings;
+import com.android.adservices.service.signals.ForcedEncoderImpl;
+import com.android.adservices.service.signals.PeriodicEncodingJobService;
+import com.android.adservices.service.signals.PeriodicEncodingJobWorker;
+import com.android.adservices.service.signals.ProtectedSignalsServiceImpl;
+import com.android.adservices.service.signals.SignalsScriptEngine;
+import com.android.adservices.service.signals.UpdateProcessingOrchestrator;
+import com.android.adservices.service.signals.UpdateSignalsOrchestrator;
+import com.android.adservices.service.signals.UpdatesDownloader;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerFactory;

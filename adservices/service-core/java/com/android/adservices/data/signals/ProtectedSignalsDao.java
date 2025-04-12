@@ -72,6 +72,7 @@ public abstract class ProtectedSignalsDao {
      *
      * @param signals The signals to insert.
      */
+    // TODO: b/408444491 - Switch to using upserts instead of inserts.
     @Insert
     protected abstract void insertSignals(@NonNull List<DBProtectedSignal> signals);
 
@@ -100,8 +101,8 @@ public abstract class ProtectedSignalsDao {
             @NonNull Instant now,
             @NonNull List<DBProtectedSignal> signalsToInsert,
             @NonNull List<DBProtectedSignal> signalsToDelete) {
-        insertSignals(signalsToInsert);
         deleteSignals(signalsToDelete);
+        insertSignals(signalsToInsert);
         persistSignalsUpdateMetadata(
                 DBSignalsUpdateMetadata.builder()
                         .setBuyer(buyer)

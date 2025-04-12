@@ -31,6 +31,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.signals.SignalUpdates.UpdateSchemaVersion;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.FluentFuture;
 
 import org.json.JSONException;
@@ -91,12 +92,15 @@ public class UpdatesDownloader {
                         packageName,
                         UPDATE_SCHEMA_VERSION_HEADER,
                         String.valueOf(mUpdateSchemaVersion));
+        ImmutableSet<String> responseHeaderKeys = ImmutableSet.of(UPDATE_SCHEMA_VERSION_HEADER);
         AdServicesHttpClientRequest clientRequest =
                 AdServicesHttpClientRequest.builder()
                         .setRequestProperties(requestProperties)
+                        .setResponseHeaderKeys(responseHeaderKeys)
                         .setUri(validatedUri)
                         .setDevContext(devContext)
                         .build();
+
         FluentFuture<AdServicesHttpClientResponse> clientResponse =
                 FluentFuture.from(mHttpClient.fetchPayload(clientRequest));
         return clientResponse.transform(

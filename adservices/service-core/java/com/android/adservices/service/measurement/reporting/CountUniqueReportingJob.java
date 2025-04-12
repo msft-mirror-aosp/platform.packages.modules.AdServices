@@ -24,6 +24,7 @@ import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_COUNT_UNI
 import android.content.Context;
 import android.os.Build;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -63,6 +64,12 @@ public class CountUniqueReportingJob implements JobWorker {
         return isJobEnabled(flags)
                 ? JOB_ENABLED_STATUS_ENABLED
                 : JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
+    }
+
+    @Nullable
+    @Override
+    public String getJobPolicyString(int jobId) {
+        return FlagsFactory.getFlags().getSpeCountUniqueReportingJobPolicy();
     }
 
     /** Schedule the Count Unique reporting job. */

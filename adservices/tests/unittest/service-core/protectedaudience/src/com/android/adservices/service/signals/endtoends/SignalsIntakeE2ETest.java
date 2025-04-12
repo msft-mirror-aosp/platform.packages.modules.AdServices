@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.signals;
+package com.android.adservices.service.signals.endtoends;
 
 import static com.android.adservices.service.signals.SignalsFixture.ADTECH;
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_KEY_1;
@@ -90,6 +90,12 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.signals.ForcedEncoder;
+import com.android.adservices.service.signals.ForcedEncoderFactory;
+import com.android.adservices.service.signals.ProtectedSignalsServiceImpl;
+import com.android.adservices.service.signals.UpdateProcessingOrchestrator;
+import com.android.adservices.service.signals.UpdateSignalsOrchestrator;
+import com.android.adservices.service.signals.UpdatesDownloader;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerFactory;
@@ -106,6 +112,7 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.mockwebserver.MockResponse;
@@ -843,9 +850,11 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
                         CommonFixture.TEST_PACKAGE_NAME,
                         UPDATE_SCHEMA_VERSION_HEADER,
                         String.valueOf(mFakeFlags.getProtectedSignalsUpdateSchemaVersion()));
+        ImmutableSet<String> responseHeaderKeys = ImmutableSet.of(UPDATE_SCHEMA_VERSION_HEADER);
         AdServicesHttpClientRequest expected =
                 AdServicesHttpClientRequest.builder()
                         .setRequestProperties(requestProperties)
+                        .setResponseHeaderKeys(responseHeaderKeys)
                         .setUri(URI)
                         .setDevContext(DevContext.createForDevOptionsDisabled())
                         .build();

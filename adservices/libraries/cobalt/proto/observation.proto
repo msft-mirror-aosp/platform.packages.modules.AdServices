@@ -52,7 +52,7 @@ option java_package = "com.google.cobalt";
 // the |ciphertext| field of an EncryptedMessage. Many encrypted Observations
 // are transmitted together inside of an ObservationBatch.
 message Observation {
-  // Next observation_type ID: 9
+  // Next observation_type ID: 15
   // Next general ID: 1002;
   reserved 1, 2, 3, 4, 5, 6, 7, 8, 1000;
 
@@ -63,6 +63,7 @@ message Observation {
     IndexHistogramObservation index_histogram = 11;
     StringHistogramObservation string_histogram = 12;
     PrivateIndexObservation private_index = 13;
+    StructObservation struct_observation = 14;
     ReportParticipationObservation report_participation = 10000;
   }
 
@@ -197,6 +198,36 @@ message HistogramBucket {
   uint32 index = 1;
   // The count for that bucket.
   uint64 count = 2;
+}
+
+// Observations of type StructObservation contain a collection of aggregates
+// corresponding to the aggregates specified in the corresponding report.
+message StructObservation {
+  // An aggregate is a list of fields and their values.
+  message Aggregate {
+    message AggregateField {
+      // Should match the |field_id| value in the corresponding report.
+      uint32 field_id = 1;
+
+      oneof field_value {
+        uint32 enum_value = 2;
+
+        // Index into the |string_hashes| field.
+        uint32 string_index = 3;
+
+        // Device-level count for the aggregate.
+        uint64 count = 4;
+      }
+    }
+
+    repeated AggregateField fields = 1;
+  }
+
+  // A single StructObservation can contain 1 or more aggregates.
+  repeated Aggregate aggregates = 1;
+
+  // List of hashes of strings (hashed using Farmhash Fingerprint64).
+  repeated bytes string_hashes = 2;
 }
 
 // Observations of this type are used to signal that a given device was

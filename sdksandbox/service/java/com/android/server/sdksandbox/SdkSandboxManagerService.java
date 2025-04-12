@@ -60,7 +60,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
@@ -563,12 +562,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     private void registerSandboxActivityInterceptor() {
-        final ActivityInterceptorCallback mActivityInterceptorCallback =
-                new SdkSandboxInterceptorCallback();
         ActivityInterceptorCallbackRegistry registry =
                 ActivityInterceptorCallbackRegistry.getInstance();
         registry.registerActivityInterceptorCallback(
-                MAINLINE_SDK_SANDBOX_ORDER_ID, mActivityInterceptorCallback);
+                MAINLINE_SDK_SANDBOX_ORDER_ID, new SdkSandboxInterceptorCallback());
     }
 
     private ArrayList<AppOwnedSdkSandboxInterface> getRegisteredAppOwnedSdkSandboxInterfacesForApp(
@@ -2105,12 +2102,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             NO_INTERCEPT
         }
 
-        private InterceptCase shouldIntercept(ActivityInterceptorInfo info) {
+        private InterceptCase getInterceptCase(ActivityInterceptorInfo info) {
             final Intent intent = info.getIntent();
             if (intent == null) {
                 return InterceptCase.NO_INTERCEPT;
             }
 
+            // Check for sandbox activity
             boolean isSdkSandboxActivity =
                     SdkSandboxActivityAuthority.isSdkSandboxActivityIntent(mContext, intent);
             if (isSdkSandboxActivity) {
@@ -2134,15 +2132,16 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return InterceptCase.SANDBOXED_ACTIVITY;
             }
 
+            // Check for instrumentation activity started from sandbox.
             if (info.getActivityInfo() == null
+                    || info.getActivityInfo().applicationInfo == null
+                    || info.getActivityInfo().applicationInfo.packageName == null
                     || !Process.isSdkSandboxUid(info.getCallingUid())
                     || !SdkLevel.isAtLeastV()) {
                 return InterceptCase.NO_INTERCEPT;
             }
             final ApplicationInfo applicationInfo = info.getActivityInfo().applicationInfo;
-            if (applicationInfo.packageName != null
-                    && isSdkSandboxAllowedToStartActivities(
-                            info.getCallingPid(), info.getCallingUid())
+            if (isSdkSandboxAllowedToStartActivities(info.getCallingPid(), info.getCallingUid())
                     && isInstrumentationRunning(
                             new CallingInfo(applicationInfo.uid, applicationInfo.packageName))) {
                 return InterceptCase.INSTRUMENTATION_ACTIVITY;
@@ -2154,21 +2153,19 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public ActivityInterceptResult onInterceptActivityLaunch(
                 @NonNull ActivityInterceptorInfo info) {
-            final ActivityInfo activityInfo = info.getActivityInfo();
-            ActivityInterceptorCallback.ActivityInterceptResult activityInterceptResult = null;
-            long timeEventStarted = mInjector.elapsedRealtime();
-            int callingUid = info.getCallingUid();
-
             // Do not add any lines before checking if interception should apply, this interception
             // happens for every single activity and adding logic might add significant performance
             // overhead.
-            switch (shouldIntercept(info)) {
+            switch (getInterceptCase(info)) {
                 case SANDBOXED_ACTIVITY:
+                    final long timeEventStarted = mInjector.elapsedRealtime();
                     // Update process name and uid to match sandbox process for the calling app.
-                    activityInfo.applicationInfo.uid = Process.toSdkSandboxUid(callingUid);
-                    CallingInfo callingInfo = new CallingInfo(callingUid, info.getCallingPackage());
+                    info.getActivityInfo().applicationInfo.uid =
+                            Process.toSdkSandboxUid(info.getCallingUid());
+                    CallingInfo callingInfo =
+                            new CallingInfo(info.getCallingUid(), info.getCallingPackage());
                     try {
-                        activityInfo.processName =
+                        info.getActivityInfo().processName =
                                 mInjector
                                         .getSdkSandboxServiceProvider()
                                         .toSandboxProcessName(callingInfo);
@@ -2178,14 +2175,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                         .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY,
                                 SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION,
                                 (int) (mInjector.elapsedRealtime() - timeEventStarted),
-                                callingUid);
+                                info.getCallingUid());
                         Log.e(
                                 TAG,
                                 "onInterceptActivityLaunch failed for: " + callingInfo.toString(),
                                 e);
                         throw new SecurityException(e.toString());
                     }
-                    activityInterceptResult =
+                    ActivityInterceptorCallback.ActivityInterceptResult activityInterceptResult =
                             new ActivityInterceptorCallback.ActivityInterceptResult(
                                     info.getIntent(), info.getCheckedOptions(), true);
                     SdkSandboxManagerService.this.logSandboxActivityApiLatency(
@@ -2194,18 +2191,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             SdkSandboxStatsLog
                                     .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
                             (int) (mInjector.elapsedRealtime() - timeEventStarted),
-                            callingUid);
-                    break;
+                            info.getCallingUid());
+                    return activityInterceptResult;
                 case INSTRUMENTATION_ACTIVITY:
                     // Tests instrumented to run in the Sandbox already use a sandbox Uid.
-                    activityInfo.applicationInfo.uid = callingUid;
+                    info.getActivityInfo().applicationInfo.uid = info.getCallingUid();
                     callingInfo =
-                            new CallingInfo(callingUid, activityInfo.applicationInfo.packageName);
-                    activityInterceptResult =
-                            new ActivityInterceptorCallback.ActivityInterceptResult(
-                                    info.getIntent(), info.getCheckedOptions(), true);
+                            new CallingInfo(
+                                    info.getCallingUid(),
+                                    info.getActivityInfo().applicationInfo.packageName);
                     try {
-                        activityInfo.processName =
+                        info.getActivityInfo().processName =
                                 mInjector
                                         .getSdkSandboxServiceProvider()
                                         .toSandboxProcessNameForInstrumentation(callingInfo);
@@ -2216,12 +2212,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 e);
                         throw new SecurityException(e.toString());
                     }
-                    break;
+                    return new ActivityInterceptorCallback.ActivityInterceptResult(
+                            info.getIntent(), info.getCheckedOptions(), true);
                 default: // NO_INTERCEPT
                     return null;
             }
-
-            return activityInterceptResult;
         }
     }
 

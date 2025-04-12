@@ -16,6 +16,7 @@
 
 package android.adservices.cts;
 
+import static android.adservices.common.AdServicesCommonManager.ADS_PERSONALZATION_ENABLED;
 import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_DISABLED;
 import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_ENABLED;
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN;
@@ -212,5 +213,15 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
         expect.that(state.isPrivacySandboxUiRequest()).isTrue();
 
         mCommonManager.enableAdServices(state, CALLBACK_EXECUTOR, receiver);
+    }
+
+    @Test
+    @SuppressWarnings("VisibleForTests")
+    // TODO(b/343741206): Remove suppress warning once the lint is fixed.
+    public void testSetAdsPersonalizationStatus() {
+        OutcomeReceiverForTests<Boolean> receiver = new OutcomeReceiverForTests<>();
+
+        mCommonManager.setAdsPersonalizationStatus(
+                ADS_PERSONALZATION_ENABLED, CALLBACK_EXECUTOR, receiver);
     }
 }
