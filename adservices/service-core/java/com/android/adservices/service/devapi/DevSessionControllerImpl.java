@@ -34,6 +34,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.regex.Pattern;
 
 public final class DevSessionControllerImpl implements DevSessionController {
 
@@ -59,23 +60,34 @@ public final class DevSessionControllerImpl implements DevSessionController {
 
     @Override
     public ListenableFuture<DevSessionControllerResult> startDevSession(
-            boolean setServerAuctionTestKeysEnabled) throws IllegalStateException {
-        return tryUpdateDevSession(true, setServerAuctionTestKeysEnabled);
+            boolean setServerAuctionTestKeysEnabled, Pattern nonDebuggableAppAllowlistPattern)
+            throws IllegalStateException {
+        return tryUpdateDevSession(
+                /* setDevSessionEnabled= */ true,
+                setServerAuctionTestKeysEnabled,
+                nonDebuggableAppAllowlistPattern);
     }
 
     @Override
     public ListenableFuture<DevSessionControllerResult> endDevSession()
             throws IllegalStateException {
         return tryUpdateDevSession(
-                /* setDevSessionEnabled */ false, PROD_MODE_SERVER_AUCTION_TEST_KEYS_DISABLED);
+                /* setDevSessionEnabled= */ false,
+                PROD_MODE_SERVER_AUCTION_TEST_KEYS_DISABLED,
+                Pattern.compile(DevSession.DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN));
     }
 
     private ListenableFuture<DevSessionControllerResult> tryUpdateDevSession(
-            boolean setDevSessionEnabled, boolean setServerAuctionTestKeysEnabled)
+            boolean setDevSessionEnabled,
+            boolean setServerAuctionTestKeysEnabled,
+            Pattern nonDebuggableAppAllowlistPattern)
             throws IllegalStateException {
         sLogger.d(
                 "Beginning DevSessionControllerImpl.set(%b, %b)",
                 setDevSessionEnabled, setServerAuctionTestKeysEnabled);
+        Objects.requireNonNull(
+                nonDebuggableAppAllowlistPattern,
+                "NonDebuggableAppAllowlistPattern must not be null");
         return FluentFuture.from(mDevSessionDataStore.get())
                 .transformAsync(
                         devSession -> {
@@ -95,25 +107,32 @@ public final class DevSessionControllerImpl implements DevSessionController {
                             // them when doing the check below.
                             if (setDevSessionEnabled) {
                                 // Note this also handles all the transitory states.
-                                return handleProdOrRecoveryToDev(setServerAuctionTestKeysEnabled);
+                                return handleProdOrRecoveryToDev(
+                                        setServerAuctionTestKeysEnabled,
+                                        nonDebuggableAppAllowlistPattern);
                             } else {
                                 // Otherwise, we are moving from IN_DEV to IN_PROD.
-                                return handleDevToProd();
+                                return handleDevToProd(nonDebuggableAppAllowlistPattern);
                             }
                         },
                         mLightWeightExecutor);
     }
 
     @SuppressWarnings("FutureReturnValueIgnored") // TODO(b/331285831): fix this
-    private ListenableFuture<DevSessionControllerResult> handleDevToProd() {
+    private ListenableFuture<DevSessionControllerResult> handleDevToProd(
+            Pattern nonDebuggableAppAllowlistPattern) {
         return FluentFuture.from(
                         setDevSession(
                                 TRANSITIONING_DEV_TO_PROD,
-                                PROD_MODE_SERVER_AUCTION_TEST_KEYS_DISABLED))
+                                PROD_MODE_SERVER_AUCTION_TEST_KEYS_DISABLED,
+                                nonDebuggableAppAllowlistPattern))
                 .transformAsync(this::clearDatabase, mLightWeightExecutor)
                 .transformAsync(
                         ignoreVoid ->
-                                setDevSession(IN_PROD, PROD_MODE_SERVER_AUCTION_TEST_KEYS_DISABLED),
+                                setDevSession(
+                                        IN_PROD,
+                                        PROD_MODE_SERVER_AUCTION_TEST_KEYS_DISABLED,
+                                        nonDebuggableAppAllowlistPattern),
                         mLightWeightExecutor)
                 .transform(
                         state -> {
@@ -132,14 +151,19 @@ public final class DevSessionControllerImpl implements DevSessionController {
 
     @SuppressWarnings("FutureReturnValueIgnored") // TODO(b/331285831): fix this
     private ListenableFuture<DevSessionControllerResult> handleProdOrRecoveryToDev(
-            boolean setServerAuctionTestKeysEnabled) {
+            boolean setServerAuctionTestKeysEnabled, Pattern nonDebuggableAppAllowlistPattern) {
         return FluentFuture.from(
                         setDevSession(
                                 TRANSITIONING_PROD_TO_DEV,
-                                PROD_MODE_SERVER_AUCTION_TEST_KEYS_DISABLED))
+                                PROD_MODE_SERVER_AUCTION_TEST_KEYS_DISABLED,
+                                nonDebuggableAppAllowlistPattern))
                 .transformAsync(this::clearDatabase, mLightWeightExecutor)
                 .transformAsync(
-                        ignoreVoid -> setDevSession(IN_DEV, setServerAuctionTestKeysEnabled),
+                        ignoreVoid ->
+                                setDevSession(
+                                        IN_DEV,
+                                        setServerAuctionTestKeysEnabled,
+                                        nonDebuggableAppAllowlistPattern),
                         mLightWeightExecutor)
                 .transform(
                         state -> {
@@ -157,7 +181,9 @@ public final class DevSessionControllerImpl implements DevSessionController {
     }
 
     private ListenableFuture<DevSession> setDevSession(
-            DevSessionState desiredState, boolean setServerAuctionTestKeysEnabled) {
+            DevSessionState desiredState,
+            boolean setServerAuctionTestKeysEnabled,
+            Pattern nonDebuggableAppAllowlistPattern) {
         sLogger.d(
                 "Beginning setDevSession(%s, setServerAuctionTestKeysEnabled: %b)",
                 desiredState, setServerAuctionTestKeysEnabled);
@@ -165,6 +191,8 @@ public final class DevSessionControllerImpl implements DevSessionController {
                 DevSession.builder()
                         .setState(desiredState)
                         .setServerAuctionTestKeysEnabled(setServerAuctionTestKeysEnabled)
+                        .setNonDebuggableAppAllowlistPatternString(
+                                nonDebuggableAppAllowlistPattern.pattern())
                         .build());
     }
 

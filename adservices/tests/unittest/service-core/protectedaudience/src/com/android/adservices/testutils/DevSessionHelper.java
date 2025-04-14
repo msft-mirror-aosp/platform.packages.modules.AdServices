@@ -37,11 +37,13 @@ import com.android.adservices.service.devapi.DevSessionController;
 import com.android.adservices.service.devapi.DevSessionControllerImpl;
 import com.android.adservices.service.devapi.DevSessionControllerResult;
 import com.android.adservices.service.devapi.DevSessionInMemoryDataStore;
+import com.android.adservices.service.devapi.DevSession;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Pattern;
 
 /**
  * A helper that manages the AdServices development session for tests. This rule ensures that a dev
@@ -102,11 +104,15 @@ public class DevSessionHelper {
     public void startDevSession() {
         mWasDevSessionStarted = true;
         try {
-            assertThat(
-                            mDevSessionController
-                                    .startDevSession(false)
-                                    .get(DEV_SESSION_TIMEOUT_SEC, TimeUnit.SECONDS))
-                    .isEqualTo(SUCCESS);
+            // TODO(b/409524702): Add support for non-debuggable app allowlist.
+            DevSessionControllerResult result =
+                    mDevSessionController
+                            .startDevSession(
+                                    /* setServerAuctionTestKeysEnabled= */ false,
+                                    Pattern.compile(DevSession.DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN))
+                            .get(DEV_SESSION_TIMEOUT_SEC, TimeUnit.SECONDS);
+            assertThat(result).isEqualTo(SUCCESS);
+
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             sLogger.e(e, "Failed to startDevSession correctly");
             throw new RuntimeException(e);
