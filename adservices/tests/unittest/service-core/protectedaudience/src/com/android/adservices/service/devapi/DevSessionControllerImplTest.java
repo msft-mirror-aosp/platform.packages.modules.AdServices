@@ -18,6 +18,7 @@ package com.android.adservices.service.devapi;
 
 import static com.android.adservices.devapi.DevSessionFixture.IN_DEV;
 import static com.android.adservices.devapi.DevSessionFixture.IN_DEV_WITH_TEST_KEYS_ENABLED;
+import static com.android.adservices.devapi.DevSessionFixture.IN_DEV_WITH_NON_DEBUGGABLE_APP_ALLOWLIST;
 import static com.android.adservices.devapi.DevSessionFixture.IN_PROD;
 import static com.android.adservices.devapi.DevSessionFixture.TRANSITIONING_DEV_TO_PROD;
 import static com.android.adservices.devapi.DevSessionFixture.TRANSITIONING_PROD_TO_DEV;
@@ -29,6 +30,7 @@ import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static com.google.common.util.concurrent.Futures.immediateVoidFuture;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doReturn;
@@ -41,6 +43,7 @@ import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.common.DatabaseClearer;
 
+import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -84,7 +87,9 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                 .thenReturn(immediateFuture(IN_DEV));
 
         Future<DevSessionControllerResult> resultFuture =
-                mDevSessionController.startDevSession(false);
+                mDevSessionController.startDevSession(
+                        /* setServerAuctionTestKeysEnabled= */ false,
+                        Pattern.compile(DevSession.DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN));
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(SUCCESS);
         verify(mMockDatabaseClearer)
@@ -108,7 +113,9 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                 .thenThrow(new RuntimeException());
 
         Future<DevSessionControllerResult> resultFuture =
-                mDevSessionController.startDevSession(false);
+                mDevSessionController.startDevSession(
+                        /* setServerAuctionTestKeysEnabled= */ false,
+                        Pattern.compile(DevSession.DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN));
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(FAILURE);
         verify(mMockDatabaseClearer)
@@ -128,7 +135,9 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
         when(mMockDatabaseClearer.deleteMeasurementData()).thenThrow(new RuntimeException());
 
         Future<DevSessionControllerResult> resultFuture =
-                mDevSessionController.startDevSession(false);
+                mDevSessionController.startDevSession(
+                        /* setServerAuctionTestKeysEnabled= */ false,
+                        Pattern.compile(DevSession.DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN));
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(FAILURE);
         verify(mMockDatabaseClearer)
@@ -148,7 +157,9 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                 .thenReturn(immediateFuture(IN_PROD));
 
         Future<DevSessionControllerResult> resultFuture =
-                mDevSessionController.startDevSession(false);
+                mDevSessionController.startDevSession(
+                        /* setServerAuctionTestKeysEnabled= */ false,
+                        Pattern.compile(DevSession.DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN));
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(SUCCESS);
         verify(mMockDatabaseClearer)
@@ -167,7 +178,9 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                 .thenReturn(immediateFuture(IN_DEV));
 
         Future<DevSessionControllerResult> resultFuture =
-                mDevSessionController.startDevSession(false);
+                mDevSessionController.startDevSession(
+                        /* setServerAuctionTestKeysEnabled= */ false,
+                        Pattern.compile(DevSession.DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN));
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(SUCCESS);
         verify(mMockDatabaseClearer)
@@ -183,7 +196,9 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
         when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_DEV));
 
         Future<DevSessionControllerResult> resultFuture =
-                mDevSessionController.startDevSession(false);
+                mDevSessionController.startDevSession(
+                        /* setServerAuctionTestKeysEnabled= */ false,
+                        Pattern.compile(DevSession.DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN));
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(NO_OP);
         verifyNoMoreInteractions(mMockDatabaseClearer);
@@ -194,7 +209,9 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
         when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_DEV));
 
         Future<DevSessionControllerResult> resultFuture =
-                mDevSessionController.startDevSession(false);
+                mDevSessionController.startDevSession(
+                        /* setServerAuctionTestKeysEnabled= */ false,
+                        Pattern.compile(DevSession.DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN));
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(NO_OP);
         verifyNoMoreInteractions(mMockDatabaseClearer);
@@ -276,7 +293,9 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                 .thenReturn(immediateFuture(TRANSITIONING_PROD_TO_DEV));
 
         Future<DevSessionControllerResult> resultFuture =
-                mDevSessionController.startDevSession(true);
+                mDevSessionController.startDevSession(
+                        /* setServerAuctionTestKeysEnabled= */ true,
+                        Pattern.compile(DevSession.DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN));
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(FAILURE);
         verify(mMockDatabaseClearer)
@@ -296,7 +315,9 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                 .thenReturn(immediateFuture(IN_DEV_WITH_TEST_KEYS_ENABLED));
 
         Future<DevSessionControllerResult> resultFuture =
-                mDevSessionController.startDevSession(true);
+                mDevSessionController.startDevSession(
+                        /* setServerAuctionTestKeysEnabled= */ true,
+                        Pattern.compile(DevSession.DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN));
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(SUCCESS);
 
@@ -314,6 +335,52 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                         /* deleteProtectedSignals= */ true,
                         /* deleteEncryptionConfigData= */ false);
         verify(mMockDatabaseClearer).deleteMeasurementData();
+    }
+
+    @Test
+    public void startDevSession_withDevSessionDisabled_withAllowlist_setCorrectly()
+            throws Exception {
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_PROD));
+        when(mMockDevSessionDataStore.set(any(DevSession.class)))
+                .thenReturn(immediateFuture(TRANSITIONING_PROD_TO_DEV))
+                .thenReturn(immediateFuture(IN_DEV_WITH_NON_DEBUGGABLE_APP_ALLOWLIST));
+
+        Pattern pattern =
+                IN_DEV_WITH_NON_DEBUGGABLE_APP_ALLOWLIST.getNonDebuggableAppAllowlistPattern();
+        Future<DevSessionControllerResult> resultFuture =
+                mDevSessionController.startDevSession(
+                        /* setServerAuctionTestKeysEnabled= */ false, pattern);
+
+        expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(SUCCESS);
+    }
+
+    @Test
+    public void endDevSession_withDevSessionDisabled_withAllowlist_resetCorrectly()
+            throws Exception {
+        when(mMockDevSessionDataStore.get())
+                .thenReturn(immediateFuture(IN_DEV_WITH_NON_DEBUGGABLE_APP_ALLOWLIST));
+        when(mMockDevSessionDataStore.set(any(DevSession.class)))
+                .thenReturn(immediateFuture(TRANSITIONING_DEV_TO_PROD))
+                .thenReturn(immediateFuture(IN_PROD));
+
+        Future<DevSessionControllerResult> resultFuture = mDevSessionController.endDevSession();
+
+        expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(SUCCESS);
+        ArgumentCaptor<DevSession> argCaptor = ArgumentCaptor.forClass(DevSession.class);
+        verify(mMockDevSessionDataStore, times(2)).set(argCaptor.capture());
+        List<DevSession> capturedArguments = argCaptor.getAllValues();
+        assertEquals(TRANSITIONING_DEV_TO_PROD, capturedArguments.get(0));
+        assertEquals(IN_PROD, capturedArguments.get(1));
+    }
+
+    @Test
+    public void startDevSession_withNullAllowlist_throwsNullPointerException() throws Exception {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mDevSessionController.startDevSession(
+                                /* setServerAuctionTestKeysEnabled= */ false,
+                                /* nonDebuggableAppAllowlistPattern= */ null));
     }
 
     private static <T> T wait(Future<T> future) throws Exception {

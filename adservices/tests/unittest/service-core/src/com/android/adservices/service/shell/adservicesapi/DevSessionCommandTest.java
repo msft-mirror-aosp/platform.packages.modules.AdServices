@@ -40,6 +40,7 @@ import com.android.adservices.service.shell.ShellCommandTestCase;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.regex.Pattern;
 import org.junit.Test;
 
 public final class DevSessionCommandTest extends ShellCommandTestCase<DevSessionCommand> {
@@ -140,7 +141,9 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
                                 new DevSessionController() {
                                     @Override
                                     public ListenableFuture<DevSessionControllerResult>
-                                            startDevSession(boolean setServerAuctionTestKeysEnabled)
+                                            startDevSession(
+                                                    boolean setServerAuctionTestKeysEnabled,
+                                                    Pattern nonDebuggableAppAllowlistPattern)
                                                     throws IllegalStateException {
                                         sleep(
                                                 DevSessionCommand.TIMEOUT_SEC,
@@ -299,7 +302,7 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
 
         @Override
         public ListenableFuture<DevSessionControllerResult> startDevSession(
-                boolean setServerAuctionTestKeysEnabled) {
+                boolean setServerAuctionTestKeysEnabled, Pattern nonDebuggableAppAllowlistPattern) {
             mDevModeState = true;
             mNumCalls += 1;
             mServerAuctionTestKeysEnabled = setServerAuctionTestKeysEnabled;

@@ -50,6 +50,9 @@ public final class SignalsFixture {
                     .build();
     public static final byte[] KEY_1 = {(byte) 1, (byte) 2, (byte) 3, (byte) 4};
     public static final byte[] KEY_2 = {(byte) 5, (byte) 6, (byte) 7, (byte) 8};
+    public static final byte[] KEY_3 = {(byte) 9, (byte) 10, (byte) 11, (byte) 12};
+    public static final byte[] KEY_4 = {(byte) 13, (byte) 14, (byte) 15, (byte) 16};
+
     public static final byte[] VALUE_1 = {(byte) 42};
     public static final byte[] VALUE_2 = {(byte) 42, (byte) 5, (byte) 9};
 
@@ -60,8 +63,6 @@ public final class SignalsFixture {
 
     public static ByteBuffer BB_KEY_1 = ByteBuffer.wrap(KEY_1);
     public static ByteBuffer BB_KEY_2 = ByteBuffer.wrap(KEY_2);
-    public static ByteBuffer BB_VALUE_1 = ByteBuffer.wrap(VALUE_1);
-    public static ByteBuffer BB_VALUE_2 = ByteBuffer.wrap(VALUE_2);
 
     public static final AdTechIdentifier ADTECH = CommonFixture.VALID_BUYER_1;
     public static final String PACKAGE = CommonFixture.TEST_PACKAGE_NAME_1;
