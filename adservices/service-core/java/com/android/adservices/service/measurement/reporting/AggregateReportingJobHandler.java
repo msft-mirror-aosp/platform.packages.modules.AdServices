@@ -307,8 +307,9 @@ public class AggregateReportingJobHandler {
             return;
         }
 
-        // Aggregate Report on device for more than minimum lifespan
+        // Aggregate Report on device for more than minimum lifespan. Skip Null reports.
         if (mFlags.getMeasurementEnableMinReportLifespanForUninstall()
+                && !aggregateReport.isFakeReport()
                 && aggregateReportCreatedBeforeLifespan(aggregateReport.getTriggerTime())
                 && (!anySourceAppInstalled(aggregateReport)
                         || !anyTriggerAppInstalled(aggregateReport))) {

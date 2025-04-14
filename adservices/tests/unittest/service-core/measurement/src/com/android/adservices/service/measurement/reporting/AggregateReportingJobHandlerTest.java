@@ -614,6 +614,56 @@ public class AggregateReportingJobHandlerTest {
     }
 
     @Test
+    public void testSendReportSuccess_uninstallEnabled_skipNullAggregateReports()
+            throws DatastoreException, IOException, JSONException {
+        when(mMockFlags.getMeasurementEnableMinReportLifespanForUninstall()).thenReturn(true);
+        when(mMockFlags.getMeasurementMinReportLifespanForUninstallSeconds())
+                .thenReturn(TimeUnit.DAYS.toSeconds(1));
+
+        long currentTime = System.currentTimeMillis();
+        Uri publisher = Uri.parse("https://publisher.test");
+
+        AggregateReport aggregateReport =
+                new AggregateReport.Builder()
+                        .setId(AGGREGATE_REPORT_ID)
+                        .setStatus(AggregateReport.Status.PENDING)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .setRegistrationOrigin(REPORTING_URI)
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setPublisher(publisher)
+                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
+                        .setApi(AggregateReportFixture.ValidAggregateReportParams.API)
+                        .setTriggerTime(currentTime - TimeUnit.HOURS.toMillis(25))
+                        .setIsFakeReport(true)
+                        .build();
+
+        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
+
+        when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
+                .thenReturn(aggregateReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_URI), any(), eq(null), anyString());
+        doReturn(aggregateReportBody)
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(any(), eq(REPORTING_URI), any());
+
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(
+                        aggregateReport.getId(), AggregateReport.Status.DELIVERED);
+        ReportingStatus status = new ReportingStatus();
+
+        mSpyAggregateReportingJobHandler.performReport(
+                aggregateReport.getId(), AggregateCryptoFixture.getKey(), status);
+
+        // Does not delete report since null aggregate reports are skipped.
+        verify(mMeasurementDao, times(0)).deleteAggregateReport(aggregateReport);
+    }
+
+    @Test
     public void testSendReportForPendingReportSuccess_originFlagDisabled()
             throws DatastoreException, IOException, JSONException {
         when(mMockFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(false);
