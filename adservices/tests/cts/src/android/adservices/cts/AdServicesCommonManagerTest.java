@@ -30,7 +30,9 @@ import static com.android.adservices.service.FlagsConstants.KEY_IS_GET_ADSERVICE
 import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStatesResponse;
+import android.adservices.common.AdServicesModuleStatesResponse;
 import android.adservices.common.AdServicesStates;
+import android.adservices.common.AdServicesUserChoicesResponse;
 import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
 import android.adservices.common.UpdateAdServicesModuleStatesParams;
@@ -223,5 +225,25 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
         mCommonManager.setAdsPersonalizationStatus(
                 ADS_PERSONALZATION_ENABLED, CALLBACK_EXECUTOR, receiver);
+    }
+
+    @Test
+    @SuppressWarnings("VisibleForTests")
+    // TODO(b/343741206): Remove suppress warning once the lint is fixed.
+    public void testGetAdServicesModuleUserChoices() {
+        OutcomeReceiverForTests<AdServicesUserChoicesResponse> receiver =
+                new OutcomeReceiverForTests<>();
+
+        mCommonManager.getAdServicesModuleUserChoices(CALLBACK_EXECUTOR, receiver);
+    }
+
+    @Test
+    @SuppressWarnings("VisibleForTests")
+    // TODO(b/343741206): Remove suppress warning once the lint is fixed.
+    public void testGetAdServicesModuleStates() {
+        OutcomeReceiverForTests<AdServicesModuleStatesResponse> receiver =
+                new OutcomeReceiverForTests<>();
+
+        mCommonManager.getAdServicesModuleStates(CALLBACK_EXECUTOR, receiver);
     }
 }
