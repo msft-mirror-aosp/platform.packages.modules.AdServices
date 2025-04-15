@@ -17,6 +17,7 @@
 package android.adservices.cts;
 
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -31,6 +32,7 @@ import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -100,6 +102,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "uses OutcomeReceiver, which is only available on T")
+    @SetFlagTrue(KEY_AD_ID_CACHE_ENABLED)
     public void testUpdateAdIdCache_notAuthorized_sPlus() throws Exception {
         UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(AdId.ZERO_OUT).build();
         OutcomeReceiverForTests<Boolean> receiver = new OutcomeReceiverForTests<>();
@@ -110,6 +113,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     }
 
     @Test
+    @SetFlagTrue(KEY_AD_ID_CACHE_ENABLED)
     public void testUpdateAdIdCache_notAuthorized_rPlus() throws Exception {
         AdServicesOutcomeReceiverForTests<Boolean> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
