@@ -1370,7 +1370,7 @@ public class AsyncSourceFetcher {
     private boolean isCountUniqueEnabled(AsyncRegistration asyncRegistration) {
         return mFlags.getMeasurementEnableCountUniqueService()
                 && asyncRegistration.isAppRequest()
-                && AllowLists.isPackageAllowListed(
+                && AllowLists.isItemAllowListed(
                         mFlags.getMeasurementCountUniqueAppAllowlist(),
                         asyncRegistration.getRegistrant().toString())
                 && AllowLists.isSignatureAllowListed(

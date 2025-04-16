@@ -213,7 +213,7 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
         // is not granted for binder thread. So we have to check it with one
         // of non-binder thread of the PPAPI.
         boolean appCanUsePpapi =
-                AllowLists.isPackageAllowListed(
+                AllowLists.isItemAllowListed(
                         mFlags.getPpapiAppAllowList(), appSetIdParam.getAppPackageName());
         if (!appCanUsePpapi) {
             invokeCallbackWithStatus(

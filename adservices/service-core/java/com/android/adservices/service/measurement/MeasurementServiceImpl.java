@@ -582,7 +582,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                         boolean enablePackageNameUidCheck =
                                 mFlags.getMeasurementEnablePackageNameUidCheck();
                         if (mFlags.getMsmtEnableApiStatusAllowListCheck()) {
-                            if (!AllowLists.isPackageAllowListed(
+                            if (!AllowLists.isItemAllowListed(
                                     mFlags.getWebContextClientAppAllowList(),
                                     statusParam.getAppPackageName())) {
                                 callback.onResult(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
