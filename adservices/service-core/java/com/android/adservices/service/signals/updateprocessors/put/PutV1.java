@@ -65,7 +65,7 @@ public class PutV1 extends Put {
         JSONObject updateObject = UpdateProcessorUtils.validateAndCastToJSONObject(PUT, update);
         String value = updateObject.getString(VALUE);
         EvictionPriority evictionPriority =
-                mEvictionPriorityHandler.getEvictionPriority(
+                mEvictionPriorityHandler.getEvictionPriorityFromUpdate(
                         key, updateObject, updateSignalsProcessReportedLogger);
 
         UpdateProcessorUtils.touchKey(key, toReturn.getKeysTouched());
