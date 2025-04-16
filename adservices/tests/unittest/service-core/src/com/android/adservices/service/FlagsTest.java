@@ -31,6 +31,7 @@ import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_MAX_CONT
 import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_MAX_CONTRIBUTION_SHORT_WINDOW;
 import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_REPORT_EXPIRY;
 import static com.android.adservices.service.Flags.DEFAULT_COUNT_UNIQUE_SHORT_WINDOW_CONTRIBUTION_BUDGET;
+import static com.android.adservices.service.Flags.DEFAULT_ENABLE_HPKE_WITH_PLATFORM_APIS;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_LOG_SAMPLING_INFRA;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
@@ -1686,6 +1687,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getSpeCountUniqueReportingJobPolicy",
                 Flags.DEFAULT_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY,
                 Flags::getSpeCountUniqueReportingJobPolicy);
+    }
+
+    @Test
+    public void testGetEnableHpkeWithPlatformApis() {
+        testFlag(
+                "getEnableHpkeWithPlatformApis",
+                DEFAULT_ENABLE_HPKE_WITH_PLATFORM_APIS,
+                Flags::getEnableHpkeWithPlatformApis);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {

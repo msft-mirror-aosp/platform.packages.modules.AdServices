@@ -30,6 +30,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY_
 import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT;
 import static com.android.adservices.service.FlagsConstants.KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_MANAGER_V2;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_HPKE_WITH_PLATFORM_APIS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOG_SAMPLING_INFRA;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_TABLET_REGION_FIX;
@@ -5428,5 +5429,10 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY,
                 Flags.DEFAULT_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY);
+    }
+
+    public boolean getEnableHpkeWithPlatformApis() {
+        return getDeviceConfigFlag(
+                KEY_ENABLE_HPKE_WITH_PLATFORM_APIS, DEFAULT_ENABLE_HPKE_WITH_PLATFORM_APIS);
     }
 }
