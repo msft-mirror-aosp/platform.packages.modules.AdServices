@@ -48,8 +48,8 @@ import static com.android.adservices.service.customaudience.ScheduleCustomAudien
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.UPDATE_ID;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.VALID_BIDDING_SIGNALS;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayload;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithComponentAds;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithScheduleRequests;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutSchedule;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutScheduleWithComponentAds;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createScheduleRequestWithUpdateUri;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.extractCustomAudiencesToLeaveFromScheduleRequest;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.extractPartialCustomAudiencesFromRequest;
@@ -1782,9 +1782,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
             throws Exception {
         // Wire the mock web server
         String responsePayload =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_1, PARTIAL_CA_2),
                                 List.of(LEAVE_CA_1, LEAVE_CA_2),
                                 /* auctionServerRequestFlagsEnabled= */ false,
@@ -1947,9 +1946,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         // Wire the mock web server
         String responsePayload =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_1, PARTIAL_CA_2),
                                 List.of(LEAVE_CA_1, LEAVE_CA_2),
                                 /* auctionServerRequestFlagsEnabled= */ true,
@@ -2118,9 +2116,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         // Wire the mock web server
         String responsePayload =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_1, PARTIAL_CA_2),
                                 List.of(LEAVE_CA_1, LEAVE_CA_2),
                                 /* auctionServerRequestFlagsEnabled= */ false,
@@ -2287,9 +2284,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         // Wire the mock web server with 1 CA with component ads and 1 without
         String responsePayload =
-                createJsonResponsePayloadWithComponentAds(
+                createJsonResponsePayloadWithoutScheduleWithComponentAds(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_1, PARTIAL_CA_2),
                                 List.of(LEAVE_CA_1, LEAVE_CA_2),
                                 List.of(COMPONENT_AD_DATA_LIST_LOCALHOST_BUYER, List.of()))
@@ -2407,9 +2403,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
             throws Exception {
         // Wire the mock web server for handling two updates
         String responsePayload1 =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_1),
                                 List.of(LEAVE_CA_1),
                                 /* auctionServerRequestFlagsEnabled= */ false,
@@ -2417,9 +2412,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .toString();
 
         String responsePayload2 =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_2),
                                 List.of(LEAVE_CA_2),
                                 /* auctionServerRequestFlagsEnabled= */ false,
@@ -2559,9 +2553,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         // Wire the mock web server
         String responsePayload =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_1),
                                 List.of(LEAVE_CA_1),
                                 /* auctionServerRequestFlagsEnabled= */ false,
@@ -2698,9 +2691,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         // Wire the mock web server
         String responsePayload =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_1),
                                 List.of(LEAVE_CA_1),
                                 /* auctionServerRequestFlagsEnabled= */ false,
@@ -2836,9 +2828,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         // Wire the mock web server
         String responsePayload =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_1, PARTIAL_CA_2),
                                 List.of(LEAVE_CA_1, LEAVE_CA_2),
                                 /* auctionServerRequestFlagsEnabled= */ true,
@@ -2939,9 +2930,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         // Wire the mock web server
         String responsePayload =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_1),
                                 List.of(LEAVE_CA_1),
                                 /* auctionServerRequestFlagsEnabled= */ false,
@@ -3098,9 +3088,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         // Wire the mock web server
         String responsePayload =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(nonOverriddenCaName, PARTIAL_CA_1),
                                 List.of(LEAVE_CA_1),
                                 /* auctionServerRequestFlagsEnabled= */ false,
@@ -3200,9 +3189,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         // Wire the mock web server
         String responsePayload =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_1, PARTIAL_CA_2),
                                 List.of(LEAVE_CA_1, LEAVE_CA_2),
                                 /* auctionServerRequestFlagsEnabled= */ false,
@@ -3290,9 +3278,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     public void testScheduleCustomAudienceUpdate_NoOverrides_Success() throws Exception {
         // Wire the mock web server
         String responsePayload =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_1, PARTIAL_CA_2),
                                 List.of(LEAVE_CA_1, LEAVE_CA_2),
                                 /* auctionServerRequestFlagsEnabled= */ false,
@@ -3647,9 +3634,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         /* Buyer set here is only being used for generating the json response. When
         persisting the schedule request, buyer is being generated from the updateUri */
         String responsePayload_SecondHop =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_1, PARTIAL_CA_2),
                                 customAudienceToLeaveList,
                                 false,
@@ -3667,7 +3653,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         true);
 
         String responsePayload_FirstHop =
-                createJsonResponsePayloadWithScheduleRequests(
+                ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadOnlySchedule(
                                 new JSONArray(List.of(scheduleRequest)))
                         .toString();
 
@@ -3772,9 +3758,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         List<String> partialCustomAudienceList = List.of(PARTIAL_CA_1, PARTIAL_CA_2);
 
         String responsePayload =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 partialCustomAudienceList,
                                 List.of(LEAVE_CA_1, LEAVE_CA_2),
                                 /* auctionServerRequestFlagsEnabled= */ false,
@@ -3937,9 +3922,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         /* Buyer set here is only being used for generating the json response. When
         persisting the schedule request, buyer is being generated from the updateUri */
         String responsePayload_SecondHop =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_1, PARTIAL_CA_2),
                                 customAudienceToLeaveList,
                                 false,
@@ -3957,7 +3941,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         true);
 
         String responsePayload_FirstHop =
-                createJsonResponsePayloadWithScheduleRequests(
+                ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadOnlySchedule(
                                 new JSONArray(List.of(scheduleRequest)))
                         .toString();
 
@@ -4129,9 +4113,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         /* Buyer set here is only being used for generating the json response. When
         persisting the schedule request, buyer is being generated from the updateUri */
         String responsePayload_SecondHop =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_3),
                                 customAudienceToLeaveList,
                                 false,
@@ -4149,9 +4132,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         true);
 
         String responsePayload_FirstHop =
-                createJsonResponsePayloadWithScheduleRequests(
+                createJsonResponsePayload(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_1, PARTIAL_CA_2),
                                 List.of(LEAVE_CA_1),
                                 new JSONArray(List.of(scheduleRequest)),
@@ -4304,9 +4286,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         /* Buyer set here is only being used for generating the json response. When
         persisting the schedule request, buyer is being generated from the updateUri */
         String responsePayload_SecondHop =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_1),
                                 customAudienceToLeaveList,
                                 false,
@@ -4324,7 +4305,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         true);
 
         String responsePayload_FirstHop =
-                createJsonResponsePayloadWithScheduleRequests(
+                ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadOnlySchedule(
                                 new JSONArray(List.of(scheduleRequest)))
                         .toString();
 
@@ -4440,9 +4421,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         /* Buyer set here is only being used for generating the json response. When
         persisting the schedule request, buyer is being generated from the updateUri */
         String responsePayload_ThirdHop =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_2),
                                 customAudienceToLeaveList2,
                                 false,
@@ -4462,9 +4442,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         /* Buyer set here is only being used for generating the json response. When
         persisting the schedule request, buyer is being generated from the updateUri */
         String responsePayload_SecondHop =
-                createJsonResponsePayloadWithScheduleRequests(
+                createJsonResponsePayload(
                                 LOCALHOST_BUYER,
-                                VALID_OWNER,
                                 List.of(PARTIAL_CA_1),
                                 customAudienceToLeaveList,
                                 new JSONArray(List.of(scheduleRequest_SecondHop)),
@@ -4484,7 +4463,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         true);
 
         String responsePayload_FirstHop =
-                createJsonResponsePayloadWithScheduleRequests(
+                ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadOnlySchedule(
                                 new JSONArray(List.of(scheduleRequest)))
                         .toString();
 

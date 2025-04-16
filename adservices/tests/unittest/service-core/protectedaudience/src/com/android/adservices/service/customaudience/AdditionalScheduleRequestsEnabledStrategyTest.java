@@ -30,7 +30,6 @@ import static com.android.adservices.service.customaudience.ScheduleCustomAudien
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CUSTOM_AUDIENCE_3;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.UPDATE_ID;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.convertScheduleRequestToDBScheduledCustomAudienceUpdate;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithScheduleRequests;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createScheduleRequest;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createScheduleRequestWithUpdateUri;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.getPartialCustomAudienceJsonArray;
@@ -141,7 +140,8 @@ public class AdditionalScheduleRequestsEnabledStrategyTest
                 .scheduleRequests(
                         OWNER,
                         true,
-                        createJsonResponsePayloadWithScheduleRequests(scheduleRequests),
+                        ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadOnlySchedule(
+                                scheduleRequests),
                         mDevContext,
                         mStatsBuilderMock)
                 .get();
@@ -189,7 +189,9 @@ public class AdditionalScheduleRequestsEnabledStrategyTest
 
         JSONArray scheduleRequests = new JSONArray(List.of(scheduleRequest, scheduleRequest2));
 
-        JSONObject jsonPayload = createJsonResponsePayloadWithScheduleRequests(scheduleRequests);
+        JSONObject jsonPayload =
+                ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadOnlySchedule(
+                        scheduleRequests);
 
         mStrategy.scheduleRequests(OWNER, true, jsonPayload, mDevContext, mStatsBuilderMock).get();
 
@@ -215,7 +217,7 @@ public class AdditionalScheduleRequestsEnabledStrategyTest
                 .scheduleRequests(
                         OWNER,
                         false,
-                        createJsonResponsePayloadWithScheduleRequests(
+                        ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadOnlySchedule(
                                 new JSONArray(List.of(getScheduleRequest_1()))),
                         mDevContext,
                         mStatsBuilderMock)

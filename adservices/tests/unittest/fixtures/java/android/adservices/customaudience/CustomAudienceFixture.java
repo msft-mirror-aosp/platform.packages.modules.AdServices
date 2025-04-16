@@ -51,6 +51,7 @@ public final class CustomAudienceFixture {
     public static final double VALID_PRIORITY_2 = 2.0;
 
     public static final String VALID_OWNER = CommonFixture.TEST_PACKAGE_NAME;
+    public static final String VALID_OWNER_2 = CommonFixture.TEST_PACKAGE_NAME_1;
     public static final String VALID_NAME = "testCustomAudienceName";
 
     public static final Instant VALID_ACTIVATION_TIME =

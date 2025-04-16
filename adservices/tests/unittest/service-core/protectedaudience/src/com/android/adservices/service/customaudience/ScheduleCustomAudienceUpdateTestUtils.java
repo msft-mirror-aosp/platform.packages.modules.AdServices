@@ -25,9 +25,11 @@ import static com.android.adservices.service.customaudience.AdditionalScheduleRe
 import static com.android.adservices.service.customaudience.AdditionalScheduleRequestsEnabledStrategyHelper.UPDATE_URI_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addActivationTime;
 import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addAuctionServerRequestFlags;
+import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addBuyer;
 import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addComponentAds;
 import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addExpirationTime;
 import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addName;
+import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addOwner;
 import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addPriority;
 import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addUserBiddingSignals;
 import static com.android.adservices.service.customaudience.ScheduledUpdatesHandler.JOIN_CUSTOM_AUDIENCE_KEY;
@@ -42,7 +44,6 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.ComponentAdData;
 import android.adservices.common.FledgeErrorResponse;
-import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.PartialCustomAudience;
 import android.adservices.customaudience.ScheduleCustomAudienceUpdateCallback;
@@ -127,6 +128,8 @@ public class ScheduleCustomAudienceUpdateTestUtils {
 
     public static final int MIN_DELAY =
             FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
+    public static final int NEGATIVE_DELAY_FOR_TEST_FLAG_IN_MINUTES = -50;
+    public static final int NEGATIVE_DELAY_FOR_TEST_IN_MINUTES = -20;
 
     public static final PartialCustomAudience PARTIAL_CUSTOM_AUDIENCE_1 =
             new PartialCustomAudience.Builder(PARTIAL_CA_1).build();
@@ -169,6 +172,180 @@ public class ScheduleCustomAudienceUpdateTestUtils {
     /** Creates a JSON response that is expected to be returned from the server for update */
     public static JSONObject createJsonResponsePayload(
             AdTechIdentifier buyer,
+            List<String> joinCustomAudienceNames,
+            List<String> leaveCustomAudienceNames,
+            JSONArray scheduleRequests,
+            boolean auctionServerRequestFlagsEnabled,
+            boolean sellerConfigurationEnabled)
+            throws JSONException {
+
+        JSONObject responseJson = new JSONObject();
+
+        JSONArray joinCustomAudienceArray = new JSONArray();
+        for (int i = 0; i < joinCustomAudienceNames.size(); i++) {
+            JSONObject generatedCa =
+                    generateCustomAudienceWithName(buyer, joinCustomAudienceNames.get(i));
+            if (auctionServerRequestFlagsEnabled) {
+                // Add auction server request flags
+                generatedCa =
+                        addAuctionServerRequestFlags(
+                                generatedCa,
+                                ImmutableList.of(CustomAudienceBlob.OMIT_ADS_VALUE),
+                                false);
+            }
+            if (sellerConfigurationEnabled) {
+                // give every CA a priority of 1.0
+                generatedCa =
+                        addPriority(
+                                /* jsonObject */ generatedCa,
+                                CustomAudienceFixture.VALID_PRIORITY_1,
+                                /* shouldAddHarmlessJunk= */ false);
+            }
+            joinCustomAudienceArray.put(i, generatedCa);
+        }
+
+        JSONArray leaveCustomAudienceArray = new JSONArray();
+        for (int i = 0; i < leaveCustomAudienceNames.size(); i++) {
+            leaveCustomAudienceArray.put(i, leaveCustomAudienceNames.get(i));
+        }
+
+        JSONObject scheduleObject = new JSONObject();
+        scheduleObject.put(REQUESTS_KEY, scheduleRequests);
+
+        responseJson.put(JOIN_CUSTOM_AUDIENCE_KEY, joinCustomAudienceArray);
+        responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, leaveCustomAudienceArray);
+        responseJson.put(SCHEDULE_REQUESTS_KEY, scheduleObject);
+
+        return responseJson;
+    }
+
+    /**
+     * Creates a JSON response that is expected to be returned from the server for update without
+     * Leave CA fields
+     */
+    public static JSONObject createJsonResponsePayloadWithoutLeave(
+            AdTechIdentifier buyer,
+            List<String> joinCustomAudienceNames,
+            List<String> leaveCustomAudienceNames,
+            boolean auctionServerRequestFlagsEnabled,
+            boolean sellerConfigurationEnabled)
+            throws JSONException {
+        JSONObject responseJson = new JSONObject();
+
+        JSONObject scheduleRequest =
+                generateScheduleRequestFromCustomAudienceNames(
+                        buyer, 40, joinCustomAudienceNames, leaveCustomAudienceNames, true);
+        JSONArray scheduleRequests = new JSONArray(List.of(scheduleRequest));
+        JSONObject scheduleObject = new JSONObject();
+        scheduleObject.put(REQUESTS_KEY, scheduleRequests);
+        responseJson.put(SCHEDULE_REQUESTS_KEY, scheduleObject);
+
+        JSONArray joinCustomAudienceArray =
+                createJoinCustomAudienceArray(
+                        buyer,
+                        joinCustomAudienceNames,
+                        auctionServerRequestFlagsEnabled,
+                        sellerConfigurationEnabled);
+        responseJson.put(JOIN_CUSTOM_AUDIENCE_KEY, joinCustomAudienceArray);
+        return responseJson;
+    }
+
+    /** Creates a JSON response that is expected to be returned from the server for update */
+    public static JSONObject createJsonResponsePayloadWithoutSchedule(
+            AdTechIdentifier buyer,
+            List<String> joinCustomAudienceNames,
+            List<String> leaveCustomAudienceNames,
+            boolean auctionServerRequestFlagsEnabled,
+            boolean sellerConfigurationEnabled)
+            throws JSONException {
+
+        JSONObject responseJson = new JSONObject();
+
+        JSONArray joinCustomAudienceArray = new JSONArray();
+        for (int i = 0; i < joinCustomAudienceNames.size(); i++) {
+            JSONObject generatedCa =
+                    generateCustomAudienceWithName(buyer, joinCustomAudienceNames.get(i));
+            if (auctionServerRequestFlagsEnabled) {
+                // Add auction server request flags
+                generatedCa =
+                        addAuctionServerRequestFlags(
+                                generatedCa,
+                                ImmutableList.of(CustomAudienceBlob.OMIT_ADS_VALUE),
+                                false);
+            }
+            if (sellerConfigurationEnabled) {
+                // give every CA a priority of 1.0
+                generatedCa =
+                        addPriority(
+                                /* jsonObject */ generatedCa,
+                                CustomAudienceFixture.VALID_PRIORITY_1,
+                                /* shouldAddHarmlessJunk= */ false);
+            }
+            joinCustomAudienceArray.put(i, generatedCa);
+        }
+
+        JSONArray leaveCustomAudienceArray = new JSONArray();
+        for (int i = 0; i < leaveCustomAudienceNames.size(); i++) {
+            leaveCustomAudienceArray.put(i, leaveCustomAudienceNames.get(i));
+        }
+
+        responseJson.put(JOIN_CUSTOM_AUDIENCE_KEY, joinCustomAudienceArray);
+        responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, leaveCustomAudienceArray);
+
+        return responseJson;
+    }
+
+    /** Creates a JSON response that is expected to be returned from the server for update */
+    public static JSONObject createJsonResponsePayloadWithoutScheduleWithDifferentBuyer(
+            AdTechIdentifier buyerForGeneratingUris,
+            AdTechIdentifier buyer,
+            List<String> joinCustomAudienceNames,
+            List<String> leaveCustomAudienceNames,
+            boolean auctionServerRequestFlagsEnabled,
+            boolean sellerConfigurationEnabled)
+            throws JSONException {
+
+        JSONObject responseJson = new JSONObject();
+
+        JSONArray joinCustomAudienceArray = new JSONArray();
+        for (int i = 0; i < joinCustomAudienceNames.size(); i++) {
+            JSONObject generatedCa =
+                    generateCustomAudienceWithName(
+                            buyerForGeneratingUris, joinCustomAudienceNames.get(i));
+            generatedCa = addBuyer(generatedCa, buyer, /* shouldAddHarmlessJunk= */ false);
+            if (auctionServerRequestFlagsEnabled) {
+                // Add auction server request flags
+                generatedCa =
+                        addAuctionServerRequestFlags(
+                                generatedCa,
+                                ImmutableList.of(CustomAudienceBlob.OMIT_ADS_VALUE),
+                                false);
+            }
+            if (sellerConfigurationEnabled) {
+                // give every CA a priority of 1.0
+                generatedCa =
+                        addPriority(
+                                /* jsonObject */ generatedCa,
+                                CustomAudienceFixture.VALID_PRIORITY_1,
+                                /* shouldAddHarmlessJunk= */ false);
+            }
+            joinCustomAudienceArray.put(i, generatedCa);
+        }
+
+        JSONArray leaveCustomAudienceArray = new JSONArray();
+        for (int i = 0; i < leaveCustomAudienceNames.size(); i++) {
+            leaveCustomAudienceArray.put(i, leaveCustomAudienceNames.get(i));
+        }
+
+        responseJson.put(JOIN_CUSTOM_AUDIENCE_KEY, joinCustomAudienceArray);
+        responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, leaveCustomAudienceArray);
+
+        return responseJson;
+    }
+
+    /** Creates a JSON response that is expected to be returned from the server for update */
+    public static JSONObject createJsonResponsePayloadWithoutScheduleWithDifferentOwner(
+            AdTechIdentifier buyer,
             String owner,
             List<String> joinCustomAudienceNames,
             List<String> leaveCustomAudienceNames,
@@ -181,7 +358,8 @@ public class ScheduleCustomAudienceUpdateTestUtils {
         JSONArray joinCustomAudienceArray = new JSONArray();
         for (int i = 0; i < joinCustomAudienceNames.size(); i++) {
             JSONObject generatedCa =
-                    generateCustomAudienceWithName(buyer, owner, joinCustomAudienceNames.get(i));
+                    generateCustomAudienceWithName(buyer, joinCustomAudienceNames.get(i));
+            generatedCa = addOwner(generatedCa, owner, /* shouldAddHarmlessJunk= */ false);
             if (auctionServerRequestFlagsEnabled) {
                 // Add auction server request flags
                 generatedCa =
@@ -216,9 +394,8 @@ public class ScheduleCustomAudienceUpdateTestUtils {
      * Creates a JSON response that is expected to be returned from the server for update with
      * component ads.
      */
-    public static JSONObject createJsonResponsePayloadWithComponentAds(
+    public static JSONObject createJsonResponsePayloadWithoutScheduleWithComponentAds(
             AdTechIdentifier buyer,
-            String owner,
             List<String> joinCustomAudienceNames,
             List<String> leaveCustomAudienceNames,
             List<List<ComponentAdData>> componentAds)
@@ -229,7 +406,7 @@ public class ScheduleCustomAudienceUpdateTestUtils {
         JSONArray joinCustomAudienceArray = new JSONArray();
         for (int i = 0; i < joinCustomAudienceNames.size(); i++) {
             JSONObject generatedCa =
-                    generateCustomAudienceWithName(buyer, owner, joinCustomAudienceNames.get(i));
+                    generateCustomAudienceWithName(buyer, joinCustomAudienceNames.get(i));
             generatedCa = addComponentAds(/* jsonObject */ generatedCa, componentAds.get(i));
             joinCustomAudienceArray.put(i, generatedCa);
         }
@@ -249,9 +426,8 @@ public class ScheduleCustomAudienceUpdateTestUtils {
      * Creates a JSON response that is expected to be returned from the server for update. The join
      * custom audiences in this request have invalid expiration time.
      */
-    public static JSONObject createJsonResponsePayloadWithInvalidExpirationTime(
-            AdTechIdentifier buyer, String owner, List<String> joinCustomAudienceNames)
-            throws JSONException {
+    public static JSONObject createJsonResponsePayloadOnlyJoinWithInvalidExpirationTime(
+            AdTechIdentifier buyer, List<String> joinCustomAudienceNames) throws JSONException {
 
         JSONObject responseJson = new JSONObject();
 
@@ -259,183 +435,22 @@ public class ScheduleCustomAudienceUpdateTestUtils {
         for (int i = 0; i < joinCustomAudienceNames.size(); i++) {
             JSONObject generatedCa =
                     generateCustomAudienceWithNameWithInvalidExpirationTime(
-                            buyer, owner, joinCustomAudienceNames.get(i));
+                            buyer, joinCustomAudienceNames.get(i));
             joinCustomAudienceArray.put(i, generatedCa);
         }
 
         responseJson.put(JOIN_CUSTOM_AUDIENCE_KEY, joinCustomAudienceArray);
 
         return responseJson;
-    }
-
-    /** Creates a JSON response that is expected to be returned from the server for update */
-    public static JSONObject createJsonResponsePayloadWithScheduleRequests(
-            AdTechIdentifier buyer,
-            String owner,
-            List<String> joinCustomAudienceNames,
-            List<String> leaveCustomAudienceNames,
-            JSONArray scheduleRequests,
-            boolean auctionServerRequestFlagsEnabled,
-            boolean sellerConfigurationEnabled)
-            throws JSONException {
-
-        JSONObject responseJson = new JSONObject();
-
-        JSONArray joinCustomAudienceArray = new JSONArray();
-        for (int i = 0; i < joinCustomAudienceNames.size(); i++) {
-            JSONObject generatedCa =
-                    generateCustomAudienceWithName(buyer, owner, joinCustomAudienceNames.get(i));
-            if (auctionServerRequestFlagsEnabled) {
-                // Add auction server request flags
-                generatedCa =
-                        addAuctionServerRequestFlags(
-                                generatedCa,
-                                ImmutableList.of(CustomAudienceBlob.OMIT_ADS_VALUE),
-                                false);
-            }
-            if (sellerConfigurationEnabled) {
-                // give every CA a priority of 1.0
-                generatedCa =
-                        addPriority(
-                                /* jsonObject */ generatedCa,
-                                CustomAudienceFixture.VALID_PRIORITY_1,
-                                /* shouldAddHarmlessJunk= */ false);
-            }
-            joinCustomAudienceArray.put(i, generatedCa);
-        }
-
-        JSONArray leaveCustomAudienceArray = new JSONArray();
-        for (int i = 0; i < leaveCustomAudienceNames.size(); i++) {
-            leaveCustomAudienceArray.put(i, leaveCustomAudienceNames.get(i));
-        }
-
-        JSONObject scheduleObject = new JSONObject();
-        scheduleObject.put(REQUESTS_KEY, scheduleRequests);
-
-        responseJson.put(JOIN_CUSTOM_AUDIENCE_KEY, joinCustomAudienceArray);
-        responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, leaveCustomAudienceArray);
-        responseJson.put(SCHEDULE_REQUESTS_KEY, scheduleObject);
-
-        return responseJson;
-    }
-
-    /**
-     * Creates a JSON response with schedule requests that is expected to be returned from the
-     * server for update
-     */
-    public static JSONObject createJsonResponsePayloadWithScheduleRequests(
-            JSONArray scheduleRequests) throws JSONException {
-        JSONObject scheduleObject = new JSONObject();
-        scheduleObject.put(REQUESTS_KEY, scheduleRequests);
-
-        JSONObject updateResponseJson = new JSONObject();
-        updateResponseJson.put(SCHEDULE_REQUESTS_KEY, scheduleObject);
-
-        return updateResponseJson;
-    }
-
-    /** Creates a Schedule Request JSONObject without an update uri */
-    public static JSONObject generateScheduleRequestMissingUpdateUriKey() throws JSONException {
-        JSONObject responseJson = new JSONObject();
-
-        responseJson.put(MIN_DELAY_KEY, MIN_DELAY);
-        responseJson.put(SHOULD_REPLACE_PENDING_UPDATES_KEY, true);
-        responseJson.put(PARTIAL_CUSTOM_AUDIENCES_KEY, getPartialCustomAudienceJsonArray());
-        responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY);
-        return responseJson;
-    }
-
-    /**
-     * Creates a JSON response with join and schedule requests that is expected to be returned from
-     * the server for update
-     */
-    public static JSONObject createJsonResponseWithJoinAndScheduleRequests(
-            JSONArray scheduleRequests) throws JSONException {
-        JSONObject scheduleObject = new JSONObject();
-        scheduleObject.put(REQUESTS_KEY, scheduleRequests);
-
-        JSONObject updateResponseJson = new JSONObject();
-        updateResponseJson.put(SCHEDULE_REQUESTS_KEY, scheduleObject);
-
-        return updateResponseJson;
-    }
-
-    /**
-     * Creates a JSON response that is expected to be returned from the server for update without
-     * Leave CA fields
-     */
-    public static JSONObject createJsonResponsePayloadWithoutLeaveCA(
-            AdTechIdentifier buyer,
-            String owner,
-            List<String> joinCustomAudienceNames,
-            List<String> leaveCustomAudienceNames,
-            boolean auctionServerRequestFlagsEnabled,
-            boolean sellerConfigurationEnabled)
-            throws JSONException {
-        JSONObject responseJson = new JSONObject();
-
-        JSONObject scheduleRequest =
-                generateScheduleRequestFromCustomAudienceNames(
-                        buyer, 40, joinCustomAudienceNames, leaveCustomAudienceNames, true);
-        JSONArray scheduleRequests = new JSONArray(List.of(scheduleRequest));
-        JSONObject scheduleObject = new JSONObject();
-        scheduleObject.put(REQUESTS_KEY, scheduleRequests);
-        responseJson.put(SCHEDULE_REQUESTS_KEY, scheduleObject);
-
-        JSONArray joinCustomAudienceArray =
-                createJoinCustomAudienceArray(
-                        buyer,
-                        owner,
-                        joinCustomAudienceNames,
-                        leaveCustomAudienceNames,
-                        auctionServerRequestFlagsEnabled,
-                        sellerConfigurationEnabled);
-        responseJson.put(JOIN_CUSTOM_AUDIENCE_KEY, joinCustomAudienceArray);
-        return responseJson;
-    }
-
-    private static JSONArray createJoinCustomAudienceArray(
-            AdTechIdentifier buyer,
-            String owner,
-            List<String> joinCustomAudienceNames,
-            List<String> leaveCustomAudienceNames,
-            boolean auctionServerRequestFlagsEnabled,
-            boolean sellerConfigurationEnabled)
-            throws JSONException {
-        JSONArray joinCustomAudienceArray = new JSONArray();
-        for (int i = 0; i < joinCustomAudienceNames.size(); i++) {
-            JSONObject generatedCa =
-                    generateCustomAudienceWithName(buyer, owner, joinCustomAudienceNames.get(i));
-            if (auctionServerRequestFlagsEnabled) {
-                // Add auction server request flags
-                generatedCa =
-                        addAuctionServerRequestFlags(
-                                generatedCa,
-                                ImmutableList.of(CustomAudienceBlob.OMIT_ADS_VALUE),
-                                false);
-            }
-            if (sellerConfigurationEnabled) {
-                // give every CA a priority of 1.0
-                generatedCa =
-                        addPriority(
-                                /* jsonObject */ generatedCa,
-                                CustomAudienceFixture.VALID_PRIORITY_1,
-                                /* shouldAddHarmlessJunk= */ false);
-            }
-            joinCustomAudienceArray.put(i, generatedCa);
-        }
-        return joinCustomAudienceArray;
     }
 
     /**
      * Creates a JSON response that with invalid join ca json object. The last CA in the JSON
      * response will be invalid, the first N - 1 will be valid.
      */
-    public static JSONObject createJsonResponsePayloadInvalidJoinCA(
+    public static JSONObject createJsonResponsePayloadOnlyJoinWithInvalidJoinCA(
             AdTechIdentifier buyer,
-            String owner,
             List<String> joinCustomAudienceNames,
-            List<String> leaveCustomAudienceNames,
             boolean auctionServerRequestFlagsEnabled,
             boolean sellerConfigurationEnabled)
             throws JSONException {
@@ -445,7 +460,7 @@ public class ScheduleCustomAudienceUpdateTestUtils {
         // Inserting N - 1 valid join custom audience JSON
         for (int i = 0; i < joinCustomAudienceNames.size() - 1; i++) {
             JSONObject generatedCa =
-                    generateCustomAudienceWithName(buyer, owner, joinCustomAudienceNames.get(i));
+                    generateCustomAudienceWithName(buyer, joinCustomAudienceNames.get(i));
             if (auctionServerRequestFlagsEnabled) {
                 // Add auction server request flags
                 generatedCa =
@@ -479,14 +494,8 @@ public class ScheduleCustomAudienceUpdateTestUtils {
      * Creates a JSON response that is expected to be returned from the server for update without
      * join ca fields
      */
-    public static JSONObject createJsonResponsePayloadWithoutJoinCA(
-            AdTechIdentifier buyer,
-            String owner,
-            List<String> joinCustomAudienceNames,
-            List<String> leaveCustomAudienceNames,
-            boolean auctionServerRequestFlagsEnabled,
-            boolean sellerConfigurationEnabled)
-            throws JSONException {
+    public static JSONObject createJsonResponsePayloadOnlyLeave(
+            List<String> leaveCustomAudienceNames) throws JSONException {
 
         JSONObject responseJson = new JSONObject();
 
@@ -499,20 +508,64 @@ public class ScheduleCustomAudienceUpdateTestUtils {
         return responseJson;
     }
 
-    /** Creates a CustomAudience JSONObject with the given buyer, owner and name. */
-    public static JSONObject generateCustomAudienceWithName(
-            AdTechIdentifier buyer, String owner, String name) throws JSONException {
+    /**
+     * Creates a JSON response with schedule requests that is expected to be returned from the
+     * server for update
+     */
+    public static JSONObject createJsonResponsePayloadOnlySchedule(JSONArray scheduleRequests)
+            throws JSONException {
+        JSONObject scheduleObject = new JSONObject();
+        scheduleObject.put(REQUESTS_KEY, scheduleRequests);
 
-        CustomAudience ca =
-                CustomAudienceFixture.getValidBuilderForBuyer(buyer).setName(name).build();
-        return CustomAudienceBlobFixture.asJSONObject(
-                owner,
-                ca.getBuyer(),
+        JSONObject updateResponseJson = new JSONObject();
+        updateResponseJson.put(SCHEDULE_REQUESTS_KEY, scheduleObject);
+
+        return updateResponseJson;
+    }
+
+    private static JSONArray createJoinCustomAudienceArray(
+            AdTechIdentifier buyer,
+            List<String> joinCustomAudienceNames,
+            boolean auctionServerRequestFlagsEnabled,
+            boolean sellerConfigurationEnabled)
+            throws JSONException {
+        JSONArray joinCustomAudienceArray = new JSONArray();
+        for (int i = 0; i < joinCustomAudienceNames.size(); i++) {
+            JSONObject generatedCa =
+                    generateCustomAudienceWithName(buyer, joinCustomAudienceNames.get(i));
+            if (auctionServerRequestFlagsEnabled) {
+                // Add auction server request flags
+                generatedCa =
+                        addAuctionServerRequestFlags(
+                                generatedCa,
+                                ImmutableList.of(CustomAudienceBlob.OMIT_ADS_VALUE),
+                                false);
+            }
+            if (sellerConfigurationEnabled) {
+                // give every CA a priority of 1.0
+                generatedCa =
+                        addPriority(
+                                /* jsonObject */ generatedCa,
+                                CustomAudienceFixture.VALID_PRIORITY_1,
+                                /* shouldAddHarmlessJunk= */ false);
+            }
+            joinCustomAudienceArray.put(i, generatedCa);
+        }
+        return joinCustomAudienceArray;
+    }
+
+    /**
+     * Creates a CustomAudience JSONObject with the given name. Buyer is only used for generating
+     * the uris.
+     */
+    public static JSONObject generateCustomAudienceWithName(AdTechIdentifier buyer, String name)
+            throws JSONException {
+        return CustomAudienceBlobFixture.asJSONObjectWithoutOwnerAndBuyer(
                 name,
-                ca.getActivationTime(),
-                ca.getExpirationTime(),
-                ca.getDailyUpdateUri(),
-                ca.getBiddingLogicUri(),
+                CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                CustomAudienceFixture.VALID_EXPIRATION_TIME,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer),
+                CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer),
                 AdSelectionSignals.EMPTY.toString(),
                 DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build(),
                 Collections.emptyList(),
@@ -520,26 +573,32 @@ public class ScheduleCustomAudienceUpdateTestUtils {
     }
 
     /**
-     * Creates a CustomAudience JSONObject with the given buyer, owner and name and with invalid
-     * expiration date.
+     * Creates a CustomAudience JSONObject with the given name with invalid expiration date. Buyer
+     * is only used for generating the uris.
      */
     public static JSONObject generateCustomAudienceWithNameWithInvalidExpirationTime(
-            AdTechIdentifier buyer, String owner, String name) throws JSONException {
-
-        CustomAudience ca =
-                CustomAudienceFixture.getValidBuilderForBuyer(buyer).setName(name).build();
-        return CustomAudienceBlobFixture.asJSONObject(
-                owner,
-                ca.getBuyer(),
+            AdTechIdentifier buyer, String name) throws JSONException {
+        return CustomAudienceBlobFixture.asJSONObjectWithoutOwnerAndBuyer(
                 name,
-                ca.getActivationTime(),
+                CustomAudienceFixture.VALID_ACTIVATION_TIME,
                 CustomAudienceFixture.INVALID_NOW_EXPIRATION_TIME,
-                ca.getDailyUpdateUri(),
-                ca.getBiddingLogicUri(),
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer),
+                CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer),
                 AdSelectionSignals.EMPTY.toString(),
                 DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build(),
                 Collections.emptyList(),
-                false);
+                /* shouldAddHarmlessJunk= */ false);
+    }
+
+    /** Creates a Schedule Request JSONObject without an update uri */
+    public static JSONObject generateScheduleRequestMissingUpdateUriKey() throws JSONException {
+        JSONObject responseJson = new JSONObject();
+
+        responseJson.put(MIN_DELAY_KEY, MIN_DELAY);
+        responseJson.put(SHOULD_REPLACE_PENDING_UPDATES_KEY, true);
+        responseJson.put(PARTIAL_CUSTOM_AUDIENCES_KEY, getPartialCustomAudienceJsonArray());
+        responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY);
+        return responseJson;
     }
 
     /** Creates a Schedule Request JSONObject from custom audience names. */
@@ -726,7 +785,7 @@ public class ScheduleCustomAudienceUpdateTestUtils {
     }
 
     /** Create request body with partial custom audiences and custom audiences to leave */
-    public static JSONObject createRequestBody(
+    public static String createRequestBody(
             JSONArray partialCustomAudienceJsonArray,
             List<DBCustomAudienceToLeave> customAudienceToLeaveList)
             throws JSONException {
@@ -742,10 +801,10 @@ public class ScheduleCustomAudienceUpdateTestUtils {
                 AdditionalScheduleRequestsEnabledStrategyHelper.LEAVE_CUSTOM_AUDIENCE_KEY,
                 jsonArray);
 
-        return jsonObject;
+        return jsonObject.toString();
     }
 
-    /** Create request body with only partial custom audiences, this should only be used for v1 */
+    /** Create request body with only partial custom audiences. */
     public static String createRequestBodyWithOnlyPartialCustomAudiences(
             JSONArray partialCustomAudienceJsonArray) throws JSONException {
         JSONObject jsonObject = new JSONObject();
