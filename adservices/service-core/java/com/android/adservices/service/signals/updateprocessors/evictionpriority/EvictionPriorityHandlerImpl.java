@@ -17,12 +17,17 @@
 package com.android.adservices.service.signals.updateprocessors.evictionpriority;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.evict.EvictionPriority;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
+
+import com.google.common.collect.Iterables;
 
 import org.json.JSONObject;
 
 import java.nio.ByteBuffer;
+import java.util.Map;
+import java.util.Set;
 
 /** Implementation of {@link EvictionPriorityHandler} used if prioritized eviction is enabled. */
 public class EvictionPriorityHandlerImpl implements EvictionPriorityHandler {
@@ -31,7 +36,7 @@ public class EvictionPriorityHandlerImpl implements EvictionPriorityHandler {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     @Override
-    public EvictionPriority getEvictionPriority(
+    public EvictionPriority getEvictionPriorityFromUpdate(
             ByteBuffer key,
             JSONObject update,
             UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
@@ -39,19 +44,54 @@ public class EvictionPriorityHandlerImpl implements EvictionPriorityHandler {
 
         if (priorityString.isEmpty()) {
             sLogger.v(
-                    "No eviction priority in update, proceeding with default eviction priority: "
+                    "No eviction priority in update, returning default eviction priority: "
                             + EvictionPriority.DEFAULT);
             return EvictionPriority.DEFAULT;
         }
 
         try {
-            EvictionPriority priority = EvictionPriority.valueOf(priorityString);
+            EvictionPriority evictionPriority = EvictionPriority.valueOf(priorityString);
             updateSignalsProcessReportedLogger.addUpdatedSignalWithEvictionPriorityForCount(key);
-            updateSignalsProcessReportedLogger.addUpdatedSignalEvictionPriority(priority);
-            return priority;
+            updateSignalsProcessReportedLogger.addUpdatedSignalEvictionPriority(evictionPriority);
+            return evictionPriority;
         } catch (IllegalArgumentException e) {
             sLogger.e(e, "Invalid eviction priority in update: " + priorityString);
             throw e;
         }
+    }
+
+    @Override
+    public EvictionPriority getEvictionPriorityFromUpdateOrExistingSignals(
+            ByteBuffer key,
+            JSONObject update,
+            Map<ByteBuffer, Set<DBProtectedSignal>> existingSignalsMap,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
+        EvictionPriority evictionPriority = EvictionPriority.DEFAULT;
+        String priorityString = update.optString(EVICTION_PRIORITY);
+
+        if (!priorityString.isEmpty()) {
+            try {
+                evictionPriority = EvictionPriority.valueOf(priorityString);
+                updateSignalsProcessReportedLogger.addUpdatedSignalWithEvictionPriorityForCount(
+                        key);
+                updateSignalsProcessReportedLogger.addUpdatedSignalEvictionPriority(
+                        evictionPriority);
+            } catch (IllegalArgumentException e) {
+                sLogger.e(e, "Invalid eviction priority in update: " + priorityString);
+                throw e;
+            }
+        } else if (existingSignalsMap.containsKey(key)) {
+            sLogger.v(
+                    "No eviction priority in update, getting eviction priority from existing"
+                            + " signals");
+            evictionPriority = Iterables.getLast(existingSignalsMap.get(key)).getEvictionPriority();
+        } else {
+            sLogger.v(
+                    "No eviction priority in update or existing signals, returning default eviction"
+                            + " priority: "
+                            + EvictionPriority.DEFAULT);
+        }
+
+        return evictionPriority;
     }
 }

@@ -3827,4 +3827,9 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
                 KEY_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY,
                 DEFAULT_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY);
     }
+
+    public final boolean getEnableHpkeWithPlatformApis() {
+        return mBackend.getFlag(
+                KEY_ENABLE_HPKE_WITH_PLATFORM_APIS, DEFAULT_ENABLE_HPKE_WITH_PLATFORM_APIS);
+    }
 }

@@ -25,9 +25,8 @@ import static com.android.adservices.service.signals.SignalsFixture.VALUE_1;
 import static com.android.adservices.service.signals.SignalsFixture.createSignal;
 import static com.android.adservices.service.signals.SignalsFixture.expectThatSignalBuilderListsAreEqual;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
@@ -79,22 +78,28 @@ public class UpdatePropertiesV1Test extends AdServicesMockitoTestCase {
         JSONObject updatesJson = new JSONObject();
         updatesJson.put(BASE64_KEY_1, updatePropertiesJson);
 
-        when(mEvictionPriorityHandlerMock.getEvictionPriority(
-                        BB_KEY_1, updatePropertiesJson, mUpdateSignalsProcessReportedLoggerMock))
-                .thenReturn(EvictionPriority.EVICT_SOONER);
-
         DBProtectedSignal existingSignal =
                 createSignal(KEY_1, VALUE_1, ID_1, NOW.minus(Duration.ofDays(1)));
         Map<ByteBuffer, Set<DBProtectedSignal>> existingSignals =
                 ImmutableMap.of(BB_KEY_1, ImmutableSet.of(existingSignal));
+
+        when(mEvictionPriorityHandlerMock.getEvictionPriorityFromUpdateOrExistingSignals(
+                        BB_KEY_1,
+                        updatePropertiesJson,
+                        existingSignals,
+                        mUpdateSignalsProcessReportedLoggerMock))
+                .thenReturn(EvictionPriority.EVICT_SOONER);
 
         UpdateOutput output =
                 mUpdatePropertiesV1.processUpdates(
                         updatesJson, existingSignals, mUpdateSignalsProcessReportedLoggerMock);
 
         verify(mEvictionPriorityHandlerMock)
-                .getEvictionPriority(
-                        BB_KEY_1, updatePropertiesJson, mUpdateSignalsProcessReportedLoggerMock);
+                .getEvictionPriorityFromUpdateOrExistingSignals(
+                        BB_KEY_1,
+                        updatePropertiesJson,
+                        existingSignals,
+                        mUpdateSignalsProcessReportedLoggerMock);
         expect.withMessage("keysTouched").that(output.getKeysTouched()).containsExactly(BB_KEY_1);
         expect.withMessage("toRemove").that(output.getToRemove()).containsExactly(existingSignal);
         List<DBProtectedSignal.Builder> expectedToAdd =
@@ -116,7 +121,7 @@ public class UpdatePropertiesV1Test extends AdServicesMockitoTestCase {
                 mUpdatePropertiesV1.processUpdates(
                         updatesJson, ImmutableMap.of(), mUpdateSignalsProcessReportedLoggerMock);
 
-        verify(mEvictionPriorityHandlerMock, never()).getEvictionPriority(any(), any(), any());
+        verifyNoMoreInteractions(mEvictionPriorityHandlerMock);
         expect.withMessage("keysTouched").that(output.getKeysTouched()).containsExactly(BB_KEY_1);
         expect.withMessage("toRemove").that(output.getToRemove()).isEmpty();
         expect.withMessage("toAdd").that(output.getToAdd()).isEmpty();
