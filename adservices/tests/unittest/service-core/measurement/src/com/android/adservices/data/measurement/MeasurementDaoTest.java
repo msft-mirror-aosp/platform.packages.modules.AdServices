@@ -7104,7 +7104,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         .build());
 
         // Will not be deleted
-        asyncRegistrationList.add(
+        AsyncRegistration validRegistration =
                 new AsyncRegistration.Builder()
                         .setId("3")
                         .setOsDestination(Uri.parse("android-app://not-installed-app-destination"))
@@ -7115,7 +7115,8 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         .setRequestTime(Long.MAX_VALUE)
                         .setRetryCount(retryLimit - 1L)
                         .setRegistrationId(UUID.randomUUID().toString())
-                        .build());
+                        .build();
+        asyncRegistrationList.add(validRegistration);
 
         // Will be deleted due to retry limit
         asyncRegistrationList.add(
@@ -7148,7 +7149,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                             AsyncRegistrationContract.AD_ID_PERMISSION,
                             asyncRegistration.getDebugKeyAllowed());
                     values.put(
-                            AsyncRegistrationContract.TYPE, asyncRegistration.getType().toString());
+                            AsyncRegistrationContract.TYPE, asyncRegistration.getType().getValue());
                     values.put(
                             AsyncRegistrationContract.REQUEST_TIME,
                             asyncRegistration.getRequestTime());
@@ -7192,16 +7193,15 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         /* having */ null,
                         /* orderBy */ null);
 
-        Set<String> ids = new HashSet<>(Arrays.asList("3"));
         List<AsyncRegistration> asyncRegistrations = new ArrayList<>();
         while (cursor.moveToNext()) {
             AsyncRegistration asyncRegistration =
                     SqliteObjectMapper.constructAsyncRegistration(cursor);
             asyncRegistrations.add(asyncRegistration);
         }
-        for (AsyncRegistration asyncRegistration : asyncRegistrations) {
-            assertTrue(ids.contains(asyncRegistration.getId()));
-        }
+
+        assertEquals(1, asyncRegistrations.size());
+        assertEquals(validRegistration, asyncRegistrations.get(0));
     }
 
     @Test

@@ -3670,10 +3670,10 @@ class MeasurementDao implements IMeasurementDao {
                 AsyncRegistrationContract.SOURCE_TYPE,
                 asyncRegistration.getSourceType() == null
                         ? null
-                        : asyncRegistration.getSourceType().ordinal());
+                        : asyncRegistration.getSourceType().getIntValue());
         values.put(AsyncRegistrationContract.REQUEST_TIME, asyncRegistration.getRequestTime());
         values.put(AsyncRegistrationContract.RETRY_COUNT, asyncRegistration.getRetryCount());
-        values.put(AsyncRegistrationContract.TYPE, asyncRegistration.getType().ordinal());
+        values.put(AsyncRegistrationContract.TYPE, asyncRegistration.getType().getValue());
         values.put(
                 AsyncRegistrationContract.DEBUG_KEY_ALLOWED,
                 asyncRegistration.getDebugKeyAllowed());
