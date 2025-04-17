@@ -36,8 +36,11 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateDebugReportRecord;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.logging.MeasurementBackgroundItemsInfo;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.reporting.DebugReport;
+
+import com.google.common.collect.ImmutableList;
 
 import java.time.Instant;
 import java.util.Collection;
@@ -900,6 +903,17 @@ public interface IMeasurementDao {
      */
     long countDistinctDebugAdIdsUsedByEnrollmentInWindow(
             String enrollmentId, long startTime, long endTime, String excludedDebugAdId)
+            throws DatastoreException;
+
+    /**
+     * Constructs and returns a list of {@link
+     * com.android.adservices.service.measurement.logging.MeasurementBackgroundItemsInfo} by
+     * fetching and grouping all records in the AsyncRegistration table.
+     *
+     * @return An immutable list of MeasurementBackgroundItemsInfo.
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    ImmutableList<MeasurementBackgroundItemsInfo> fetchRegistrationsAndConstructBackgroundItems()
             throws DatastoreException;
 
     /**
