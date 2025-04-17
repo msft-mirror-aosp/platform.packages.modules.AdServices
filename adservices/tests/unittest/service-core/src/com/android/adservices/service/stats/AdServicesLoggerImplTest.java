@@ -588,6 +588,20 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
+    public void testLogMsmtNumUniqueReportingOriginPerEnrollment() {
+        int count = 10;
+        mAdservicesLogger.logMsmtNumUniqueReportingOriginPerEnrollment(count);
+        verify(mStatsdLoggerMock).logMsmtNumUniqueReportingOriginPerEnrollment(count);
+    }
+
+    @Test
+    public void testLogMsmtNumUniqueReportingOriginPerEnrollmentXDestination() {
+        int count = 10;
+        mAdservicesLogger.logMsmtNumUniqueReportingOriginPerEnrollmentXDestination(count);
+        verify(mStatsdLoggerMock).logMsmtNumUniqueReportingOriginPerEnrollmentXDestination(count);
+    }
+
+    @Test
     public void testLogEnrollmentDataStats() {
         int transactionTypeEnumValue =
                 EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.ordinal();

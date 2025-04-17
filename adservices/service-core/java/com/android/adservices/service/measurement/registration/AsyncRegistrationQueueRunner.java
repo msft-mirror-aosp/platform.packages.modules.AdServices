@@ -24,6 +24,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.os.Trace;
+import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreException;
@@ -676,6 +677,24 @@ public final class AsyncRegistrationQueueRunner {
                         "storeSource (SUCCESS): Source inserted to database. Enrollment ID: %s,"
                                 + " Source ID: %s, Source Event ID: %s",
                         source.getEnrollmentId(), source.getId(), source.getEventId());
+
+        mLogger.logMsmtNumUniqueReportingOriginPerEnrollment(
+                dao.countDistinctReportingOriginsPerEnrollmentInSource(
+                        source.getEnrollmentId(),
+                        source.getEventTime()
+                                - mFlags.getMeasurementMinReportingOriginUpdateWindow(),
+                        source.getEventTime()));
+
+        for (Pair<Integer, String> destination : source.getAllAttributionDestinations()) {
+            mLogger.logMsmtNumUniqueReportingOriginPerEnrollmentXDestination(
+                    dao.countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                            source.getEnrollmentId(),
+                            destination.first.intValue(),
+                            destination.second,
+                            source.getEventTime()
+                                    - mFlags.getMeasurementMinReportingOriginUpdateWindow(),
+                            source.getEventTime()));
+        }
 
         if (mFlags.getMeasurementEnableAttributionScope()) {
             dao.updateSourcesForAttributionScope(source);
