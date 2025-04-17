@@ -104,12 +104,12 @@ public class FledgeAllowListsFilter {
     private boolean isInAllowList(
             String appPackageName, @AppManifestConfigCall.ApiType int apiType) {
         if (apiType == API_CUSTOM_AUDIENCES) {
-            return AllowLists.isPackageAllowListed(mFlags.getPpapiAppAllowList(), appPackageName);
+            return AllowLists.isItemAllowListed(mFlags.getPpapiAppAllowList(), appPackageName);
         } else if (apiType == API_PROTECTED_SIGNALS) {
-            return AllowLists.isPackageAllowListed(mFlags.getPasAppAllowList(), appPackageName);
+            return AllowLists.isItemAllowListed(mFlags.getPasAppAllowList(), appPackageName);
         } else if (apiType == API_AD_SELECTION) {
-            return AllowLists.isPackageAllowListed(mFlags.getPpapiAppAllowList(), appPackageName)
-                    || AllowLists.isPackageAllowListed(mFlags.getPasAppAllowList(), appPackageName);
+            return AllowLists.isItemAllowListed(mFlags.getPpapiAppAllowList(), appPackageName)
+                    || AllowLists.isItemAllowListed(mFlags.getPasAppAllowList(), appPackageName);
         } else {
             throw new IllegalStateException(
                     String.format(Locale.ENGLISH, INVALID_API_TYPE, apiType));

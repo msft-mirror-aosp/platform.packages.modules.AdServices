@@ -139,7 +139,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
 
     private String getAllowlistedAppPackageName(String appPackageName) {
         if (!mFlags.getMeasurementEnableAppPackageNameLogging()
-                || !AllowLists.isPackageAllowListed(
+                || !AllowLists.isItemAllowListed(
                         mFlags.getMeasurementAppPackageNameLoggingAllowlist(), appPackageName)) {
             return "";
         }

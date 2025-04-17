@@ -72,13 +72,13 @@ public final class AllowListsTest extends AdServicesExtendedMockitoTestCase {
     @Test
     public void testAppCanUsePpapi_allowAll() {
         expect.that(AllowLists.doesAllowListAllowAll(ALLOW_ALL)).isTrue();
-        expect.that(AllowLists.isPackageAllowListed(ALLOW_ALL, SOME_PACKAGE_NAME)).isTrue();
+        expect.that(AllowLists.isItemAllowListed(ALLOW_ALL, SOME_PACKAGE_NAME)).isTrue();
     }
 
     @Test
     public void testAppCanUsePpapi_emptyAllowList() {
         expect.that(AllowLists.doesAllowListAllowAll(EMPTY_LIST)).isFalse();
-        expect.that(AllowLists.isPackageAllowListed(EMPTY_LIST, SOME_PACKAGE_NAME)).isFalse();
+        expect.that(AllowLists.isItemAllowListed(EMPTY_LIST, SOME_PACKAGE_NAME)).isFalse();
         expect.that(AllowLists.splitAllowList(EMPTY_LIST)).isEmpty();
     }
 
@@ -86,9 +86,9 @@ public final class AllowListsTest extends AdServicesExtendedMockitoTestCase {
     public void testAppCanUsePpapi_notEmptyAllowList() {
         String allowList = SOME_PACKAGE_NAME + ",AnotherPackageName";
         expect.that(AllowLists.doesAllowListAllowAll(allowList)).isFalse();
-        expect.that(AllowLists.isPackageAllowListed(allowList, "notAllowedPackageName")).isFalse();
-        expect.that(AllowLists.isPackageAllowListed(allowList, SOME_PACKAGE_NAME)).isTrue();
-        expect.that(AllowLists.isPackageAllowListed(allowList, "AnotherPackageName")).isTrue();
+        expect.that(AllowLists.isItemAllowListed(allowList, "notAllowedPackageName")).isFalse();
+        expect.that(AllowLists.isItemAllowListed(allowList, SOME_PACKAGE_NAME)).isTrue();
+        expect.that(AllowLists.isItemAllowListed(allowList, "AnotherPackageName")).isTrue();
         expect.that(AllowLists.splitAllowList(allowList))
                 .containsExactly(SOME_PACKAGE_NAME, "AnotherPackageName");
     }
@@ -98,10 +98,10 @@ public final class AllowListsTest extends AdServicesExtendedMockitoTestCase {
         // Allow list contains leading/trailing spaces
         String listWithSpace =
                 SOME_PACKAGE_NAME + ", PackageName1,PackageName2 ,  PackageName3    ";
-        expect.that(AllowLists.isPackageAllowListed(listWithSpace, SOME_PACKAGE_NAME)).isTrue();
-        expect.that(AllowLists.isPackageAllowListed(listWithSpace, "PackageName1")).isTrue();
-        expect.that(AllowLists.isPackageAllowListed(listWithSpace, "PackageName2")).isTrue();
-        expect.that(AllowLists.isPackageAllowListed(listWithSpace, "PackageName3")).isTrue();
+        expect.that(AllowLists.isItemAllowListed(listWithSpace, SOME_PACKAGE_NAME)).isTrue();
+        expect.that(AllowLists.isItemAllowListed(listWithSpace, "PackageName1")).isTrue();
+        expect.that(AllowLists.isItemAllowListed(listWithSpace, "PackageName2")).isTrue();
+        expect.that(AllowLists.isItemAllowListed(listWithSpace, "PackageName3")).isTrue();
         expect.that(AllowLists.splitAllowList(listWithSpace))
                 .containsExactly(SOME_PACKAGE_NAME, "PackageName1", "PackageName2", "PackageName3");
     }
@@ -111,14 +111,11 @@ public final class AllowListsTest extends AdServicesExtendedMockitoTestCase {
         // Allow list contains leading/trailing line separators
         String listWithLineSeparator =
                 SOME_PACKAGE_NAME + ",\nPackageName1,PackageName2\n,\n\nPackageName3\n\n\n";
-        expect.that(AllowLists.isPackageAllowListed(listWithLineSeparator, SOME_PACKAGE_NAME))
+        expect.that(AllowLists.isItemAllowListed(listWithLineSeparator, SOME_PACKAGE_NAME))
                 .isTrue();
-        expect.that(AllowLists.isPackageAllowListed(listWithLineSeparator, "PackageName1"))
-                .isTrue();
-        expect.that(AllowLists.isPackageAllowListed(listWithLineSeparator, "PackageName2"))
-                .isTrue();
-        expect.that(AllowLists.isPackageAllowListed(listWithLineSeparator, "PackageName3"))
-                .isTrue();
+        expect.that(AllowLists.isItemAllowListed(listWithLineSeparator, "PackageName1")).isTrue();
+        expect.that(AllowLists.isItemAllowListed(listWithLineSeparator, "PackageName2")).isTrue();
+        expect.that(AllowLists.isItemAllowListed(listWithLineSeparator, "PackageName3")).isTrue();
         expect.that(AllowLists.splitAllowList(listWithLineSeparator))
                 .containsExactly(SOME_PACKAGE_NAME, "PackageName1", "PackageName2", "PackageName3");
     }

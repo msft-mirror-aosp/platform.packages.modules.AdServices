@@ -38,7 +38,7 @@ public class AppPackageAccessResolver implements IAccessResolver {
 
     @Override
     public AccessInfo getAccessInfo(@NonNull Context context) {
-        boolean isInAllowList = AllowLists.isPackageAllowListed(mAllowList, mPackageName);
+        boolean isInAllowList = AllowLists.isItemAllowListed(mAllowList, mPackageName);
         boolean isInBlockList = isBlocked();
         if (isInAllowList && !isInBlockList) {
             return new AccessInfo(true, AdServicesStatusUtils.STATUS_SUCCESS);
@@ -58,6 +58,6 @@ public class AppPackageAccessResolver implements IAccessResolver {
 
     private boolean isBlocked() {
         // Allowlist is misnomer in this case. isBlocked method for code clarity.
-        return AllowLists.isPackageAllowListed(mBlockList, mPackageName);
+        return AllowLists.isItemAllowListed(mBlockList, mPackageName);
     }
 }
