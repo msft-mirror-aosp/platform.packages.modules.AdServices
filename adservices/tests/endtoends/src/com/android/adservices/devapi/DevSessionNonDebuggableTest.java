@@ -319,7 +319,7 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
         assertThat(
                         mAdServicesShellCommandHelper.runCommand(
                                 "adservices-api dev-session %s --erase-db",
-                                state ? "start" : "end"))
+                                state ? "start --allow-debuggable-apps" : "end"))
                 .isNotEmpty();
         sLogger.v("Completed setDevSession(%b)", state);
     }

@@ -150,7 +150,8 @@ public class GetAdSelectionDataShellCommandCtsTest extends FledgeDebuggableScena
     private void setDevSessionState(boolean state) {
         Log.v(LOGCAT_TAG_FLEDGE, String.format("Starting setDevSession(%b)", state));
         mAdServicesShellCommandHelper.runCommand(
-                "adservices-api dev-session %s --erase-db", state ? "start" : "end");
+                "adservices-api dev-session %s --erase-db",
+                state ? "start --allow-debuggable-apps" : "end");
         Log.v(LOGCAT_TAG_FLEDGE, String.format("Completed setDevSession(%b)", state));
     }
 }
