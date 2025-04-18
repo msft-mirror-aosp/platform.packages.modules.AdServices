@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.ADSERVICES_MEASUREMENT_REPORTING_ORIGINS_PER_ENRLL_X_DEST_COUNTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.ADSERVICES_MEASUREMENT_REPORTING_ORIGINS_PER_ENROLLMENT_COUNTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.ADSERVICES_SHELL_COMMAND_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_COUNTER_HISTOGRAM_UPDATER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_FILTERING_PROCESS_AD_SELECTION_REPORTED;
@@ -139,7 +141,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
 
     private String getAllowlistedAppPackageName(String appPackageName) {
         if (!mFlags.getMeasurementEnableAppPackageNameLogging()
-                || !AllowLists.isPackageAllowListed(
+                || !AllowLists.isItemAllowListed(
                         mFlags.getMeasurementAppPackageNameLoggingAllowlist(), appPackageName)) {
             return "";
         }
@@ -1081,6 +1083,18 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     @Override
     public void logProdDebugEnabledStats(ProdDebugEnabledStats stats) {
         AdServicesStatsLog.write(PROD_DEBUG_ENABLED_REPORTED, stats.isProdDebugEnabled());
+    }
+
+    @Override
+    public void logMsmtNumUniqueReportingOriginPerEnrollment(int count) {
+        AdServicesStatsLog.write(
+                ADSERVICES_MEASUREMENT_REPORTING_ORIGINS_PER_ENROLLMENT_COUNTED, count);
+    }
+
+    @Override
+    public void logMsmtNumUniqueReportingOriginPerEnrollmentXDestination(int count) {
+        AdServicesStatsLog.write(
+                ADSERVICES_MEASUREMENT_REPORTING_ORIGINS_PER_ENRLL_X_DEST_COUNTED, count);
     }
 
     @NonNull

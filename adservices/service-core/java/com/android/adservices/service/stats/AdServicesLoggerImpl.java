@@ -482,6 +482,16 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
         mStatsdAdServicesLogger.logProdDebugEnabledStats(stats);
     }
 
+    @Override
+    public void logMsmtNumUniqueReportingOriginPerEnrollment(int count) {
+        mStatsdAdServicesLogger.logMsmtNumUniqueReportingOriginPerEnrollment(count);
+    }
+
+    @Override
+    public void logMsmtNumUniqueReportingOriginPerEnrollmentXDestination(int count) {
+        mStatsdAdServicesLogger.logMsmtNumUniqueReportingOriginPerEnrollmentXDestination(count);
+    }
+
     /** Logs api call error status using {@code CobaltLogger}. */
     @VisibleForTesting
     // used by testCobaltLogAppNameApiError_nullPackageName only

@@ -261,7 +261,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
         // is not granted for binder thread. So we have to check it with one
         // of non-binder thread of the PPAPI.
         boolean appCanNotUseAdId =
-                AllowLists.isPackageAllowListed(
+                AllowLists.isItemAllowListed(
                         mFlags.getAdIdApiAppBlockList(), adIdParam.getAppPackageName());
         if (appCanNotUseAdId) {
             invokeCallbackWithStatus(

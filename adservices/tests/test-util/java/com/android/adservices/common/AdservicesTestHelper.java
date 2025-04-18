@@ -91,12 +91,8 @@ public final class AdservicesTestHelper {
         ShellUtils.runShellCommand(
                 "%s %s", FORCE_KILL_PROCESS_COMMAND, getAdServicesPackageName(context, logTag));
 
-        try {
-            // Sleep 100 ms to allow AdServices process to recover
-            Thread.sleep(/* millis= */ 100);
-        } catch (InterruptedException ignored) {
-            Log.e(logTag, "Recovery from restarting AdServices process interrupted", ignored);
-        }
+        // Sleep to allow AdServices process to recover
+        doSleep(/* timeoutMs= */ 250, logTag);
     }
 
     /**
@@ -220,5 +216,22 @@ public final class AdservicesTestHelper {
         String uninstallMessage =
                 ShellUtils.runShellCommand("pm uninstall --user %d %s", currentUserId, apkName);
         assertThat(uninstallMessage).contains("Success");
+    }
+
+    private static void doSleep(long timeoutMs, String logTag) {
+        Log.i(logTag, "Starting to sleep for " + timeoutMs + " ms");
+        long currentTime = System.currentTimeMillis();
+        long wakeupTime = currentTime + timeoutMs;
+        while (wakeupTime - currentTime > 0) {
+            Log.i(logTag, "Time left to sleep: " + (wakeupTime - currentTime) + " ms");
+            try {
+                Thread.sleep(wakeupTime - currentTime);
+            } catch (InterruptedException ignored) {
+                Log.w(logTag, "Interrupted while sleeping");
+                Thread.currentThread().interrupt();
+            }
+            currentTime = System.currentTimeMillis();
+        }
+        Log.i(logTag, "Done sleeping");
     }
 }

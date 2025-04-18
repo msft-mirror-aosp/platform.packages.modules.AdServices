@@ -335,7 +335,7 @@ public class AsyncTriggerFetcher {
         // If the trigger is registered from web context, only allow-listed apps should be able to
         // parse attribution config.
         return !AsyncRegistration.RegistrationType.WEB_TRIGGER.equals(registrationType)
-                || AllowLists.isPackageAllowListed(
+                || AllowLists.isItemAllowListed(
                         mFlags.getWebContextClientAppAllowList(), registrant.getAuthority());
     }
 
