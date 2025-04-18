@@ -29,6 +29,7 @@ import static com.android.adservices.data.measurement.MeasurementTables.DebugRep
 import static com.android.adservices.data.measurement.MeasurementTables.EventReportContract;
 import static com.android.adservices.data.measurement.MeasurementTables.KeyValueDataContract;
 import static com.android.adservices.data.measurement.MeasurementTables.XnaIgnoredSourcesContract;
+import static com.android.adservices.service.measurement.registration.AsyncRegistration.RegistrationType;
 
 import android.adservices.measurement.DeletionRequest;
 import android.content.ContentValues;
@@ -64,6 +65,8 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateDebugReportRecord;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.logging.MeasurementBackgroundItemsInfo;
+import com.android.adservices.service.measurement.logging.MeasurementBackgroundJobItemType;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
@@ -4055,6 +4058,52 @@ class MeasurementDao implements IMeasurementDao {
                     String.valueOf(endTime),
                     excludedDebugAdId
                 });
+    }
+
+    @Override
+    public ImmutableList<MeasurementBackgroundItemsInfo>
+            fetchRegistrationsAndConstructBackgroundItems() throws DatastoreException {
+        String itemTypeColumn = "item_type";
+        String numberOfItemsColumn = "number_of_items";
+        String oldestTimestampColumn = "oldest_timestamp";
+        // This query is to group registrations by type (source or trigger), count number of
+        // registrations per type and also get the oldest timestamp per type.
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT CASE WHEN %1$s = "
+                                + RegistrationType.APP_TRIGGER.getValue()
+                                + " OR %1$s = "
+                                + RegistrationType.WEB_TRIGGER.getValue()
+                                + " THEN "
+                                + MeasurementBackgroundJobItemType.TRIGGER.getTypeId()
+                                + " ELSE "
+                                + MeasurementBackgroundJobItemType.SOURCE.getTypeId()
+                                + " END AS %4$s , "
+                                + " COUNT(*) AS "
+                                + numberOfItemsColumn
+                                + " , "
+                                + " MIN(%2$s) AS "
+                                + oldestTimestampColumn
+                                + " FROM %3$s "
+                                + " GROUP BY %4$s ",
+                        AsyncRegistrationContract.TYPE,
+                        AsyncRegistrationContract.REQUEST_TIME,
+                        AsyncRegistrationContract.TABLE,
+                        itemTypeColumn);
+        List<MeasurementBackgroundItemsInfo> itemsList = new ArrayList<>();
+        try (Cursor cursor = mSQLTransaction.getDatabase().rawQuery(query, new String[] {})) {
+            while (cursor.moveToNext()) {
+                MeasurementBackgroundItemsInfo.Builder stats =
+                        MeasurementBackgroundItemsInfo.builder();
+                stats.setItemType(cursor.getInt(cursor.getColumnIndex(itemTypeColumn)))
+                        .setNumberOfItems(cursor.getInt(cursor.getColumnIndex(numberOfItemsColumn)))
+                        .setOldestItemTimestamp(
+                                cursor.getLong(cursor.getColumnIndex(oldestTimestampColumn)));
+                itemsList.add(stats.build());
+            }
+        }
+        return ImmutableList.copyOf(itemsList);
     }
 
     @Override
