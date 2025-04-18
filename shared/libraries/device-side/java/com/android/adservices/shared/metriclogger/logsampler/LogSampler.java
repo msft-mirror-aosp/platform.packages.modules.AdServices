@@ -16,6 +16,8 @@
 
 package com.android.adservices.shared.metriclogger.logsampler;
 
+import com.google.common.base.Supplier;
+
 /**
  * Interface to define sampling strategies whether a specific event is sampled or not.
  *
@@ -30,5 +32,5 @@ package com.android.adservices.shared.metriclogger.logsampler;
 public interface LogSampler<L> {
 
     /** Returns true if the event should be logged. */
-    boolean shouldLog();
+    SamplerResult shouldLog(Supplier<L> logSupplier);
 }

@@ -61,10 +61,10 @@ public abstract class MetricLoggerConfig<L> {
     public abstract LogUploader<L> getLogUploader();
 
     /** Returns the per-event sampling config. */
-    public abstract @Nullable PerEventSamplingConfig getPerEventSamplingConfig();
+    public abstract @Nullable PerEventSamplingConfig<L> getPerEventSamplingConfig();
 
     /** Returns the per-device sampling config. */
-    public abstract @Nullable PerDeviceSamplingConfig getPerDeviceSamplingConfig();
+    public abstract @Nullable PerDeviceSamplingConfig<L> getPerDeviceSamplingConfig();
 
     /** Returns a generic builder. */
     @SuppressWarnings("AvoidStaticContext") // Method shared across modules
@@ -146,11 +146,11 @@ public abstract class MetricLoggerConfig<L> {
 
         /** Sets the config for perEventSampling. */
         public abstract Builder<L> perEventSamplingConfig(
-                PerEventSamplingConfig eventSamplingConfig);
+                PerEventSamplingConfig<L> eventSamplingConfig);
 
         /** Sets the config for perDeviceSampling. */
         public abstract Builder<L> perDeviceSamplingConfig(
-                PerDeviceSamplingConfig deviceSamplingConfig);
+                PerDeviceSamplingConfig<L> deviceSamplingConfig);
 
         abstract MetricLoggerConfig<L> autoBuild();
 

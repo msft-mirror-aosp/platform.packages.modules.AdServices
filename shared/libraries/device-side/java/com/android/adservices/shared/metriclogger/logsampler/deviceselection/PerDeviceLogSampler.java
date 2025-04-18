@@ -17,6 +17,8 @@
 package com.android.adservices.shared.metriclogger.logsampler.deviceselection;
 
 import static com.android.adservices.shared.metriclogger.AbstractMetricLogger.TAG;
+import static com.android.adservices.shared.metriclogger.logsampler.SamplerResult.ALWAYS_LOG_SAMPLING_RESULT;
+import static com.android.adservices.shared.metriclogger.logsampler.SamplerResult.NEVER_LOG_SAMPLING_RESULT;
 import static com.android.adservices.shared.metriclogger.logsampler.deviceselection.DeviceSelectionLogic.computePeriodInfo;
 import static com.android.adservices.shared.metriclogger.logsampler.deviceselection.DeviceSelectionLogic.getHasher;
 
@@ -25,6 +27,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.android.adservices.shared.metriclogger.logsampler.LogSampler;
+import com.android.adservices.shared.metriclogger.logsampler.SamplerResult;
 import com.android.adservices.shared.proto.MetricId;
 import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.GuardedBy;
@@ -43,7 +46,7 @@ public final class PerDeviceLogSampler<L> implements LogSampler<L> {
     private static final String DEVICE_SAMPLER = "PerDeviceSampler";
 
     private final MetricId mMetricId;
-    private final @Nullable PerDeviceSamplingConfig mConfig;
+    private final @Nullable PerDeviceSamplingConfig<L> mConfig;
     private final Supplier<UniqueDeviceIdHelper> mUniqueDeviceIdHelper;
     private final Clock mClock;
 
@@ -60,7 +63,7 @@ public final class PerDeviceLogSampler<L> implements LogSampler<L> {
     public PerDeviceLogSampler(
             Context context,
             MetricId metricId,
-            @Nullable PerDeviceSamplingConfig config,
+            @Nullable PerDeviceSamplingConfig<L> config,
             Executor backgroundExecutor,
             Executor lightweightExecutor) {
         this(
@@ -73,7 +76,7 @@ public final class PerDeviceLogSampler<L> implements LogSampler<L> {
     @VisibleForTesting
     PerDeviceLogSampler(
             MetricId metricId,
-            @Nullable PerDeviceSamplingConfig config,
+            @Nullable PerDeviceSamplingConfig<L> config,
             Supplier<UniqueDeviceIdHelper> uniqueDeviceIdHelper,
             Clock clock) {
         mMetricId = metricId;
@@ -93,14 +96,14 @@ public final class PerDeviceLogSampler<L> implements LogSampler<L> {
     }
 
     @Override
-    public boolean shouldLog() {
+    public SamplerResult shouldLog(Supplier<L> logSupplier) {
         if (mConfig == null) {
             Log.v(
                     TAG,
                     String.format(
                             "%s %s: Per-device sampling config is missing, always log",
                             mMetricId.name(), DEVICE_SAMPLER));
-            return true;
+            return ALWAYS_LOG_SAMPLING_RESULT;
         }
 
         if (mConfig.getSamplingRate() == 1.0) {
@@ -109,7 +112,7 @@ public final class PerDeviceLogSampler<L> implements LogSampler<L> {
                     String.format(
                             "%s %s: Sampling rate is 1, always log",
                             mMetricId.name(), DEVICE_SAMPLER));
-            return true;
+            return ALWAYS_LOG_SAMPLING_RESULT;
         }
 
         if (mConfig.getSamplingRate() == 0) {
@@ -118,13 +121,13 @@ public final class PerDeviceLogSampler<L> implements LogSampler<L> {
                     String.format(
                             "%s %s: Sampling rate is 0, do not log",
                             mMetricId.name(), DEVICE_SAMPLER));
-            return false;
+            return NEVER_LOG_SAMPLING_RESULT;
         }
 
         return shouldLog(Instant.ofEpochMilli(mClock.currentTimeMillis()));
     }
 
-    private boolean shouldLog(Instant eventTime) {
+    private SamplerResult shouldLog(Instant eventTime) {
         synchronized (mLock) {
             // Use the stored sampling decision if the logging decision is already computed and
             // is before the staggering end time.
@@ -143,7 +146,7 @@ public final class PerDeviceLogSampler<L> implements LogSampler<L> {
                                     "%s %s: Cached sampling decision is negative, rejecting event.",
                                     mMetricId.name(), DEVICE_SAMPLER));
                 }
-                return mShouldSelectDevice;
+                return SamplerResult.create(mShouldSelectDevice, mConfig.getSamplingRate());
             }
 
             // Compute the sampling decision
@@ -180,7 +183,7 @@ public final class PerDeviceLogSampler<L> implements LogSampler<L> {
                             selectionId,
                             periodNumber,
                             mShouldSelectDevice));
-            return mShouldSelectDevice;
+            return SamplerResult.create(mShouldSelectDevice, mConfig.getSamplingRate());
         }
     }
 
