@@ -1867,4 +1867,8 @@ public final class FlagsConstants {
 
     public static final String KEY_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY =
             "Spe__count_unique_reporting_job_policy";
+
+    /** Key to enable support dimension in log sampling. */
+    public static final String KEY_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING =
+            "LogSampling__enable_support_dimension_in_log_sampling";
 }

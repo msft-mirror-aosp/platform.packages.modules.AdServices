@@ -18,6 +18,7 @@ package com.android.adservices.shared.common.flags;
 
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.BACKGROUND_JOB_LOGGING_ENABLED;
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.BACKGROUND_JOB_SAMPLING_LOGGING_RATE;
+import static com.android.adservices.shared.common.flags.ModuleSharedFlags.DEFAULT_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING;
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -47,6 +48,12 @@ public final class ModuleSharedFlagsTest extends SharedUnitTestCase {
     public void testGetErrorCodeSampleInterval() {
         assertThat(mFlags.getEncodedErrorCodeListPerSampleInterval())
                 .isEqualTo(ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL);
+    }
+
+    @Test
+    public void testGetEnableSupportDimensionInLogSampling() {
+        assertThat(mFlags.getEnableSupportDimensionInLogSampling())
+                .isEqualTo(DEFAULT_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING);
     }
 
     // TODO(b/325135083): add a test to make sure all constants are annotated with FeatureFlag or

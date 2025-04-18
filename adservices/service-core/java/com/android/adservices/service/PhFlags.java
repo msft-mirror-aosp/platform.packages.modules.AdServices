@@ -33,6 +33,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_M
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_HPKE_WITH_PLATFORM_APIS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOG_SAMPLING_INFRA;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_TABLET_REGION_FIX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
@@ -5429,6 +5430,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY,
                 Flags.DEFAULT_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY);
+    }
+
+    @Override
+    public boolean getEnableSupportDimensionInLogSampling() {
+        return getDeviceConfigFlag(
+                KEY_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING,
+                DEFAULT_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING);
     }
 
     public boolean getEnableHpkeWithPlatformApis() {
