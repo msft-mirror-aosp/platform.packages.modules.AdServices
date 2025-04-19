@@ -31,6 +31,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -2562,6 +2563,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         Source source =
                 spy(
                         SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
                                 .setAppDestinations(
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                                 .setWebDestinations(null)
@@ -2576,6 +2578,22 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
         ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
                 ArgumentCaptor.forClass(Attribution.class);
+        when(mMeasurementDao.countDistinctReportingOriginsPerEnrollmentInSource(
+                        source.getEnrollmentId(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME))
+                .thenReturn(2);
+        when(mMeasurementDao.countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                        source.getEnrollmentId(),
+                        0,
+                        source.getAppDestinations().get(0).toString(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME))
+                .thenReturn(1);
+        when(mMockFlags.getMeasurementMinReportingOriginUpdateWindow())
+                .thenReturn(TimeUnit.DAYS.toMillis(1));
 
         // Execution
         asyncRegistrationQueueRunner.insertSourceFromTransaction(
@@ -2583,6 +2601,22 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Assertion
         verify(mMeasurementDao).insertSource(source);
+        verify(mMeasurementDao)
+                .countDistinctReportingOriginsPerEnrollmentInSource(
+                        source.getEnrollmentId(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME);
+        verify(mLogger).logMsmtNumUniqueReportingOriginPerEnrollment(eq(2));
+        verify(mMeasurementDao)
+                .countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                        source.getEnrollmentId(),
+                        0,
+                        source.getAppDestinations().get(0).toString(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME);
+        verify(mLogger).logMsmtNumUniqueReportingOriginPerEnrollmentXDestination(eq(1));
         verify(mMeasurementDao, times(2)).insertEventReport(any());
         verify(mMeasurementDao).insertAttribution(attributionRateLimitArgCaptor.capture());
 
@@ -2610,6 +2644,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         Source source =
                 spy(
                         SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
                                 .setAppDestinations(null)
                                 .setWebDestinations(
                                         SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
@@ -2622,6 +2657,22 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
         ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
                 ArgumentCaptor.forClass(Attribution.class);
+        when(mMeasurementDao.countDistinctReportingOriginsPerEnrollmentInSource(
+                        source.getEnrollmentId(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME))
+                .thenReturn(1);
+        when(mMeasurementDao.countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                        source.getEnrollmentId(),
+                        1,
+                        source.getWebDestinations().get(0).toString(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME))
+                .thenReturn(1);
+        when(mMockFlags.getMeasurementMinReportingOriginUpdateWindow())
+                .thenReturn(TimeUnit.DAYS.toMillis(1));
 
         // Execution
         asyncRegistrationQueueRunner.insertSourceFromTransaction(
@@ -2629,6 +2680,22 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Assertion
         verify(mMeasurementDao).insertSource(source);
+        verify(mMeasurementDao)
+                .countDistinctReportingOriginsPerEnrollmentInSource(
+                        source.getEnrollmentId(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME);
+        verify(mLogger).logMsmtNumUniqueReportingOriginPerEnrollment(eq(1));
+        verify(mMeasurementDao)
+                .countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                        source.getEnrollmentId(),
+                        1,
+                        source.getWebDestinations().get(0).toString(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME);
+        verify(mLogger).logMsmtNumUniqueReportingOriginPerEnrollmentXDestination(eq(1));
         verify(mMeasurementDao, times(2)).insertEventReport(any());
         verify(mMeasurementDao).insertAttribution(attributionRateLimitArgCaptor.capture());
 
@@ -2649,6 +2716,48 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     }
 
     @Test
+    public void insertSource_withNoDestinations_noLogsForRepOriginPerEnrllXDest()
+            throws DatastoreException {
+        // Setup
+        Source source =
+                spy(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
+                                .setAppDestinations(null)
+                                .setWebDestinations(null)
+                                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                                .build());
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+        when(mMeasurementDao.countDistinctReportingOriginsPerEnrollmentInSource(
+                        source.getEnrollmentId(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME))
+                .thenReturn(1);
+        when(mMockFlags.getMeasurementMinReportingOriginUpdateWindow())
+                .thenReturn(TimeUnit.DAYS.toMillis(1));
+
+        // Execution
+        asyncRegistrationQueueRunner.insertSourceFromTransaction(
+                source, null, mMeasurementDao, new HashSet<>());
+
+        // Assertion
+        verify(mMeasurementDao).insertSource(source);
+        verify(mMeasurementDao)
+                .countDistinctReportingOriginsPerEnrollmentInSource(
+                        source.getEnrollmentId(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME);
+        verify(mLogger).logMsmtNumUniqueReportingOriginPerEnrollment(eq(1));
+        verify(mMeasurementDao, never())
+                .countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                        anyString(), anyInt(), anyString(), anyLong(), anyLong());
+        verify(mLogger, never()).logMsmtNumUniqueReportingOriginPerEnrollmentXDestination(anyInt());
+    }
+
+    @Test
     public void insertSource_withFalseAppAndWebAttribution_accountsForFakeReportAttribution()
             throws DatastoreException {
         // Setup
@@ -2656,6 +2765,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         Source source =
                 spy(
                         SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
                                 .setAppDestinations(
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                                 .setWebDestinations(
@@ -2675,6 +2785,30 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 ArgumentCaptor.forClass(Attribution.class);
         ArgumentCaptor<EventReport> fakeEventReportCaptor =
                 ArgumentCaptor.forClass(EventReport.class);
+        when(mMeasurementDao.countDistinctReportingOriginsPerEnrollmentInSource(
+                        source.getEnrollmentId(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME))
+                .thenReturn(1);
+        when(mMeasurementDao.countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                        source.getEnrollmentId(),
+                        0,
+                        source.getAppDestinations().get(0).toString(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME))
+                .thenReturn(1);
+        when(mMeasurementDao.countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                        source.getEnrollmentId(),
+                        1,
+                        source.getWebDestinations().get(0).toString(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME))
+                .thenReturn(1);
+        when(mMockFlags.getMeasurementMinReportingOriginUpdateWindow())
+                .thenReturn(TimeUnit.DAYS.toMillis(1));
 
         // Execution
         asyncRegistrationQueueRunner.insertSourceFromTransaction(
@@ -2682,6 +2816,30 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Assertion
         verify(mMeasurementDao).insertSource(source);
+        verify(mMeasurementDao)
+                .countDistinctReportingOriginsPerEnrollmentInSource(
+                        source.getEnrollmentId(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME);
+        verify(mLogger).logMsmtNumUniqueReportingOriginPerEnrollment(eq(1));
+        verify(mMeasurementDao)
+                .countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                        source.getEnrollmentId(),
+                        0,
+                        source.getAppDestinations().get(0).toString(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME);
+        verify(mMeasurementDao)
+                .countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                        source.getEnrollmentId(),
+                        1,
+                        source.getWebDestinations().get(0).toString(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME);
+        verify(mLogger, times(2)).logMsmtNumUniqueReportingOriginPerEnrollmentXDestination(eq(1));
         verify(mMeasurementDao, times(2)).insertEventReport(fakeEventReportCaptor.capture());
         verify(mMeasurementDao, times(2))
                 .insertAttribution(attributionRateLimitArgCaptor.capture());
@@ -2730,6 +2888,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         Source source =
                 spy(
                         SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
                                 .setAppDestinations(
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                                 .setWebDestinations(
@@ -2747,6 +2906,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         Source source =
                 spy(
                         SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
                                 .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
                                 .setPublisherType(EventSurfaceType.WEB)
                                 .setAppDestinations(
@@ -2767,6 +2927,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         Source source =
                 spy(
                         SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
                                 .setAppDestinations(
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                                 .setWebDestinations(
@@ -2785,6 +2946,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         Source source =
                 spy(
                         SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
                                 .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
                                 .setPublisherType(EventSurfaceType.WEB)
                                 .setAppDestinations(
@@ -2806,6 +2968,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         Source source =
                 spy(
                         SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
                                 .setAppDestinations(
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                                 .setWebDestinations(
@@ -2823,6 +2986,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         Source source =
                 spy(
                         SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
                                 .setAppDestinations(
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                                 .setWebDestinations(null)
@@ -2833,6 +2997,22 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
         ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
                 ArgumentCaptor.forClass(Attribution.class);
+        when(mMeasurementDao.countDistinctReportingOriginsPerEnrollmentInSource(
+                        source.getEnrollmentId(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME))
+                .thenReturn(1);
+        when(mMeasurementDao.countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                        source.getEnrollmentId(),
+                        0,
+                        source.getAppDestinations().get(0).toString(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME))
+                .thenReturn(1);
+        when(mMockFlags.getMeasurementMinReportingOriginUpdateWindow())
+                .thenReturn(TimeUnit.DAYS.toMillis(1));
 
         // Execution
         asyncRegistrationQueueRunner.insertSourceFromTransaction(
@@ -2840,6 +3020,22 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Assertion
         verify(mMeasurementDao).insertSource(source);
+        verify(mMeasurementDao)
+                .countDistinctReportingOriginsPerEnrollmentInSource(
+                        source.getEnrollmentId(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME);
+        verify(mLogger).logMsmtNumUniqueReportingOriginPerEnrollment(eq(1));
+        verify(mMeasurementDao)
+                .countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                        source.getEnrollmentId(),
+                        0,
+                        source.getAppDestinations().get(0).toString(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME);
+        verify(mLogger).logMsmtNumUniqueReportingOriginPerEnrollmentXDestination(eq(1));
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mMeasurementDao).insertAttribution(attributionRateLimitArgCaptor.capture());
 
@@ -4392,6 +4588,30 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         int fakeReportsCount = 2;
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
+        when(mMeasurementDao.countDistinctReportingOriginsPerEnrollmentInSource(
+                        source.getEnrollmentId(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME))
+                .thenReturn(1);
+        when(mMeasurementDao.countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                        source.getEnrollmentId(),
+                        0,
+                        source.getAppDestinations().get(0).toString(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME))
+                .thenReturn(1);
+        when(mMeasurementDao.countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                        source.getEnrollmentId(),
+                        1,
+                        source.getWebDestinations().get(0).toString(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME))
+                .thenReturn(1);
+        when(mMockFlags.getMeasurementMinReportingOriginUpdateWindow())
+                .thenReturn(TimeUnit.DAYS.toMillis(1));
 
         List<Source.FakeReport> fakeReports =
                 createFakeReports(
@@ -4409,6 +4629,30 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Assertion
         verify(mMeasurementDao).insertSource(source);
+        verify(mMeasurementDao)
+                .countDistinctReportingOriginsPerEnrollmentInSource(
+                        source.getEnrollmentId(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME);
+        verify(mLogger).logMsmtNumUniqueReportingOriginPerEnrollment(eq(1));
+        verify(mMeasurementDao)
+                .countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                        source.getEnrollmentId(),
+                        0,
+                        source.getAppDestinations().get(0).toString(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME);
+        verify(mMeasurementDao)
+                .countDistinctReportingOriginsPerEnrollmentXDestinationInSource(
+                        source.getEnrollmentId(),
+                        1,
+                        source.getWebDestinations().get(0).toString(),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME
+                                - TimeUnit.DAYS.toMillis(1),
+                        SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME);
+        verify(mLogger, times(2)).logMsmtNumUniqueReportingOriginPerEnrollmentXDestination(eq(1));
         verify(mMeasurementDao, times(2)).insertEventReport(fakeEventReportCaptor.capture());
         assertEquals(2, fakeEventReportCaptor.getAllValues().size());
         fakeEventReportCaptor

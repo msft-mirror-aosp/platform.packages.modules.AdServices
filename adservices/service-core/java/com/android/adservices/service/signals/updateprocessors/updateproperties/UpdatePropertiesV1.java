@@ -75,20 +75,20 @@ public class UpdatePropertiesV1 extends UpdateProperties {
     private void processKey(
             ByteBuffer key,
             JSONObject update,
-            Map<ByteBuffer, Set<DBProtectedSignal>> current,
+            Map<ByteBuffer, Set<DBProtectedSignal>> allCurrentSignalsMap,
             UpdateOutput toReturn,
             UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
         UpdateProcessorUtils.touchKey(key, toReturn.getKeysTouched());
 
-        if (!current.containsKey(key)) {
+        if (!allCurrentSignalsMap.containsKey(key)) {
             sLogger.v("No signals present for key, skipping property updates");
             return;
         }
 
-        Set<DBProtectedSignal> currentSignals = current.get(key);
+        Set<DBProtectedSignal> currentSignals = allCurrentSignalsMap.get(key);
         EvictionPriority evictionPriority =
-                mEvictionPriorityHandler.getEvictionPriority(
-                        key, update, updateSignalsProcessReportedLogger);
+                mEvictionPriorityHandler.getEvictionPriorityFromUpdateOrExistingSignals(
+                        key, update, allCurrentSignalsMap, updateSignalsProcessReportedLogger);
 
         for (DBProtectedSignal currentSignal : currentSignals) {
             DBProtectedSignal.Builder updatedSignalBuilder =

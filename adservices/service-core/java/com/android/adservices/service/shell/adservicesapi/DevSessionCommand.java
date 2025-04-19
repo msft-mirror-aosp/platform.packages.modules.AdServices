@@ -20,6 +20,7 @@ import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_DEV
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.devapi.DevSession;
 import com.android.adservices.service.devapi.DevSessionController;
 import com.android.adservices.service.devapi.DevSessionControllerResult;
 import com.android.adservices.service.shell.AbstractShellCommand;
@@ -35,6 +36,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 public final class DevSessionCommand extends AbstractShellCommand {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
@@ -49,6 +52,8 @@ public final class DevSessionCommand extends AbstractShellCommand {
     public static final String ARG_ERASE_DB = "--erase-db";
     public static final String ARG_ENABLE_SERVER_AUCTION_TEST_KEYS =
             "--enable-server-auction-test-keys";
+    public static final String ARG_ALLOW_DEBUGGABLE_APPS = "--allow-debuggable-apps";
+    public static final String ARG_APP_PACKAGE_ALLOWLIST = "--app-package-allowlist";
 
     @VisibleForTesting
     public static final String HELP =
@@ -72,6 +77,14 @@ public final class DevSessionCommand extends AbstractShellCommand {
             ERROR_RESET_WARNING + "Re-run with the " + ARG_ERASE_DB + " flag to acknowledge.";
 
     @VisibleForTesting
+    public static final String ERROR_NEED_ALLOW_DEBUGGABLE_APPS =
+            ERROR_RESET_WARNING
+                    + "During a development session, debuggable apps are allowed to access APIs."
+                    + " Re-run with "
+                    + ARG_ALLOW_DEBUGGABLE_APPS
+                    + " flag to acknowledge.";
+
+    @VisibleForTesting
     public static final String ERROR_ALREADY_IN_DEV_MODE =
             "Already in developer mode. Call '"
                     + SUB_CMD_END
@@ -82,6 +95,15 @@ public final class DevSessionCommand extends AbstractShellCommand {
     @VisibleForTesting
     public static final String ERROR_FAILED_TO_RESET =
             "Failed to reset device state and set developer mode.";
+
+    @VisibleForTesting
+    public static final String ERROR_INVALID_ALLOWLIST_PATTERN =
+            "Invalid allowlist pattern. Please ensure it is a valid regex pattern.";
+
+    @VisibleForTesting
+    public static final String ERROR_NO_ALLOWLIST_VALUE =
+            "No allowlist value provided. Please provide a value after "
+                    + ARG_APP_PACKAGE_ALLOWLIST;
 
     @VisibleForTesting
     public static final String OUTPUT_SUCCESS_FORMAT = "Successfully changed developer mode to: %s";
@@ -116,6 +138,42 @@ public final class DevSessionCommand extends AbstractShellCommand {
             return invalidArgsError(getCommandHelp(), err, getMetricsLoggerCommand(), args);
         }
 
+        // Compile the non-debuggable app allowlist pattern if provided.
+        Pattern nonDebuggableAppAllowlistPattern =
+                Pattern.compile(DevSession.DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN);
+        if (shouldSetDevSessionEnabled) {
+            // The --allow-debuggable-apps flag is always required.
+            if (!argList.contains(ARG_ALLOW_DEBUGGABLE_APPS)) {
+                sLogger.v("Could not enter or exit dev mode:" + ERROR_NEED_ALLOW_DEBUGGABLE_APPS);
+                err.write(ERROR_NEED_ALLOW_DEBUGGABLE_APPS);
+                return invalidArgsError(getCommandHelp(), err, getMetricsLoggerCommand(), args);
+            }
+
+            if (argList.contains(ARG_APP_PACKAGE_ALLOWLIST)) {
+                int allowlistIndex = argList.indexOf(ARG_APP_PACKAGE_ALLOWLIST);
+                if (allowlistIndex == argList.size() - 1 || allowlistIndex == -1) {
+                    sLogger.e(
+                            "Could not enter or exit dev mode:" + ERROR_NO_ALLOWLIST_VALUE);
+                    err.write(ERROR_NO_ALLOWLIST_VALUE);
+                    return invalidArgsError(getCommandHelp(), err, getMetricsLoggerCommand(), args);
+                }
+                try {
+                    nonDebuggableAppAllowlistPattern =
+                            Pattern.compile(argList.get(allowlistIndex + 1));
+                } catch (PatternSyntaxException e) {
+                    sLogger.e(
+                            e,
+                            "Could not enter or exit dev mode:" + ERROR_INVALID_ALLOWLIST_PATTERN);
+                    err.write(ERROR_INVALID_ALLOWLIST_PATTERN);
+                    return invalidArgsError(getCommandHelp(), err, getMetricsLoggerCommand(), args);
+                }
+            }
+        } else if (!shouldSetDevSessionEnabled
+                && (argList.contains(ARG_APP_PACKAGE_ALLOWLIST)
+                        || argList.contains(ARG_ALLOW_DEBUGGABLE_APPS))) {
+            return invalidArgsError(getCommandHelp(), err, getMetricsLoggerCommand(), args);
+        }
+
         boolean setServerAuctionTestKeysEnabled =
                 argList.contains(ARG_ENABLE_SERVER_AUCTION_TEST_KEYS);
 
@@ -123,7 +181,9 @@ public final class DevSessionCommand extends AbstractShellCommand {
         try {
             Future<DevSessionControllerResult> future =
                     shouldSetDevSessionEnabled
-                            ? mDevSessionController.startDevSession(setServerAuctionTestKeysEnabled)
+                            ? mDevSessionController.startDevSession(
+                                    setServerAuctionTestKeysEnabled,
+                                    nonDebuggableAppAllowlistPattern)
                             : mDevSessionController.endDevSession();
             result = future.get(TIMEOUT_SEC, TimeUnit.SECONDS);
         } catch (ExecutionException | InterruptedException | TimeoutException e) {

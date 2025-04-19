@@ -30,11 +30,15 @@ import static com.android.adservices.service.FlagsConstants.KEY_IS_GET_ADSERVICE
 import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStatesResponse;
+import android.adservices.common.AdServicesModuleStatesResponse;
 import android.adservices.common.AdServicesStates;
+import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdServicesUserChoicesResponse;
 import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
 import android.adservices.common.UpdateAdServicesModuleStatesParams;
 import android.adservices.common.UpdateAdServicesUserChoicesParams;
+import android.util.SparseIntArray;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
@@ -223,5 +227,39 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
         mCommonManager.setAdsPersonalizationStatus(
                 ADS_PERSONALZATION_ENABLED, CALLBACK_EXECUTOR, receiver);
+    }
+
+    @Test
+    @SuppressWarnings("VisibleForTests")
+    // TODO(b/343741206): Remove suppress warning once the lint is fixed.
+    public void testGetAdServicesModuleUserChoices() {
+        OutcomeReceiverForTests<AdServicesUserChoicesResponse> receiver =
+                new OutcomeReceiverForTests<>();
+        expect.that(
+                        new AdServicesUserChoicesResponse.Builder()
+                                .setStatusCode(AdServicesStatusUtils.STATUS_SUCCESS)
+                                .setUserChoices(new SparseIntArray(0))
+                                .build()
+                                .getUserChoices()
+                                .size())
+                .isEqualTo(0);
+        mCommonManager.getAdServicesModuleUserChoices(CALLBACK_EXECUTOR, receiver);
+    }
+
+    @Test
+    @SuppressWarnings("VisibleForTests")
+    // TODO(b/343741206): Remove suppress warning once the lint is fixed.
+    public void testGetAdServicesModuleStates() {
+        OutcomeReceiverForTests<AdServicesModuleStatesResponse> receiver =
+                new OutcomeReceiverForTests<>();
+        expect.that(
+                        new AdServicesModuleStatesResponse.Builder()
+                                .setStatusCode(AdServicesStatusUtils.STATUS_SUCCESS)
+                                .setModuleStates(new SparseIntArray(0))
+                                .build()
+                                .getModuleStates()
+                                .size())
+                .isEqualTo(0);
+        mCommonManager.getAdServicesModuleStates(CALLBACK_EXECUTOR, receiver);
     }
 }

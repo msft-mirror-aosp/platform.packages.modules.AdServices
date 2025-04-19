@@ -37,6 +37,11 @@ public final class DevSessionFixture {
                     .setState(DevSessionState.IN_DEV)
                     .setServerAuctionTestKeysEnabled(true)
                     .build();
+    public static final DevSession IN_DEV_WITH_NON_DEBUGGABLE_APP_ALLOWLIST =
+            DevSession.builder()
+                    .setState(DevSessionState.IN_DEV)
+                    .setNonDebuggableAppAllowlistPatternString("com.example.app")
+                    .build();
 
     private DevSessionFixture() {}
 

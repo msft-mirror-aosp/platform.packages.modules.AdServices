@@ -35,6 +35,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REG
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
+import static com.android.adservices.service.measurement.AsyncRegistrationFixture.getValidAsyncRegistrationBuilder;
 import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS;
 import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME;
 
@@ -93,8 +94,11 @@ import com.android.adservices.service.measurement.aggregation.AggregateDebugRepo
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
+import com.android.adservices.service.measurement.logging.MeasurementBackgroundItemsInfo;
+import com.android.adservices.service.measurement.logging.MeasurementBackgroundJobItemType;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
+import com.android.adservices.service.measurement.registration.AsyncRegistration.RegistrationType;
 import com.android.adservices.service.measurement.reporting.AggregateDebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
@@ -7083,7 +7087,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         .setRegistrant(INSTALLED_REGISTRANT)
                         .setTopOrigin(INSTALLED_REGISTRANT)
                         .setAdIdPermission(false)
-                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setType(RegistrationType.APP_SOURCE)
                         .setRequestTime(1)
                         .setRetryCount(retryLimit - 1L)
                         .setRegistrationId(UUID.randomUUID().toString())
@@ -7097,25 +7101,26 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         .setRegistrant(INSTALLED_REGISTRANT)
                         .setTopOrigin(INSTALLED_REGISTRANT)
                         .setAdIdPermission(false)
-                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setType(RegistrationType.APP_SOURCE)
                         .setRequestTime(1)
                         .setRetryCount(retryLimit)
                         .setRegistrationId(UUID.randomUUID().toString())
                         .build());
 
         // Will not be deleted
-        asyncRegistrationList.add(
+        AsyncRegistration validRegistration =
                 new AsyncRegistration.Builder()
                         .setId("3")
                         .setOsDestination(Uri.parse("android-app://not-installed-app-destination"))
                         .setRegistrant(INSTALLED_REGISTRANT)
                         .setTopOrigin(INSTALLED_REGISTRANT)
                         .setAdIdPermission(false)
-                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setType(RegistrationType.APP_SOURCE)
                         .setRequestTime(Long.MAX_VALUE)
                         .setRetryCount(retryLimit - 1L)
                         .setRegistrationId(UUID.randomUUID().toString())
-                        .build());
+                        .build();
+        asyncRegistrationList.add(validRegistration);
 
         // Will be deleted due to retry limit
         asyncRegistrationList.add(
@@ -7125,7 +7130,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         .setRegistrant(INSTALLED_REGISTRANT)
                         .setTopOrigin(INSTALLED_REGISTRANT)
                         .setAdIdPermission(false)
-                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setType(RegistrationType.APP_SOURCE)
                         .setRequestTime(Long.MAX_VALUE)
                         .setRetryCount(retryLimit)
                         .setRegistrationId(UUID.randomUUID().toString())
@@ -7134,30 +7139,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         asyncRegistrationList.forEach(
                 asyncRegistration -> {
                     ContentValues values = new ContentValues();
-                    values.put(AsyncRegistrationContract.ID, asyncRegistration.getId());
-                    values.put(
-                            AsyncRegistrationContract.REGISTRANT,
-                            asyncRegistration.getRegistrant().toString());
-                    values.put(
-                            AsyncRegistrationContract.TOP_ORIGIN,
-                            asyncRegistration.getTopOrigin().toString());
-                    values.put(
-                            AsyncRegistrationContract.OS_DESTINATION,
-                            asyncRegistration.getOsDestination().toString());
-                    values.put(
-                            AsyncRegistrationContract.AD_ID_PERMISSION,
-                            asyncRegistration.getDebugKeyAllowed());
-                    values.put(
-                            AsyncRegistrationContract.TYPE, asyncRegistration.getType().toString());
-                    values.put(
-                            AsyncRegistrationContract.REQUEST_TIME,
-                            asyncRegistration.getRequestTime());
-                    values.put(
-                            AsyncRegistrationContract.RETRY_COUNT,
-                            asyncRegistration.getRetryCount());
-                    values.put(
-                            AsyncRegistrationContract.REGISTRATION_ID,
-                            asyncRegistration.getRegistrationId());
+                    putAsyncRegIntoContentValues(asyncRegistration, values);
                     db.insert(AsyncRegistrationContract.TABLE, /* nullColumnHack */ null, values);
                 });
 
@@ -7192,16 +7174,15 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         /* having */ null,
                         /* orderBy */ null);
 
-        Set<String> ids = new HashSet<>(Arrays.asList("3"));
         List<AsyncRegistration> asyncRegistrations = new ArrayList<>();
         while (cursor.moveToNext()) {
             AsyncRegistration asyncRegistration =
                     SqliteObjectMapper.constructAsyncRegistration(cursor);
             asyncRegistrations.add(asyncRegistration);
         }
-        for (AsyncRegistration asyncRegistration : asyncRegistrations) {
-            assertTrue(ids.contains(asyncRegistration.getId()));
-        }
+
+        assertEquals(1, asyncRegistrations.size());
+        assertEquals(validRegistration, asyncRegistrations.get(0));
     }
 
     @Test
@@ -7223,12 +7204,12 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
             db.insert(KeyValueDataContract.TABLE, null, contentValues);
         }
         AsyncRegistration asyncRegistration1 =
-                AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
+                getValidAsyncRegistrationBuilder()
                         .setRegistrationId("reg1")
                         .setRequestTime(System.currentTimeMillis() + 60000) // Avoid deletion
                         .build();
         AsyncRegistration asyncRegistration2 =
-                AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
+                getValidAsyncRegistrationBuilder()
                         .setRegistrationId("reg2")
                         .setRequestTime(System.currentTimeMillis() + 60000) // Avoid deletion
                         .build();
@@ -9765,13 +9746,9 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         Uri regUri1 = origin1.buildUpon().appendPath("/hello").build();
         Uri regUri2 = origin2;
         AsyncRegistration asyncRegistration1 =
-                AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
-                        .setRegistrationUri(regUri1)
-                        .build();
+                getValidAsyncRegistrationBuilder().setRegistrationUri(regUri1).build();
         AsyncRegistration asyncRegistration2 =
-                AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
-                        .setRegistrationUri(regUri2)
-                        .build();
+                getValidAsyncRegistrationBuilder().setRegistrationUri(regUri2).build();
 
         mDatastoreManager.runInTransaction(
                 (dao) -> {
@@ -9869,10 +9846,11 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         AsyncRegistration ar1 =
                 new AsyncRegistration.Builder()
                         .setId("1")
+                        .setOsDestination(Uri.parse("android-app://installed-app-destination"))
                         .setRegistrant(Uri.parse("android-app://installed-registrant1"))
                         .setTopOrigin(Uri.parse("android-app://installed-registrant1"))
                         .setAdIdPermission(false)
-                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setType(RegistrationType.APP_SOURCE)
                         .setRequestTime(1)
                         .setRegistrationId(ValidAsyncRegistrationParams.REGISTRATION_ID)
                         .build();
@@ -9880,10 +9858,11 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         AsyncRegistration ar2 =
                 new AsyncRegistration.Builder()
                         .setId("2")
+                        .setOsDestination(Uri.parse("android-app://installed-app-destination"))
                         .setRegistrant(Uri.parse("android-app://installed-registrant2"))
                         .setTopOrigin(Uri.parse("android-app://installed-registrant2"))
                         .setAdIdPermission(false)
-                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setType(RegistrationType.APP_SOURCE)
                         .setRequestTime(Long.MAX_VALUE)
                         .setRegistrationId(ValidAsyncRegistrationParams.REGISTRATION_ID)
                         .build();
@@ -9891,10 +9870,11 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         AsyncRegistration ar3 =
                 new AsyncRegistration.Builder()
                         .setId("3")
+                        .setOsDestination(Uri.parse("android-app://installed-app-destination"))
                         .setRegistrant(Uri.parse("android-app://installed-registrant3"))
                         .setTopOrigin(Uri.parse("android-app://installed-registrant3"))
                         .setAdIdPermission(false)
-                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setType(RegistrationType.APP_SOURCE)
                         .setRequestTime(Long.MAX_VALUE)
                         .setRegistrationId(ValidAsyncRegistrationParams.REGISTRATION_ID)
                         .build();
@@ -9903,48 +9883,32 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         asyncRegistrationList.forEach(
                 asyncRegistration -> {
                     ContentValues values = new ContentValues();
-                    values.put(AsyncRegistrationContract.ID, asyncRegistration.getId());
-                    values.put(
-                            AsyncRegistrationContract.REQUEST_TIME,
-                            asyncRegistration.getRequestTime());
-                    values.put(
-                            AsyncRegistrationContract.REGISTRANT,
-                            asyncRegistration.getRegistrant().toString());
-                    values.put(
-                            AsyncRegistrationContract.TOP_ORIGIN,
-                            asyncRegistration.getTopOrigin().toString());
-                    values.put(
-                            AsyncRegistrationContract.REGISTRATION_ID,
-                            asyncRegistration.getRegistrationId());
+                    putAsyncRegIntoContentValues(asyncRegistration, values);
                     db.insert(AsyncRegistrationContract.TABLE, /* nullColumnHack */ null, values);
                 });
 
         mDatastoreManager.runInTransaction(
                 (dao) -> dao.deleteAsyncRegistrations(List.of("1", "3")));
 
-        assertThat(
-                        db.query(
-                                        /* table */ AsyncRegistrationContract.TABLE,
-                                        /* columns */ null,
-                                        /* selection */ null,
-                                        /* selectionArgs */ null,
-                                        /* groupBy */ null,
-                                        /* having */ null,
-                                        /* orderedBy */ null)
-                                .getCount())
-                .isEqualTo(1);
+        Cursor cursor =
+                db.query(
+                        AsyncRegistrationContract.TABLE,
+                        /* columns */ null,
+                        /* selection */ null,
+                        /* selectionArgs */ null,
+                        /* groupBy */ null,
+                        /* having */ null,
+                        /* orderBy */ null);
 
-        assertThat(
-                        db.query(
-                                        /* table */ AsyncRegistrationContract.TABLE,
-                                        /* columns */ null,
-                                        /* selection */ AsyncRegistrationContract.ID + " = ? ",
-                                        /* selectionArgs */ new String[] {"2"},
-                                        /* groupBy */ null,
-                                        /* having */ null,
-                                        /* orderedBy */ null)
-                                .getCount())
-                .isEqualTo(1);
+        List<AsyncRegistration> asyncRegistrations = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            AsyncRegistration asyncRegistration =
+                    SqliteObjectMapper.constructAsyncRegistration(cursor);
+            asyncRegistrations.add(asyncRegistration);
+        }
+
+        assertEquals(1, asyncRegistrations.size());
+        assertEquals(ar2, asyncRegistrations.get(0));
     }
 
     /** Test that retry count in AsyncRegistration is updated correctly. */
@@ -11134,41 +11098,36 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
     public void fetchMatchingAsyncRegistrations_bringsMatchingAsyncRegistrations() {
         // Setup
         AsyncRegistration asyncRegistration1 =
-                AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
-                        .setTopOrigin(
-                                WebUtil.validUri("https://subdomain1.site1.test"))
+                getValidAsyncRegistrationBuilder()
+                        .setTopOrigin(WebUtil.validUri("https://subdomain1.site1.test"))
                         .setRequestTime(5000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("asyncRegistration1")
                         .build();
         AsyncRegistration asyncRegistration2 =
-                AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
-                        .setTopOrigin(
-                                WebUtil.validUri("https://subdomain1.site1.test"))
+                getValidAsyncRegistrationBuilder()
+                        .setTopOrigin(WebUtil.validUri("https://subdomain1.site1.test"))
                         .setRequestTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("asyncRegistration2")
                         .build();
         AsyncRegistration asyncRegistration3 =
-                AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
-                        .setTopOrigin(
-                                WebUtil.validUri("https://subdomain2.site1.test"))
+                getValidAsyncRegistrationBuilder()
+                        .setTopOrigin(WebUtil.validUri("https://subdomain2.site1.test"))
                         .setRequestTime(15000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("asyncRegistration3")
                         .build();
         AsyncRegistration asyncRegistration4 =
-                AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
-                        .setTopOrigin(
-                                WebUtil.validUri("https://subdomain2.site2.test"))
+                getValidAsyncRegistrationBuilder()
+                        .setTopOrigin(WebUtil.validUri("https://subdomain2.site2.test"))
                         .setRequestTime(15000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("asyncRegistration4")
                         .build();
         AsyncRegistration asyncRegistration5 =
-                AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
-                        .setTopOrigin(
-                                WebUtil.validUri("https://subdomain2.site1.test"))
+                getValidAsyncRegistrationBuilder()
+                        .setTopOrigin(WebUtil.validUri("https://subdomain2.site1.test"))
                         .setRequestTime(20000)
                         .setRegistrant(Uri.parse("android-app://com.registrant2"))
                         .setId("asyncRegistration5")
@@ -11181,16 +11140,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         asyncRegistrations.forEach(
                 asyncRegistration -> {
                     ContentValues values = new ContentValues();
-                    values.put(AsyncRegistrationContract.ID, asyncRegistration.getId());
-                    values.put(
-                            AsyncRegistrationContract.TOP_ORIGIN,
-                            asyncRegistration.getTopOrigin().toString());
-                    values.put(AsyncRegistrationContract.REQUEST_TIME,
-                            asyncRegistration.getRequestTime());
-                    values.put(AsyncRegistrationContract.REGISTRANT,
-                            asyncRegistration.getRegistrant().toString());
-                    values.put(AsyncRegistrationContract.REGISTRATION_ID,
-                            UUID.randomUUID().toString());
+                    putAsyncRegIntoContentValues(asyncRegistration, values);
                     db.insert(AsyncRegistrationContract.TABLE, /* nullColumnHack */ null, values);
                 });
 
@@ -12134,6 +12084,95 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                                         6,
                                         dao.countDistinctDebugAdIdsUsedByEnrollment(
                                                 "enrollment-id-1"))));
+    }
+
+    @Test
+    public void testFetchAsyncRegistrationsAndConstructBackgroundItemsInfo() {
+        long testSourceOldestRequestTime = 10L;
+        long testTriggerOldestRequestTime = 20L;
+        List<AsyncRegistration> asyncRegistrationList = new ArrayList<>();
+
+        // Three types of sources.
+        asyncRegistrationList.add(
+                getValidAsyncRegistrationBuilder()
+                        .setType(RegistrationType.APP_SOURCE)
+                        .setRequestTime(testSourceOldestRequestTime)
+                        .build());
+        asyncRegistrationList.add(
+                getValidAsyncRegistrationBuilder()
+                        .setType(RegistrationType.APP_SOURCES)
+                        .setRequestTime(testSourceOldestRequestTime + 1)
+                        .build());
+        asyncRegistrationList.add(
+                getValidAsyncRegistrationBuilder()
+                        .setType(RegistrationType.WEB_SOURCE)
+                        .setRequestTime(testSourceOldestRequestTime + 2)
+                        .build());
+        // Two types of triggers.
+        asyncRegistrationList.add(
+                getValidAsyncRegistrationBuilder()
+                        .setType(RegistrationType.APP_TRIGGER)
+                        .setRequestTime(testTriggerOldestRequestTime)
+                        .build());
+        asyncRegistrationList.add(
+                getValidAsyncRegistrationBuilder()
+                        .setType(RegistrationType.WEB_TRIGGER)
+                        .setRequestTime(testTriggerOldestRequestTime + 10)
+                        .build());
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
+        asyncRegistrationList.forEach(
+                asyncRegistration -> {
+                    ContentValues values = new ContentValues();
+                    putAsyncRegIntoContentValues(asyncRegistration, values);
+                    db.insert(AsyncRegistrationContract.TABLE, /* nullColumnHack */ null, values);
+                });
+
+        long count =
+                DatabaseUtils.queryNumEntries(
+                        db, AsyncRegistrationContract.TABLE, /* selection */ null);
+        assertEquals(5, count);
+
+        ImmutableList<MeasurementBackgroundItemsInfo> expectedItems =
+                ImmutableList.of(
+                        // Three sources are grouped into one MeasurementBackgroundItemsInfo.
+                        MeasurementBackgroundItemsInfo.builder()
+                                .setNumberOfItems(3)
+                                .setItemType(MeasurementBackgroundJobItemType.SOURCE.getTypeId())
+                                .setOldestItemTimestamp(testSourceOldestRequestTime)
+                                .build(),
+                        // Two triggers are grouped into one MeasurementBackgroundItemsInfo.
+                        MeasurementBackgroundItemsInfo.builder()
+                                .setNumberOfItems(2)
+                                .setItemType(MeasurementBackgroundJobItemType.TRIGGER.getTypeId())
+                                .setOldestItemTimestamp(testTriggerOldestRequestTime)
+                                .build());
+
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        dao ->
+                                assertEquals(
+                                        expectedItems,
+                                        dao.fetchRegistrationsAndConstructBackgroundItems())));
+    }
+
+    private static void putAsyncRegIntoContentValues(
+            AsyncRegistration asyncRegistration, ContentValues values) {
+        values.put(AsyncRegistrationContract.ID, asyncRegistration.getId());
+        values.put(
+                AsyncRegistrationContract.REGISTRANT, asyncRegistration.getRegistrant().toString());
+        values.put(
+                AsyncRegistrationContract.TOP_ORIGIN, asyncRegistration.getTopOrigin().toString());
+        values.put(
+                AsyncRegistrationContract.OS_DESTINATION,
+                asyncRegistration.getOsDestination().toString());
+        values.put(
+                AsyncRegistrationContract.AD_ID_PERMISSION, asyncRegistration.getDebugKeyAllowed());
+        values.put(AsyncRegistrationContract.TYPE, asyncRegistration.getType().getValue());
+        values.put(AsyncRegistrationContract.REQUEST_TIME, asyncRegistration.getRequestTime());
+        values.put(AsyncRegistrationContract.RETRY_COUNT, asyncRegistration.getRetryCount());
+        values.put(
+                AsyncRegistrationContract.REGISTRATION_ID, asyncRegistration.getRegistrationId());
     }
 
     @Test
@@ -15235,9 +15274,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
     private void insertAsyncRecordForPackageName(Uri... registrants) {
         for (Uri registrant : registrants) {
             AsyncRegistration validRecord =
-                    AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
-                            .setRegistrant(registrant)
-                            .build();
+                    getValidAsyncRegistrationBuilder().setRegistrant(registrant).build();
 
             mDatastoreManager.runInTransaction((dao) -> dao.insertAsyncRegistration(validRecord));
         }

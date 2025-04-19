@@ -110,7 +110,7 @@ public final class AppUpdateTest extends CtsAdServicesTopicsAppUpdateTestCase {
 
     // As adb commands and broadcast processing require time to execute, add this waiting time to
     // allow them to have enough time to be executed. This helps to reduce the test flaky.
-    private static final long EXECUTION_WAITING_TIME = 2000;
+    private static final long EXECUTION_WAITING_TIME = 500;
 
     private static final String TEST_APK_NAME = "CtsSampleTopicsApp1.apk";
     private static final String TEST_APK_PATH = "/data/local/tmp/cts/install/" + TEST_APK_NAME;

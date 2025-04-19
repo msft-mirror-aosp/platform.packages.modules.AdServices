@@ -66,14 +66,13 @@ public class AllowLists {
     }
 
     /**
-     * A utility to check if an app package exists in the provided allow-list. The allow-list to
+     * A utility to check if an item exists in the provided allow-list. The allow-list to
      * search is split by {@link #SPLITTER} without any white spaces. E.g. of a valid allow list -
      * "abc.package1.app,com.package2.app,com.package3.xyz" If the provided parameter {@code
-     * appPackageName} exists in the allow-list (e.g. com.package2.app), then the method returns
+     * item} exists in the allow-list (e.g. com.package2.app), then the method returns
      * true, false otherwise.
      */
-    public static boolean isPackageAllowListed(
-            @NonNull String allowList, @NonNull String appPackageName) {
+    public static boolean isItemAllowListed(@NonNull String allowList, @NonNull String item) {
         if (ALLOW_ALL.equals(allowList)) {
             return true;
         }
@@ -82,7 +81,7 @@ public class AllowLists {
         // on every API call.
         return Arrays.stream(allowList.split(SPLITTER))
                 .map(String::trim)
-                .anyMatch(packageName -> packageName.equals(appPackageName));
+                .anyMatch(itemName -> itemName.equals(item));
     }
 
     /**

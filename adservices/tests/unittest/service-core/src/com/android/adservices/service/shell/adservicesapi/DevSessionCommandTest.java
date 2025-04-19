@@ -19,12 +19,27 @@ package com.android.adservices.service.shell.adservicesapi;
 import static com.android.adservices.service.devapi.DevSessionControllerResult.FAILURE;
 import static com.android.adservices.service.devapi.DevSessionControllerResult.SUCCESS;
 import static com.android.adservices.service.shell.adservicesapi.AdServicesApiShellCommandFactory.COMMAND_PREFIX;
+import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.ARG_ALLOW_DEBUGGABLE_APPS;
 import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.ARG_ENABLE_SERVER_AUCTION_TEST_KEYS;
 import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.ARG_ERASE_DB;
+import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.ARG_APP_PACKAGE_ALLOWLIST;
 import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.CMD;
 import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.ERROR_ALREADY_IN_DEV_MODE;
 import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.ERROR_FAILED_TO_RESET;
 import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.ERROR_NEED_ACKNOWLEDGEMENT;
+import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.ERROR_INVALID_ALLOWLIST_PATTERN;
+import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.ERROR_NO_ALLOWLIST_VALUE;
+import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.ERROR_NEED_ALLOW_DEBUGGABLE_APPS;
+import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.OUTPUT_SUCCESS_FORMAT;
+import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.SUB_CMD_END;
+import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.SUB_CMD_START;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_DEV_SESSION;
+import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.sleep;
+
+import static com.google.common.truth.Truth.assertThat;
+
+import com.android.adservices.service.devapi.DevSessionController;
+import com.android.adservices.service.devapi.DevSessionControllerResult;
 import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.OUTPUT_SUCCESS_FORMAT;
 import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.SUB_CMD_END;
 import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.SUB_CMD_START;
@@ -40,6 +55,7 @@ import com.android.adservices.service.shell.ShellCommandTestCase;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.regex.Pattern;
 import org.junit.Test;
 
 public final class DevSessionCommandTest extends ShellCommandTestCase<DevSessionCommand> {
@@ -75,7 +91,8 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
                         new DevSessionCommand(mFakeDevSessionController),
                         COMMAND_PREFIX,
                         CMD,
-                        SUB_CMD_START);
+                        SUB_CMD_START,
+                        ARG_ALLOW_DEBUGGABLE_APPS);
 
         assertThat(result.mErr).startsWith(ERROR_NEED_ACKNOWLEDGEMENT);
         assertThat(result.mOut).isEmpty();
@@ -91,7 +108,8 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
                         new DevSessionCommand(mFakeDevSessionController),
                         COMMAND_PREFIX,
                         CMD,
-                        SUB_CMD_END);
+                        SUB_CMD_END,
+                        ARG_ALLOW_DEBUGGABLE_APPS);
 
         assertThat(result.mErr).startsWith(ERROR_NEED_ACKNOWLEDGEMENT);
         assertThat(result.mOut).isEmpty();
@@ -108,7 +126,8 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
                         COMMAND_PREFIX,
                         CMD,
                         SUB_CMD_START,
-                        ARG_ERASE_DB);
+                        ARG_ERASE_DB,
+                        ARG_ALLOW_DEBUGGABLE_APPS);
 
         assertThat(result.mOut).isEqualTo(String.format(OUTPUT_SUCCESS_FORMAT, true));
         assertThat(result.mErr).isEmpty();
@@ -126,7 +145,8 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
                         COMMAND_PREFIX,
                         CMD,
                         SUB_CMD_START,
-                        ARG_ERASE_DB);
+                        ARG_ERASE_DB,
+                        ARG_ALLOW_DEBUGGABLE_APPS);
 
         assertThat(result.mOut).isEmpty();
         assertThat(result.mErr).isEqualTo(ERROR_FAILED_TO_RESET);
@@ -140,7 +160,9 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
                                 new DevSessionController() {
                                     @Override
                                     public ListenableFuture<DevSessionControllerResult>
-                                            startDevSession(boolean setServerAuctionTestKeysEnabled)
+                                            startDevSession(
+                                                    boolean setServerAuctionTestKeysEnabled,
+                                                    Pattern nonDebuggableAppAllowlistPattern)
                                                     throws IllegalStateException {
                                         sleep(
                                                 DevSessionCommand.TIMEOUT_SEC,
@@ -158,7 +180,8 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
                         COMMAND_PREFIX,
                         CMD,
                         SUB_CMD_START,
-                        ARG_ERASE_DB);
+                        ARG_ERASE_DB,
+                        ARG_ALLOW_DEBUGGABLE_APPS);
 
         assertThat(result.mOut).isEmpty();
         assertThat(result.mErr).isEqualTo(ERROR_FAILED_TO_RESET);
@@ -193,7 +216,8 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
                         COMMAND_PREFIX,
                         CMD,
                         SUB_CMD_START,
-                        ARG_ERASE_DB);
+                        ARG_ERASE_DB,
+                        ARG_ALLOW_DEBUGGABLE_APPS);
 
         assertThat(result.mErr).isEqualTo(ERROR_ALREADY_IN_DEV_MODE);
         assertThat(result.mOut).isEmpty();
@@ -228,7 +252,8 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
                         COMMAND_PREFIX,
                         CMD,
                         SUB_CMD_START,
-                        ARG_ENABLE_SERVER_AUCTION_TEST_KEYS);
+                        ARG_ENABLE_SERVER_AUCTION_TEST_KEYS,
+                        ARG_ALLOW_DEBUGGABLE_APPS);
 
         assertThat(result.mErr).startsWith(ERROR_NEED_ACKNOWLEDGEMENT);
         assertThat(result.mOut).isEmpty();
@@ -243,7 +268,8 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
                         COMMAND_PREFIX,
                         CMD,
                         SUB_CMD_END,
-                        ARG_ENABLE_SERVER_AUCTION_TEST_KEYS);
+                        ARG_ENABLE_SERVER_AUCTION_TEST_KEYS,
+                        ARG_ALLOW_DEBUGGABLE_APPS);
 
         assertThat(result.mErr).startsWith(ERROR_NEED_ACKNOWLEDGEMENT);
         assertThat(result.mOut).isEmpty();
@@ -261,7 +287,8 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
                         CMD,
                         SUB_CMD_START,
                         ARG_ERASE_DB,
-                        ARG_ENABLE_SERVER_AUCTION_TEST_KEYS);
+                        ARG_ENABLE_SERVER_AUCTION_TEST_KEYS,
+                        ARG_ALLOW_DEBUGGABLE_APPS);
 
         assertThat(result.mOut).isEqualTo(String.format(OUTPUT_SUCCESS_FORMAT, true));
         assertThat(result.mErr).isEmpty();
@@ -290,19 +317,120 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
         assertThat(mFakeDevSessionController.mServerAuctionTestKeysEnabled).isEqualTo(false);
     }
 
+    @Test
+    public void testRun_startDevSession_withoutAllowDebuggableApps_returnsErrorMessage() {
+        Result result =
+                run(
+                        new DevSessionCommand(mFakeDevSessionController),
+                        COMMAND_PREFIX,
+                        CMD,
+                        SUB_CMD_START,
+                        ARG_ERASE_DB);
+
+        assertThat(result.mErr).startsWith(ERROR_NEED_ALLOW_DEBUGGABLE_APPS);
+        assertThat(result.mOut).isEmpty();
+        assertThat(mFakeDevSessionController.mNumCalls).isEqualTo(0);
+    }
+
+    @Test
+    public void testRun_startDevSession_withAppAllowlist_succeeds() {
+        mFakeDevSessionController.mReturnValue = SUCCESS;
+
+        Result result =
+                run(
+                        new DevSessionCommand(mFakeDevSessionController),
+                        COMMAND_PREFIX,
+                        CMD,
+                        SUB_CMD_START,
+                        ARG_ERASE_DB,
+                        ARG_ALLOW_DEBUGGABLE_APPS,
+                        ARG_APP_PACKAGE_ALLOWLIST,
+                        "com.*");
+
+        assertThat(result.mOut).isEqualTo(String.format(OUTPUT_SUCCESS_FORMAT, true));
+        assertThat(result.mErr).isEmpty();
+        assertThat(mFakeDevSessionController.mNumCalls).isEqualTo(1);
+        assertThat(mFakeDevSessionController.mDevModeState).isEqualTo(true);
+        assertThat(mFakeDevSessionController.mNonDebuggableAppAllowlistPattern.pattern())
+                .isEqualTo("com.*");
+    }
+
+    @Test
+    public void testRun_startDevSession_withInvalidAppAllowlist_returnsErrorMessage() {
+        Result result =
+                run(
+                        new DevSessionCommand(mFakeDevSessionController),
+                        COMMAND_PREFIX,
+                        CMD,
+                        SUB_CMD_START,
+                        ARG_ERASE_DB,
+                        ARG_ALLOW_DEBUGGABLE_APPS,
+                        ARG_APP_PACKAGE_ALLOWLIST,
+                        "(");
+
+        assertThat(result.mErr).startsWith(ERROR_INVALID_ALLOWLIST_PATTERN);
+        assertThat(result.mOut).isEmpty();
+        assertThat(mFakeDevSessionController.mNumCalls).isEqualTo(0);
+    }
+
+    @Test
+    public void testRun_startDevSession_withAppAllowlistButNoValue_returnsErrorMessage() {
+        Result result =
+                run(
+                        new DevSessionCommand(mFakeDevSessionController),
+                        COMMAND_PREFIX,
+                        CMD,
+                        SUB_CMD_START,
+                        ARG_ERASE_DB,
+                        ARG_ALLOW_DEBUGGABLE_APPS,
+                        ARG_APP_PACKAGE_ALLOWLIST);
+
+        assertThat(result.mErr).startsWith(ERROR_NO_ALLOWLIST_VALUE);
+        assertThat(result.mOut).isEmpty();
+        assertThat(mFakeDevSessionController.mNumCalls).isEqualTo(0);
+    }
+
+    @Test
+    public void testRun_endDevSession_withAppAllowlist_returnsHelp() {
+        runAndExpectInvalidArgument(
+                new DevSessionCommand(mFakeDevSessionController),
+                DevSessionCommand.HELP,
+                EXPECTED_COMMAND,
+                CMD,
+                SUB_CMD_END,
+                ARG_ERASE_DB,
+                ARG_ALLOW_DEBUGGABLE_APPS,
+                ARG_APP_PACKAGE_ALLOWLIST,
+                "");
+    }
+
+    @Test
+    public void testRun_endDevSession_withAllowDebuggableApps_returnsHelp() {
+        runAndExpectInvalidArgument(
+                new DevSessionCommand(mFakeDevSessionController),
+                DevSessionCommand.HELP,
+                EXPECTED_COMMAND,
+                CMD,
+                SUB_CMD_END,
+                ARG_ERASE_DB,
+                ARG_ALLOW_DEBUGGABLE_APPS);
+    }
+
     private static class FakeDevSessionController implements DevSessionController {
 
         Boolean mDevModeState = null;
         Boolean mServerAuctionTestKeysEnabled = null;
+        Pattern mNonDebuggableAppAllowlistPattern = null;
         DevSessionControllerResult mReturnValue = DevSessionControllerResult.UNKNOWN;
         int mNumCalls = 0;
 
         @Override
         public ListenableFuture<DevSessionControllerResult> startDevSession(
-                boolean setServerAuctionTestKeysEnabled) {
+                boolean setServerAuctionTestKeysEnabled, Pattern nonDebuggableAppAllowlistPattern) {
             mDevModeState = true;
             mNumCalls += 1;
             mServerAuctionTestKeysEnabled = setServerAuctionTestKeysEnabled;
+            mNonDebuggableAppAllowlistPattern = nonDebuggableAppAllowlistPattern;
             return Futures.immediateFuture(mReturnValue);
         }
 
@@ -312,6 +440,7 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
             mDevModeState = false;
             mNumCalls += 1;
             mServerAuctionTestKeysEnabled = false;
+            mNonDebuggableAppAllowlistPattern = null;
             return Futures.immediateFuture(mReturnValue);
         }
     }

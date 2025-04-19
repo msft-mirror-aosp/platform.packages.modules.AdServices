@@ -85,8 +85,8 @@ public class AppendV1 extends Append {
 
         // Read new signal properties from the update.
         EvictionPriority evictionPriority =
-                mEvictionPriorityHandler.getEvictionPriority(
-                        key, update, updateSignalsProcessReportedLogger);
+                mEvictionPriorityHandler.getEvictionPriorityFromUpdateOrExistingSignals(
+                        key, update, current, updateSignalsProcessReportedLogger);
 
         // Update existing signals for the key with properties from this update.
         updateExistingSignals(key, evictionPriority, current, toReturn);

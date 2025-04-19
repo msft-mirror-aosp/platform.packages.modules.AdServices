@@ -471,7 +471,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         }
                         // Check package in allowlist
                         boolean appCanUseGetCommonStatesService =
-                                AllowLists.isPackageAllowListed(
+                                AllowLists.isItemAllowListed(
                                         mFlags.getAdServicesCommonStatesAllowList(),
                                         param.getAppPackageName());
                         if (!appCanUseGetCommonStatesService) {

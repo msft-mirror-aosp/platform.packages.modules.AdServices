@@ -17,8 +17,8 @@ package com.android.adservices.shared.meta_testing;
 
 import com.android.adservices.shared.testing.LogEntry;
 import com.android.adservices.shared.testing.Logger;
-import com.android.ddmlib.Log;
-import com.android.ddmlib.Log.ILogOutput;
+import com.android.tradefed.log.Log;
+import com.android.tradefed.log.Log.ILogOutput;
 import com.android.tradefed.log.LogUtil.CLog;
 
 import com.google.common.collect.ImmutableList;
@@ -29,19 +29,19 @@ import java.util.List;
 /**
  * Fake implementation of {@link ILogOutput}.
  *
- * <p>Should be obtained using {@link #addToDdmLib()} (which automatically registers it as
+ * <p>Should be obtained using {@link #addToTf()} (which automatically registers it as
  * listener), then released by {@link #removeSelf()}.
  */
-public final class FakeDdmLibLogger implements ILogOutput {
+public final class FakeTfLogger implements ILogOutput {
 
     private final List<LogEntry> mEntries = new ArrayList<>();
 
-    private FakeDdmLibLogger() {}
+    private FakeTfLogger() {}
 
     /** Factory method. */
-    public static FakeDdmLibLogger addToDdmLib() {
-        var logger = new FakeDdmLibLogger();
-        CLog.i("Calling com.android.ddmlib.Log.addLogger(%s)", logger);
+    public static FakeTfLogger addToTf() {
+        var logger = new FakeTfLogger();
+        CLog.i("Calling com.android.tradefed.log.Log.addLogger(%s)", logger);
         Log.addLogger(logger);
         return logger;
     }
@@ -49,7 +49,7 @@ public final class FakeDdmLibLogger implements ILogOutput {
     /** Unregister itself as listener. */
     public void removeSelf() {
         // Note: message before probably won't be logged as we're intercepting it
-        CLog.i("Calling com.android.ddmlib.Log.removeLogger(%s)", this);
+        CLog.i("Calling com.android.tradefed.log.Log.removeLogger(%s)", this);
         Log.removeLogger(this);
     }
 
@@ -89,6 +89,6 @@ public final class FakeDdmLibLogger implements ILogOutput {
 
     @Override
     public String toString() {
-        return "FakeDdmLibLogger [mEntries=" + mEntries + "]";
+        return "FakeTfLogger [mEntries=" + mEntries + "]";
     }
 }

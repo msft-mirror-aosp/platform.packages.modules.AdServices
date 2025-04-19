@@ -17,6 +17,7 @@
 package com.android.adservices.service.devapi;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import java.util.regex.Pattern;
 
 /** Provides functionality to reset the AdServices DB. */
 public interface DevSessionController {
@@ -24,12 +25,15 @@ public interface DevSessionController {
      * Begins a developer session and returns to {@link DevSessionState#IN_PROD}. Clears the
      * adservices database during the transition.
      *
+     * @param setServerAuctionTestKeysEnabled Whether to enable server auction test keys.
+     * @param nonDebuggableAppAllowlistPattern A regex pattern that matches the package names of
+     *     non-debuggable apps that are allowed to use PPAPIs.
      * @return A {@link DevSessionControllerResult} containing the status of the operation. See that
      *     enum for more info on each result code's meaning.
      * @throws IllegalStateException If the current {@link DevSession} could not be retrieved.
      */
     ListenableFuture<DevSessionControllerResult> startDevSession(
-            boolean setServerAuctionTestKeysEnabled);
+            boolean setServerAuctionTestKeysEnabled, Pattern nonDebuggableAppAllowlistPattern);
 
     /**
      * Ends a developer session and returns to {@link DevSessionState#IN_PROD}. Clears the

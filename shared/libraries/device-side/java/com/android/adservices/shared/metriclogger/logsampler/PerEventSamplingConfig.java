@@ -27,41 +27,47 @@ import com.google.errorprone.annotations.Immutable;
  * <p>On-device per-event sampling is a log reduction technique by which, instead of uploading all
  * the log events of particular event type as we receive them, we upload only a certain percentage
  * of log events as defined by the sample rate.
+ *
+ * @param <L> the type of the log event.
  */
 @AutoValue
 @Immutable
-public abstract class PerEventSamplingConfig {
+public abstract class PerEventSamplingConfig<L> {
 
     /** Returns the sampling rate to use. */
     public abstract double getSamplingRate();
 
     /** Returns the builder for {@link PerEventSamplingConfig}. */
-    public abstract Builder toBuilder();
+    public abstract Builder<L> toBuilder();
 
     /**
      * Creates an instance of {@link PerEventSamplingConfig} which contains configuration for
      * per-event sampling.
      */
-    public static PerEventSamplingConfig createPerEventSamplingConfig(
+    public static <L> PerEventSamplingConfig<L> createPerEventSamplingConfig(
             LogSamplingConfig.PerEventSampling config) {
-        Builder builder = PerEventSamplingConfig.builder();
+        Builder<L> builder = PerEventSamplingConfig.builder();
         builder.samplingRate(getSamplingRate(config));
         return builder.build();
     }
 
-    private static Builder builder() {
-        return new AutoValue_PerEventSamplingConfig.Builder();
+    private static <L> Builder<L> builder() {
+        return new AutoValue_PerEventSamplingConfig.Builder<L>();
     }
 
-    /** Builder for this class */
+    /**
+     * Builder for this class
+     *
+     * @param <L> the type of the log event.
+     */
     @AutoValue.Builder
-    public abstract static class Builder {
+    public abstract static class Builder<L> {
 
         /** Sets the value for {@link #getSamplingRate()}. */
-        public abstract Builder samplingRate(double samplingRate);
+        public abstract Builder<L> samplingRate(double samplingRate);
 
         /** Builds a new {@link PerEventSamplingConfig} instance. */
-        public abstract PerEventSamplingConfig build();
+        public abstract PerEventSamplingConfig<L> build();
     }
 
     /**

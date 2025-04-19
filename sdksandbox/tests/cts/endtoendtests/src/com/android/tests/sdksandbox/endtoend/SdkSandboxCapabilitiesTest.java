@@ -16,8 +16,6 @@
 
 package com.android.tests.sdksandbox.endtoend;
 
-import static android.content.pm.Flags.FLAG_ALLOW_SDK_SANDBOX_QUERY_INTENT_ACTIVITIES;
-
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertNotNull;
@@ -28,7 +26,6 @@ import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.SdkLifecycleHelper;
 import android.content.Context;
 import android.os.Bundle;
-import android.platform.test.annotations.RequiresFlagsEnabled;
 import android.platform.test.flag.junit.CheckFlagsRule;
 import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 
@@ -75,7 +72,6 @@ public class SdkSandboxCapabilitiesTest extends SandboxKillerBeforeTest {
     }
 
     @Test
-    @RequiresFlagsEnabled(FLAG_ALLOW_SDK_SANDBOX_QUERY_INTENT_ACTIVITIES)
     public void testQueryLauncherActivity() throws Exception {
         assumeTrue("Test is meant for V+ devices only", SdkLevel.isAtLeastV());
 
