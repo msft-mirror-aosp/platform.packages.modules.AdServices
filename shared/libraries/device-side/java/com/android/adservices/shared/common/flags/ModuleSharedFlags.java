@@ -74,4 +74,11 @@ public interface ModuleSharedFlags {
     default boolean getSpeEnablePerJobPolicy() {
         return DEFAULT_SPE_ENABLE_PER_JOB_POLICY;
     }
+
+    @FeatureFlag(SHARED)
+    boolean DEFAULT_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING = false;
+
+    default boolean getEnableSupportDimensionInLogSampling() {
+        return DEFAULT_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING;
+    }
 }

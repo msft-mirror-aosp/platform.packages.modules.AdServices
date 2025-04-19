@@ -3828,6 +3828,13 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
                 DEFAULT_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY);
     }
 
+    @Override
+    public boolean getEnableSupportDimensionInLogSampling() {
+        return mBackend.getFlag(
+                KEY_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING,
+                DEFAULT_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING);
+    }
+
     public final boolean getEnableHpkeWithPlatformApis() {
         return mBackend.getFlag(
                 KEY_ENABLE_HPKE_WITH_PLATFORM_APIS, DEFAULT_ENABLE_HPKE_WITH_PLATFORM_APIS);

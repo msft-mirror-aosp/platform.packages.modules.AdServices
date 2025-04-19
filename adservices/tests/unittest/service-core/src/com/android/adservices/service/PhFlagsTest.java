@@ -683,6 +683,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOG_SAMPL
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_PAS_COMPONENT_ADS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_RB_ATRACE;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_TABLET_REGION_FIX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_U18_APPSEARCH_MIGRATION;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL;
@@ -1213,6 +1214,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_UI_FEATURE_TYPE_
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
+import static com.android.adservices.shared.common.flags.ModuleSharedFlags.DEFAULT_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING;
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL;
 import static com.android.adservices.shared.meta_testing.FlagsTestLittleHelper.expectDumpHasAllGetters;
 
@@ -6633,6 +6635,14 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_ENABLE_HPKE_WITH_PLATFORM_APIS,
                 DEFAULT_ENABLE_HPKE_WITH_PLATFORM_APIS,
                 Flags::getEnableHpkeWithPlatformApis);
+    }
+
+    @Test
+    public void testGetEnableSupportDimensionInLogSampling() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING,
+                DEFAULT_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING,
+                Flags::getEnableSupportDimensionInLogSampling);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

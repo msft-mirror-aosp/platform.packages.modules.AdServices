@@ -30,11 +30,31 @@ import java.util.Objects;
 public class AsyncRegistration {
 
     public enum RegistrationType {
-        APP_SOURCE,
-        APP_SOURCES,
-        APP_TRIGGER,
-        WEB_SOURCE,
-        WEB_TRIGGER
+        APP_SOURCE(0),
+        APP_SOURCES(1),
+        APP_TRIGGER(2),
+        WEB_SOURCE(3),
+        WEB_TRIGGER(4);
+
+        private final int value;
+
+        /**
+         * Private constructor to associate an integer value with each enum constant.
+         *
+         * @param value The integer value for the enum constant.
+         */
+        RegistrationType(int value) {
+            this.value = value;
+        }
+
+        /**
+         * Gets the integer value associated with this RegistrationType constant.
+         *
+         * @return The integer value.
+         */
+        public int getValue() {
+            return value;
+        }
     }
 
     private final String mId;
@@ -324,8 +344,8 @@ public class AsyncRegistration {
         }
 
         /**
-         * See {@link AsyncRegistration#getSourceType()}. Valid inputs are ordinals of {@link
-         * Source.SourceType} enum values.
+         * See {@link AsyncRegistration#getSourceType()}. Valid inputs are int values of {@link
+         * Source.SourceType} enum constants.
          */
         @NonNull
         public Builder setSourceType(Source.SourceType sourceType) {
@@ -348,8 +368,8 @@ public class AsyncRegistration {
         }
 
         /**
-         * See {@link AsyncRegistration#getType()}. Valid inputs are ordinals of {@link
-         * AsyncRegistration.RegistrationType} enum values.
+         * See {@link AsyncRegistration#getType()}. Valid inputs are int values of {@link
+         * AsyncRegistration.RegistrationType} enum constants.
          */
         @NonNull
         public Builder setType(RegistrationType type) {

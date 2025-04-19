@@ -17,11 +17,14 @@
 package com.android.adservices.shared.metriclogger.logsampler;
 
 import static com.android.adservices.shared.metriclogger.AbstractMetricLogger.TAG;
+import static com.android.adservices.shared.metriclogger.logsampler.SamplerResult.ALWAYS_LOG_SAMPLING_RESULT;
 
 import android.annotation.Nullable;
 import android.util.Log;
 
 import com.android.adservices.shared.proto.MetricId;
+
+import com.google.common.base.Supplier;
 
 /**
  * Implements per-event sampling strategy for a metric.
@@ -35,10 +38,10 @@ public final class PerEventLogSampler<L> implements LogSampler<L> {
 
     private static final String EVENT_SAMPLER = "PerEventSampler";
 
-    @Nullable private final PerEventSamplingConfig mConfig;
+    @Nullable private final PerEventSamplingConfig<L> mConfig;
     private final MetricId mMetricId;
 
-    public PerEventLogSampler(MetricId metricId, @Nullable PerEventSamplingConfig config) {
+    public PerEventLogSampler(MetricId metricId, @Nullable PerEventSamplingConfig<L> config) {
         this.mConfig = config;
         this.mMetricId = metricId;
     }
@@ -48,23 +51,24 @@ public final class PerEventLogSampler<L> implements LogSampler<L> {
      *
      * <p>Rolls a dice and returns whether the event will be logged or not.
      */
-    public boolean shouldLog() {
-        if (mConfig != null) {
-            boolean logDecision = Math.random() <= mConfig.getSamplingRate();
+    @Override
+    public SamplerResult shouldLog(Supplier<L> logSupplier) {
+        if (mConfig == null) {
             Log.v(
                     TAG,
                     String.format(
-                            "%s %s: Computed Per event sampling decision whether to log the metric:"
-                                    + " %b",
-                            mMetricId.name(), EVENT_SAMPLER, logDecision));
-            return logDecision;
+                            "%s %s: Per-event sampling config is missing, always log",
+                            mMetricId.name(), EVENT_SAMPLER));
+            return ALWAYS_LOG_SAMPLING_RESULT;
         }
 
+        boolean logDecision = Math.random() <= mConfig.getSamplingRate();
         Log.v(
                 TAG,
                 String.format(
-                        "%s %s: Per-event sampling config is missing, always log",
-                        mMetricId.name(), EVENT_SAMPLER));
-        return true;
+                        "%s %s: Computed Per event sampling decision whether to log the metric:"
+                                + " %b",
+                        mMetricId.name(), EVENT_SAMPLER, logDecision));
+        return SamplerResult.create(logDecision, mConfig.getSamplingRate());
     }
 }

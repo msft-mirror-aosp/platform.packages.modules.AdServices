@@ -17,6 +17,7 @@
 package com.android.adservices.shared.metriclogger;
 
 import com.android.adservices.shared.metriclogger.logsampler.LogSampler;
+import com.android.adservices.shared.metriclogger.logsampler.SamplerResult;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -63,29 +64,18 @@ public abstract class AbstractMetricLogger<L> implements MetricLogger<L> {
 
     @Override
     public void log(Supplier<L> logSupplier) {
-        if (!mPerDeviceSampling.get().shouldLog()) {
+        SamplerResult perDeviceSamplerResult = mPerDeviceSampling.get().shouldLog(logSupplier);
+        if (!perDeviceSamplerResult.getShouldLogEvent()) {
             return;
         }
-        if (mPerEventSampling.get().shouldLog()) {
-            mConfig.getLogUploader().accept(logSupplier.get(), getMetadata());
+        SamplerResult perEventSamplerResult = mPerEventSampling.get().shouldLog(logSupplier);
+        if (perEventSamplerResult.getShouldLogEvent()) {
+            mConfig.getLogUploader()
+                    .accept(
+                            logSupplier.get(),
+                            new SamplingMetadata(
+                                    perDeviceSamplerResult.getAppliedSamplingRate(),
+                                    perEventSamplerResult.getAppliedSamplingRate()));
         }
-    }
-
-    private SamplingMetadata getMetadata() {
-        // If per-device sampling config is null, perform no per-device sampling (i.e. all events
-        // are logged).
-        double perDeviceSampleRate =
-                mConfig.getPerDeviceSamplingConfig() == null
-                        ? 1.0
-                        : mConfig.getPerDeviceSamplingConfig().getSamplingRate();
-
-        // If per-event sampling config is null, perform no per-event sampling (i.e. all events are
-        // logged).
-        double perEventSampleRate =
-                mConfig.getPerEventSamplingConfig() == null
-                        ? 1.0
-                        : mConfig.getPerEventSamplingConfig().getSamplingRate();
-
-        return new SamplingMetadata(perDeviceSampleRate, perEventSampleRate);
     }
 }

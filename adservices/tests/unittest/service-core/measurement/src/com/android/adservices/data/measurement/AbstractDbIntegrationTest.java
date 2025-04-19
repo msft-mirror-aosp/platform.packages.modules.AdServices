@@ -719,7 +719,7 @@ public abstract class AbstractDbIntegrationTest extends AdServicesExtendedMockit
                 MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE,
                 asyncRegistration.getSourceType() == null
                         ? null
-                        : asyncRegistration.getSourceType().ordinal());
+                        : asyncRegistration.getSourceType().getIntValue());
         values.put(
                 MeasurementTables.AsyncRegistrationContract.REQUEST_TIME,
                 asyncRegistration.getRequestTime());
@@ -728,7 +728,7 @@ public abstract class AbstractDbIntegrationTest extends AdServicesExtendedMockit
                 asyncRegistration.getRetryCount());
         values.put(
                 MeasurementTables.AsyncRegistrationContract.TYPE,
-                asyncRegistration.getType().ordinal());
+                asyncRegistration.getType().getValue());
         values.put(
                 MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED,
                 asyncRegistration.getDebugKeyAllowed());

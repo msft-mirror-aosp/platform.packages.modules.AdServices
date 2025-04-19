@@ -24,9 +24,17 @@ import com.google.errorprone.annotations.Immutable;
 
 import java.time.Duration;
 
+/**
+ * Describes the on-device per-device sampling configuration for a metric.
+ *
+ * <p>On-device per-device sampling is a log reduction technique by which, instead of uploading the
+ * log events from all the devices, we upload only from a certain percentage of devices.
+ *
+ * @param <L> the type of the log event.
+ */
 @AutoValue
 @Immutable
-public abstract class PerDeviceSamplingConfig {
+public abstract class PerDeviceSamplingConfig<L> {
 
     // Default rotation period is 35 days or 3024000 seconds.
     @VisibleForTesting static final Duration DEFAULT_ROTATION_PERIOD = Duration.ofDays(35);
@@ -70,9 +78,9 @@ public abstract class PerDeviceSamplingConfig {
      * Creates an instance of {@link PerDeviceSamplingConfig} which contains configuration for
      * per-device sampling.
      */
-    public static PerDeviceSamplingConfig createPerDeviceSamplingConfig(
+    public static <L> PerDeviceSamplingConfig<L> createPerDeviceSamplingConfig(
             LogSamplingConfig.PerDeviceSampling config) {
-        return builder()
+        return PerDeviceSamplingConfig.<L>builder()
                 .groupName(getGroupNameOrDefault(config))
                 .rotationPeriod(getRotationPeriodOrDefault(config))
                 .staggeringPeriod(getStaggeringPeriodOrDefault(config))
@@ -80,8 +88,8 @@ public abstract class PerDeviceSamplingConfig {
                 .build();
     }
 
-    private static Builder builder() {
-        return new AutoValue_PerDeviceSamplingConfig.Builder();
+    private static <L> Builder<L> builder() {
+        return new AutoValue_PerDeviceSamplingConfig.Builder<L>();
     }
 
     /**
@@ -131,22 +139,26 @@ public abstract class PerDeviceSamplingConfig {
         return DEFAULT_STAGGERING_PERIOD;
     }
 
-    /** Builder for this class */
+    /**
+     * Builder for this class
+     *
+     * @param <L> the type of the log event.
+     */
     @AutoValue.Builder
-    public abstract static class Builder {
+    public abstract static class Builder<L> {
         /** Sets the value for {@link #getSamplingRate()}. */
-        public abstract Builder samplingRate(double samplingRate);
+        public abstract Builder<L> samplingRate(double samplingRate);
 
         /** Sets the value for {@link #getRotationPeriod()}. */
-        public abstract Builder rotationPeriod(Duration rotationPeriod);
+        public abstract Builder<L> rotationPeriod(Duration rotationPeriod);
 
         /** Sets the value for {@link #getStaggeringPeriod()}. */
-        public abstract Builder staggeringPeriod(Duration staggeringPeriod);
+        public abstract Builder<L> staggeringPeriod(Duration staggeringPeriod);
 
         /** Sets the value for {@link #getGroupName}. */
-        public abstract Builder groupName(String groupName);
+        public abstract Builder<L> groupName(String groupName);
 
         /** Builds a new {@link PerDeviceSamplingConfig} instance. */
-        public abstract PerDeviceSamplingConfig build();
+        public abstract PerDeviceSamplingConfig<L> build();
     }
 }

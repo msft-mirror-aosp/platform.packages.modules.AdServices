@@ -16,13 +16,19 @@
 
 package com.android.adservices.shared.metriclogger.logsampler;
 
+import static com.android.adservices.shared.metriclogger.logsampler.SamplerResult.ALWAYS_LOG_SAMPLING_RESULT;
+import static com.android.adservices.shared.metriclogger.logsampler.SamplerResult.NEVER_LOG_SAMPLING_RESULT;
+
 import com.android.adservices.shared.SharedUnitTestCase;
 import com.android.adservices.shared.proto.LogSamplingConfig.PerEventSampling;
 import com.android.adservices.shared.proto.MetricId;
 
+import com.google.common.base.Supplier;
+
 import org.junit.Test;
 
 public final class PerEventLogSamplerTest extends SharedUnitTestCase {
+    private static final Supplier<ExampleStats> EXAMPLE_STATS = ExampleStats::new;
 
     @Test
     public void testShouldLog_samplingRateIsHalf_probabilityIsCorrect() {
@@ -40,7 +46,7 @@ public final class PerEventLogSamplerTest extends SharedUnitTestCase {
 
         // Act Simulate 1000 events and count how many times shouldLog() returns true.
         for (int i = 0; i < 1000; i++) {
-            if (perEventSampling.shouldLog()) {
+            if (perEventSampling.shouldLog(EXAMPLE_STATS).getShouldLogEvent()) {
                 logSuccess++;
             }
         }
@@ -56,7 +62,8 @@ public final class PerEventLogSamplerTest extends SharedUnitTestCase {
         PerEventLogSampler<ExampleStats> perEventSamplingImpl =
                 new PerEventLogSampler<>(MetricId.EXAMPLE_STATS, null);
 
-        expect.that(perEventSamplingImpl.shouldLog()).isTrue();
+        expect.that(perEventSamplingImpl.shouldLog(EXAMPLE_STATS))
+                .isEqualTo(ALWAYS_LOG_SAMPLING_RESULT);
     }
 
     @Test
@@ -69,7 +76,8 @@ public final class PerEventLogSamplerTest extends SharedUnitTestCase {
                         MetricId.EXAMPLE_STATS,
                         PerEventSamplingConfig.createPerEventSamplingConfig(SamplingRateOneProto));
 
-        expect.that(perEventSampling.shouldLog()).isTrue();
+        expect.that(perEventSampling.shouldLog(EXAMPLE_STATS))
+                .isEqualTo(ALWAYS_LOG_SAMPLING_RESULT);
     }
 
     @Test
@@ -82,7 +90,7 @@ public final class PerEventLogSamplerTest extends SharedUnitTestCase {
                         MetricId.EXAMPLE_STATS,
                         PerEventSamplingConfig.createPerEventSamplingConfig(SamplingRateZeroProto));
 
-        expect.that(perEventSampling.shouldLog()).isFalse();
+        expect.that(perEventSampling.shouldLog(EXAMPLE_STATS)).isEqualTo(NEVER_LOG_SAMPLING_RESULT);
     }
 
     private static final class ExampleStats {

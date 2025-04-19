@@ -16,14 +16,19 @@
 
 package com.android.adservices.shared.metriclogger.logsampler.deviceselection;
 
+import static com.android.adservices.shared.metriclogger.logsampler.SamplerResult.ALWAYS_LOG_SAMPLING_RESULT;
+import static com.android.adservices.shared.metriclogger.logsampler.SamplerResult.NEVER_LOG_SAMPLING_RESULT;
+
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
 import com.android.adservices.shared.metriclogger.logsampler.LogSampler;
+import com.android.adservices.shared.metriclogger.logsampler.SamplerResult;
 import com.android.adservices.shared.proto.LogSamplingConfig;
 import com.android.adservices.shared.proto.MetricId;
 import com.android.adservices.shared.util.Clock;
 
+import com.google.common.base.Supplier;
 import com.google.common.util.concurrent.Futures;
 
 import org.junit.Test;
@@ -32,13 +37,15 @@ import org.mockito.Mock;
 public final class PerDeviceLogSamplerTest extends SharedMockitoTestCase {
     private static final long SECONDS_IN_A_DAY = 86400;
     private static final String EXAMPLE_GROUP_NAME = "example";
+    private static final double SAMPLE_RATE = 0.05;
     private static final LogSamplingConfig.PerDeviceSampling SAMPLING_CONFIG_PROTO =
             LogSamplingConfig.PerDeviceSampling.newBuilder()
-                    .setSamplingRate(0.05)
+                    .setSamplingRate(SAMPLE_RATE)
                     .setRotationPeriodDays(7)
                     .setStaggeringPeriodDays(1)
                     .setGroupName(EXAMPLE_GROUP_NAME)
                     .build();
+    private static final Supplier<ExampleStats> EXAMPLE_STATS = ExampleStats::new;
 
     private @Mock UniqueDeviceIdHelper mMockDeviceId;
     private @Mock Clock mClock;
@@ -49,12 +56,14 @@ public final class PerDeviceLogSamplerTest extends SharedMockitoTestCase {
                 new PerDeviceLogSampler<>(
                         MetricId.EXAMPLE_STATS, /* config= */ null, () -> mMockDeviceId, mClock);
 
-        expect.withMessage("shouldLog()").that(sampler.shouldLog()).isTrue();
+        expect.withMessage("shouldLog()")
+                .that(sampler.shouldLog(EXAMPLE_STATS))
+                .isEqualTo(ALWAYS_LOG_SAMPLING_RESULT);
     }
 
     @Test
     public void testShouldLog_samplingRateOne_alwaysLog() {
-        PerDeviceSamplingConfig config =
+        PerDeviceSamplingConfig<ExampleStats> config =
                 PerDeviceSamplingConfig.createPerDeviceSamplingConfig(
                         LogSamplingConfig.PerDeviceSampling.newBuilder()
                                 .setSamplingRate(1.0)
@@ -63,12 +72,14 @@ public final class PerDeviceLogSamplerTest extends SharedMockitoTestCase {
                 new PerDeviceLogSampler<>(
                         MetricId.EXAMPLE_STATS, config, () -> mMockDeviceId, mClock);
 
-        expect.withMessage("shouldLog()").that(sampler.shouldLog()).isTrue();
+        expect.withMessage("shouldLog()")
+                .that(sampler.shouldLog(EXAMPLE_STATS))
+                .isEqualTo(ALWAYS_LOG_SAMPLING_RESULT);
     }
 
     @Test
     public void testShouldLog_samplingRateZero_doNotLog() {
-        PerDeviceSamplingConfig config =
+        PerDeviceSamplingConfig<ExampleStats> config =
                 PerDeviceSamplingConfig.createPerDeviceSamplingConfig(
                         LogSamplingConfig.PerDeviceSampling.newBuilder()
                                 .setSamplingRate(0)
@@ -77,7 +88,9 @@ public final class PerDeviceLogSamplerTest extends SharedMockitoTestCase {
                 new PerDeviceLogSampler<>(
                         MetricId.EXAMPLE_STATS, config, () -> mMockDeviceId, mClock);
 
-        expect.withMessage("shouldLog()").that(sampler.shouldLog()).isFalse();
+        expect.withMessage("shouldLog()")
+                .that(sampler.shouldLog(EXAMPLE_STATS))
+                .isEqualTo(NEVER_LOG_SAMPLING_RESULT);
     }
 
     @Test
@@ -91,7 +104,9 @@ public final class PerDeviceLogSamplerTest extends SharedMockitoTestCase {
 
         for (long deviceId : deviceIdsLogs) {
             LogSampler<ExampleStats> sampler = getDeviceLogSampler(deviceId, SAMPLING_CONFIG_PROTO);
-            expect.withMessage("deviceId=" + deviceId).that(sampler.shouldLog()).isTrue();
+            expect.withMessage("deviceId=" + deviceId)
+                    .that(sampler.shouldLog(EXAMPLE_STATS))
+                    .isEqualTo(SamplerResult.create(/* shouldLogEvent= */ true, SAMPLE_RATE));
         }
 
         // All the devices belong to stagger group 1. 1 % 7 == 8 % 7 == 22 % 7 == 1
@@ -99,24 +114,29 @@ public final class PerDeviceLogSamplerTest extends SharedMockitoTestCase {
 
         for (long deviceId : deviceIdsDoesNotLog) {
             LogSampler<ExampleStats> sampler = getDeviceLogSampler(deviceId, SAMPLING_CONFIG_PROTO);
-            expect.withMessage("deviceId=" + deviceId).that(sampler.shouldLog()).isFalse();
+            expect.withMessage("deviceId=" + deviceId)
+                    .that(sampler.shouldLog(EXAMPLE_STATS))
+                    .isEqualTo(SamplerResult.create(/* shouldLogEvent= */ false, SAMPLE_RATE));
         }
     }
 
     @Test
     public void testShouldLog_sameStaggerGroup_eventTimeChanges() {
-
         final long eventTimeDays1 = 10L;
         long deviceId = 8;
         mockCurrentTimeSeconds(eventTimeDays1 * SECONDS_IN_A_DAY);
         LogSampler<ExampleStats> sampler = getDeviceLogSampler(deviceId, SAMPLING_CONFIG_PROTO);
-        expect.withMessage("deviceId=" + deviceId).that(sampler.shouldLog()).isFalse();
+        expect.withMessage("eventTimeDays1=" + eventTimeDays1)
+                .that(sampler.shouldLog(EXAMPLE_STATS))
+                .isEqualTo(SamplerResult.create(/* shouldLogEvent= */ false, SAMPLE_RATE));
 
         // The devices 8 is picked when eventTime occurred is at 356 days.
         final long eventTimeDays2 = 356L;
         mockCurrentTimeSeconds(eventTimeDays2 * SECONDS_IN_A_DAY);
         sampler = getDeviceLogSampler(deviceId, SAMPLING_CONFIG_PROTO);
-        expect.withMessage("deviceId=" + deviceId).that(sampler.shouldLog()).isTrue();
+        expect.withMessage("eventTimeDays2=" + eventTimeDays2)
+                .that(sampler.shouldLog(EXAMPLE_STATS))
+                .isEqualTo(SamplerResult.create(/* shouldLogEvent= */ true, SAMPLE_RATE));
     }
 
     @Test
@@ -126,14 +146,18 @@ public final class PerDeviceLogSamplerTest extends SharedMockitoTestCase {
         long deviceId = 8;
         mockCurrentTimeSeconds(eventTimeDays2 * SECONDS_IN_A_DAY);
         LogSampler<ExampleStats> sampler = getDeviceLogSampler(deviceId, SAMPLING_CONFIG_PROTO);
-        expect.withMessage("deviceId=" + deviceId).that(sampler.shouldLog()).isTrue();
+        expect.withMessage("groupName=" + SAMPLING_CONFIG_PROTO.getGroupName())
+                .that(sampler.shouldLog(EXAMPLE_STATS))
+                .isEqualTo(SamplerResult.create(/* shouldLogEvent= */ true, SAMPLE_RATE));
 
         // "otherExample" group name is not picked.
         sampler =
                 getDeviceLogSampler(
                         deviceId,
                         SAMPLING_CONFIG_PROTO.toBuilder().setGroupName("otherExample").build());
-        expect.withMessage("deviceId=" + deviceId).that(sampler.shouldLog()).isFalse();
+        expect.withMessage("groupName=otherExample")
+                .that(sampler.shouldLog(EXAMPLE_STATS))
+                .isEqualTo(SamplerResult.create(/* shouldLogEvent= */ false, SAMPLE_RATE));
     }
 
     @Test
@@ -291,7 +315,7 @@ public final class PerDeviceLogSamplerTest extends SharedMockitoTestCase {
     private <L> LogSampler<L> getDeviceLogSampler(
             long deviceId, LogSamplingConfig.PerDeviceSampling samplingConfigProto) {
         setMockDeviceId(deviceId);
-        PerDeviceSamplingConfig config =
+        PerDeviceSamplingConfig<L> config =
                 PerDeviceSamplingConfig.createPerDeviceSamplingConfig(samplingConfigProto);
         return new PerDeviceLogSampler<>(
                 MetricId.EXAMPLE_STATS, config, () -> mMockDeviceId, mClock);
@@ -304,7 +328,7 @@ public final class PerDeviceLogSamplerTest extends SharedMockitoTestCase {
             int finalDays = days;
             mockCurrentTimeSeconds(finalDays * SECONDS_IN_A_DAY);
             LogSampler<ExampleStats> sampler = getDeviceLogSampler(deviceId, samplingConfigProto);
-            if (sampler.shouldLog()) {
+            if (sampler.shouldLog(EXAMPLE_STATS).getShouldLogEvent()) {
                 patternBuilder.append("1");
             } else {
                 patternBuilder.append("0");
