@@ -19,7 +19,7 @@ import static com.android.adservices.shared.testing.LogEntry.Subject.logEntry;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import com.android.adservices.shared.meta_testing.FakeDdmLibLogger;
+import com.android.adservices.shared.meta_testing.FakeTfLogger;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -35,11 +35,11 @@ public final class HostSideDynamicLoggerTest extends HostSideTestCase {
 
     private final String mTag = "El Taggo";
     private final Throwable mThrowable = new Throwable("D'OH!");
-    private final FakeDdmLibLogger mFakeLogger = FakeDdmLibLogger.addToDdmLib();
+    private final FakeTfLogger mFakeLogger = FakeTfLogger.addToTf();
     private final DynamicLogger mLogger = DynamicLogger.getInstance();
 
     @After
-    public void unregisterDdmLibLogger() {
+    public void unregisterTfLogger() {
         mFakeLogger.removeSelf();
     }
 
