@@ -1,0 +1,214 @@
+{
+  "description": {
+    "test_case": "A2W test for trigger-event-storage-limit debug report during open enrollment.",
+    "source1_trigger1_trigger_2": "Source adtech has no permissions, trigger adtechs have permissions. Event level report is generated without debug keys, no debug reports get sent.",
+    "source2_trigger2_trigger_3": "Source adtech has permissions, trigger adtechs have no permissions. Event level report is generated without debug keys, no debug reports get sent."
+  },
+  "phflags_override": {
+    "Measurement__enable_debug_join_keys_open_access": "true",
+    "Measurement__debug_join_keys_noncompilant_adtechs": "",
+    "measurement_max_event_reports_per_destination": "1",
+    "measurement_flex_api_max_information_gain_dual_destination_event": "9",
+    "measurement_flex_api_max_information_gain_dual_destination_navigation": "14"
+  },
+  "input": {
+    "sources": [
+      {
+        "timestamp": "1643235573000",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "example.1s1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "source_event_id": "1",
+                "destination": "android-app://example.1d1.test",
+                "web_destination": "https://example.1d1.test",
+                "debug_key": "347982378",
+                "debug_join_key": "sample-debug-join-key"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "timestamp": "1643235574000",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "example.2s2.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech2.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "source_event_id": "2",
+                "destination": "android-app://example.2d2.test",
+                "web_destination": "https://example.2d2.test",
+                "debug_key": "347982378",
+                "debug_join_key": "sample-debug-join-key"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "web_triggers": [
+      {
+        "timestamp": "1643235575000",
+        "registration_request": {
+          "destination_origin": "https://example.1d1.test",
+          "registrant": "example.1d1.test",
+          "trigger_params": [
+            {
+              "attribution_src_url": "https://www.ad-tech1.test"
+            }
+          ]
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "debug_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "1",
+                    "priority": "1"
+                  }
+                ],
+                "debug_reporting": true,
+                "debug_key": "8971346781",
+                "debug_join_key": "sample-debug-join-key"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "timestamp": "1643235576000",
+        "registration_request": {
+          "destination_origin": "https://example.1d1.test",
+          "registrant": "example.1d1.test",
+          "trigger_params": [
+            {
+              "attribution_src_url": "https://www.ad-tech1.test"
+            }
+          ]
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "debug_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "2",
+                    "priority": "1"
+                  }
+                ],
+                "debug_reporting": true,
+                "debug_key": "8971346782",
+                "debug_join_key": "sample-debug-join-key"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "timestamp": "1643235576000",
+        "registration_request": {
+          "destination_origin": "https://example.2d2.test",
+          "registrant": "example.2d2.test",
+          "trigger_params": [
+            {
+              "attribution_src_url": "https://www.ad-tech2.test"
+            }
+          ]
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech2.test",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "2",
+                    "priority": "1"
+                  }
+                ],
+                "debug_key": "8971346781",
+                "debug_join_key": "sample-debug-join-key"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "timestamp": "1643235577000",
+        "registration_request": {
+          "destination_origin": "https://example.2d2.test",
+          "registrant": "example.2d2.test",
+          "trigger_params": [
+            {
+              "attribution_src_url": "https://www.ad-tech2.test"
+            }
+          ]
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech2.test",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "3",
+                    "priority": "1"
+                  }
+                ],
+                "debug_reporting": true,
+                "debug_key": "8971346782",
+                "debug_join_key": "sample-debug-join-key"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "event_level_results": [
+      {
+        "payload": {
+          "attribution_destination": "https://1d1.test",
+          "randomized_trigger_rate": 0.0170218,
+          "scheduled_report_time": "1643408373",
+          "source_event_id": "1",
+          "source_type": "navigation",
+          "trigger_data": "1"
+        },
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
+        "report_time": "1643408373000"
+      },
+      {
+        "payload": {
+          "attribution_destination": "https://2d2.test",
+          "randomized_trigger_rate": 0.0170218,
+          "scheduled_report_time": "1643408374",
+          "source_event_id": "2",
+          "source_type": "navigation",
+          "trigger_data": "2"
+        },
+        "report_url": "https://www.ad-tech2.test/.well-known/attribution-reporting/report-event-attribution",
+        "report_time": "1643408374000"
+      }
+    ],
+    "debug_event_level_results": [],
+    "verbose_debug_reports": []
+  }
+}
