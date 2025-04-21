@@ -336,12 +336,7 @@ public class AsyncSourceFetcher {
             builder.setDebugAdId(json.optString(SourceHeaderContract.DEBUG_AD_ID));
         }
 
-        Set<String> allowedEnrollmentsString =
-                new HashSet<>(
-                        AllowLists.splitAllowList(
-                                mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()));
-        if (allowedEnrollmentsString.contains(enrollmentId)
-                && !json.isNull(SourceHeaderContract.DEBUG_JOIN_KEY)) {
+        if (canSetDebugJoinKey(json, enrollmentId)) {
             builder.setDebugJoinKey(json.optString(SourceHeaderContract.DEBUG_JOIN_KEY));
         }
 
@@ -1419,6 +1414,18 @@ public class AsyncSourceFetcher {
             }
         }
         return true;
+    }
+
+    private boolean canSetDebugJoinKey(JSONObject json, String enrollmentId) {
+        if (!json.isNull(SourceHeaderContract.DEBUG_JOIN_KEY)) {
+            if (mFlags.getMeasurementEnableDebugJoinKeysOpenAccess()) {
+                return !(AllowLists.isItemAllowListed(
+                        mFlags.getMeasurementDebugJoinKeysNoncompliantAdtechs(), enrollmentId));
+            }
+            return AllowLists.isItemAllowListed(
+                    mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist(), enrollmentId);
+        }
+        return false;
     }
 
     private static boolean isContiguousStartingAtZero(Set<UnsignedLong> unsignedLongs) {
