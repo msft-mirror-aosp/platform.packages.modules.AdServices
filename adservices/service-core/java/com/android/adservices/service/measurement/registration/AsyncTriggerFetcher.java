@@ -651,12 +651,7 @@ public class AsyncTriggerFetcher {
             builder.setDebugAdId(json.optString(TriggerHeaderContract.DEBUG_AD_ID));
         }
 
-        Set<String> allowedEnrollmentsString =
-                new HashSet<>(
-                        AllowLists.splitAllowList(
-                                mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()));
-        if (allowedEnrollmentsString.contains(enrollmentId)
-                && !json.isNull(TriggerHeaderContract.DEBUG_JOIN_KEY)) {
+        if (canSetDebugJoinKey(json, enrollmentId)) {
             builder.setDebugJoinKey(json.optString(TriggerHeaderContract.DEBUG_JOIN_KEY));
         }
 
@@ -1292,6 +1287,18 @@ public class AsyncTriggerFetcher {
             }
         }
         return true;
+    }
+
+    private boolean canSetDebugJoinKey(JSONObject json, String enrollmentId) {
+        if (!json.isNull(TriggerHeaderContract.DEBUG_JOIN_KEY)) {
+            if (mFlags.getMeasurementEnableDebugJoinKeysOpenAccess()) {
+                return !(AllowLists.isItemAllowListed(
+                        mFlags.getMeasurementDebugJoinKeysNoncompliantAdtechs(), enrollmentId));
+            }
+            return AllowLists.isItemAllowListed(
+                    mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist(), enrollmentId);
+        }
+        return false;
     }
 
     private static Uri getAttributionDestination(
