@@ -69,6 +69,8 @@ public class SdkSandboxScenarioRule implements TestRule {
     // This flag is used internally for behaviors that are
     // enabled by default.
     private static final int ENABLE_ALWAYS = 0x1;
+    private static final String ENABLE_LOCALHOST_COMMAND =
+            "cmd connectivity set-localhost-sandbox-enabled ";
     // Execute "Before" and "After" annotations around tests.
     public static final int ENABLE_LIFE_CYCLE_ANNOTATIONS = 0x2;
 
@@ -117,6 +119,12 @@ public class SdkSandboxScenarioRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                // Enable localhost comms for a sandbox if there is a specified client package to
+                // exempt
+                String exemptPackage = getLocalhostAllowedClientPackagename();
+                if (exemptPackage != null) {
+                    setLocalhostInSandboxEnabled(true, exemptPackage);
+                }
                 try (ActivityScenario scenario =
                         ActivityScenario.launch(SdkSandboxCtsActivity.class)) {
                     final Context context =
@@ -139,6 +147,10 @@ public class SdkSandboxScenarioRule implements TestRule {
                     try (ActivityScenario scenario =
                             ActivityScenario.launch(SdkSandboxCtsActivity.class)) {
                         mSdkLifecycleHelper.unloadSdk(mSdkName);
+                        // Reset localhost restrictions for the sandbox of the client packagename
+                        if (exemptPackage != null) {
+                            setLocalhostInSandboxEnabled(false, exemptPackage);
+                        }
                     }
                 }
             }
@@ -180,6 +192,11 @@ public class SdkSandboxScenarioRule implements TestRule {
                 throw afterFailure;
             }
         }
+    }
+
+    /* Override if test suite requires localhost communications for the test to run */
+    public String getLocalhostAllowedClientPackagename() {
+        return null;
     }
 
     private Throwable runBeforeTestMethods() {
@@ -284,6 +301,17 @@ public class SdkSandboxScenarioRule implements TestRule {
         }
         Assert.assertNotNull(testSdk.getInterface());
         return testSdk.getInterface();
+    }
+
+    private void setLocalhostInSandboxEnabled(boolean enabled, String packageName) {
+        String cmd;
+        if (enabled) {
+            cmd = ENABLE_LOCALHOST_COMMAND + "true ";
+        } else {
+            cmd = ENABLE_LOCALHOST_COMMAND + "false ";
+        }
+        cmd += packageName;
+        InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(cmd);
     }
 
     private void setView(ActivityScenario scenario) throws Exception {

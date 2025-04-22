@@ -376,17 +376,6 @@
     </issue>
 
     <issue
-        id="StaticFieldLeak"
-        message="Do not place Android context classes in static fields; this is a memory leak"
-        errorLine1="    protected static final Context sContext = ApplicationProvider.getApplicationContext();"
-        errorLine2="              ~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/MeasurementCtsDebuggableTest.java"
-            line="68"
-            column="15"/>
-    </issue>
-
-    <issue
         id="MissingApplicationIcon"
         message="Should explicitly set `android:icon`, there is no default"
         errorLine1="    &lt;application"

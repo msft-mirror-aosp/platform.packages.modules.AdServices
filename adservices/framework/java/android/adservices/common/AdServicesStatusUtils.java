@@ -353,7 +353,9 @@ public final class AdServicesStatusUtils {
 
     /** The error message when a non-debuggable app is calling during a dev session. */
     public static final String DEV_SESSION_CALLER_IS_NON_DEBUGGABLE_MESSAGE =
-            "Caller during a dev session must have android:debuggable=\"true\" in their manifest! "
+            "Caller during a dev session must have android:debuggable=”true” in their manifest, "
+                    + "or be explicitly allowlisted in the --app-package-allowlist flag when "
+                    + "starting a dev session."
                     + DEV_SESSION_ERROR_TRANSITIONING_HELP;
 
     /** The error message when dev session state cannot be read. */
