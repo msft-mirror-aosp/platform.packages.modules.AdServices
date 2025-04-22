@@ -26,6 +26,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.android.adservices.api.R;
 import com.android.adservices.ui.settings.activitydelegates.MeasurementActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.MeasurementActionDelegate;
+import com.android.adservices.ui.settings.expressivefragments.MeasurementActivityFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
 
@@ -73,9 +74,18 @@ public class MeasurementActivity extends AdServicesBaseActivity {
     }
 
     private void initActivity() {
-        setContentView(R.layout.measurement_activity);
-        // no need to store since not using
-        new MeasurementActivityActionDelegate(
-                this, new ViewModelProvider(this).get(MeasurementViewModel.class));
+        if (isExpressiveTheme()) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(
+                            com.android.settingslib.collapsingtoolbar.R.id.content_frame,
+                            new MeasurementActivityFragment())
+                    .commit();
+        } else {
+            setContentView(R.layout.measurement_activity);
+            // no need to store since not using
+            new MeasurementActivityActionDelegate(
+                    this, new ViewModelProvider(this).get(MeasurementViewModel.class));
+        }
     }
 }
