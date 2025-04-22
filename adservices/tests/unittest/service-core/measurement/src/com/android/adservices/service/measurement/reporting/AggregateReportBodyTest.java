@@ -27,10 +27,10 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
-import com.android.adservices.HpkeJni;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.crypto.AdServicesHpke;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoConverter;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
@@ -433,7 +433,7 @@ public class AggregateReportBodyTest {
         assertNotNull(encryptedPayloadBase64);
 
         final byte[] decryptedCborEncoded =
-                HpkeJni.decrypt(
+                AdServicesHpke.decrypt(
                         AggregateCryptoFixture.getPrivateKey(),
                         Base64.getDecoder().decode(encryptedPayloadBase64),
                         AggregateCryptoFixture.getSharedInfoPrefix().getBytes());

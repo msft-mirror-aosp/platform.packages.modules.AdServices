@@ -25,7 +25,6 @@ android_test {
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.xml",
     static_libs: [
-        "adservices-service-core",
         "adservices-test-utility",
         "adservices-cobalt-schema",
         "adservices-cobalt-testing",

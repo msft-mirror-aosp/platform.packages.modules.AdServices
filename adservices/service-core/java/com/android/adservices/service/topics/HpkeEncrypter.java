@@ -21,9 +21,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import androidx.annotation.NonNull;
 
-import com.android.adservices.HpkeJni;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.common.crypto.AdServicesHpke;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -56,7 +56,7 @@ public class HpkeEncrypter implements Encrypter {
             return null;
         }
 
-        return HpkeJni.encrypt(publicKey, plainText, contextInfo);
+        return AdServicesHpke.encrypt(publicKey, plainText, contextInfo);
     }
 
     // Return true if key is compatible with the supported HPKE implementation.
