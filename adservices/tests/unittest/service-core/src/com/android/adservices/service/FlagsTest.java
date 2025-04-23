@@ -40,6 +40,8 @@ import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_COUNT_UNI
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_CLICK_SOURCE_FG_CHECK;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_VIEW_SOURCE_FG_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_SERVICE;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK;
@@ -1163,6 +1165,22 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementEnablePackageNameUidCheck",
                 DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK,
                 Flags::getMeasurementEnablePackageNameUidCheck);
+    }
+
+    @Test
+    public void testGetMeasurementClickSourceFgCheck() {
+        testFlag(
+                "getMeasurementClickSourceFgCheck",
+                DEFAULT_MEASUREMENT_CLICK_SOURCE_FG_CHECK,
+                Flags::getMeasurementClickSourceFgCheck);
+    }
+
+    @Test
+    public void testGetMeasurementViewSourceFgCheck() {
+        testFlag(
+                "getMeasurementViewSourceFgCheck",
+                DEFAULT_MEASUREMENT_VIEW_SOURCE_FG_CHECK,
+                Flags::getMeasurementViewSourceFgCheck);
     }
 
     @Test
