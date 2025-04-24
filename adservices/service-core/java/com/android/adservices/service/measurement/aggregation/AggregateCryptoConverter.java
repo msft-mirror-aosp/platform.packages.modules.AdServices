@@ -24,8 +24,8 @@ import static com.android.adservices.service.measurement.aggregation.AggregateHi
 
 import android.annotation.Nullable;
 
-import com.android.adservices.HpkeJni;
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.common.crypto.AdServicesHpke;
 import com.android.adservices.service.exception.CryptoException;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.internal.annotations.VisibleForTesting;
@@ -227,7 +227,7 @@ public class AggregateCryptoConverter {
 
     @VisibleForTesting
     static byte[] encryptWithHpke(byte[] publicKey, byte[] plainText, byte[] contextInfo) {
-        return HpkeJni.encrypt(publicKey, plainText, contextInfo);
+        return AdServicesHpke.encrypt(publicKey, plainText, contextInfo);
     }
 
     @VisibleForTesting

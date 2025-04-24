@@ -23,22 +23,14 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
-import com.android.adservices.HpkeJni;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.crypto.AdServicesHpke;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoConverter;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-
-import co.nstant.in.cbor.CborDecoder;
-import co.nstant.in.cbor.CborException;
-import co.nstant.in.cbor.model.Array;
-import co.nstant.in.cbor.model.ByteString;
-import co.nstant.in.cbor.model.DataItem;
-import co.nstant.in.cbor.model.Map;
-import co.nstant.in.cbor.model.UnicodeString;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -52,6 +44,14 @@ import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
 import java.util.Base64;
 import java.util.List;
+
+import co.nstant.in.cbor.CborDecoder;
+import co.nstant.in.cbor.CborException;
+import co.nstant.in.cbor.model.Array;
+import co.nstant.in.cbor.model.ByteString;
+import co.nstant.in.cbor.model.DataItem;
+import co.nstant.in.cbor.model.Map;
+import co.nstant.in.cbor.model.UnicodeString;
 
 public class CountUniqueReportBodyTest {
 
@@ -209,7 +209,7 @@ public class CountUniqueReportBodyTest {
         assertThat(encryptedPayloadBase64).isNotNull();
 
         final byte[] decryptedCborEncoded =
-                HpkeJni.decrypt(
+                AdServicesHpke.decrypt(
                         AggregateCryptoFixture.getPrivateKey(),
                         Base64.getDecoder().decode(encryptedPayloadBase64),
                         AggregateCryptoFixture.getSharedInfoPrefix().getBytes());

@@ -30,11 +30,11 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.HpkeJni;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.common.crypto.AdServicesHpke;
 
 import org.json.JSONObject;
 import org.junit.Test;
@@ -61,7 +61,8 @@ public final class HpkeEncrypterTest extends AdServicesExtendedMockitoTestCase {
         assertThat(cipherText).isNotEmpty();
 
         // Decrypt and deserialize to verify correct information.
-        byte[] decryptedText = HpkeJni.decrypt(DECODED_PRIVATE_KEY, cipherText, EMPTY_CONTEXT_INFO);
+        byte[] decryptedText =
+                AdServicesHpke.decrypt(DECODED_PRIVATE_KEY, cipherText, EMPTY_CONTEXT_INFO);
         JSONObject returnedJSON = new JSONObject(new String(decryptedText));
         Topic returnedTopic =
                 Topic.create(
