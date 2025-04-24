@@ -158,6 +158,7 @@ android_library {
         "framework-annotations-lib", // For @SystemApi, etc
         "framework-adservices.impl",
         "framework-configinfrastructure.stubs.module_lib",
+        "framework-sdkextensions.stubs.module_lib", // For SdkExtensions
         "framework-sdksandbox.impl",
         "framework-ondevicepersonalization.stubs.module_lib",
         "framework-statsd.stubs.module_lib", // For WW logging
