@@ -1290,15 +1290,11 @@ public class AsyncTriggerFetcher {
     }
 
     private boolean canSetDebugJoinKey(JSONObject json, String enrollmentId) {
-        if (!json.isNull(TriggerHeaderContract.DEBUG_JOIN_KEY)) {
-            if (mFlags.getMeasurementEnableDebugJoinKeysOpenAccess()) {
-                return !(AllowLists.isItemAllowListed(
-                        mFlags.getMeasurementDebugJoinKeysNoncompliantAdtechs(), enrollmentId));
-            }
-            return AllowLists.isItemAllowListed(
-                    mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist(), enrollmentId);
-        }
-        return false;
+        return !json.isNull(TriggerHeaderContract.DEBUG_JOIN_KEY)
+                && (mFlags.getMeasurementEnableDebugJoinKeysOpenAccess()
+                        || AllowLists.isItemAllowListed(
+                                mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist(),
+                                enrollmentId));
     }
 
     private static Uri getAttributionDestination(
