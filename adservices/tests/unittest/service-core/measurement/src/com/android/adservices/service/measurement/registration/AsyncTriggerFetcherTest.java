@@ -7530,7 +7530,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
-    public void fetchWebTriggers_withDebugJoinKeyEnrollmentNoncompliantAdtech_joinKeyDropped()
+    public void fetchWebTriggers_withDebugJoinKeyEnrollmentNoncompliantAdtech_joinKeyStored()
             throws IOException, JSONException {
         // Setup
         when(mMockFlags.getMeasurementEnableDebugJoinKeysOpenAccess()).thenReturn(true);
@@ -7567,7 +7567,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
         assertThat(fetch.isPresent()).isTrue();
         Trigger result = fetch.get();
-        assertThat(result.getDebugJoinKey()).isNull();
+        assertThat(result.getDebugJoinKey()).isEqualTo(DEBUG_JOIN_KEY);
         verify(mUrlConnection1).setRequestMethod("POST");
     }
 
@@ -7650,7 +7650,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
-    public void fetchTrigger_basicWithDebugJoinKeyNoncompliantAdtech_joinKeyDropped()
+    public void fetchTrigger_basicWithDebugJoinKeyNoncompliantAdtech_joinKeyStored()
             throws Exception {
         when(mMockFlags.getMeasurementEnableDebugJoinKeysOpenAccess()).thenReturn(true);
         when(mMockFlags.getMeasurementDebugJoinKeysNoncompliantAdtechs()).thenReturn(ENROLLMENT_ID);
@@ -7682,7 +7682,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         // Assertion
         assertThat(fetch.isPresent()).isTrue();
         Trigger result = fetch.get();
-        assertThat(result.getDebugJoinKey()).isNull();
+        assertThat(result.getDebugJoinKey()).isEqualTo(DEBUG_JOIN_KEY);
         verify(mUrlConnection).setRequestMethod("POST");
     }
 

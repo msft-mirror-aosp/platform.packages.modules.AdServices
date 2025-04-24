@@ -5502,7 +5502,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void fetchWebSources_withDebugJoinKeyNoncompliantAdtech_joinKeyDropped()
+    public void fetchWebSources_withDebugJoinKeyNoncompliantAdtech_joinKeyStored()
             throws IOException {
         // Setup
         when(mMockFlags.getMeasurementEnableDebugJoinKeysOpenAccess()).thenReturn(true);
@@ -5540,7 +5540,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         assertThat(fetch.isPresent()).isTrue();
         Source result = fetch.get();
         assertThat(result.getEnrollmentId()).isEqualTo(ENROLLMENT_ID);
-        assertThat(result.getDebugJoinKey()).isNull();
+        assertThat(result.getDebugJoinKey()).isEqualTo(DEBUG_JOIN_KEY);
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -6115,7 +6115,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void fetchSource_withDebugJoinKeyEnrollmentNoncompliantAdtech_joinKeyDropped()
+    public void fetchSource_withDebugJoinKeyEnrollmentNoncompliantAdtech_joinKeyStored()
             throws Exception {
         when(mMockFlags.getMeasurementEnableDebugJoinKeysOpenAccess()).thenReturn(true);
         when(mMockFlags.getMeasurementDebugJoinKeysNoncompliantAdtechs()).thenReturn(ENROLLMENT_ID);
@@ -6149,7 +6149,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
         assertThat(fetch.isPresent()).isTrue();
         Source result = fetch.get();
-        assertThat(result.getDebugJoinKey()).isNull();
+        assertThat(result.getDebugJoinKey()).isEqualTo(DEBUG_JOIN_KEY);
     }
 
     @Test
