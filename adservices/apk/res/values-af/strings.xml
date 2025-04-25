@@ -213,7 +213,7 @@
     <string name="settingsUI_main_view_ad_topics_info" msgid="5758770045787568091">"Android neem kennis van onderwerpe waarin jy belangstel gegrond op apps wat jy onlangs gebruik het en hoe dikwels jy hulle gebruik."</string>
     <string name="settingsUI_main_view_apps_info" msgid="3093099990301760086">"Apps wat jy gebruik, kan ook bepaal waarvan jy hou gegrond op hoe jy hulle gebruik."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7231616293146266690">"Apps wat jy gebruik, kan Android vir inligting vra om hulle te help om die werkverrigting van hul advertensies te meet. Android laat apps toe om beperkte soorte data in te samel."</string>
-    <string name="settingsU_main_view_learn_more" msgid="1510918572255886819">"Kom meer te wete oor "<a href="https://support.google.com/android?p=ad_privacy">"advertensieprivaatheid op Android"</a></string>
+    <string name="settingsU_main_view_learn_more" msgid="1510918572255886819">"Meer inligting oor "<a href="https://support.google.com/android?p=ad_privacy">"advertensieprivaatheid op Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6972706530860751586">"Aan / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> onderwerpe"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="7938363290536769313">"{count,plural, =1{Aan / # onderwerp}other{Aan / # onderwerpe}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="5488403228775310943">"Aan / <xliff:g id="APPS_COUNT">%1$d</xliff:g> apps"</string>
