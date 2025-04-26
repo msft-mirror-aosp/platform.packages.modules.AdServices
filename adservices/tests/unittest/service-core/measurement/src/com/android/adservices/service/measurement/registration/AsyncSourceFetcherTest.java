@@ -5502,6 +5502,49 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
+    public void fetchWebSources_withDebugJoinKeyNoncompliantAdtech_joinKeyStored()
+            throws IOException {
+        // Setup
+        when(mMockFlags.getMeasurementEnableDebugJoinKeysOpenAccess()).thenReturn(true);
+        when(mMockFlags.getMeasurementDebugJoinKeysNoncompliantAdtechs()).thenReturn(ENROLLMENT_ID);
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "  \"debug_join_key\": \""
+                                                + DEBUG_JOIN_KEY
+                                                + "\"\n"
+                                                + "}\n")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        Source result = fetch.get();
+        assertThat(result.getEnrollmentId()).isEqualTo(ENROLLMENT_ID);
+        assertThat(result.getDebugJoinKey()).isEqualTo(DEBUG_JOIN_KEY);
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
     public void fetchWebSources_webDestinationDoNotMatch_failsDropsSource() throws IOException {
         // Setup
         WebSourceRegistrationRequest request =
@@ -6069,6 +6112,44 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         assertEquals(DEBUG_KEY, result.getDebugKey());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         assertNull(result.getDebugJoinKey());
+    }
+
+    @Test
+    public void fetchSource_withDebugJoinKeyEnrollmentNoncompliantAdtech_joinKeyStored()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableDebugJoinKeysOpenAccess()).thenReturn(true);
+        when(mMockFlags.getMeasurementDebugJoinKeysNoncompliantAdtechs()).thenReturn(ENROLLMENT_ID);
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"debug_join_key\": "
+                                                + DEBUG_JOIN_KEY
+                                                + "}\n")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        Source result = fetch.get();
+        assertThat(result.getDebugJoinKey()).isEqualTo(DEBUG_JOIN_KEY);
     }
 
     @Test

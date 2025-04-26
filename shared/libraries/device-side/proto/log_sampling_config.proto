@@ -4,6 +4,8 @@ package com.android.adservices.shared.proto;
 option java_multiple_files = true;
 option java_package = "com.android.adservices.shared.proto";
 
+import "dimension_name.proto";
+
 // Describes a configuration for sampling events
 message LogSamplingConfig {
   // Configuration of per-event sampling.
@@ -12,6 +14,9 @@ message LogSamplingConfig {
     // Sampling rate for events. The value must be between 0 and 1 where 0 means no events are
     // sampled and 1 means all events are sampled.
     optional double sampling_rate = 1;
+
+    // Specifies a sampling rate for events matching a set of dimensions.
+    repeated DimensionMatcher dimension_matcher = 2;
   }
 
   // Configuration of per-event sampling
@@ -38,8 +43,51 @@ message LogSamplingConfig {
     // Devices which are part of sampling rate 5% will also be part of sampling rate 10%. Some of
     // the devices which are not part of 5% can be part of 10% sampling rate.
     optional string group_name = 4;
+
+    // Specifies a sampling rate for events matching a set of dimensions.
+    repeated DimensionMatcher dimension_matcher = 5;
   }
 
   // Configuration of per-device sampling
   optional PerDeviceSampling per_device_sampling = 2;
+}
+
+// Represents a single dimension and its associated value.
+// Pairs a dimension's name with a specific value to match against.
+message Dimension {
+  // The name/id of the dimension.
+  DimensionName name = 1;
+
+  // The event must match one of the values in the value field.
+  repeated int32 value = 2;
+}
+
+// Specifies a sampling rate for events matching a set of dimensions.
+/*
+Example proto for DimensionMatcher: If CEL_ERROR_CODE is 1 or 10 and CEL_PPAPI_NAME is 2 then use
+sampling_rate as 0.2.
+
+dimension_matcher {
+  dimension {
+    name: CEL_ERROR_CODE
+    value: 1
+    value: 10
+  }
+  dimension {
+    name: CEL_PPAPI_NAME
+    value: 2
+  }
+  sampling_rate: 0.2
+}
+ */
+message DimensionMatcher {
+  // A list of dimension criteria. The event must match all the dimension
+  // criteria specified in this list. This implements an implicit 'AND'
+  // condition between the dimensions. Example: If this list contains {name:
+  // ERROR_CODE, value: 1} and {name: PPAPI_NAME, value: 2}, the rule only
+  // applies if the event has both error code 1 AND ppapi name 2.
+  repeated Dimension dimension = 1;
+
+  // The sampling rate to apply to events matching all specified criteria.
+  optional double sampling_rate = 2;
 }

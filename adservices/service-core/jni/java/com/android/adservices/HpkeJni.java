@@ -38,7 +38,11 @@ public class HpkeJni {
      * @param associatedData used by the encryption algorithm, intended to provide additional data
      *     keeping the message integrity.
      * @return ciphertext encrypted result, ciphertext would be null if encryption fails.
+     * @deprecated Use {@link
+     *     com.android.adservices.service.common.crypto.AdServicesHpke#encrypt(byte[], byte[],
+     *     byte[])} instead
      */
+    @Deprecated
     public static synchronized native byte[] encrypt(
             @NonNull byte[] publicKey, @NonNull byte[] plainText, @NonNull byte[] associatedData);
 
@@ -49,7 +53,11 @@ public class HpkeJni {
      * @param ciphertext the encrypted message to be decrypted.
      * @param associatedData used on encryption providing additional data keeping message integrity.
      * @return plaintext decrypted result, plaintext would be null if decryption fails.
+     * @deprecated Use {@link
+     *     com.android.adservices.service.common.crypto.AdServicesHpke#decrypt(byte[], byte[],
+     *     byte[])} instead
      */
+    @Deprecated
     public static synchronized native byte[] decrypt(
             @NonNull byte[] privateKey, @NonNull byte[] ciphertext, @NonNull byte[] associatedData);
 }

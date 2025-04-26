@@ -35,7 +35,6 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
-import com.android.adservices.HpkeJni;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
@@ -44,6 +43,7 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.common.crypto.AdServicesHpke;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
@@ -141,7 +141,8 @@ public final class EncryptionManagerTest extends AdServicesExtendedMockitoTestCa
                 Bytes.concat(
                         optionalEncryptedTopic.get().getEncapsulatedKey(),
                         optionalEncryptedTopic.get().getEncryptedTopic());
-        byte[] decryptedText = HpkeJni.decrypt(DECODED_PRIVATE_KEY, cipherText, EMPTY_CONTEXT_INFO);
+        byte[] decryptedText =
+                AdServicesHpke.decrypt(DECODED_PRIVATE_KEY, cipherText, EMPTY_CONTEXT_INFO);
         assertThat(new String(decryptedText))
                 .isEqualTo("{\"topic_id\":5,\"model_version\":7," + "\"taxonomy_version\":6}");
         JSONObject returnedJSON = new JSONObject(new String(decryptedText));
