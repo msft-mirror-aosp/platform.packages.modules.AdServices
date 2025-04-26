@@ -29,7 +29,8 @@ import static org.junit.Assert.fail;
 
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.HpkeJni;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.service.common.crypto.AdServicesHpke;
 import com.android.adservices.service.exception.CryptoException;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -50,7 +51,7 @@ import co.nstant.in.cbor.model.Map;
 import co.nstant.in.cbor.model.UnicodeString;
 
 @SmallTest
-public class AggregateCryptoConverterTest {
+public class AggregateCryptoConverterTest extends AdServicesUnitTestCase {
     private static final String PLAIN_TEXT = "plain_text";
     private static final String SHARED_INFO = "{\"shared_info\":\"example\"}";
     private static final String DEFAULT_PAYLOAD =
@@ -602,7 +603,7 @@ public class AggregateCryptoConverterTest {
         assertNotEquals(PLAIN_TEXT, new String(encoded));
 
         byte[] decoded =
-                HpkeJni.decrypt(
+                AdServicesHpke.decrypt(
                         AggregateCryptoFixture.getPrivateKey(), encoded, SHARED_INFO.getBytes());
         assertNotNull(decoded);
         assertEquals(PLAIN_TEXT, new String(decoded));
@@ -630,7 +631,7 @@ public class AggregateCryptoConverterTest {
                         ? AggregateCryptoFixture.getSharedInfoPrefix().getBytes()
                         : (AggregateCryptoFixture.getSharedInfoPrefix() + sharedInfo).getBytes();
         final byte[] decryptedCborEncoded =
-                HpkeJni.decrypt(
+                AdServicesHpke.decrypt(
                         AggregateCryptoFixture.getPrivateKey(),
                         Base64.getDecoder().decode(encryptedPayloadBase64),
                         associatedData);

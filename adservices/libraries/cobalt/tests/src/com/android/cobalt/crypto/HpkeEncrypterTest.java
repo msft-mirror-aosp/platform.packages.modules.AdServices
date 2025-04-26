@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.android.adservices.cobalt.HpkeEncryptImpl;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.cobalt.CobaltPipelineType;
 import com.android.cobalt.testing.crypto.HpkeEncryptFactory;
 
@@ -38,17 +39,13 @@ import com.google.cobalt.ObservationToEncrypt;
 import com.google.protobuf.ByteString;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-public class HpkeEncrypterTest {
-    @Rule public final MockitoRule mockito = MockitoJUnit.rule();
+public class HpkeEncrypterTest extends AdServicesMockitoTestCase {
     // KeyIndex values for testing.
     private static final int SHUFFLER_KEY_INDEX_VALUE = 1;
     private static final int ANALYZER_KEY_INDEX_VALUE = 1337;

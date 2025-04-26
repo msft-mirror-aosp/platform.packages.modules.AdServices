@@ -29,7 +29,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.android.adservices.HpkeJni;
+import com.android.adservices.service.common.crypto.AdServicesHpke;
 
 import com.google.common.primitives.Bytes;
 import com.google.common.util.concurrent.FutureCallback;
@@ -190,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
                             encryptedTopic.getEncapsulatedKey(),
                             encryptedTopic.getEncryptedTopic());
             byte[] decryptedText =
-                    HpkeJni.decrypt(DECODED_PRIVATE_KEY, cipherText, EMPTY_CONTEXT_INFO);
+                    AdServicesHpke.decrypt(DECODED_PRIVATE_KEY, cipherText, EMPTY_CONTEXT_INFO);
             sb.append(index++).append(". ").append(new String(decryptedText)).append(NEWLINE);
         }
         return sb.toString();

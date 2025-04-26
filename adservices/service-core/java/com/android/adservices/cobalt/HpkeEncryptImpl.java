@@ -18,10 +18,10 @@ package com.android.adservices.cobalt;
 
 import androidx.annotation.VisibleForTesting;
 
-import com.android.adservices.HpkeJni;
+import com.android.adservices.service.common.crypto.AdServicesHpke;
 import com.android.cobalt.crypto.HpkeEncrypt;
 
-/** Wrapper around the HPKE JNI bindings to pass to Cobalt. */
+/** Wrapper around the HPKE to pass to Cobalt. */
 @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
 public final class HpkeEncryptImpl implements HpkeEncrypt {
     public HpkeEncryptImpl() {}
@@ -36,6 +36,6 @@ public final class HpkeEncryptImpl implements HpkeEncrypt {
      */
     @Override
     public byte[] encrypt(byte[] publicKey, byte[] plainText, byte[] contextInfo) {
-        return HpkeJni.encrypt(publicKey, plainText, contextInfo);
+        return AdServicesHpke.encrypt(publicKey, plainText, contextInfo);
     }
 }

@@ -41,7 +41,6 @@ import android.os.RemoteException;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.HpkeJni;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -53,6 +52,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
+import com.android.adservices.service.common.crypto.AdServicesHpke;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.measurement.actions.Action;
@@ -705,7 +705,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         .getString("payload");
 
         final byte[] decryptedPayload =
-                HpkeJni.decrypt(
+                AdServicesHpke.decrypt(
                         decode(AggregateCryptoFixture.getPrivateKeyBase64()),
                         decode(payload),
                         (AggregateCryptoFixture.getSharedInfoPrefix() + sharedInfo.toString())
