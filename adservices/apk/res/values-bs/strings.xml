@@ -137,7 +137,7 @@
     <string name="notificationUI_notification_ga_content_v2" msgid="9010872481787347894">"Sada postoji više izbora u pogledu oglasa koji vam se prikazuju uz zaštitu identiteta"</string>
     <string name="notificationUI_header_ga_title_v2" msgid="7278405488204886217">"Sada su dostupne nove funkcije privatnosti pri izloženosti oglasima"</string>
     <string name="notificationUI_container1_ga_introduction_v2" msgid="8607352345994852038">"Android sada nudi nove funkcije privatnosti koje vam daju više izbora u pogledu oglasa koji vam se prikazuju."</string>
-    <string name="notificationUI_how_it_works_row_body7_v2" msgid="1478686356348245037"><a href="https://support.google.com/android/answer/13720755?sjid=5065763854652067029">"Saznajte više o privatnosti pri izloženosti oglasima na Androidu"</a></string>
+    <string name="notificationUI_how_it_works_row_body7_v2" msgid="1478686356348245037"><a href="https://support.google.com/android/answer/13720755?sjid=5065763854652067029">"Saznajte više o privatnosti pri izloženosti oglasima u Androidu"</a></string>
     <string name="notificationUI_next_button_text" msgid="6150546034144405663">"Naprijed"</string>
     <string name="settingsUI_main_view_title" msgid="8506265544709344889">"Okruženje zaštićene privatnosti"</string>
     <string name="settingsUI_main_view_subtitle" msgid="4192045492059726083">"Učestvujte u Androidovoj beta verziji privatnosti pri izloženosti oglasima"</string>
@@ -213,14 +213,14 @@
     <string name="settingsUI_main_view_ad_topics_info" msgid="5758770045787568091">"Android bilježi teme koje vas zanimaju na osnovu aplikacija koje ste nedavno koristili i toga koliko ih često koristite."</string>
     <string name="settingsUI_main_view_apps_info" msgid="3093099990301760086">"Aplikacije koje koristite također utvrđuju šta vam se sviđa na osnovu toga kako ih koristite."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7231616293146266690">"Aplikacije koje koristite mogu od Androida zatražiti informacije koje će im pomoći da izmjere performanse svojih oglasa. Android omogućava aplikacijama da prikupljaju ograničene vrste podataka."</string>
-    <string name="settingsU_main_view_learn_more" msgid="1510918572255886819">"Saznajte više o "<a href="https://support.google.com/android?p=ad_privacy">"privatnosti pri izloženosti oglasima na Androidu"</a></string>
+    <string name="settingsU_main_view_learn_more" msgid="1510918572255886819">"Saznajte više o "<a href="https://support.google.com/android?p=ad_privacy">"privatnosti pri izloženosti oglasima u Androidu"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6972706530860751586">"Uključeno / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> tema/e"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="7938363290536769313">"{count,plural, =1{Uključeno / # tema}one{Uključeno / # tema}few{Uključeno / # teme}other{Uključeno / # tema}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="5488403228775310943">"Uključeno / <xliff:g id="APPS_COUNT">%1$d</xliff:g> aplikacija/e"</string>
     <string name="settingsUI_apps_subtitle_plural" msgid="7184167843623106783">"{count,plural, =1{Uključeno / # aplikacija}one{Uključeno / # aplikacija}few{Uključeno / # aplikacije}other{Uključeno / # aplikacija}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="4526152882066971753">"Uključeno"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="3699617207496648034">"Isključeno"</string>
-    <string name="settingsUI_topics_view_ga_subtitle" msgid="4448883758817660143">"Teme koje vas zanimaju se zasnivaju na nedavno korištenim aplikacijama i koriste ih aplikacije da vam prikažu personalizirane oglase.\n\nMožete blokirati teme koje ne želite dijeliti s aplikacijama. Pored toga, Android redovno automatski briše teme.\n\nIako se ova funkcija može uključiti, možda nećete vidjeti listu tema dok funkcija ne bude potpuno dostupna i aplikacije je ne počnu koristiti."</string>
+    <string name="settingsUI_topics_view_ga_subtitle" msgid="4448883758817660143">"Teme koje vas zanimaju se zasnivaju na nedavno korištenim aplikacijama i koriste ih aplikacije da vam prikazuju personalizirane oglase.\n\nMožete blokirati teme koje ne želite dijeliti s aplikacijama. Pored toga, Android redovno automatski briše teme.\n\nIako se ova funkcija može uključiti, možda nećete vidjeti listu tema dok funkcija ne bude potpuno dostupna i aplikacije je ne počnu koristiti."</string>
     <string name="settingsUI_topics_switch_title" msgid="6138535622464144001">"Dozvoli teme oglasa"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="1855691597262481021">"Teme oglasa koje ste blokirali"</string>
     <string name="settingsUI_reset_topics_ga_title" msgid="1580902912944562790">"Poništi sve teme oglasa"</string>

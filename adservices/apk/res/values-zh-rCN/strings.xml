@@ -156,7 +156,7 @@
     <string name="settingsUI_topics_view_info_text1" msgid="1837427989556474858">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="3814232857139974524">"Android 广告隐私权 Beta 版提供了新功能，以便应用向您展示您可能会喜欢的广告。这些技术不使用标识符。\n\nAndroid 可推测您可能会对哪些类型的广告感兴趣，并将这些兴趣暂时存储在您的设备上。这样一来，应用不必追踪您在其他开发者的网站和应用上的活动便能向您展示与您相关的广告。"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="2592506251182454751">"您未屏蔽任何感兴趣的主题"</string>
-    <string name="settingsUI_no_blocked_topics_ga_text" msgid="3571887649896533532">"没有被屏蔽的主题"</string>
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="3571887649896533532">"未屏蔽任何主题"</string>
     <string name="settingsUI_view_blocked_topics_title" msgid="6524865577585338530">"查看被屏蔽的主题"</string>
     <string name="settingsUI_topics_are_reset" msgid="7474478586324962685">"感兴趣的主题已重置"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="1862215340606433752">"主题已重置"</string>
@@ -171,9 +171,9 @@
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="6386103688779633888">"您未屏蔽任何应用"</string>
     <string name="settingsUI_no_blocked_apps_ga_text" msgid="5715916198159277202">"没有被屏蔽的应用"</string>
     <string name="settingsUI_measurement_switch_title" msgid="2111625410373329760">"允许衡量广告效果"</string>
-    <string name="settingsUI_measurement_view_intro_text" msgid="2780083472100004780">"应用和广告主可请求 Android 提供某些信息，以帮助他们衡量其广告效果。\n\n系统会定期从您的设备中删除广告衡量数据。"</string>
+    <string name="settingsUI_measurement_view_intro_text" msgid="2780083472100004780">"应用和广告主可请求 Android 提供信息，帮助其衡量广告效果。\n\n系统会定期从您的设备中删除广告衡量数据。"</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="518549441454274773">"重置衡量数据"</string>
-    <string name="settingsUI_measurement_view_footer_text" msgid="823743750634137761">"Android 会限制各种应用相互之间可以分享的信息，从而保护您的隐私。系统会延迟发送报告，以便保护您的身份信息。\n\n您的浏览器可能有相似的设置。如果 Android 和您的浏览器都开启了广告衡量功能，相关公司或许就能够衡量广告在您使用的应用和访问的网站中的效果。您的浏览记录会保留在设备上，确保其私密性。\n\n如需详细了解 Android 如何保护您的数据，请参阅我们的"<a href="https://policies.google.com/privacy">"隐私权政策"</a>"。"</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="823743750634137761">"Android 会限制各种应用之间可以分享的信息，从而保护您的隐私。系统会延迟发送报告，以便保护您的身份信息。\n\n您的浏览器可能有相似的设置。如果 Android 和您的浏览器都开启了广告衡量功能，相关公司或许就能够衡量广告在您使用的应用和访问的网站中的效果。您的浏览记录会保留在您的设备上，确保其私密性。\n\n如需详细了解 Android 如何保护您的数据，请参阅我们的"<a href="https://policies.google.com/privacy">"《隐私权政策》"</a>"。"</string>
     <string name="settingsUI_measurement_are_reset" msgid="3109724238284555411">"广告效果衡量数据已重置"</string>
     <string name="settingsUI_dialog_negative_text" msgid="2991743327829379614">"取消"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="7364417538227823889">"要关闭 Privacy Sandbox 吗？"</string>
@@ -212,7 +212,7 @@
     <string name="settingsUI_apps_ga_title" msgid="6646343832670673768">"应用建议的广告"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="5758770045787568091">"Android 会根据您最近使用过的应用和使用这些应用的频率来了解您感兴趣的主题。"</string>
     <string name="settingsUI_main_view_apps_info" msgid="3093099990301760086">"您使用的应用还可根据您使用应用的方式判断您喜欢的内容。"</string>
-    <string name="settingsU_main_view_measurement_info" msgid="7231616293146266690">"您使用的应用可请求 Android 提供相关信息，以便衡量其广告效果。Android 允许应用收集有限类型的数据。"</string>
+    <string name="settingsU_main_view_measurement_info" msgid="7231616293146266690">"您使用的应用可请求 Android 提供信息，帮助其衡量广告效果。Android 允许应用收集有限类型的数据。"</string>
     <string name="settingsU_main_view_learn_more" msgid="1510918572255886819">"详细了解 "<a href="https://support.google.com/android?p=ad_privacy">"Android 上的广告隐私权"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6972706530860751586">"已开启/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> 个主题"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="7938363290536769313">"{count,plural, =1{已开启/# 个主题}other{已开启/# 个主题}}"</string>

@@ -169,7 +169,7 @@
     <string name="settingsUI_apps_view_info_text1" msgid="8524518056879001890">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="6191835773793395323">"La beta de privacidad en la publicidad de Android proporciona nuevas funciones que las aplicaciones pueden usar para mostrarte anuncios que podrían interesarte. Estas tecnologías no usan identificadores de dispositivo.\n\nLas aplicaciones pueden estimar el tipo de anuncios que podrían interesarte y guardar los intereses temporalmente en tu dispositivo. Esto permite que las aplicaciones te muestren anuncios relevantes sin monitorizar tu actividad en sitios web ni aplicaciones de otros desarrolladores."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="6386103688779633888">"No tienes ninguna aplicación bloqueada"</string>
-    <string name="settingsUI_no_blocked_apps_ga_text" msgid="5715916198159277202">"No hay aplicaciones para las que no quieras sugerencias"</string>
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="5715916198159277202">"No hay aplicaciones bloqueadas"</string>
     <string name="settingsUI_measurement_switch_title" msgid="2111625410373329760">"Permitir medición de anuncios"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="2780083472100004780">"Las aplicaciones y los anunciantes pueden solicitar a Android información que les ayude a medir el rendimiento de sus anuncios.\n\nLos datos de medición de anuncios se eliminan periódicamente de tu dispositivo."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="518549441454274773">"Borrar datos de medición"</string>
@@ -212,7 +212,7 @@
     <string name="settingsUI_apps_ga_title" msgid="6646343832670673768">"Anuncios sugeridos por aplicaciones"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="5758770045787568091">"Android tiene en cuenta temas de interés basándose en las aplicaciones que has usado recientemente y la frecuencia con la que las usas."</string>
     <string name="settingsUI_main_view_apps_info" msgid="3093099990301760086">"Las aplicaciones que usas también pueden determinar lo que te gusta en función de cómo las usas."</string>
-    <string name="settingsU_main_view_measurement_info" msgid="7231616293146266690">"Las aplicaciones que usas le pueden pedir información a Android para medir el rendimiento de sus anuncios. Android permite que la aplicaciones recojan tipos de datos limitados."</string>
+    <string name="settingsU_main_view_measurement_info" msgid="7231616293146266690">"Las aplicaciones que usas le pueden pedir información a Android para medir el rendimiento de sus anuncios. Android permite que las aplicaciones recojan tipos de datos limitados."</string>
     <string name="settingsU_main_view_learn_more" msgid="1510918572255886819">"Más información sobre la "<a href="https://support.google.com/android?p=ad_privacy">"privacidad en la publicidad de Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6972706530860751586">"Activado: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> temas"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="7938363290536769313">"{count,plural, =1{Activado: # tema}other{Activados: # temas}}"</string>
