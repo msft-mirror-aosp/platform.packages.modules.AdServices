@@ -25,6 +25,7 @@ import static android.adservices.customaudience.CustomAudienceFixture.VALID_ACTI
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_EXPIRATION_TIME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_NAME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_OWNER;
+import static android.adservices.customaudience.CustomAudienceFixture.VALID_OWNER_2;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_PRIORITY_1;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_PRIORITY_2;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS;
@@ -110,6 +111,19 @@ public class CustomAudienceBlobTest extends AdServicesUnitTestCase {
                     DBTrustedBiddingDataFixture.getValidBuilderByBuyer(VALID_BUYER_1).build(),
                     DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(VALID_BUYER_1),
                     false);
+    private JSONObject mJSONObjectWithBuyerAndOwnerOverrides =
+            CustomAudienceBlobFixture.asJSONObject(
+                    VALID_OWNER_2,
+                    VALID_BUYER_2,
+                    VALID_NAME,
+                    VALID_ACTIVATION_TIME,
+                    VALID_EXPIRATION_TIME,
+                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(VALID_BUYER_1),
+                    getValidBiddingLogicUriByBuyer(VALID_BUYER_1),
+                    VALID_USER_BIDDING_SIGNALS.toString(),
+                    DBTrustedBiddingDataFixture.getValidBuilderByBuyer(VALID_BUYER_1).build(),
+                    DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(VALID_BUYER_1),
+                    false);
 
     private CustomAudienceBlob mCustomAudienceBlob;
 
@@ -147,12 +161,8 @@ public class CustomAudienceBlobTest extends AdServicesUnitTestCase {
     @Test
     public void testOverrideFromPartialCustomAudience_validValues() {
         mCustomAudienceBlob.overrideFromPartialCustomAudience(
-                VALID_OWNER,
-                VALID_BUYER_1,
                 DBPartialCustomAudience.getPartialCustomAudience(DB_PARTIAL_CUSTOM_AUDIENCE_1));
 
-        assertEquals(mCustomAudienceBlob.getOwner(), VALID_OWNER);
-        assertEquals(mCustomAudienceBlob.getBuyer(), VALID_BUYER_1);
         assertEquals(mCustomAudienceBlob.getName(), DB_PARTIAL_CUSTOM_AUDIENCE_1.getName());
         assertEquals(
                 mCustomAudienceBlob.getActivationTime(),
@@ -197,6 +207,43 @@ public class CustomAudienceBlobTest extends AdServicesUnitTestCase {
         JSONObject asJSONObject = mCustomAudienceBlob.asJSONObject();
 
         assertThat(asJSONObject.toString()).isEqualTo(mJSONObject.toString());
+    }
+
+    @Test
+    public void testOverrideFromJSONObject_withOwnerAndBuyerOverrides_validValues()
+            throws JSONException {
+        mCustomAudienceBlob.overrideFromJSONObject(mJSONObject, VALID_OWNER_2, VALID_BUYER_2);
+
+        assertEquals(mCustomAudienceBlob.getOwner(), VALID_OWNER_2);
+        assertEquals(mCustomAudienceBlob.getBuyer(), VALID_BUYER_2);
+        assertEquals(mCustomAudienceBlob.getName(), VALID_NAME);
+        assertEquals(mCustomAudienceBlob.getActivationTime(), VALID_ACTIVATION_TIME);
+        assertEquals(mCustomAudienceBlob.getExpirationTime(), VALID_EXPIRATION_TIME);
+        assertEquals(
+                mCustomAudienceBlob.getDailyUpdateUri(),
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(VALID_BUYER_1));
+        assertEquals(
+                mCustomAudienceBlob.getBiddingLogicUri(),
+                getValidBiddingLogicUriByBuyer(VALID_BUYER_1));
+        assertEquals(mCustomAudienceBlob.getUserBiddingSignals(), VALID_USER_BIDDING_SIGNALS);
+        assertEquals(
+                mCustomAudienceBlob.getTrustedBiddingData().toString(),
+                getValidTrustedBiddingDataByBuyer(VALID_BUYER_1).toString());
+        assertEquals(
+                mCustomAudienceBlob.getAds().toString(),
+                getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1).toString());
+        expect.that(mCustomAudienceBlob.getComponentAds()).isEmpty();
+    }
+
+    @Test
+    public void testOverrideFromJSONObject_withOwnerAndBuyer_validJSONObject()
+            throws JSONException {
+        mCustomAudienceBlob.overrideFromJSONObject(mJSONObject, VALID_OWNER_2, VALID_BUYER_2);
+
+        JSONObject asJSONObject = mCustomAudienceBlob.asJSONObject();
+
+        assertThat(asJSONObject.toString())
+                .isEqualTo(mJSONObjectWithBuyerAndOwnerOverrides.toString());
     }
 
     @Test

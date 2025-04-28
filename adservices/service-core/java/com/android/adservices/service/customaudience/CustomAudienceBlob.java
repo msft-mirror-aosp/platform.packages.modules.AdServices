@@ -54,6 +54,8 @@ import android.adservices.customaudience.PartialCustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 
+import androidx.annotation.Nullable;
+
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -207,10 +209,48 @@ public class CustomAudienceBlob {
                 MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
     }
 
+    /**
+     * Update fields of the {@link CustomAudienceBlob} from a {@link JSONObject} with owner and
+     * buyer overrides.
+     */
+    public void overrideFromJSONObject(
+            JSONObject json, String overrideOwner, AdTechIdentifier overrideBuyer)
+            throws JSONException {
+        overrideFromJSONObjectInternal(json, overrideOwner, overrideBuyer);
+    }
+
     /** Update fields of the {@link CustomAudienceBlob} from a {@link JSONObject}. */
     public void overrideFromJSONObject(JSONObject json) throws JSONException {
+        overrideFromJSONObjectInternal(json, /* overrideOwner= */ null, /* overrideBuyer= */ null);
+    }
+
+    /** The actual implementation of the overrideFromJSONObject. */
+    private void overrideFromJSONObjectInternal(
+            JSONObject json,
+            @Nullable String overrideOwner,
+            @Nullable AdTechIdentifier overrideBuyer)
+            throws JSONException {
         LinkedHashSet<String> jsonKeySet = new LinkedHashSet<>(Lists.newArrayList(json.keys()));
-        for (String key : mKeysSet) {
+        LinkedHashSet<String> keySet = new LinkedHashSet<>(mKeysSet);
+
+        if (overrideOwner != null) {
+            this.setOwner(overrideOwner);
+            keySet.remove(OWNER_KEY);
+        }
+        if (overrideBuyer != null) {
+            this.setBuyer(overrideBuyer);
+            keySet.remove(BUYER_KEY);
+        }
+        if (mAuctionServerRequestFlagsEnabled) {
+            keySet.add(AUCTION_SERVER_REQUEST_FLAGS_KEY);
+        }
+        if (mSellerConfigurationEnabled) {
+            keySet.add(PRIORITY_KEY);
+        }
+        if (mComponentAdsEnabled) {
+            keySet.add(COMPONENT_ADS_KEY);
+        }
+        for (String key : keySet) {
             sLogger.v(key);
             if (jsonKeySet.contains(key)) {
                 sLogger.v("Adding %s", key);
@@ -256,24 +296,21 @@ public class CustomAudienceBlob {
                         break;
                     case ADS_KEY:
                         this.setAds(this.getAdsFromJSONObject(json, ADS_KEY));
+                        break;
+                    case AUCTION_SERVER_REQUEST_FLAGS_KEY:
+                        this.setAuctionServerRequestFlags(
+                                this.getAuctionServerRequestFlagsFromJSONObject(
+                                        json, AUCTION_SERVER_REQUEST_FLAGS_KEY));
+                        break;
+                    case PRIORITY_KEY:
+                        this.setPriority(this.getDoubleFromJSONObject(json, PRIORITY_KEY));
+                        break;
+                    case COMPONENT_ADS_KEY:
+                        this.setComponentAds(
+                                this.getComponentAdsFromJSONObject(json, COMPONENT_ADS_KEY));
+                        break;
                 }
             }
-        }
-        // Set auction server flags if flag is enabled
-        if (mAuctionServerRequestFlagsEnabled
-                && jsonKeySet.contains(AUCTION_SERVER_REQUEST_FLAGS_KEY)) {
-            this.setAuctionServerRequestFlags(
-                    this.getAuctionServerRequestFlagsFromJSONObject(
-                            json, AUCTION_SERVER_REQUEST_FLAGS_KEY));
-        }
-
-        // Set priority if seller configuration flag is enabled
-        if (mSellerConfigurationEnabled && jsonKeySet.contains(PRIORITY_KEY)) {
-            this.setPriority(this.getDoubleFromJSONObject(json, PRIORITY_KEY));
-        }
-
-        if (mComponentAdsEnabled && jsonKeySet.contains(COMPONENT_ADS_KEY)) {
-            this.setComponentAds(this.getComponentAdsFromJSONObject(json, COMPONENT_ADS_KEY));
         }
     }
 
@@ -300,12 +337,9 @@ public class CustomAudienceBlob {
     }
 
     /**
-     * Utility methods to override a {@link CustomAudienceBlob} from a {@link PartialCustomAudience}
+     * Utility method to override a {@link CustomAudienceBlob} from a {@link PartialCustomAudience}
      */
-    public void overrideFromPartialCustomAudience(
-            String owner, AdTechIdentifier buyer, PartialCustomAudience partialCustomAudience) {
-        this.setOwner(owner);
-        this.setBuyer(buyer);
+    public void overrideFromPartialCustomAudience(PartialCustomAudience partialCustomAudience) {
 
         this.setName(partialCustomAudience.getName());
 
@@ -978,10 +1012,6 @@ public class CustomAudienceBlob {
                 key,
                 (jsonObject, jsonKey) -> {
                     try {
-                        AdTechIdentifier buyer =
-                                AdTechIdentifier.fromString(
-                                        this.getStringFromJSONObject(json, BUYER_KEY));
-
                         JSONArray componentAdsJsonArray = jsonObject.getJSONArray(key);
 
                         int componentAdsListLength = componentAdsJsonArray.length();
@@ -1011,7 +1041,7 @@ public class CustomAudienceBlob {
                                 AdTechUriValidator uriValidator =
                                         new AdTechUriValidator(
                                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
-                                                buyer.toString(),
+                                                getBuyer().toString(),
                                                 this.getClass().getSimpleName(),
                                                 RENDER_URI_KEY);
                                 uriValidator.validate(parsedUri);

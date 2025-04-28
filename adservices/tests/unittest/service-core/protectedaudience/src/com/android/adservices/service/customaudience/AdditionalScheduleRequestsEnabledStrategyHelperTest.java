@@ -37,7 +37,6 @@ import static com.android.adservices.service.customaudience.ScheduleCustomAudien
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PACKAGE;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CA_1;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CA_2;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithScheduleRequests;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createPartialCustomAudience;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createScheduleRequest;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createScheduleRequestWithUpdateUri;
@@ -267,7 +266,8 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
         JSONArray scheduleRequests = new JSONArray(List.of(scheduleRequest_1, scheduleRequest_2));
 
         JSONObject updateResponseJson =
-                createJsonResponsePayloadWithScheduleRequests(scheduleRequests);
+                ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadOnlySchedule(
+                        scheduleRequests);
 
         List<JSONObject> result = mHelper.extractScheduleRequestsFromResponse(updateResponseJson);
 
@@ -281,7 +281,8 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
         JSONArray scheduleRequests = new JSONArray(List.of(new JSONArray(), scheduleRequest));
 
         JSONObject updateResponseJson =
-                createJsonResponsePayloadWithScheduleRequests(scheduleRequests);
+                ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadOnlySchedule(
+                        scheduleRequests);
 
         List<JSONObject> result = mHelper.extractScheduleRequestsFromResponse(updateResponseJson);
 
@@ -294,7 +295,8 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
         JSONArray scheduleRequestArray = new JSONArray(List.of(new JSONArray(), new JSONArray()));
 
         JSONObject updateResponseJson =
-                createJsonResponsePayloadWithScheduleRequests(scheduleRequestArray);
+                ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadOnlySchedule(
+                        scheduleRequestArray);
 
         List<JSONObject> result = mHelper.extractScheduleRequestsFromResponse(updateResponseJson);
 

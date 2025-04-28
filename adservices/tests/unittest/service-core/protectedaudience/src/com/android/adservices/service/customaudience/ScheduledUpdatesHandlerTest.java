@@ -29,10 +29,10 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CUSTOM_AU
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpsClient.DEFAULT_TIMEOUT_MS;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.ACTIVATION_TIME;
@@ -44,22 +44,26 @@ import static com.android.adservices.service.customaudience.ScheduleCustomAudien
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.DB_PARTIAL_CUSTOM_AUDIENCE_3;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.LEAVE_CA_1;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.LEAVE_CA_2;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.NEGATIVE_DELAY_FOR_TEST_FLAG_IN_MINUTES;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.NEGATIVE_DELAY_FOR_TEST_IN_MINUTES;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CA_1;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CA_2;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.UPDATE_ID;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.VALID_BIDDING_SIGNALS;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayload;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadInvalidJoinCA;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithComponentAds;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithInvalidExpirationTime;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithScheduleRequests;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutJoinCA;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutLeaveCA;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadOnlyJoinWithInvalidExpirationTime;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadOnlyJoinWithInvalidJoinCA;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadOnlyLeave;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadOnlySchedule;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutLeave;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutSchedule;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutScheduleWithComponentAds;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutScheduleWithDifferentBuyer;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutScheduleWithDifferentOwner;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createRequestBody;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createRequestBodyWithOnlyPartialCustomAudiences;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createScheduleRequest;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.eqJsonArray;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.eqJsonObject;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.generateCustomAudienceWithName;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.generateScheduleRequestFromCustomAudienceNames;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.generateScheduleRequestFromCustomAudienceNamesWithInvalidPartialCA;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.generateScheduleRequestMissingUpdateUriKey;
@@ -188,9 +192,6 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     private static final String OWNER = CustomAudienceFixture.VALID_OWNER;
     private static final String OWNER_2 = "com.android.test.2";
     private static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
-    private static final String CUSTOM_AUDIENCE_NAME_1 = "custom_audience_1";
-    private static final String CUSTOM_AUDIENCE_NAME_2 = "custom_audience_2";
-    private static final String CUSTOM_AUDIENCE_NAME_3 = "custom_audience_3";
     private static final Uri UPDATE_URI = CommonFixture.getUri(BUYER, "/updateUri");
     private static final Instant CREATION_TIME = FIXED_NOW;
     private static final Instant SCHEDULED_TIME = CREATION_TIME.plus(180, ChronoUnit.MINUTES);
@@ -337,9 +338,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         .build();
 
         JSONObject responseJson =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         partialCustomAudienceList.stream()
                                 .map(ca -> ca.getName())
                                 .collect(Collectors.toList()),
@@ -452,9 +452,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         .build();
 
         JSONObject responseJson =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         partialCustomAudienceList.stream()
                                 .map(ca -> ca.getName())
                                 .collect(Collectors.toList()),
@@ -474,8 +473,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
         String expectedRequestBody =
-                createRequestBody(partialCustomAudienceJsonArray, customAudienceToLeaveList)
-                        .toString();
+                createRequestBody(partialCustomAudienceJsonArray, customAudienceToLeaveList);
 
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
@@ -601,9 +599,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
         JSONObject responseJson =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         partialCustomAudienceList.stream()
                                 .map(ca -> ca.getName())
                                 .collect(Collectors.toList()),
@@ -642,90 +639,6 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         .containsAll(List.of(PARTIAL_CA_1, PARTIAL_CA_2)));
 
         verifyDisabledStrategy(beforeTime, UPDATE, responseJson, partialCustomAudienceJsonArray);
-    }
-
-    @Test
-    @SetLongFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT, value = 100)
-    @SetLongFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT, value = 100)
-    @SetLongFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT, value = 1)
-    public void testPerformScheduledUpdates_twoOwners_oneCaPerOwner_joinsOneCAForEachOwner()
-            throws Exception {
-        // We set the flag values such that the max number of CA per owner is 1.
-        // We return 3 CA from the server response: CA1 & CA2 from OWNER_1 and CA3 from OWNER_2  and
-        // assert that CA1 and CA3 has joined.
-
-        CustomAudienceQuantityChecker customAudienceQuantityChecker =
-                new CustomAudienceQuantityChecker(mCustomAudienceDao, mFakeFlags);
-
-        ComponentAdsStrategy componentAdsStrategy =
-                ComponentAdsStrategy.createInstance(
-                        /* componentAdsEnabled= */ false, TEST_COMPONENT_ADS_FILTERER);
-
-        mHandler =
-                new ScheduledUpdatesHandler(
-                        mCustomAudienceDao,
-                        mAdServicesHttpsClientMock,
-                        mFakeFlags,
-                        Clock.systemUTC(),
-                        AdServicesExecutors.getBackgroundExecutor(),
-                        AdServicesExecutors.getLightWeightExecutor(),
-                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
-                        mAdRenderIdValidator,
-                        AD_DATA_CONVERSION_STRATEGY,
-                        mCustomAudienceImplMock,
-                        customAudienceQuantityChecker,
-                        mStrategyMock,
-                        mAdServicesLoggerMock,
-                        componentAdsStrategy);
-        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(UPDATE);
-
-        JSONObject responseJson = new JSONObject();
-        JSONArray joinCustomAudienceArray = new JSONArray();
-        joinCustomAudienceArray.put(
-                0, generateCustomAudienceWithName(BUYER, OWNER, CUSTOM_AUDIENCE_NAME_1));
-        joinCustomAudienceArray.put(
-                1, generateCustomAudienceWithName(BUYER, OWNER, CUSTOM_AUDIENCE_NAME_2));
-        joinCustomAudienceArray.put(
-                2, generateCustomAudienceWithName(BUYER, OWNER_2, CUSTOM_AUDIENCE_NAME_3));
-        responseJson.put(JOIN_CUSTOM_AUDIENCE_KEY, joinCustomAudienceArray);
-
-        Instant beforeTime = UPDATE.getScheduledTime().plusSeconds(1000);
-
-        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
-                DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(UPDATE).build();
-
-        mockAdditionalScheduleRequestsDisabledStrategy(
-                beforeTime, scheduledUpdateRequest, responseJson, new JSONArray());
-
-        ListenableFuture<AdServicesHttpClientResponse> response =
-                Futures.immediateFuture(
-                        AdServicesHttpClientResponse.builder()
-                                .setResponseBody(responseJson.toString())
-                                .build());
-        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
-                .thenReturn(response);
-
-        Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
-
-        verify(mAdServicesHttpsClientMock).performRequestGetResponseInPlainString(any());
-
-        List<DBScheduledCustomAudienceUpdate> customAudienceScheduledUpdatesInDB =
-                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(UPDATE.getOwner());
-
-        // Scheduled updates should be deleted from the database.
-        assertEquals(0, customAudienceScheduledUpdatesInDB.size());
-
-        List<DBCustomAudience> joinedCustomAudiences =
-                mCustomAudienceDao.getActiveCustomAudienceByBuyers(
-                        List.of(UPDATE.getBuyer()), FIXED_NOW, 10000);
-        assertTrue(
-                "There should be only 2 joined Custom Audiences",
-                joinedCustomAudiences.stream()
-                        .map(DBCustomAudience::getName)
-                        .collect(Collectors.toList())
-                        .containsAll(List.of(CUSTOM_AUDIENCE_NAME_1, CUSTOM_AUDIENCE_NAME_3)));
-
-        verifyDisabledStrategy(beforeTime, UPDATE, responseJson, new JSONArray());
     }
 
     @Test
@@ -774,9 +687,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
         JSONObject responseJson =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         partialCustomAudienceList.stream()
                                 .map(ca -> ca.getName())
                                 .collect(Collectors.toList()),
@@ -836,14 +748,13 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         JSONObject responseJson =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         partialCustomAudienceList.stream()
                                 .map(ca -> ca.getName())
                                 .collect(Collectors.toList()),
                         List.of(LEAVE_CA_1, LEAVE_CA_2),
-                        true,
+                        /* auctionServerRequestFlagsEnabled= */ true,
                         /* sellerConfigurationEnabled= */ false);
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
@@ -933,9 +844,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         JSONObject responseJson =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         partialCustomAudienceList.stream()
                                 .map(ca -> ca.getName())
                                 .collect(Collectors.toList()),
@@ -1036,9 +946,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         JSONObject responseJson =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         partialCustomAudienceList.stream()
                                 .map(ca -> ca.getName())
                                 .collect(Collectors.toList()),
@@ -1144,9 +1053,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         JSONObject responseJson =
-                createJsonResponsePayloadWithComponentAds(
+                createJsonResponsePayloadWithoutScheduleWithComponentAds(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         partialCustomAudienceList.stream()
                                 .map(ca -> ca.getName())
                                 .collect(Collectors.toList()),
@@ -1247,9 +1155,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         JSONObject responseJson =
-                createJsonResponsePayloadWithComponentAds(
+                createJsonResponsePayloadWithoutScheduleWithComponentAds(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         partialCustomAudienceList.stream()
                                 .map(ca -> ca.getName())
                                 .collect(Collectors.toList()),
@@ -1322,9 +1229,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         .build();
 
         JSONObject responseJson =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         partialCustomAudienceList.stream()
                                 .map(ca -> ca.getName())
                                 .collect(Collectors.toList()),
@@ -1382,9 +1288,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         .build();
 
         JSONObject responseJson =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         partialCustomAudienceList.stream()
                                 .map(ca -> ca.getName())
                                 .collect(Collectors.toList()),
@@ -1441,9 +1346,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         .build();
 
         JSONObject responseJson =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         partialCustomAudienceList.stream()
                                 .map(ca -> ca.getName())
                                 .collect(Collectors.toList()),
@@ -1541,9 +1445,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         .build();
 
         JSONObject responseJson =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         partialCustomAudienceList.stream()
                                 .map(ca -> ca.getName())
                                 .collect(Collectors.toList()),
@@ -1648,9 +1551,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         // simulate a persisted custom audience with a priority value by setting seller
         // configuration to true
         JSONObject responseJson =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         partialCustomAudienceList.stream()
                                 .map(ca -> ca.getName())
                                 .collect(Collectors.toList()),
@@ -1749,9 +1651,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         String nonOverriddenCaName = "non_overridden_ca";
 
         JSONObject responseJson =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         List.of(nonOverriddenCaName, PARTIAL_CA_1, PARTIAL_CA_2),
                         List.of(LEAVE_CA_1, LEAVE_CA_2),
                         /* auctionServerRequestFlagsEnabled= */ false,
@@ -1840,9 +1741,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         .build();
 
         JSONObject responseJson =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         partialCustomAudienceList.stream()
                                 .map(ca -> ca.getName())
                                 .collect(Collectors.toList()),
@@ -1927,9 +1827,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         String nonOverriddenCaName = "non_overridden_ca";
 
         JSONObject responseJson =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         List.of(nonOverriddenCaName),
                         List.of(LEAVE_CA_1, LEAVE_CA_2),
                         /* auctionServerRequestFlagsEnabled= */ false,
@@ -2010,9 +1909,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         .build();
 
         JSONObject responseJson =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                         UPDATE.getBuyer(),
-                        UPDATE.getOwner(),
                         partialCustomAudienceList.stream()
                                 .map(ca -> ca.getName())
                                 .collect(Collectors.toList()),
@@ -2140,9 +2038,6 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     @Test
     public void testPerformScheduledUpdates_withNoJoinField_logsCorrectly() throws Exception {
-        List<DBPartialCustomAudience> partialCustomAudienceList =
-                List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
-
         ComponentAdsStrategy componentAdsStrategy =
                 ComponentAdsStrategy.createInstance(
                         /* componentAdsEnabled= */ false, TEST_COMPONENT_ADS_FILTERER);
@@ -2166,16 +2061,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(UPDATE);
 
         String responsePayload =
-                createJsonResponsePayloadWithoutJoinCA(
-                                UPDATE.getBuyer(),
-                                UPDATE.getOwner(),
-                                partialCustomAudienceList.stream()
-                                        .map(ca -> ca.getName())
-                                        .collect(Collectors.toList()),
-                                List.of(LEAVE_CA_1, LEAVE_CA_2),
-                                /* auctionServerRequestFlagsEnabled= */ false,
-                                /* sellerConfigurationEnabled= */ false)
-                        .toString();
+                createJsonResponsePayloadOnlyLeave(List.of(LEAVE_CA_1, LEAVE_CA_2)).toString();
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
                         AdServicesHttpClientResponse.builder()
@@ -2250,8 +2136,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         false);
 
         JSONArray scheduleRequests = new JSONArray(List.of(scheduleRequest));
-        String responsePayload =
-                createJsonResponsePayloadWithScheduleRequests(scheduleRequests).toString();
+        String responsePayload = createJsonResponsePayloadOnlySchedule(scheduleRequests).toString();
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
                         AdServicesHttpClientResponse.builder()
@@ -2352,8 +2237,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         JSONObject scheduleRequest = generateScheduleRequestMissingUpdateUriKey();
 
         JSONArray scheduleRequests = new JSONArray(List.of(scheduleRequest));
-        String responsePayload =
-                createJsonResponsePayloadWithScheduleRequests(scheduleRequests).toString();
+        String responsePayload = createJsonResponsePayloadOnlySchedule(scheduleRequests).toString();
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
                         AdServicesHttpClientResponse.builder()
@@ -2483,8 +2367,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
         JSONArray scheduleRequests =
                 new JSONArray(List.of(validScheduleRequest, invalidScheduleRequest));
-        String responsePayload =
-                createJsonResponsePayloadWithScheduleRequests(scheduleRequests).toString();
+        String responsePayload = createJsonResponsePayloadOnlySchedule(scheduleRequests).toString();
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
                         AdServicesHttpClientResponse.builder()
@@ -2614,8 +2497,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
         JSONArray scheduleRequests =
                 new JSONArray(List.of(validScheduleRequest, invalidScheduleRequest));
-        String responsePayload =
-                createJsonResponsePayloadWithScheduleRequests(scheduleRequests).toString();
+        String responsePayload = createJsonResponsePayloadOnlySchedule(scheduleRequests).toString();
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
                         AdServicesHttpClientResponse.builder()
@@ -2727,8 +2609,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         true);
 
         JSONArray scheduleRequests = new JSONArray(List.of(scheduleRequest));
-        String responsePayload =
-                createJsonResponsePayloadWithScheduleRequests(scheduleRequests).toString();
+        String responsePayload = createJsonResponsePayloadOnlySchedule(scheduleRequests).toString();
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
                         AdServicesHttpClientResponse.builder()
@@ -2818,9 +2699,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 updateWithAllowScheduleInResponseTrue);
 
         String responsePayload =
-                createJsonResponsePayloadWithoutLeaveCA(
+                createJsonResponsePayloadWithoutLeave(
                                 UPDATE.getBuyer(),
-                                UPDATE.getOwner(),
                                 partialCustomAudienceList.stream()
                                         .map(ca -> ca.getName())
                                         .collect(Collectors.toList()),
@@ -2946,8 +2826,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
         JSONArray scheduleRequests =
                 new JSONArray(List.of(scheduleRequest, invalidScheduleRequest));
-        String responsePayload =
-                createJsonResponsePayloadWithScheduleRequests(scheduleRequests).toString();
+        String responsePayload = createJsonResponsePayloadOnlySchedule(scheduleRequests).toString();
 
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
@@ -3090,9 +2969,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mComponentAdsStrategyMock);
 
         String responsePayload =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 UPDATE.getBuyer(),
-                                UPDATE.getOwner(),
                                 partialCustomAudienceList.stream()
                                         .map(ca -> ca.getName())
                                         .collect(Collectors.toList()),
@@ -3210,9 +3088,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mComponentAdsStrategyMock);
 
         String responsePayload =
-                createJsonResponsePayload(
-                                UPDATE.getBuyer(),
-                                UPDATE.getOwner(),
+                createJsonResponsePayloadWithoutSchedule(
+                                BUYER,
                                 List.of(
                                         DB_PARTIAL_CUSTOM_AUDIENCE_1.getName(),
                                         DB_PARTIAL_CUSTOM_AUDIENCE_3.getName()),
@@ -3221,9 +3098,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                                 /* sellerConfigurationEnabled= */ false)
                         .toString();
         String responsePayload2 =
-                createJsonResponsePayload(
-                                UPDATE.getBuyer(),
-                                UPDATE.getOwner(),
+                createJsonResponsePayloadWithoutSchedule(
+                                BUYER_2,
                                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_2.getName()),
                                 List.of(LEAVE_CA_1, LEAVE_CA_2),
                                 true,
@@ -3625,9 +3501,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(UPDATE);
 
         String responsePayload =
-                createJsonResponsePayloadWithoutLeaveCA(
+                createJsonResponsePayloadWithoutLeave(
                                 UPDATE.getBuyer(),
-                                UPDATE.getOwner(),
                                 partialCustomAudienceList.stream()
                                         .map(ca -> ca.getName())
                                         .collect(Collectors.toList()),
@@ -3785,9 +3660,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 .check(any(), any());
 
         String responsePayload =
-                createJsonResponsePayload(
+                createJsonResponsePayloadWithoutSchedule(
                                 UPDATE.getBuyer(),
-                                UPDATE.getOwner(),
                                 partialCustomAudienceList.stream()
                                         .map(ca -> ca.getName())
                                         .collect(Collectors.toList()),
@@ -3891,13 +3765,11 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 mScheduleAttemptedBuilder);
 
         String responsePayload =
-                createJsonResponsePayloadInvalidJoinCA(
+                createJsonResponsePayloadOnlyJoinWithInvalidJoinCA(
                                 UPDATE.getBuyer(),
-                                UPDATE.getOwner(),
                                 partialCustomAudienceList.stream()
                                         .map(ca -> ca.getName())
                                         .collect(Collectors.toList()),
-                                List.of(),
                                 /* auctionServerRequestFlagsEnabled= */ false,
                                 /* sellerConfigurationEnabled= */ false)
                         .toString();
@@ -4005,9 +3877,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 mScheduleAttemptedBuilder);
 
         String responsePayload =
-                createJsonResponsePayloadWithoutLeaveCA(
+                createJsonResponsePayloadWithoutLeave(
                                 UPDATE.getBuyer(),
-                                UPDATE.getOwner(),
                                 partialCustomAudienceList.stream()
                                         .map(ca -> ca.getName())
                                         .collect(Collectors.toList()),
@@ -4102,9 +3973,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 mScheduleAttemptedBuilder);
 
         String responsePayload =
-                createJsonResponsePayloadWithInvalidExpirationTime(
+                createJsonResponsePayloadOnlyJoinWithInvalidExpirationTime(
                                 UPDATE.getBuyer(),
-                                UPDATE.getOwner(),
                                 partialCustomAudienceList.stream()
                                         .map(ca -> ca.getName())
                                         .collect(Collectors.toList()))
@@ -4229,6 +4099,684 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CONTENT_SIZE_ERROR);
     }
 
+    @Test
+    public void
+            testPerformScheduledUpdates_1Hop_withNoPartialCAsInTheRequest_joinsWithCorrectOwnerAndBuyer()
+                    throws JSONException,
+                            ExecutionException,
+                            InterruptedException,
+                            TimeoutException {
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(UPDATE).build();
+
+        JSONObject responseJson =
+                createJsonResponsePayloadWithoutSchedule(
+                        UPDATE.getBuyer(),
+                        List.of(PARTIAL_CA_1),
+                        List.of(),
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
+
+        Instant beforeTime = Instant.now();
+
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseJson.toString())
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+        mockAdditionalScheduleRequestsDisabledStrategy(
+                beforeTime,
+                scheduledUpdateRequest,
+                responseJson,
+                /* partialCustomAudienceJSON
+                Array= */ new JSONArray());
+
+        Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+
+        verify(mComponentAdsStrategyMock)
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
+        DBCustomAudience joinedCustomAudience = mInsertCustomAudienceCaptor.getValue();
+
+        assertEquals(joinedCustomAudience.getOwner(), OWNER);
+        assertEquals(joinedCustomAudience.getBuyer(), BUYER);
+    }
+
+    @Test
+    public void testPerformScheduledUpdates_1Hop_oneInPartialCa_joins2CAsWithCorrectOwnerAndBuyer()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1);
+
+        JSONArray partialCustomAudienceJsonArray =
+                createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
+
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+
+        JSONObject responseJson =
+                createJsonResponsePayloadWithoutSchedule(
+                        UPDATE.getBuyer(),
+                        List.of(PARTIAL_CA_1, PARTIAL_CA_2),
+                        List.of(),
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
+
+        Instant beforeTime = Instant.now();
+
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseJson.toString())
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        mockAdditionalScheduleRequestsDisabledStrategy(
+                beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
+
+        Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+
+        verify(mComponentAdsStrategyMock, times(2))
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
+        List<DBCustomAudience> joinedCustomAudienceList =
+                mInsertCustomAudienceCaptor.getAllValues();
+
+        for (DBCustomAudience customAudience : joinedCustomAudienceList) {
+            assertEquals(customAudience.getOwner(), OWNER);
+            assertEquals(customAudience.getBuyer(), BUYER);
+        }
+    }
+
+    @Test
+    public void
+            testPerformScheduledUpdates_1Hop_withDifferentBuyerFieldInTheResponse_joinsWithCorrectBuyer()
+                    throws JSONException,
+                            ExecutionException,
+                            InterruptedException,
+                            TimeoutException {
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(UPDATE).build();
+
+        JSONObject responseJson =
+                createJsonResponsePayloadWithoutScheduleWithDifferentBuyer(
+                        BUYER,
+                        BUYER_2,
+                        List.of(PARTIAL_CA_1),
+                        List.of(),
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
+
+        Instant beforeTime = Instant.now();
+
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseJson.toString())
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(
+                        any(AdServicesHttpClientRequest.class)))
+                .thenReturn(response);
+
+        mockAdditionalScheduleRequestsDisabledStrategy(
+                beforeTime,
+                scheduledUpdateRequest,
+                responseJson,
+                /* partialCustomAudienceJsonArray= */ new JSONArray());
+
+        Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+        verify(mComponentAdsStrategyMock)
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
+        DBCustomAudience joinedCustomAudience = mInsertCustomAudienceCaptor.getValue();
+
+        assertEquals(joinedCustomAudience.getBuyer(), BUYER);
+    }
+
+    @Test
+    public void testPerformScheduledUpdates_1Hop_withDifferentBuyerInTheResponse_doesNotJoin()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(UPDATE).build();
+
+        JSONObject responseJson =
+                createJsonResponsePayloadWithoutScheduleWithDifferentBuyer(
+                        BUYER_2,
+                        BUYER_2,
+                        List.of(PARTIAL_CA_1),
+                        List.of(),
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
+
+        Instant beforeTime = Instant.now();
+
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseJson.toString())
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(
+                        any(AdServicesHttpClientRequest.class)))
+                .thenReturn(response);
+
+        mockAdditionalScheduleRequestsDisabledStrategy(
+                beforeTime,
+                scheduledUpdateRequest,
+                responseJson,
+                /* partialCustomAudienceJsonArray= */ new JSONArray());
+
+        mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+
+        verify(mComponentAdsStrategyMock, never())
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        any(DBCustomAudience.class),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
+    }
+
+    @Test
+    public void
+            testPerformScheduledUpdates_1Hop_withDifferentOwnerInTheResponse_joinsWithCorrectOwner()
+                    throws JSONException,
+                            ExecutionException,
+                            InterruptedException,
+                            TimeoutException {
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(UPDATE).build();
+
+        JSONObject responseJson =
+                createJsonResponsePayloadWithoutScheduleWithDifferentOwner(
+                        BUYER,
+                        OWNER_2,
+                        List.of(PARTIAL_CA_1),
+                        List.of(),
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
+
+        Instant beforeTime = Instant.now();
+
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseJson.toString())
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(
+                        any(AdServicesHttpClientRequest.class)))
+                .thenReturn(response);
+
+        mockAdditionalScheduleRequestsDisabledStrategy(
+                beforeTime,
+                scheduledUpdateRequest,
+                responseJson,
+                /* partialCustomAudienceJsonArray= */ new JSONArray());
+
+        Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+
+        verify(mComponentAdsStrategyMock)
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
+        DBCustomAudience joinedCustomAudience = mInsertCustomAudienceCaptor.getValue();
+
+        assertEquals(joinedCustomAudience.getOwner(), OWNER);
+    }
+
+    @SetIntegerFlag(
+            name = KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
+            value = NEGATIVE_DELAY_FOR_TEST_FLAG_IN_MINUTES)
+    @Test
+    public void testPerformScheduledUpdates_2Hops_withNoPartialCAs_joinsWithCorrectOwnerAndBuyer()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest1 =
+                DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(UPDATE).build();
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest2 =
+                DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(UPDATE).build();
+
+        JSONArray scheduleRequestJsonArray = new JSONArray();
+        scheduleRequestJsonArray.put(
+                createScheduleRequest(
+                        BUYER,
+                        NEGATIVE_DELAY_FOR_TEST_IN_MINUTES,
+                        /* partialCustomAudiences= */ new JSONArray(),
+                        /* customAudiencesToLeave= */ new JSONArray(),
+                        /* shouldReplacePendingUpdates= */ true));
+        JSONObject responseFirstHopJson =
+                createJsonResponsePayloadOnlySchedule(scheduleRequestJsonArray);
+        JSONObject responseSecondHopJson =
+                createJsonResponsePayloadWithoutSchedule(
+                        BUYER,
+                        List.of(PARTIAL_CA_1),
+                        /* leaveCustomAudienceNames= */ List.of(),
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
+
+        Instant beforeTime = Instant.now();
+
+        ListenableFuture<AdServicesHttpClientResponse> responseFirstHop =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseFirstHopJson.toString())
+                                .build());
+        ListenableFuture<AdServicesHttpClientResponse> responseSecondHop =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseSecondHopJson.toString())
+                                .build());
+
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(
+                        any(AdServicesHttpClientRequest.class)))
+                .thenReturn(responseFirstHop)
+                .thenReturn(responseSecondHop);
+        mockAdditionalScheduleRequestsEnabledStrategy(
+                scheduledUpdateRequest1,
+                scheduledUpdateRequest2,
+                /* partialCustomAudienceJsonArray= */ new JSONArray(),
+                /* customAudienceToLeaveList= */ List.of());
+
+        mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+        mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+
+        verify(mComponentAdsStrategyMock)
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
+        DBCustomAudience joinedCustomAudience = mInsertCustomAudienceCaptor.getValue();
+
+        assertEquals(joinedCustomAudience.getOwner(), OWNER);
+        assertEquals(joinedCustomAudience.getBuyer(), BUYER);
+    }
+
+    @SetIntegerFlag(
+            name = KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
+            value = NEGATIVE_DELAY_FOR_TEST_FLAG_IN_MINUTES)
+    @Test
+    public void
+            testPerformScheduledUpdates_2Hops_withNoPartialCAsInTheResponse_joinsWithCorrectOwnerAndBuyer()
+                    throws JSONException,
+                            ExecutionException,
+                            InterruptedException,
+                            TimeoutException {
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1);
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest1 =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest2 =
+                DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(UPDATE).build();
+
+        JSONArray scheduleRequestJsonArray = new JSONArray();
+        scheduleRequestJsonArray.put(
+                createScheduleRequest(
+                        BUYER,
+                        NEGATIVE_DELAY_FOR_TEST_IN_MINUTES,
+                        /* partialCustomAudiences= */ new JSONArray(),
+                        /* customAudiencesToLeave= */ new JSONArray(),
+                        /* shouldReplacePendingUpdates= */ true));
+        JSONObject responseFirstHopJson =
+                createJsonResponsePayloadOnlySchedule(scheduleRequestJsonArray);
+        JSONObject responseSecondHopJson =
+                ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutSchedule(
+                        BUYER,
+                        List.of(PARTIAL_CA_1),
+                        List.of(),
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
+
+        Instant beforeTime = Instant.now();
+
+        ListenableFuture<AdServicesHttpClientResponse> responseFirstHop =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseFirstHopJson.toString())
+                                .build());
+        ListenableFuture<AdServicesHttpClientResponse> responseSecondHop =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseSecondHopJson.toString())
+                                .build());
+
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(
+                        any(AdServicesHttpClientRequest.class)))
+                .thenReturn(responseFirstHop)
+                .thenReturn(responseSecondHop);
+        mockAdditionalScheduleRequestsEnabledStrategy(
+                scheduledUpdateRequest1,
+                scheduledUpdateRequest2,
+                /* partialCustomAudienceJsonArray= */ new JSONArray(),
+                /* customAudienceToLeaveList= */ List.of());
+
+        mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+        Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+
+        verify(mComponentAdsStrategyMock)
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
+        DBCustomAudience joinedCustomAudience = mInsertCustomAudienceCaptor.getValue();
+
+        assertEquals(joinedCustomAudience.getOwner(), OWNER);
+        assertEquals(joinedCustomAudience.getBuyer(), BUYER);
+    }
+
+    @SetIntegerFlag(
+            name = KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
+            value = NEGATIVE_DELAY_FOR_TEST_FLAG_IN_MINUTES)
+    @Test
+    public void
+            testPerformScheduledUpdates_2Hops_withNoPartialCAsInTheRequest_joinsWithCorrectOwnerAndBuyer()
+                    throws JSONException,
+                            ExecutionException,
+                            InterruptedException,
+                            TimeoutException {
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1);
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest1 =
+                DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(UPDATE).build();
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest2 =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+
+        JSONArray scheduleRequestJsonArray = new JSONArray();
+        scheduleRequestJsonArray.put(
+                createScheduleRequest(
+                        BUYER,
+                        NEGATIVE_DELAY_FOR_TEST_IN_MINUTES,
+                        createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList),
+                        /* customAudiencesToLeave= */ new JSONArray(),
+                        /* shouldReplacePendingUpdates= */ true));
+        JSONObject responseFirstHopJson =
+                createJsonResponsePayloadOnlySchedule(scheduleRequestJsonArray);
+        JSONObject responseSecondHopJson =
+                ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutSchedule(
+                        BUYER,
+                        List.of(PARTIAL_CA_1),
+                        List.of(),
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
+
+        Instant beforeTime = Instant.now();
+
+        JSONArray partialCustomAudienceJsonArray =
+                createJsonArrayFromPartialCustomAudienceList(List.of());
+
+        ListenableFuture<AdServicesHttpClientResponse> responseFirstHop =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseFirstHopJson.toString())
+                                .build());
+        ListenableFuture<AdServicesHttpClientResponse> responseSecondHop =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseSecondHopJson.toString())
+                                .build());
+
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(
+                        any(AdServicesHttpClientRequest.class)))
+                .thenReturn(responseFirstHop)
+                .thenReturn(responseSecondHop);
+        mockAdditionalScheduleRequestsEnabledStrategy(
+                scheduledUpdateRequest1,
+                scheduledUpdateRequest2,
+                /* partialCustomAudienceJsonArray= */ new JSONArray(),
+                /* customAudienceToLeaveList= */ List.of());
+
+        mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+        mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+
+        verify(mComponentAdsStrategyMock)
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
+        DBCustomAudience joinedCustomAudience = mInsertCustomAudienceCaptor.getValue();
+
+        assertEquals(joinedCustomAudience.getOwner(), OWNER);
+        assertEquals(joinedCustomAudience.getBuyer(), BUYER);
+    }
+
+    @SetIntegerFlag(
+            name = KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
+            value = NEGATIVE_DELAY_FOR_TEST_FLAG_IN_MINUTES)
+    @Test
+    public void
+            testPerformScheduledUpdates_2Hops_withDifferentBuyerFieldInTheResponse_joinsWithCorrectBuyer()
+                    throws JSONException,
+                            ExecutionException,
+                            InterruptedException,
+                            TimeoutException {
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest1 =
+                DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(UPDATE).build();
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest2 =
+                DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(UPDATE).build();
+
+        JSONArray scheduleRequestJsonArray = new JSONArray();
+        scheduleRequestJsonArray.put(
+                createScheduleRequest(
+                        BUYER,
+                        NEGATIVE_DELAY_FOR_TEST_IN_MINUTES,
+                        /* partialCustomAudiences= */ new JSONArray(),
+                        /* customAudiencesToLeave= */ new JSONArray(),
+                        /* shouldReplacePendingUpdates= */ true));
+        JSONObject responseFirstHopJson =
+                createJsonResponsePayloadOnlySchedule(scheduleRequestJsonArray);
+        JSONObject responseSecondHopJson =
+                createJsonResponsePayloadWithoutScheduleWithDifferentBuyer(
+                        BUYER,
+                        BUYER_2,
+                        List.of(PARTIAL_CA_1),
+                        List.of(),
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
+
+        Instant beforeTime = Instant.now();
+
+        ListenableFuture<AdServicesHttpClientResponse> responseFirstHop =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseFirstHopJson.toString())
+                                .build());
+        ListenableFuture<AdServicesHttpClientResponse> responseSecondHop =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseSecondHopJson.toString())
+                                .build());
+
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(
+                        any(AdServicesHttpClientRequest.class)))
+                .thenReturn(responseFirstHop)
+                .thenReturn(responseSecondHop);
+        mockAdditionalScheduleRequestsEnabledStrategy(
+                scheduledUpdateRequest1,
+                scheduledUpdateRequest2,
+                /* partialCustomAudienceJsonArray= */ new JSONArray(),
+                /* customAudienceToLeaveList= */ List.of());
+
+        mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+        mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+        verify(mComponentAdsStrategyMock)
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
+        DBCustomAudience joinedCustomAudience = mInsertCustomAudienceCaptor.getValue();
+
+        assertEquals(joinedCustomAudience.getBuyer(), BUYER);
+    }
+
+    @SetIntegerFlag(
+            name = KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
+            value = NEGATIVE_DELAY_FOR_TEST_FLAG_IN_MINUTES)
+    @Test
+    public void testPerformScheduledUpdates_2Hops_withDifferentBuyerInTheResponse_doesNotJoin()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest1 =
+                DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(UPDATE).build();
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest2 =
+                DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(UPDATE).build();
+
+        JSONArray scheduleRequestJsonArray = new JSONArray();
+        scheduleRequestJsonArray.put(
+                createScheduleRequest(
+                        BUYER,
+                        NEGATIVE_DELAY_FOR_TEST_IN_MINUTES,
+                        /* partialCustomAudiences= */ new JSONArray(),
+                        /* customAudiencesToLeave= */ new JSONArray(),
+                        /* shouldReplacePendingUpdates= */ true));
+        JSONObject responseFirstHopJson =
+                createJsonResponsePayloadOnlySchedule(scheduleRequestJsonArray);
+        JSONObject responseSecondHopJson =
+                createJsonResponsePayloadWithoutScheduleWithDifferentBuyer(
+                        BUYER_2,
+                        BUYER_2,
+                        List.of(PARTIAL_CA_1),
+                        List.of(),
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
+
+        Instant beforeTime = Instant.now();
+
+        ListenableFuture<AdServicesHttpClientResponse> responseFirstHop =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseFirstHopJson.toString())
+                                .build());
+        ListenableFuture<AdServicesHttpClientResponse> responseSecondHop =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseSecondHopJson.toString())
+                                .build());
+
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(
+                        any(AdServicesHttpClientRequest.class)))
+                .thenReturn(responseFirstHop)
+                .thenReturn(responseSecondHop);
+        mockAdditionalScheduleRequestsEnabledStrategy(
+                scheduledUpdateRequest1,
+                scheduledUpdateRequest2,
+                /* partialCustomAudienceJsonArray= */ new JSONArray(),
+                /* customAudienceToLeaveList= */ List.of());
+
+        mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+        mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+
+        verify(mComponentAdsStrategyMock, never())
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        any(DBCustomAudience.class),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
+    }
+
+    @SetIntegerFlag(
+            name = KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
+            value = NEGATIVE_DELAY_FOR_TEST_FLAG_IN_MINUTES)
+    @Test
+    public void
+            testPerformScheduledUpdates_2Hops_withDifferentOwnerInTheResponse_joinsWithCorrectOwner()
+                    throws JSONException,
+                            ExecutionException,
+                            InterruptedException,
+                            TimeoutException {
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest1 =
+                DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(UPDATE).build();
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest2 =
+                DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(UPDATE).build();
+
+        JSONArray scheduleRequestJsonArray = new JSONArray();
+        scheduleRequestJsonArray.put(
+                createScheduleRequest(
+                        BUYER,
+                        NEGATIVE_DELAY_FOR_TEST_IN_MINUTES,
+                        /* partialCustomAudiences= */ new JSONArray(),
+                        /* customAudiencesToLeave= */ new JSONArray(),
+                        /* shouldReplacePendingUpdates= */ true));
+        JSONObject responseFirstHopJson =
+                createJsonResponsePayloadOnlySchedule(scheduleRequestJsonArray);
+        JSONObject responseSecondHopJson =
+                createJsonResponsePayloadWithoutScheduleWithDifferentOwner(
+                        BUYER,
+                        OWNER_2,
+                        List.of(PARTIAL_CA_1),
+                        List.of(),
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
+
+        Instant beforeTime = Instant.now();
+
+        ListenableFuture<AdServicesHttpClientResponse> responseFirstHop =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseFirstHopJson.toString())
+                                .build());
+        ListenableFuture<AdServicesHttpClientResponse> responseSecondHop =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseSecondHopJson.toString())
+                                .build());
+
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(
+                        any(AdServicesHttpClientRequest.class)))
+                .thenReturn(responseFirstHop)
+                .thenReturn(responseSecondHop);
+        mockAdditionalScheduleRequestsEnabledStrategy(
+                scheduledUpdateRequest1,
+                scheduledUpdateRequest2,
+                /* partialCustomAudienceJsonArray= */ new JSONArray(),
+                /* customAudienceToLeaveList= */ List.of());
+
+        mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+        mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+
+        verify(mComponentAdsStrategyMock)
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
+        DBCustomAudience joinedCustomAudience = mInsertCustomAudienceCaptor.getValue();
+
+        assertEquals(joinedCustomAudience.getOwner(), OWNER);
+    }
+
     private JSONArray createJsonArrayFromPartialCustomAudienceList(
             List<DBPartialCustomAudience> partialCustomAudienceList) throws JSONException {
         List<CustomAudienceBlob> validBlobs = new ArrayList<>();
@@ -4246,8 +4794,6 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                             COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
                             MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
             blob.overrideFromPartialCustomAudience(
-                    OWNER,
-                    BUYER,
                     DBPartialCustomAudience.getPartialCustomAudience(partialCustomAudience));
             validBlobs.add(blob);
         }
@@ -4388,6 +4934,23 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 .thenReturn(
                         createRequestBodyWithOnlyPartialCustomAudiences(
                                 partialCustomAudienceJsonArray));
+    }
+
+    private void mockAdditionalScheduleRequestsEnabledStrategy(
+            DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest1,
+            DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest2,
+            JSONArray partialCustomAudienceJsonArray,
+            List<DBCustomAudienceToLeave> customAudienceToLeaveList)
+            throws JSONException {
+        when(mStrategyMock.getScheduledCustomAudienceUpdateRequestList(any()))
+                .thenReturn(List.of(scheduledUpdateRequest1))
+                .thenReturn(List.of(scheduledUpdateRequest2));
+        when(mStrategyMock.scheduleRequests(any(), anyBoolean(), any(), any(), any()))
+                .thenReturn(FluentFuture.from(immediateVoidFuture()));
+        when(mStrategyMock.prepareFetchUpdateRequestBody(any(), any()))
+                .thenReturn(
+                        createRequestBody(
+                                partialCustomAudienceJsonArray, customAudienceToLeaveList));
     }
 
     private void verifyDisabledStrategy(
