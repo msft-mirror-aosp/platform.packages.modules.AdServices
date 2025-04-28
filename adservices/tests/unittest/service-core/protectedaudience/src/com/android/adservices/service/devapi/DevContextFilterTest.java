@@ -34,6 +34,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.adservices.common.CommonFixture;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -51,6 +52,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 @MockStatic(Settings.Global.class)
 @MockStatic(Build.class)
@@ -100,6 +102,104 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
         mockPackageNameForUid(APP_UID, APP_PACKAGE);
         mockInstalledApplications(aNonDebuggableAppInfo());
         when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_DEV));
+
+        assertThrows(SecurityException.class, () -> mDevContextFilter.createDevContext(APP_UID));
+    }
+
+    @Test
+    public void testCreateDevContextWithNonDebuggableCallerDuringDevSessionAllowlisted()
+            throws Exception {
+        enableDeveloperOptions();
+        mockPackageNameForUid(APP_UID, APP_PACKAGE);
+        mockInstalledApplications(aNonDebuggableAppInfo());
+        when(mMockDevSessionDataStore.get())
+                .thenReturn(
+                        immediateFuture(
+                                DevSession.builder()
+                                        .setState(DevSessionState.IN_DEV)
+                                        .setNonDebuggableAppAllowlistPattern(
+                                                Pattern.compile("com\\.test\\..*"))
+                                        .build()));
+
+        DevContext devContext = mDevContextFilter.createDevContext(APP_UID);
+
+        assertWithMessage("createDevContext(%s)", APP_UID).that(devContext).isNotNull();
+    }
+
+    @Test
+    public void testCreateDevContextWithNonDebuggableCallerDuringProdSessionAllowlisted()
+            throws Exception {
+        enableDeveloperOptions();
+        mockPackageNameForUid(APP_UID, APP_PACKAGE);
+        mockInstalledApplications(aNonDebuggableAppInfo());
+        when(mMockDevSessionDataStore.get())
+                .thenReturn(
+                        immediateFuture(
+                                DevSession.builder()
+                                        .setState(DevSessionState.IN_PROD)
+                                        .setNonDebuggableAppAllowlistPattern(
+                                                Pattern.compile("com\\.test\\..*"))
+                                        .build()));
+
+        DevContext devContext = mDevContextFilter.createDevContext(APP_UID);
+
+        assertWithMessage("createDevContext(%s)", APP_UID).that(devContext).isNotNull();
+    }
+
+    @Test
+    public void testCreateDevContextWithNonDebuggableCallerDuringTransitioningDevToProdAllowlisted()
+            throws Exception {
+        enableDeveloperOptions();
+        mockPackageNameForUid(APP_UID, APP_PACKAGE);
+        mockInstalledApplications(aNonDebuggableAppInfo());
+        when(mMockDevSessionDataStore.get())
+                .thenReturn(
+                        immediateFuture(
+                                DevSession.builder()
+                                        .setState(DevSessionState.TRANSITIONING_DEV_TO_PROD)
+                                        .setNonDebuggableAppAllowlistPattern(
+                                                Pattern.compile("com\\.test\\..*"))
+                                        .build()));
+
+        // Callers are not allowed to create dev context during transition.
+        assertThrows(
+                IllegalStateException.class, () -> mDevContextFilter.createDevContext(APP_UID));
+    }
+
+    @Test
+    public void testCreateDevContextWithNonDebuggableCallerDuringTransitioningProdToDevAllowlisted()
+            throws Exception {
+        enableDeveloperOptions();
+        mockPackageNameForUid(APP_UID, APP_PACKAGE);
+        mockInstalledApplications(aNonDebuggableAppInfo());
+        when(mMockDevSessionDataStore.get())
+                .thenReturn(
+                        immediateFuture(
+                                DevSession.builder()
+                                        .setState(DevSessionState.TRANSITIONING_PROD_TO_DEV)
+                                        .setNonDebuggableAppAllowlistPattern(
+                                                Pattern.compile("com\\.test\\..*"))
+                                        .build()));
+
+        // Callers are not allowed to create dev context during transition.
+        assertThrows(
+                IllegalStateException.class, () -> mDevContextFilter.createDevContext(APP_UID));
+    }
+
+    @Test
+    public void testCreateDevContextWithNonDebuggableCallerDuringDevSessionAllowlistedPackage()
+            throws Exception {
+        enableDeveloperOptions();
+        mockPackageNameForUid(APP_UID, APP_PACKAGE);
+        mockInstalledApplications(aNonDebuggableAppInfo());
+        when(mMockDevSessionDataStore.get())
+                .thenReturn(
+                        immediateFuture(
+                                DevSession.builder()
+                                        .setState(DevSessionState.IN_DEV)
+                                        .setNonDebuggableAppAllowlistPattern(
+                                                Pattern.compile("com\\.android\\..*"))
+                                        .build()));
 
         assertThrows(SecurityException.class, () -> mDevContextFilter.createDevContext(APP_UID));
     }

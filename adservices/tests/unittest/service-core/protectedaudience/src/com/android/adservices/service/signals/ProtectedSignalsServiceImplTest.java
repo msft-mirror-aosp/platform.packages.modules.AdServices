@@ -68,6 +68,7 @@ import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.devapi.DevSessionFixture;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -251,6 +252,75 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                 .setAdservicesApiStatusCode(AdServicesStatusUtils.STATUS_SUCCESS);
         mInOrder.verify(mUpdateSignalsProcessReportedLoggerMock)
                 .logUpdateSignalsProcessReportedStats();
+    }
+
+    @SuppressWarnings("FutureReturnValueIgnored")
+    @Test
+    public void testUpdateSignalsSuccessDuringDevSession() throws Exception {
+        DevContext devContext =
+                DevContext.builder()
+                        .setDeviceDevOptionsEnabled(true)
+                        .setCallingAppPackageName(PACKAGE)
+                        .setDevSession(DevSessionFixture.IN_DEV)
+                        .build();
+        when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
+                        eq(URI),
+                        eq(PACKAGE),
+                        /* disableEnrollmentCheck= */ eq(false),
+                        /* enforceForeground= */ eq(true),
+                        /* enforceConsent= */ eq(false),
+                        /* enforceNotificationShown= */ eq(true),
+                        eq(UID),
+                        eq(API_NAME),
+                        eq(PROTECTED_SIGNAL_API_UPDATE_SIGNALS),
+                        eq(devContext)))
+                .thenReturn(ADTECH);
+        SettableFuture<Object> emptyReturn = SettableFuture.create();
+        emptyReturn.set(new Object());
+        when(mUpdateSignalsOrchestratorMock.orchestrateUpdate(
+                        eq(URI), eq(ADTECH), eq(PACKAGE), eq(devContext), any(), any()))
+                .thenReturn(FluentFuture.from(emptyReturn));
+        when(mDevContextFilterMock.createDevContext()).thenReturn(devContext);
+
+        mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallback);
+
+        mUpdateSignalsCallback.assertResultReceived();
+        verify(mFledgeAuthorizationFilterMock)
+                .assertAppDeclaredPermission(
+                        eq(mContext),
+                        eq(PACKAGE),
+                        eq(API_NAME),
+                        eq(AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS));
+        verify(mCallingAppUidSupplierMock).getCallingAppUid();
+        verify(mDevContextFilterMock).createDevContext();
+        verify(mProtectedSignalsServiceFilterMock)
+                .filterRequestAndExtractIdentifier(
+                        eq(URI),
+                        eq(PACKAGE),
+                        eq(false),
+                        eq(true),
+                        eq(false),
+                        eq(true),
+                        eq(UID),
+                        eq(API_NAME),
+                        eq(PROTECTED_SIGNAL_API_UPDATE_SIGNALS),
+                        eq(devContext));
+        verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE));
+        verify(mUpdateSignalsOrchestratorMock)
+                .orchestrateUpdate(eq(URI), eq(ADTECH), eq(PACKAGE), eq(devContext), any(), any());
+        verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_SUCCESS, PACKAGE);
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(1));
+        verify(mAdServicesLoggerMock).logUpdateSignalsApiCalledStats(mStatsCaptor.capture());
+        assertEquals(
+                JSON_PROCESSING_STATUS_SUCCESS, mStatsCaptor.getValue().getJsonProcessingStatus());
+        // Shouldn't be logged if status is success
+        assertEquals("", mStatsCaptor.getValue().getAdTechId());
+        assertEquals(0, mStatsCaptor.getValue().getPackageUid());
+        mInOrder.verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setAdservicesApiStatusCode(AdServicesStatusUtils.STATUS_SUCCESS);
+        mInOrder.verify(mUpdateSignalsProcessReportedLoggerMock);
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")

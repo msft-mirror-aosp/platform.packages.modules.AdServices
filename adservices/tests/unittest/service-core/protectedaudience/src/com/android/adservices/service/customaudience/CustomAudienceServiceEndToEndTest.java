@@ -648,6 +648,26 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     }
 
     @Test
+    public void testJoinCustomAudience_inAllowlistedDevSession_customAudienceClearedAfterSession() {
+        ResultCapturingCallback callback = new ResultCapturingCallback();
+        mDevSessionHelper.startDevSession(/* withAllowlistedTestPackage= */ true);
+
+        mService.joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build(),
+                MY_APP_PACKAGE_NAME,
+                callback);
+
+        assertTrue(callback.isSuccess());
+        assertNotNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, CommonFixture.VALID_BUYER_1, VALID_NAME));
+        mDevSessionHelper.endDevSession();
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, CommonFixture.VALID_BUYER_1, VALID_NAME));
+    }
+
+    @Test
     public void testJoinCustomAudience_beforeDevSession_customAudienceClearedEnteringSession() {
         ResultCapturingCallback callback = new ResultCapturingCallback();
 
