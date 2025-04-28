@@ -21,6 +21,7 @@ import static com.android.adservices.service.devapi.DevSessionControllerResult.S
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.adservices.common.CommonFixture;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -38,8 +39,10 @@ import com.android.adservices.service.devapi.DevSessionControllerImpl;
 import com.android.adservices.service.devapi.DevSessionControllerResult;
 import com.android.adservices.service.devapi.DevSessionInMemoryDataStore;
 import com.android.adservices.service.devapi.DevSession;
+import com.android.internal.util.Preconditions;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -102,14 +105,23 @@ public class DevSessionHelper {
      * <p>After this method is called, the database setters will no longer work.
      */
     public void startDevSession() {
+        startDevSession(/* withAllowlistedTestPackage= */ false);
+    }
+
+    /**
+     * Start a dev session.
+     *
+     * @param withAllowlistedTestPackage whether to allowlist the test package (aka the current
+     *     package).
+     */
+    public void startDevSession(boolean withAllowlistedTestPackage) {
         mWasDevSessionStarted = true;
         try {
-            // TODO(b/409524702): Add support for non-debuggable app allowlist.
             DevSessionControllerResult result =
                     mDevSessionController
                             .startDevSession(
                                     /* setServerAuctionTestKeysEnabled= */ false,
-                                    Pattern.compile(DevSession.DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN))
+                                    getAppAllowlistPattern(withAllowlistedTestPackage))
                             .get(DEV_SESSION_TIMEOUT_SEC, TimeUnit.SECONDS);
             assertThat(result).isEqualTo(SUCCESS);
 
@@ -142,5 +154,18 @@ public class DevSessionHelper {
         }
         assertThat(result).isIn(List.of(SUCCESS, NO_OP));
         sLogger.v("DevSessionRule: Completed endDevSession() with result %s", result.name());
+    }
+
+    private Pattern getAppAllowlistPattern(boolean withAllowlistedTestPackage) {
+        return withAllowlistedTestPackage
+                ? getAllowlistPatternForPackage(CommonFixture.TEST_PACKAGE_NAME)
+                : Pattern.compile(DevSession.DEFAULT_EMPTY_APP_ALLOWLIST_PATTERN);
+    }
+
+    private Pattern getAllowlistPatternForPackage(String packageName) {
+        // Escape the test package name and covert it into a regex pattern that
+        // exactly matches the package name.
+        Preconditions.checkArgument(!packageName.isEmpty());
+        return Pattern.compile("^" + packageName.replace(".", "\\.") + "$");
     }
 }

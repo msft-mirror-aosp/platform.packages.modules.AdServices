@@ -157,6 +157,7 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.devapi.DevSessionFixture;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AppInstallAdvertisersSetterTest.SetAppInstallAdvertisersTestCallback;
@@ -179,6 +180,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.devapi.DevSession;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
@@ -10006,6 +10008,39 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    public void testReportEvent_duringDevSession_success() throws Exception {
+        mockCreateDevContextWithDevSession(DevSessionFixture.IN_DEV);
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setBuyerContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+
+        doReturn(mMeasurementServiceMock).when(MeasurementImpl::getInstance);
+        ReportInteractionTestCallback callback =
+                callReportInteraction(
+                        generateAdSelectionServiceImpl(),
+                        new ReportInteractionInput.Builder()
+                                .setAdSelectionId(AD_SELECTION_ID)
+                                .setInteractionData(INTERACTION_DATA)
+                                .setInteractionKey(CLICK_EVENT_BUYER)
+                                .setCallerPackageName(TEST_PACKAGE_NAME)
+                                .setReportingDestinations(FLAG_REPORTING_DESTINATION_BUYER)
+                                .build(),
+                        /* shouldCountLog= */ true);
+        assertTrue("reportInteraction() callback was unsuccessful", callback.mIsSuccess);
+    }
+
+    @Test
     public void testSetAdCounterHistogramOverrideNullInputThrows() {
         assertThrows(
                 NullPointerException.class,
@@ -10955,6 +10990,15 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
             int apiName, String appPackageName, int resultCode) {
         verifyLogFledgeApiCallStatsAnyLatency(
                 mAdServicesLoggerMock, never(), apiName, appPackageName, resultCode);
+    }
+
+    private void mockCreateDevContextWithDevSession(DevSession devSession) {
+        mockCreateDevContext(
+                mDevContextFilterMock,
+                DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
+                        .setDeviceDevOptionsEnabled(true)
+                        .setDevSession(devSession)
+                        .build());
     }
 
     private void mockCreateDevContext(DevContextFilter mockFilter, String callingAppPackageName) {
