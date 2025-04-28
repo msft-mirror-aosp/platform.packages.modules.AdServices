@@ -40,6 +40,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNAL
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.adselection.AdSelectionConfigFixture;
@@ -64,6 +65,7 @@ import android.os.OutcomeReceiver;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.AdServicesEndToEndTestCase;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.annotations.EnableAllApis;
@@ -131,14 +133,12 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
                     .setContext(mContext)
                     .setExecutor(AdServicesExecutors.getLightWeightExecutor())
                     .build();
-    private MeasurementManager mMeasurementManager;
+    private boolean mCurrentDevSessionState = false;
     private static final Executor sCallbackExecutor = Executors.newCachedThreadPool();
 
     private static final long VALID_AD_SELECTION_ID = 12L;
     private static final AdTechIdentifier AD_TECH = AdTechIdentifier.fromString("localhost");
     private static final long TIMEOUT_SEC = 5;
-    private static final long TIMEOUT_IN_MS = 30_000;
-    private static final String SERVER_BASE_URI = "https://rb-measurement-rollback.test:8080";
 
     private MeasurementManager getMeasurementManager() {
         return MeasurementManager.get(sContext);
@@ -146,38 +146,62 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
 
     @Before
     public void setUp() throws Exception {
-        mMeasurementManager =
-                SdkLevel.isAtLeastT()
-                        ? mContext.getSystemService(MeasurementManager.class)
-                        : MeasurementManager.get(mContext);
-        startDevSession();
+        // Pretend we are in a dev session, and force end a dev session in case
+        // we are in one from a previous test.
+        mAdServicesShellCommandHelper.runCommand("adservices-api dev-session end --erase-db");
     }
 
     @After
     public void tearDown() throws Exception {
-        endDevSession();
+        endDevSessionIfNeeded();
     }
 
     @Test
-    public void test_joinCustomAudience_throwsSecurityException() {
-        assertCallIsRejected(
+    public void test_joinCustomAudience_throwsSecurityException() throws Exception {
+        startDevSessionWithoutAllowlist();
+
+        assertCallThrowsSecurityException(
                 mCustomAudienceClient.joinCustomAudience(
                         CustomAudienceFixture.getValidBuilderForBuyer(AD_TECH).build()));
     }
 
     @Test
-    public void test_leaveCustomAudience_throwsSecurityException() {
+    public void test_joinCustomAudience_allowListEnabled_doesNotThrowSecurityException()
+            throws Exception {
+        startDevSessionWithAllowlist();
+
+        assertCallSucceedsOrThrowsNonSecurityException(
+                mCustomAudienceClient.joinCustomAudience(
+                        CustomAudienceFixture.getValidBuilderForBuyer(AD_TECH).build()));
+    }
+
+    @Test
+    public void test_leaveCustomAudience_throwsSecurityException() throws Exception {
+        startDevSessionWithoutAllowlist();
         CustomAudience customAudience =
                 CustomAudienceFixture.getValidBuilderForBuyer(AD_TECH).build();
 
-        assertCallIsRejected(
+        assertCallThrowsSecurityException(
                 mCustomAudienceClient.leaveCustomAudience(
                         customAudience.getBuyer(), customAudience.getName()));
     }
 
     @Test
-    public void test_fetchAndJoinCustomAudience_throwsSecurityException() {
-        assertCallIsRejected(
+    public void test_leaveCustomAudience_allowListEnabled_doesNotThrowSecurityException()
+            throws Exception {
+        startDevSessionWithAllowlist();
+        CustomAudience customAudience =
+                CustomAudienceFixture.getValidBuilderForBuyer(AD_TECH).build();
+
+        assertCallSucceedsOrThrowsNonSecurityException(
+                mCustomAudienceClient.leaveCustomAudience(
+                        customAudience.getBuyer(), customAudience.getName()));
+    }
+
+    @Test
+    public void test_fetchAndJoinCustomAudience_throwsSecurityException() throws Exception {
+        startDevSessionWithoutAllowlist();
+        assertCallThrowsSecurityException(
                 mCustomAudienceClient.fetchAndJoinCustomAudience(
                         new FetchAndJoinCustomAudienceRequest.Builder(
                                         CustomAudienceFixture.getValidFetchUriByBuyer(
@@ -186,8 +210,23 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
     }
 
     @Test
-    public void test_scheduleCustomAudienceUpdate_throwsSecurityException() {
-        assertCallIsRejected(
+    public void test_fetchAndJoinCustomAudience_allowListEnabled_doesNotThrowSecurityException()
+            throws Exception {
+        startDevSessionWithAllowlist();
+
+        assertCallSucceedsOrThrowsNonSecurityException(
+                mCustomAudienceClient.fetchAndJoinCustomAudience(
+                        new FetchAndJoinCustomAudienceRequest.Builder(
+                                        CustomAudienceFixture.getValidFetchUriByBuyer(
+                                                CommonFixture.VALID_BUYER_1, "1"))
+                                .build()));
+    }
+
+    @Test
+    public void test_scheduleCustomAudienceUpdate_throwsSecurityException() throws Exception {
+        startDevSessionWithoutAllowlist();
+
+        assertCallThrowsSecurityException(
                 mCustomAudienceClient.scheduleCustomAudienceUpdate(
                         new ScheduleCustomAudienceUpdateRequest.Builder(
                                         CustomAudienceFixture.getValidFetchUriByBuyer(
@@ -198,15 +237,44 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
     }
 
     @Test
-    public void test_getAdSelectionData_throwsSecurityException() {
-        assertCallIsRejected(
+    public void test_scheduleCustomAudienceUpdate_allowListEnabled_doesNotThrowSecurityException()
+            throws Exception {
+        startDevSessionWithAllowlist();
+
+        assertCallSucceedsOrThrowsNonSecurityException(
+                mCustomAudienceClient.scheduleCustomAudienceUpdate(
+                        new ScheduleCustomAudienceUpdateRequest.Builder(
+                                        CustomAudienceFixture.getValidFetchUriByBuyer(
+                                                CommonFixture.VALID_BUYER_1, "1"),
+                                        Duration.ofDays(1),
+                                        List.of())
+                                .build()));
+    }
+
+    @Test
+    public void test_getAdSelectionData_throwsSecurityException() throws Exception {
+        startDevSessionWithoutAllowlist();
+
+        assertCallThrowsSecurityException(
                 mAdSelectionClient.getAdSelectionData(
                         new GetAdSelectionDataRequest.Builder().setSeller(AD_TECH).build()));
     }
 
     @Test
-    public void test_reportImpressionOnDeviceAuction_throwsSecurityException() {
-        assertCallIsRejected(
+    public void test_getAdSelectionData_allowListEnabled_doesNotThrowSecurityException()
+            throws Exception {
+        startDevSessionWithAllowlist();
+
+        assertCallSucceedsOrThrowsNonSecurityException(
+                mAdSelectionClient.getAdSelectionData(
+                        new GetAdSelectionDataRequest.Builder().setSeller(AD_TECH).build()));
+    }
+
+    @Test
+    public void test_reportImpressionOnDeviceAuction_throwsSecurityException() throws Exception {
+        startDevSessionWithoutAllowlist();
+
+        assertCallThrowsSecurityException(
                 mAdSelectionClient.reportImpression(
                         new ReportImpressionRequest(
                                 VALID_AD_SELECTION_ID,
@@ -214,15 +282,42 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
     }
 
     @Test
-    public void test_reportImpressionServerAuction_throwsSecurityException() {
-        assertCallIsRejected(
+    public void
+            test_reportImpressionOnDeviceAuction_allowListEnabled_doesNotThrowSecurityException()
+                    throws Exception {
+        startDevSessionWithAllowlist();
+
+        assertCallSucceedsOrThrowsNonSecurityException(
+                mAdSelectionClient.reportImpression(
+                        new ReportImpressionRequest(
+                                VALID_AD_SELECTION_ID,
+                                AdSelectionConfigFixture.anAdSelectionConfig())));
+    }
+
+    @Test
+    public void test_reportImpressionServerAuction_throwsSecurityException() throws Exception {
+        startDevSessionWithoutAllowlist();
+
+        assertCallThrowsSecurityException(
                 mAdSelectionClient.reportImpression(
                         new ReportImpressionRequest(VALID_AD_SELECTION_ID)));
     }
 
     @Test
-    public void test_reportEvent_throwsSecurityException() {
-        assertCallIsRejected(
+    public void test_reportImpressionServerAuction_allowListEnabled_doesNotThrowSecurityException()
+            throws Exception {
+        startDevSessionWithAllowlist();
+
+        assertCallSucceedsOrThrowsNonSecurityException(
+                mAdSelectionClient.reportImpression(
+                        new ReportImpressionRequest(VALID_AD_SELECTION_ID)));
+    }
+
+    @Test
+    public void test_reportEvent_throwsSecurityException() throws Exception {
+        startDevSessionWithoutAllowlist();
+
+        assertCallThrowsSecurityException(
                 mAdSelectionClient.reportEvent(
                         new ReportEventRequest.Builder(
                                         VALID_AD_SELECTION_ID,
@@ -233,14 +328,41 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
     }
 
     @Test
-    public void test_updateSignals_throwsSecurityException() {
-        assertCallIsRejected(
+    public void test_reportEvent_allowListEnabled_doesNotThrowSecurityException() throws Exception {
+        startDevSessionWithAllowlist();
+
+        assertCallSucceedsOrThrowsNonSecurityException(
+                mAdSelectionClient.reportEvent(
+                        new ReportEventRequest.Builder(
+                                        VALID_AD_SELECTION_ID,
+                                        "click",
+                                        "some data",
+                                        FLAG_REPORTING_DESTINATION_SELLER)
+                                .build()));
+    }
+
+    @Test
+    public void test_updateSignals_throwsSecurityException() throws Exception {
+        startDevSessionWithoutAllowlist();
+
+        assertCallThrowsSecurityException(
+                mProtectedSignalsClient.updateSignals(
+                        new UpdateSignalsRequest.Builder(Uri.EMPTY).build()));
+    }
+
+    @Test
+    public void test_updateSignals_allowListEnabled_doesNotThrowSecurityException()
+            throws Exception {
+        startDevSessionWithAllowlist();
+
+        assertCallSucceedsOrThrowsNonSecurityException(
                 mProtectedSignalsClient.updateSignals(
                         new UpdateSignalsRequest.Builder(Uri.EMPTY).build()));
     }
 
     @Test
     public void testRegisterSource_devModeDisabledInMsmtService_success() throws Exception {
+        startDevSessionWithoutAllowlist();
         MeasurementManager mm = getMeasurementManager();
         Uri uri = Uri.parse("https://www.example.com");
         OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
@@ -252,6 +374,7 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
 
     @Test
     public void testRegisterTrigger_devModeDisabledInMsmtService_success() throws Exception {
+        startDevSessionWithoutAllowlist();
         MeasurementManager mm = getMeasurementManager();
         Uri uri = Uri.parse("https://www.example.com");
         OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
@@ -263,6 +386,7 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
 
     @Test
     public void testDeleteRegistrations_devModeDisabledInMsmtService_success() throws Exception {
+        startDevSessionWithoutAllowlist();
         MeasurementManager mm = getMeasurementManager();
         DeletionRequest request = new DeletionRequest.Builder().build();
         OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
@@ -274,6 +398,7 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
 
     @Test
     public void testRegisterWebSource_devModeDisabledInMsmtService_success() throws Exception {
+        startDevSessionWithoutAllowlist();
         MeasurementManager mm = getMeasurementManager();
         OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
 
@@ -285,6 +410,7 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
 
     @Test
     public void testRegisterWebTrigger_devModeDisabledInMsmtService_success() throws Exception {
+        startDevSessionWithoutAllowlist();
         MeasurementManager mm = getMeasurementManager();
         OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
 
@@ -295,7 +421,9 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
     }
 
     @Test
-    public void testGetMeasurementApiStatus_devModeDisabledInMsmtService_success() throws Exception {
+    public void testGetMeasurementApiStatus_devModeDisabledInMsmtService_success()
+            throws Exception {
+        startDevSessionWithoutAllowlist();
         MeasurementManager mm = getMeasurementManager();
         OutcomeReceiverForTests<Integer> callback = new OutcomeReceiverForTests<>();
         flags.setDebugFlag(KEY_CONSENT_NOTIFIED_DEBUG_MODE, true);
@@ -306,25 +434,44 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
         callback.assertResultReceived();
     }
 
-    private void startDevSession() throws Exception {
-        setDevSessionState(true);
+    private void startDevSessionWithoutAllowlist() throws Exception {
+        setDevSessionState(true, null);
     }
 
-    private void endDevSession() throws Exception {
-        setDevSessionState(false);
+    private void startDevSessionWithAllowlist() throws Exception {
+        setDevSessionState(true, CommonFixture.TEST_PACKAGE_NAME);
     }
 
-    private void setDevSessionState(boolean state) throws Exception {
+    private void endDevSessionIfNeeded() throws Exception {
+        if (mCurrentDevSessionState) {
+            setDevSessionState(false, null);
+        }
+    }
+
+    private void setDevSessionState(boolean state, String allowlistPattern) throws Exception {
+        if (mCurrentDevSessionState == state) {
+            fail("Dev session state is already " + state);
+            return;
+        } else {
+            mCurrentDevSessionState = state;
+        }
         sLogger.v("Starting setDevSession(%b)", state);
-        assertThat(
-                        mAdServicesShellCommandHelper.runCommand(
-                                "adservices-api dev-session %s --erase-db",
-                                state ? "start --allow-debuggable-apps" : "end"))
-                .isNotEmpty();
+        final String commandPrefix = "adservices-api dev-session %s --erase-db";
+        final String command;
+        if (state && allowlistPattern != null) {
+            mAdServicesShellCommandHelper.runCommand(
+                    "adservices-api dev-session start --allow-debuggable-apps --erase-db"
+                            + " --app-package-allowlist %s",
+                    allowlistPattern);
+        } else {
+            mAdServicesShellCommandHelper.runCommand(
+                    "adservices-api dev-session %s --erase-db",
+                    state ? "start --allow-debuggable-apps" : "end");
+        }
         sLogger.v("Completed setDevSession(%b)", state);
     }
 
-    private void assertCallIsRejected(ListenableFuture<?> future) {
+    private void assertCallThrowsSecurityException(ListenableFuture<?> future) throws Exception {
         ExecutionException exception =
                 assertThrows(
                         ExecutionException.class, () -> future.get(TIMEOUT_SEC, TimeUnit.SECONDS));
@@ -332,5 +479,15 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
                 "Expected ExecutionException to be caused by SecurityException, but was: "
                         + exception.getCause(),
                 exception.getCause() instanceof SecurityException);
+    }
+
+    @SuppressWarnings("MissingFail")
+    private void assertCallSucceedsOrThrowsNonSecurityException(ListenableFuture<?> future)
+            throws Exception {
+        try {
+            future.get(TIMEOUT_SEC, TimeUnit.SECONDS);
+        } catch (Exception tolerated) {
+            assertThat(tolerated).isNotInstanceOf(SecurityException.class);
+        }
     }
 }

@@ -215,8 +215,18 @@ public class DevContextFilter {
             builder.setDeviceDevOptionsEnabled(false);
         }
         DevContext devContext = builder.build();
-        validateDevSessionStateOrThrow(devContext.getDevSession().getState(), isCallerDebuggable);
+        validateDevSessionStateOrThrow(
+                devContext.getDevSession().getState(),
+                isCallerDebuggable,
+                isAllowlisted(devContext.getDevSession(), callingAppPackage));
         return devContext;
+    }
+
+    private boolean isAllowlisted(DevSession devSession, String callingAppPackage) {
+        return devSession
+                .getNonDebuggableAppAllowlistPattern()
+                .matcher(callingAppPackage)
+                .matches();
     }
 
     /**
@@ -259,12 +269,17 @@ public class DevContextFilter {
     }
 
     private void validateDevSessionStateOrThrow(
-            DevSessionState devSessionState, boolean isCallerDebuggable) throws RuntimeException {
+            DevSessionState devSessionState,
+            boolean isCallerDebuggable,
+            boolean isCallerAllowlisted)
+            throws RuntimeException {
         Exception genericException = null;
         sLogger.v(
                 "Current DevSessionState: %s, isCallerDebuggable: %b,",
                 devSessionState, isCallerDebuggable);
-        if (devSessionState.equals(DevSessionState.IN_DEV) && !isCallerDebuggable) {
+        if (devSessionState.equals(DevSessionState.IN_DEV)
+                && !isCallerDebuggable
+                && !isCallerAllowlisted) {
             sLogger.v("Rejecting non-debuggable app in dev session");
             genericException =
                     AdServicesStatusUtils.asException(STATUS_DEV_SESSION_CALLER_IS_NON_DEBUGGABLE);
