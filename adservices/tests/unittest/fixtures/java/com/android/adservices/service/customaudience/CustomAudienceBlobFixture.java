@@ -89,6 +89,36 @@ public class CustomAudienceBlobFixture {
      *
      * <p>Optionally adds harmless junk to the response by adding unexpected fields.
      */
+    public static JSONObject asJSONObjectWithoutOwnerAndBuyer(
+            String name,
+            Instant activationTime,
+            Instant expirationTime,
+            Uri dailyUpdateUri,
+            Uri biddingLogicUri,
+            String userBiddingSignals,
+            DBTrustedBiddingData trustedBiddingData,
+            List<DBAdData> ads,
+            boolean shouldAddHarmlessJunk)
+            throws JSONException {
+        JSONObject json = new JSONObject();
+
+        json = addName(json, name, shouldAddHarmlessJunk);
+        json = addActivationTime(json, activationTime, shouldAddHarmlessJunk);
+        json = addExpirationTime(json, expirationTime, shouldAddHarmlessJunk);
+        json = addDailyUpdateUri(json, dailyUpdateUri, shouldAddHarmlessJunk);
+        json = addBiddingLogicUri(json, biddingLogicUri, shouldAddHarmlessJunk);
+        json = addUserBiddingSignals(json, userBiddingSignals, shouldAddHarmlessJunk);
+        json = addTrustedBiddingData(json, trustedBiddingData, shouldAddHarmlessJunk);
+        json = addAds(json, ads, shouldAddHarmlessJunk);
+
+        return json;
+    }
+
+    /**
+     * Converts the inputs to a valid JSON object and returns it as a serialized string.
+     *
+     * <p>Optionally adds harmless junk to the response by adding unexpected fields.
+     */
     public static JSONObject asJSONObject(
             String owner,
             AdTechIdentifier buyer,
