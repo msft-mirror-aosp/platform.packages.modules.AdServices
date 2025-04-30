@@ -16,6 +16,7 @@
 
 package android.adservices.lint.prod
 
+import android.adservices.lint.common.CompletableFutureUsageDetector
 import android.adservices.lint.common.DeviceConfigUsageDetector
 import android.adservices.lint.common.KillSwitchFlagUsageDetector
 import android.adservices.lint.common.PreconditionsCheckStateDetector
@@ -43,6 +44,7 @@ class AdServicesProdLintCheckerIssueRegistry : IssueRegistry() {
             SharedPreferencesUsageDetector.ISSUE,
             SystemPropertiesUsageDetector.ISSUE,
             StaticContextDetector.ISSUE,
+            CompletableFutureUsageDetector.ISSUE,
         )
 
     override val api: Int
