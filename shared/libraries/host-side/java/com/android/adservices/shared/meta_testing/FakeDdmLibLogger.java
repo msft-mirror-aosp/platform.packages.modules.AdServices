@@ -17,8 +17,8 @@ package com.android.adservices.shared.meta_testing;
 
 import com.android.adservices.shared.testing.LogEntry;
 import com.android.adservices.shared.testing.Logger;
-import com.android.ddmlib.Log;
-import com.android.ddmlib.Log.ILogOutput;
+import com.android.tradefed.log.Log;
+import com.android.tradefed.log.Log.ILogOutput;
 
 import com.google.common.collect.ImmutableList;
 
