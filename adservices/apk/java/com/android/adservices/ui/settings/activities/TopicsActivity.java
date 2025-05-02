@@ -26,6 +26,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.android.adservices.api.R;
 import com.android.adservices.ui.settings.activitydelegates.TopicsActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.TopicsActionDelegate;
+import com.android.adservices.ui.settings.expressivefragments.TopicsActivityFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 
@@ -76,10 +77,19 @@ public class TopicsActivity extends AdServicesBaseActivity {
     }
 
     private void initActivity() {
-        setContentView(R.layout.topics_activity);
-        // no need to store since not using
-        mActivityActionDelegate =
-                new TopicsActivityActionDelegate(
-                        this, new ViewModelProvider(this).get(TopicsViewModel.class));
+        if (isExpressiveTheme()) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(
+                            com.android.settingslib.collapsingtoolbar.R.id.content_frame,
+                            new TopicsActivityFragment())
+                    .commit();
+        } else {
+            setContentView(R.layout.topics_activity);
+            // no need to store since not using
+            mActivityActionDelegate =
+                    new TopicsActivityActionDelegate(
+                            this, new ViewModelProvider(this).get(TopicsViewModel.class));
+        }
     }
 }

@@ -26,6 +26,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.android.adservices.api.R;
 import com.android.adservices.ui.settings.activitydelegates.BlockedTopicsActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.BlockedTopicsActionDelegate;
+import com.android.adservices.ui.settings.expressivefragments.BlockedTopicsActivityFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedTopicsFragment;
 import com.android.adservices.ui.settings.viewmodels.BlockedTopicsViewModel;
 
@@ -73,9 +74,18 @@ public class BlockedTopicsActivity extends AdServicesBaseActivity {
     }
 
     private void initActivity() {
-        setContentView(R.layout.blocked_topics_activity);
-        // no need to store since not using
-        new BlockedTopicsActivityActionDelegate(
-                this, new ViewModelProvider(this).get(BlockedTopicsViewModel.class));
+        if (isExpressiveTheme()) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(
+                            com.android.settingslib.collapsingtoolbar.R.id.content_frame,
+                            new BlockedTopicsActivityFragment())
+                    .commit();
+        } else {
+            setContentView(R.layout.blocked_topics_activity);
+            // no need to store since not using
+            new BlockedTopicsActivityActionDelegate(
+                    this, new ViewModelProvider(this).get(BlockedTopicsViewModel.class));
+        }
     }
 }
