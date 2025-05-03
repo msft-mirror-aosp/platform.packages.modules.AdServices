@@ -19,6 +19,7 @@ package com.android.adservices.service.devapi;
 import com.google.auto.value.AutoValue;
 
 import java.util.regex.Pattern;
+import java.util.Objects;
 
 /**
  * Represents the current state of developer mode on the device.
@@ -120,6 +121,12 @@ public abstract class DevSession {
 
         /** Sets the app allowlist pattern for the current dev session. */
         public abstract Builder setNonDebuggableAppAllowlistPatternString(String patternString);
+
+        public Builder setNonDebuggableAppAllowlistPattern(Pattern pattern) {
+            Objects.requireNonNull(pattern);
+            setNonDebuggableAppAllowlistPatternString(pattern.pattern());
+            return this;
+        }
 
         /** Creates a new {@link DevSession} instance with the configured properties. */
         public abstract DevSession build();

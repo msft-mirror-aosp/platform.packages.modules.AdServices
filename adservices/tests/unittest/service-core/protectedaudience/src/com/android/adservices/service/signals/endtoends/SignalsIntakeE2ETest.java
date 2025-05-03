@@ -374,7 +374,6 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
         assertSignalsUnorderedListEqualsExceptIdAndTime(expected, actual);
     }
 
-    @Ignore("b/376480141")
     @Test
     public void testPut_beforeDevSession_signalIsCleared() throws Exception {
         setupService(true);
@@ -391,13 +390,29 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
         mDevSessionHelper.endDevSession();
     }
 
-    @Ignore("b/376480141")
     @Test
     public void testPut_duringDevSession_signalIsCleared() throws Exception {
         setupService(true);
         String json =
                 "{" + "\"put\":{\"" + BASE64_KEY_1 + "\":\"" + BASE64_VALUE_1 + "\"" + "}" + "}";
         mDevSessionHelper.startDevSession();
+
+        setupAndRunUpdateSignals(json);
+
+        assertThat(mSignalsDao.getSignalsByBuyer(BUYER)).isNotEmpty();
+        mDevSessionHelper.endDevSession();
+        assertThat(mSignalsDao.getSignalsByBuyer(BUYER)).isEmpty();
+        assertThat(mEncoderLogicMetadataDao.doesEncoderExist(BUYER)).isFalse();
+        assertThat(mEncoderEndpointsDao.getEndpoint(BUYER)).isNull();
+        mDevSessionHelper.endDevSession();
+    }
+
+    @Test
+    public void testPut_duringAllowlistedDevSession_signalIsCleared() throws Exception {
+        setupService(true);
+        String json =
+                "{" + "\"put\":{\"" + BASE64_KEY_1 + "\":\"" + BASE64_VALUE_1 + "\"" + "}" + "}";
+        mDevSessionHelper.startDevSession(/* withAllowlistedTestPackage= */ true);
 
         setupAndRunUpdateSignals(json);
 

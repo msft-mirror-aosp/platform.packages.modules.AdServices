@@ -1861,6 +1861,30 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
     }
 
     @Test
+    public void testGetAdSelectionData_withEncrypt_validRequestInAllowlistedDevMode_dataIsCleared()
+            throws Exception {
+        mDevSessionHelper.startDevSession(/* withAllowlistedTestPackage= */ true);
+        prepareDataAndRunServerAuction();
+
+        // Exit the dev session, clearing the database.
+        mDevSessionHelper.endDevSession();
+
+        GetAdSelectionDataTestCallback callback =
+                invokeGetAdSelectionData(
+                        mAdSelectionService,
+                        new GetAdSelectionDataInput.Builder()
+                                .setSeller(SELLER)
+                                .setCallerPackageName(CALLER_PACKAGE_NAME)
+                                .setCoordinatorOriginUri(Uri.parse(COORDINATOR_HOST))
+                                .build());
+        assertThat(mCustomAudienceDaoSpy.getCustomAudienceCount()).isEqualTo(0);
+        assertThat(mProtectedSignalsDao.getSignalsByBuyer(WINNER_BUYER)).isEmpty();
+        assertThat(mEncodedPayloadDaoSpy.doesEncodedPayloadExist(WINNER_BUYER)).isFalse();
+        assertThat(callback.mIsSuccess).isTrue();
+        mDevSessionHelper.endDevSession();
+    }
+
+    @Test
     public void testGetAdSelectionData_withEncrypt_validRequestBeforeDevMode_dataIsCleared()
             throws Exception {
         prepareDataAndRunServerAuction();

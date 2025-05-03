@@ -87,6 +87,7 @@ import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
+import com.android.adservices.devapi.DevSessionFixture;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -254,6 +255,22 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 STATUS_SUCCESS);
 
         verifyNoMoreMockInteractions();
+    }
+
+    @Test
+    public void testJoinCustomAudience_duringDevSession_success() throws RemoteException {
+        when(mDevContextFilterMock.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDeviceDevOptionsEnabled(true)
+                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                                .setDevSession(DevSessionFixture.IN_DEV)
+                                .build());
+        mService.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE,
+                CustomAudienceFixture.VALID_OWNER,
+                mICustomAudienceCallbackMock);
+        verify(mICustomAudienceCallbackMock).onSuccess();
     }
 
     @Test
@@ -880,6 +897,25 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 STATUS_SUCCESS);
 
         verifyNoMoreMockInteractions();
+    }
+
+    @Test
+    public void testLeaveCustomAudience_duringDevSession_success() throws RemoteException {
+        when(mDevContextFilterMock.createDevContext(anyInt()))
+                .thenReturn(
+                        DevContext.builder()
+                                .setDeviceDevOptionsEnabled(true)
+                                .setCallingAppPackageName(CustomAudienceFixture.VALID_OWNER)
+                                .setDevSession(DevSessionFixture.IN_DEV)
+                                .build());
+
+        mService.leaveCustomAudience(
+                CustomAudienceFixture.VALID_OWNER,
+                CommonFixture.VALID_BUYER_1,
+                CustomAudienceFixture.VALID_NAME,
+                mICustomAudienceCallbackMock);
+
+        verify(mICustomAudienceCallbackMock).onSuccess();
     }
 
     @Test

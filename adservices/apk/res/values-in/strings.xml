@@ -220,7 +220,7 @@
     <string name="settingsUI_apps_subtitle_plural" msgid="7184167843623106783">"{count,plural, =1{Aktif / # aplikasi}other{Aktif / # aplikasi}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="4526152882066971753">"Aktif"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="3699617207496648034">"Nonaktif"</string>
-    <string name="settingsUI_topics_view_ga_subtitle" msgid="4448883758817660143">"Minat topik didasarkan pada aplikasi yang digunakan baru-baru ini dan digunakan oleh aplikasi untuk menampilkan iklan yang dipersonalisasi kepada Anda.\n\nAnda dapat memblokir topik yang tidak ingin dibagikan ke aplikasi. Android juga menghapus otomatis topik secara berkala.\n\nMeskipun fitur ini dapat diaktifkan, Anda mungkin tidak akan melihat daftar topik hingga fitur ini sepenuhnya tersedia dan aplikasi mulai menggunakannya."</string>
+    <string name="settingsUI_topics_view_ga_subtitle" msgid="4448883758817660143">"Minat topik didasarkan pada aplikasi yang Anda gunakan baru-baru ini. Minat topik digunakan aplikasi untuk menampilkan iklan yang dipersonalisasi kepada Anda.\n\nAnda dapat memblokir topik yang tidak ingin dibagikan ke aplikasi. Android juga menghapus otomatis topik secara berkala.\n\nMeskipun fitur ini dapat diaktifkan, Anda mungkin tidak akan melihat daftar topik hingga fitur ini sepenuhnya tersedia dan aplikasi mulai menggunakannya."</string>
     <string name="settingsUI_topics_switch_title" msgid="6138535622464144001">"Izinkan topik iklan"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="1855691597262481021">"Topik iklan yang Anda blokir"</string>
     <string name="settingsUI_reset_topics_ga_title" msgid="1580902912944562790">"Reset semua topik iklan"</string>

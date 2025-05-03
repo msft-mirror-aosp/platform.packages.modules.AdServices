@@ -128,6 +128,8 @@ public final class ScheduledUpdatesHandler {
             "Fused custom audience is incomplete.";
     public static final String FUSED_CUSTOM_AUDIENCE_EXCEEDS_SIZE_LIMIT_MESSAGE =
             "Fused custom audience exceeds size limit.";
+    public static final String CUSTOM_AUDIENCE_INCOMPATIBLE_FIELD =
+            "Custom Audience has incompatible %s field. Expected: %s, actual: %s";
     public static final ImmutableMap<String, String> JSON_REQUEST_PROPERTIES =
             ImmutableMap.of(
                     "Content-Type", "application/json",
@@ -355,14 +357,13 @@ public final class ScheduledUpdatesHandler {
 
     private FluentFuture<Void> handleSingleUpdate(
             @NonNull DBScheduledCustomAudienceUpdate update,
-            List<DBPartialCustomAudience> customAudienceOverrides,
+            List<DBPartialCustomAudience> partialCustomAudienceList,
             List<DBCustomAudienceToLeave> customAudienceToLeaveList,
             AtomicInteger numberOfSuccessfulUpdates) {
-        List<CustomAudienceBlob> validatedPartialCustomAudienceBlobs = new ArrayList<>();
+        List<CustomAudienceBlob> validatedPartialCustomAudienceBlobList = new ArrayList<>();
 
-        for (DBPartialCustomAudience partialCustomAudience : customAudienceOverrides) {
-
-            CustomAudienceBlob blob =
+        for (DBPartialCustomAudience partialCustomAudience : partialCustomAudienceList) {
+            CustomAudienceBlob partialCustomAudienceBlob =
                     new CustomAudienceBlob(
                             mFledgeFrequencyCapFilteringEnabled,
                             mFledgeAppInstallFilteringEnabled,
@@ -374,22 +375,22 @@ public final class ScheduledUpdatesHandler {
                             mComponentAdRenderIdMaxLength,
                             mMaxNumComponentAds);
 
-            blob.overrideFromPartialCustomAudience(
-                    update.getOwner(),
-                    update.getBuyer(),
+            partialCustomAudienceBlob.overrideFromPartialCustomAudience(
                     DBPartialCustomAudience.getPartialCustomAudience(partialCustomAudience));
 
             try {
-                mCustomAudienceBlobValidator.validate(blob);
-                validatedPartialCustomAudienceBlobs.add(blob);
+                mCustomAudienceBlobValidator.validate(partialCustomAudienceBlob);
+                validatedPartialCustomAudienceBlobList.add(partialCustomAudienceBlob);
             } catch (IllegalArgumentException e) {
-                sLogger.w(e, "Blob failed validation skipping this override");
+                sLogger.w(
+                        e, "Partial Custom Audience Blob failed validation skipping this override");
             }
         }
         sLogger.v(
-                "Override blobs validation complete: %s",
-                validatedPartialCustomAudienceBlobs.size());
-        return fetchUpdate(update, validatedPartialCustomAudienceBlobs, customAudienceToLeaveList)
+                "Partial Custom Audience blobs' validation complete: %s",
+                validatedPartialCustomAudienceBlobList.size());
+        return fetchUpdate(
+                        update, validatedPartialCustomAudienceBlobList, customAudienceToLeaveList)
                 .transformAsync(
                         ignored -> {
                             numberOfSuccessfulUpdates.getAndIncrement();
@@ -400,13 +401,14 @@ public final class ScheduledUpdatesHandler {
 
     private FluentFuture<Void> fetchUpdate(
             DBScheduledCustomAudienceUpdate update,
-            List<CustomAudienceBlob> validBlobs,
+            List<CustomAudienceBlob> validatedPartialCustomAudienceBlobList,
             List<DBCustomAudienceToLeave> customAudienceToLeaveList) {
         JSONArray partialCustomAudienceJsonArray = new JSONArray();
 
-        for (int i = 0; i < validBlobs.size(); i++) {
+        for (int i = 0; i < validatedPartialCustomAudienceBlobList.size(); i++) {
             try {
-                partialCustomAudienceJsonArray.put(i, validBlobs.get(i).asJSONObject());
+                partialCustomAudienceJsonArray.put(
+                        i, validatedPartialCustomAudienceBlobList.get(i).asJSONObject());
             } catch (JSONException e) {
                 sLogger.w(e, "Invalid Partial Custom Audience Object, skipping join");
             }
@@ -455,20 +457,25 @@ public final class ScheduledUpdatesHandler {
                         },
                         mLightWeightExecutor)
                 .transformAsync(
-                        r -> parseFetchUpdateResponse(r, update, validBlobs, devContext),
+                        r ->
+                                parseFetchUpdateResponse(
+                                        r,
+                                        update,
+                                        validatedPartialCustomAudienceBlobList,
+                                        devContext),
                         mLightWeightExecutor);
     }
 
     private FluentFuture<Void> parseFetchUpdateResponse(
             AdServicesHttpClientResponse response,
             DBScheduledCustomAudienceUpdate update,
-            List<CustomAudienceBlob> overrideCustomAudienceBlobs,
+            List<CustomAudienceBlob> validatedPartialCustomAudienceBlobList,
             DevContext devContext)
             throws JSONException {
         ScheduledCustomAudienceUpdatePerformedStats.Builder statsBuilder =
                 ScheduledCustomAudienceUpdatePerformedStats.builder()
                         .setNumberOfPartialCustomAudienceInRequest(
-                                overrideCustomAudienceBlobs.size());
+                                validatedPartialCustomAudienceBlobList.size());
         String responseBody = response.getResponseBody();
 
         JSONObject jsonResponse = new JSONObject(responseBody);
@@ -486,7 +493,9 @@ public final class ScheduledUpdatesHandler {
                 .transformAsync(
                         ignoredVoid ->
                                 joinCustomAudiences(
-                                        overrideCustomAudienceBlobs,
+                                        update.getOwner(),
+                                        update.getBuyer(),
+                                        validatedPartialCustomAudienceBlobList,
                                         extractJoinCustomAudiencesFromResponse(jsonResponse),
                                         devContext,
                                         statsBuilder),
@@ -536,7 +545,9 @@ public final class ScheduledUpdatesHandler {
     }
 
     private FluentFuture<Void> joinCustomAudiences(
-            @NonNull List<CustomAudienceBlob> overrideBlobs,
+            @NonNull String owner,
+            @NonNull AdTechIdentifier buyer,
+            @NonNull List<CustomAudienceBlob> validatedPartialCustomAudienceBlobList,
             @NonNull List<JSONObject> joinCustomAudienceList,
             @NonNull DevContext devContext,
             ScheduledCustomAudienceUpdatePerformedStats.Builder statsBuilder) {
@@ -545,12 +556,13 @@ public final class ScheduledUpdatesHandler {
         List<ListenableFuture<Void>> persistCustomAudienceList = new ArrayList<>();
 
         Map<String, CustomAudienceBlob> customAudienceOverrideMap =
-                overrideBlobs.stream().collect(Collectors.toMap(b -> b.getName(), b -> b));
+                validatedPartialCustomAudienceBlobList.stream()
+                        .collect(Collectors.toMap(CustomAudienceBlob::getName, b -> b));
 
         ExecutionSequencer sequencer = ExecutionSequencer.create();
 
         for (JSONObject customAudience : joinCustomAudienceList) {
-            CustomAudienceBlob fusedBlob =
+            CustomAudienceBlob fusedCustomAudienceBlob =
                     new CustomAudienceBlob(
                             mFledgeFrequencyCapFilteringEnabled,
                             mFledgeAppInstallFilteringEnabled,
@@ -562,23 +574,26 @@ public final class ScheduledUpdatesHandler {
                             mComponentAdRenderIdMaxLength,
                             mMaxNumComponentAds);
             try {
-                fusedBlob.overrideFromJSONObject(customAudience);
-                if (customAudienceOverrideMap.containsKey(fusedBlob.getName())) {
-                    fusedBlob.overrideFromJSONObject(
-                            customAudienceOverrideMap.get(fusedBlob.getName()).asJSONObject());
+                fusedCustomAudienceBlob.overrideFromJSONObject(customAudience, owner, buyer);
+                if (customAudienceOverrideMap.containsKey(fusedCustomAudienceBlob.getName())) {
+                    fusedCustomAudienceBlob.overrideFromJSONObject(
+                            customAudienceOverrideMap
+                                    .get(fusedCustomAudienceBlob.getName())
+                                    .asJSONObject());
                 }
 
-                if (!isComplete(fusedBlob)) {
+                if (!isComplete(fusedCustomAudienceBlob)) {
                     InvalidObjectException e =
                             new InvalidObjectException(FUSED_CUSTOM_AUDIENCE_INCOMPLETE_MESSAGE);
                     sLogger.e(e, FUSED_CUSTOM_AUDIENCE_INCOMPLETE_MESSAGE);
                     throw e;
                 }
 
-                mCustomAudienceBlobValidator.validate(fusedBlob);
+                mCustomAudienceBlobValidator.validate(fusedCustomAudienceBlob);
 
-                if (fusedBlob.asJSONObject().toString().getBytes(UTF_8).length
+                if (fusedCustomAudienceBlob.asJSONObject().toString().getBytes(UTF_8).length
                         > mFledgeCustomAudienceMaxCustomAudienceSizeB) {
+
                     throw new InvalidObjectException(
                             FUSED_CUSTOM_AUDIENCE_EXCEEDS_SIZE_LIMIT_MESSAGE);
                 }
@@ -586,7 +601,7 @@ public final class ScheduledUpdatesHandler {
                         sequencer.submitAsync(
                                 () ->
                                         persistCustomAudience(
-                                                fusedBlob,
+                                                fusedCustomAudienceBlob,
                                                 devContext,
                                                 numberOfCustomAudienceJoined),
                                 mBackgroundExecutor));
