@@ -141,6 +141,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_BACKGROUN
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_EPOCH_JOB_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_ENABLE_EXPRESSIVE_THEME;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS;
 import static com.android.adservices.shared.common.flags.Constants.MAX_PERCENTAGE;
 
@@ -4131,6 +4132,7 @@ public final class PhFlags implements Flags {
         uxMap.put(
                 KEY_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS,
                 getUiEnableSetAdsPersonalizationStatus());
+        uxMap.put(KEY_UI_ENABLE_EXPRESSIVE_THEME, getUiEnableExpressiveTheme());
         return uxMap;
     }
 
@@ -5442,5 +5444,11 @@ public final class PhFlags implements Flags {
     public boolean getEnableHpkeWithPlatformApis() {
         return getDeviceConfigFlag(
                 KEY_ENABLE_HPKE_WITH_PLATFORM_APIS, DEFAULT_ENABLE_HPKE_WITH_PLATFORM_APIS);
+    }
+
+    @Override
+    public boolean getUiEnableExpressiveTheme() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_UI_ENABLE_EXPRESSIVE_THEME, DEFAULT_UI__ENABLE_EXPRESSIVE_THEME);
     }
 }

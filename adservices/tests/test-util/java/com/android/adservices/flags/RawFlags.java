@@ -3839,4 +3839,9 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
         return mBackend.getFlag(
                 KEY_ENABLE_HPKE_WITH_PLATFORM_APIS, DEFAULT_ENABLE_HPKE_WITH_PLATFORM_APIS);
     }
+
+    public final boolean getUiEnableExpressiveTheme() {
+        return mBackend.getFlag(
+                KEY_UI_ENABLE_EXPRESSIVE_THEME, DEFAULT_UI__ENABLE_EXPRESSIVE_THEME);
+    }
 }

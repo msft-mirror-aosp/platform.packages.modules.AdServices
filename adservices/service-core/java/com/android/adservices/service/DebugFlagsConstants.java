@@ -93,4 +93,8 @@ public final class DebugFlagsConstants {
             "fledge_forced_encoding_complete_broadcast_enabled";
     public static final String KEY_ATTRIBUTION_REPORTING_CLI_ENABLED =
             "measurement_attribution_reporting_cli_enabled";
+
+    // Consent Settings activity debug mode keys.
+    public static final String KEY_CONSENT_SETTINGS_ACTIVITY_DEBUG_MODE_ENABLED =
+            "consent_settings_activity_debug_mode";
 }
