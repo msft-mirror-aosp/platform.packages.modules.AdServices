@@ -140,6 +140,7 @@ import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_PILOT_JOBS_BAT
 import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_PILOT_JOBS_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_U18_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS;
+import static com.android.adservices.service.Flags.DEFAULT_UI__ENABLE_EXPRESSIVE_THEME;
 import static com.android.adservices.service.Flags.DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT;
 import static com.android.adservices.service.Flags.DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.Flags.DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
@@ -1209,6 +1210,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_TEST_ENCR
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_EEA_COUNTRIES;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_ENABLE_EXPRESSIVE_THEME;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_FEATURE_TYPE_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL;
@@ -6643,6 +6645,14 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING,
                 DEFAULT_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING,
                 Flags::getEnableSupportDimensionInLogSampling);
+    }
+
+    @Test
+    public void testGetUiEnableExpressiveTheme() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_UI_ENABLE_EXPRESSIVE_THEME,
+                DEFAULT_UI__ENABLE_EXPRESSIVE_THEME,
+                Flags::getUiEnableExpressiveTheme);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

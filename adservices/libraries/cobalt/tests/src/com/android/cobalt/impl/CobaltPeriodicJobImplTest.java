@@ -281,6 +281,12 @@ public class CobaltPeriodicJobImplTest {
                 .collect(toImmutableList());
     }
 
+    private static ImmutableList<ObservationMetadata> getMetadataIn(Envelope envelope) {
+        return envelope.getBatchList().stream()
+                .map(ObservationBatch::getMetaData)
+                .collect(toImmutableList());
+    }
+
     /** Method to manually set up state before a test begins. */
     public void manualSetUp() throws ExecutionException, InterruptedException {
         mCobaltDatabase = Room.inMemoryDatabaseBuilder(CONTEXT, CobaltDatabase.class).build();
@@ -407,7 +413,10 @@ public class CobaltPeriodicJobImplTest {
         assertThat(apiKeysOf(sentEnvelopes)).containsExactly(API_KEY);
         assertThat(getObservationsIn(sentEnvelopes.get(0)))
                 .containsExactly(
-                        REPORT_1_METADATA,
+                        REPORT_1_METADATA.toBuilder()
+                                .setSystemProfileIndex(0)
+                                .clearSystemProfile()
+                                .build(),
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(OBSERVATION_1)
@@ -468,7 +477,10 @@ public class CobaltPeriodicJobImplTest {
         assertThat(apiKeysOf(sentEnvelopes)).containsExactly(API_KEY);
         assertThat(getObservationsIn(sentEnvelopes.get(0)))
                 .containsExactly(
-                        REPORT_1_METADATA,
+                        REPORT_1_METADATA.toBuilder()
+                                .setSystemProfileIndex(0)
+                                .clearSystemProfile()
+                                .build(),
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(observation)
@@ -533,21 +545,40 @@ public class CobaltPeriodicJobImplTest {
         ImmutableList<Envelope> sentEnvelopes = mUploader.getSentEnvelopes();
         assertThat(sentEnvelopes).hasSize(1);
         assertThat(apiKeysOf(sentEnvelopes)).containsExactly(API_KEY);
-        assertThat(getObservationsIn(sentEnvelopes.get(0)))
+
+        // The ordering of the batches and system profiles is nondeterministic, so we just need to
+        // verify that the system profile indexes assigned are consistent with the order that
+        // they're inserted into the envelope.
+        Envelope envelope = sentEnvelopes.get(0);
+        assertThat(envelope.getSystemProfilesList()).contains(SYSTEM_PROFILE_1);
+        int systemProfile1Index = envelope.getSystemProfilesList().indexOf(SYSTEM_PROFILE_1);
+        assertThat(envelope.getSystemProfilesList()).contains(SYSTEM_PROFILE_2);
+        int systemProfile2Index = envelope.getSystemProfilesList().indexOf(SYSTEM_PROFILE_2);
+
+        assertThat(getObservationsIn(envelope))
                 .containsExactly(
-                        REPORT_2_METADATA,
+                        REPORT_2_METADATA.toBuilder()
+                                .setSystemProfileIndex(systemProfile1Index)
+                                .clearSystemProfile()
+                                .build(),
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(OBSERVATION_1)
                                         .setContributionId(RANDOM_BYTES)
                                         .build()),
-                        REPORT_3_METADATA,
+                        REPORT_3_METADATA.toBuilder()
+                                .setSystemProfileIndex(systemProfile2Index)
+                                .clearSystemProfile()
+                                .build(),
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(OBSERVATION_2)
                                         .setContributionId(RANDOM_BYTES)
                                         .build()),
-                        REPORT_4_METADATA,
+                        REPORT_4_METADATA.toBuilder()
+                                .setSystemProfileIndex(systemProfile2Index)
+                                .clearSystemProfile()
+                                .build(),
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(OBSERVATION_3)
@@ -621,22 +652,35 @@ public class CobaltPeriodicJobImplTest {
         ImmutableMap<ObservationMetadata, ImmutableList<ObservationToEncrypt>>
                 expectedEnvelopeObservations =
                         ImmutableMap.of(
-                                REPORT_2_METADATA.toBuilder().setSystemProfile(large).build(),
+                                REPORT_2_METADATA.toBuilder()
+                                        .setSystemProfileIndex(0)
+                                        .clearSystemProfile()
+                                        .build(),
                                 ImmutableList.of(
                                         ObservationToEncrypt.newBuilder()
                                                 .setObservation(OBSERVATION_1)
                                                 .setContributionId(RANDOM_BYTES)
                                                 .build()),
-                                REPORT_3_METADATA,
+                                REPORT_3_METADATA.toBuilder()
+                                        .setSystemProfileIndex(0)
+                                        .clearSystemProfile()
+                                        .build(),
                                 ImmutableList.of(
                                         ObservationToEncrypt.newBuilder()
                                                 .setObservation(OBSERVATION_2)
                                                 .setContributionId(RANDOM_BYTES)
                                                 .build()));
+        ImmutableList<SystemProfile> expectedSystemProfiles =
+                ImmutableList.of(large, SYSTEM_PROFILE_2);
+
         assertThat(expectedEnvelopeObservations)
                 .containsAtLeastEntriesIn(getObservationsIn(sentEnvelopes.get(0)));
         assertThat(expectedEnvelopeObservations)
                 .containsAtLeastEntriesIn(getObservationsIn(sentEnvelopes.get(1)));
+        assertThat(expectedSystemProfiles)
+                .containsAtLeastElementsIn(sentEnvelopes.get(0).getSystemProfilesList());
+        assertThat(expectedSystemProfiles)
+                .containsAtLeastElementsIn(sentEnvelopes.get(1).getSystemProfilesList());
         assertThat(getObservationsIn(sentEnvelopes.get(0)))
                 .isNotEqualTo(getObservationsIn(sentEnvelopes.get(1)));
         assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(1);
@@ -686,15 +730,30 @@ public class CobaltPeriodicJobImplTest {
         assertThat(sentEnvelopes).hasSize(1);
         assertThat(apiKeysOf(sentEnvelopes)).containsExactly(API_KEY);
 
-        assertThat(getObservationsIn(sentEnvelopes.get(0)))
+        // The ordering of the batches and system profiles is nondeterministic, so we just need to
+        // verify that the system profile indexes assigned are consistent with the order that
+        // they're inserted into the envelope.
+        Envelope envelope = sentEnvelopes.get(0);
+        assertThat(envelope.getSystemProfilesList()).contains(SYSTEM_PROFILE_1);
+        int systemProfile1Index = envelope.getSystemProfilesList().indexOf(SYSTEM_PROFILE_1);
+        assertThat(envelope.getSystemProfilesList()).contains(SYSTEM_PROFILE_2);
+        int systemProfile2Index = envelope.getSystemProfilesList().indexOf(SYSTEM_PROFILE_2);
+
+        assertThat(getObservationsIn(envelope))
                 .containsExactly(
-                        REPORT_1_METADATA,
+                        REPORT_1_METADATA.toBuilder()
+                                        .setSystemProfileIndex(systemProfile1Index)
+                                        .clearSystemProfile()
+                                        .build(),
                                 ImmutableList.of(
                                         ObservationToEncrypt.newBuilder()
                                                 .setObservation(OBSERVATION_1)
                                                 .setContributionId(RANDOM_BYTES)
                                                 .build()),
-                        REPORT_1_METADATA_2,
+                        REPORT_1_METADATA_2.toBuilder()
+                                        .setSystemProfileIndex(systemProfile2Index)
+                                        .clearSystemProfile()
+                                        .build(),
                                 ImmutableList.of(
                                         ObservationToEncrypt.newBuilder()
                                                 .setObservation(
@@ -771,7 +830,10 @@ public class CobaltPeriodicJobImplTest {
 
         assertThat(getObservationsIn(sentEnvelopes.get(0)))
                 .containsExactly(
-                        REPORT_1_METADATA,
+                        REPORT_1_METADATA.toBuilder()
+                                .setSystemProfileIndex(0)
+                                .clearSystemProfile()
+                                .build(),
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(
@@ -842,10 +904,7 @@ public class CobaltPeriodicJobImplTest {
                                 .setMetricId((int) REPORT_1.metricId())
                                 .setReportId((int) REPORT_1.reportId())
                                 .setDayIndex(LOG_TIME_DAY)
-                                .setSystemProfile(
-                                        SystemProfile.newBuilder()
-                                                .setAppVersion(APP_VERSION)
-                                                .build())
+                                .setSystemProfileIndex(0)
                                 .build(),
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
@@ -860,6 +919,8 @@ public class CobaltPeriodicJobImplTest {
                                                         .createReportParticipationObservation(
                                                                 RANDOM_BYTES))
                                         .build()));
+        assertThat(sentEnvelopes.get(0).getSystemProfilesList())
+                .containsExactly(SystemProfile.newBuilder().setAppVersion(APP_VERSION).build());
         assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(1);
         assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
         assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
@@ -1272,11 +1333,26 @@ public class CobaltPeriodicJobImplTest {
                         ObservationFactory.createIndexHistogram(
                                 EVENT_VECTOR_2, /* index= */ 0, /* count= */ 1L));
 
-        assertThat(getObservationsIn(sentEnvelopes.get(0)))
+        // The ordering of the batches and system profiles is nondeterministic, so we just need to
+        // verify that the system profile indexes assigned are consistent with the order that
+        // they're inserted into the envelope.
+        Envelope envelope = sentEnvelopes.get(0);
+        assertThat(envelope.getSystemProfilesList())
+                .contains(mSystemData.filteredSystemProfile(systemProfileReport));
+        int systemProfileReportSystemProfileIndex =
+                envelope.getSystemProfilesList()
+                        .indexOf(mSystemData.filteredSystemProfile(systemProfileReport));
+        assertThat(envelope.getSystemProfilesList())
+                .contains(mSystemData.filteredSystemProfile(simpleReport));
+        int simpleReportSystemProfileIndex =
+                envelope.getSystemProfilesList()
+                        .indexOf(mSystemData.filteredSystemProfile(simpleReport));
+
+        assertThat(getObservationsIn(envelope))
                 .containsExactly(
                         baseMetadata.toBuilder()
                                 .setReportId(simpleReport.getId())
-                                .setSystemProfile(mSystemData.filteredSystemProfile(simpleReport))
+                                .setSystemProfileIndex(simpleReportSystemProfileIndex)
                                 .build(),
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
@@ -1287,8 +1363,7 @@ public class CobaltPeriodicJobImplTest {
                                         .build()),
                         baseMetadata.toBuilder()
                                 .setReportId(systemProfileReport.getId())
-                                .setSystemProfile(
-                                        mSystemData.filteredSystemProfile(systemProfileReport))
+                                .setSystemProfileIndex(systemProfileReportSystemProfileIndex)
                                 .build(),
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
@@ -1447,8 +1522,7 @@ public class CobaltPeriodicJobImplTest {
                         baseMetadata.toBuilder()
                                 .setMetricId(occurrenceMetric.getId())
                                 .setReportId(occurrenceReport.getId())
-                                .setSystemProfile(
-                                        mSystemData.filteredSystemProfile(occurrenceReport))
+                                .setSystemProfileIndex(0)
                                 .build(),
                         ImmutableList.of(
                                 // Real observation.
@@ -1474,7 +1548,7 @@ public class CobaltPeriodicJobImplTest {
                         baseMetadata.toBuilder()
                                 .setMetricId(stringMetric.getId())
                                 .setReportId(stringReport.getId())
-                                .setSystemProfile(mSystemData.filteredSystemProfile(stringReport))
+                                .setSystemProfileIndex(0)
                                 .build(),
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
@@ -1630,5 +1704,158 @@ public class CobaltPeriodicJobImplTest {
         assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
         assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(0);
         assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(1);
+    }
+
+    @Test
+    public void testGenerateAggregatedObservations_movesSystemProfileToEnvelope() throws Exception {
+        manualSetUp();
+
+        // Mark a Count report as having occurred on the previous day.
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        LOG_TIME_DAY,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 0,
+                        /* count= */ EVENT_COUNT_1)
+                .get();
+
+        // Trigger the CobaltPeriodicJob for the current day.
+        mClock.set(UPLOAD_TIME);
+        mPeriodicJob.generateAggregatedObservations().get();
+
+        // Verify the system profile was moved from the observation batch to the envelope level.
+        ImmutableList<Envelope> sentEnvelopes = mUploader.getSentEnvelopes();
+        assertThat(sentEnvelopes).hasSize(1);
+        assertThat(getMetadataIn(sentEnvelopes.get(0)))
+                .containsExactly(
+                        REPORT_1_METADATA.toBuilder()
+                                .setSystemProfileIndex(0)
+                                .clearSystemProfile()
+                                .build());
+        assertThat(sentEnvelopes.get(0).getSystemProfilesList()).containsExactly(SYSTEM_PROFILE_1);
+    }
+
+    @Test
+    public void testGenerateAggregatedObservations_multipleUniqueSystemProfiles() throws Exception {
+        manualSetUp();
+
+        // Add 2 count events, each with a different report id and system profile. Using different
+        // report ids is crucial for verifying that the correct system profile index is assigned.
+        // Otherwise, the metadatas would be identical besides the system profile index.
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        LOG_TIME_DAY,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 0,
+                        /* count= */ EVENT_COUNT_1)
+                .get();
+        mDataService
+                .aggregateCount(
+                        REPORT_2,
+                        LOG_TIME_DAY,
+                        SYSTEM_PROFILE_2,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 0,
+                        /* count= */ EVENT_COUNT_1)
+                .get();
+
+        // Trigger the CobaltPeriodicJob for the current day.
+        mClock.set(UPLOAD_TIME);
+        mPeriodicJob.generateAggregatedObservations().get();
+
+        ImmutableList<Envelope> sentEnvelopes = mUploader.getSentEnvelopes();
+        assertThat(sentEnvelopes).hasSize(1);
+        Envelope envelope = sentEnvelopes.get(0);
+
+        // The ordering of the batches and system profiles is nondeterministic, so we just need to
+        // verify that the system profile indexes assigned are consistent with the order that
+        // they're inserted into the envelope.
+        assertThat(envelope.getSystemProfilesList()).contains(SYSTEM_PROFILE_1);
+        int systemProfile1Index = envelope.getSystemProfilesList().indexOf(SYSTEM_PROFILE_1);
+        assertThat(envelope.getSystemProfilesList()).contains(SYSTEM_PROFILE_2);
+        int systemProfile2Index = envelope.getSystemProfilesList().indexOf(SYSTEM_PROFILE_2);
+
+        assertThat(getMetadataIn(envelope))
+                .containsExactly(
+                        REPORT_1_METADATA.toBuilder()
+                                .setSystemProfileIndex(systemProfile1Index)
+                                .clearSystemProfile()
+                                .build(),
+                        REPORT_2_METADATA.toBuilder()
+                                .setSystemProfileIndex(systemProfile2Index)
+                                .clearSystemProfile()
+                                .build());
+    }
+
+    @Test
+    public void testGenerateAggregatedObservations_sharesSystemProfiles() throws Exception {
+        manualSetUp();
+
+        // Add 3 count events with different report ids, but with the first and third having an
+        // identical system profile. Using different report ids is crucial for verifying that the
+        // correct system profile index is assigned. Otherwise, the metadatas would be identical
+        // besides the system profile index.
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        LOG_TIME_DAY,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 0,
+                        /* count= */ EVENT_COUNT_1)
+                .get();
+        mDataService
+                .aggregateCount(
+                        REPORT_2,
+                        LOG_TIME_DAY,
+                        SYSTEM_PROFILE_2,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 0,
+                        /* count= */ EVENT_COUNT_1)
+                .get();
+        mDataService
+                .aggregateCount(
+                        REPORT_3,
+                        LOG_TIME_DAY,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 0,
+                        /* count= */ EVENT_COUNT_1)
+                .get();
+
+        // Trigger the CobaltPeriodicJob for the current day.
+        mClock.set(UPLOAD_TIME);
+        mPeriodicJob.generateAggregatedObservations().get();
+
+        ImmutableList<Envelope> sentEnvelopes = mUploader.getSentEnvelopes();
+        assertThat(sentEnvelopes).hasSize(1);
+        Envelope envelope = sentEnvelopes.get(0);
+
+        // The ordering of the batches and system profiles is nondeterministic, so we just need to
+        // verify that the system profile indexes assigned are consistent with the order that
+        // they're inserted into the envelope.
+        assertThat(envelope.getSystemProfilesList()).contains(SYSTEM_PROFILE_1);
+        int systemProfile1Index = envelope.getSystemProfilesList().indexOf(SYSTEM_PROFILE_1);
+        assertThat(envelope.getSystemProfilesList()).contains(SYSTEM_PROFILE_2);
+        int systemProfile2Index = envelope.getSystemProfilesList().indexOf(SYSTEM_PROFILE_2);
+
+        assertThat(getMetadataIn(envelope))
+                .containsExactly(
+                        REPORT_1_METADATA.toBuilder()
+                                .setSystemProfileIndex(systemProfile1Index)
+                                .clearSystemProfile()
+                                .build(),
+                        REPORT_2_METADATA.toBuilder()
+                                .setSystemProfileIndex(systemProfile2Index)
+                                .clearSystemProfile()
+                                .build(),
+                        REPORT_3_METADATA.toBuilder()
+                                .setSystemProfileIndex(systemProfile1Index)
+                                .clearSystemProfile()
+                                .build());
     }
 }
