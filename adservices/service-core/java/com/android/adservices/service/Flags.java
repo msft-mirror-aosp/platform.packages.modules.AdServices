@@ -6390,6 +6390,14 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENABLE_HPKE_WITH_PLATFORM_APIS;
     }
 
+    /** Feature flag to enable expressive theme. */
+    @FeatureFlag boolean DEFAULT_UI__ENABLE_EXPRESSIVE_THEME = true;
+
+    /** Returns whether experssive theme is enabled. */
+    default boolean getUiEnableExpressiveTheme() {
+        return DEFAULT_UI__ENABLE_EXPRESSIVE_THEME;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
     ////////////////////////////////////////////////////////////////////////////////////////////////
