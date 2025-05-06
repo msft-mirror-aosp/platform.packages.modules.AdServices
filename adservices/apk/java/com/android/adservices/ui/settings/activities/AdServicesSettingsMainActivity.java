@@ -30,6 +30,7 @@ import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.OTAResourcesManager;
 import com.android.adservices.ui.settings.activitydelegates.MainActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.MainActionDelegate;
+import com.android.adservices.ui.settings.expressivefragments.MainActivityFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 
@@ -97,12 +98,12 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
 
     @Override
     public void initGA() {
-        initMainActivity(R.layout.main_activity);
+        initMainActivity(R.layout.main_activity, R.layout.main_activity_fragment);
     }
 
     @Override
     public void initU18() {
-        initMainActivity(R.layout.main_u18_activity);
+        initMainActivity(R.layout.main_u18_activity, R.layout.main_u18_activity_fragment);
     }
 
     @Override
@@ -110,10 +111,19 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
         initGA();
     }
 
-    private void initMainActivity(int layoutResID) {
-        setContentView(layoutResID);
-        mActivityActionDelegate =
-                new MainActivityActionDelegate(
-                        this, new ViewModelProvider(this).get(MainViewModel.class));
+    private void initMainActivity(int layoutResID, int preferenceResID) {
+        if (isExpressiveTheme()) {
+            MainActivityFragment uiContent = new MainActivityFragment(preferenceResID);
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(
+                            com.android.settingslib.collapsingtoolbar.R.id.content_frame, uiContent)
+                    .commit();
+        } else {
+            setContentView(layoutResID);
+            mActivityActionDelegate =
+                    new MainActivityActionDelegate(
+                            this, new ViewModelProvider(this).get(MainViewModel.class));
+        }
     }
 }

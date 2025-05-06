@@ -55,6 +55,8 @@ android_library {
         "SettingsLibSettingsTheme",
         "SettingsLibCollapsingToolbarBaseActivity",
         "SettingsLibMainSwitchPreference",
+        "SettingsLibTopIntroPreference",
+        "SettingsLibFooterPreference",
     ],
     // TODO(b/269145496): Remove dex_preopt: false.
     dex_preopt: {
