@@ -165,9 +165,9 @@ public class KeyValueData {
     }
 
     /** Set the next execution time of the Reporting Service Job */
-    public void setReportingJobNextExecutionTime(Long value) {
+    public void setReportingJobNextExecutionTime(@Nullable Long value) {
         validateOfTypeReport();
-        mValue = String.valueOf(value);
+        mValue = value == null ? null : String.valueOf(value);
     }
 
     private void validateOfTypeReport() {
