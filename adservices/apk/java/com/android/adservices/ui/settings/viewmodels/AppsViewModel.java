@@ -24,6 +24,7 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.preference.SwitchPreferenceCompat;
 
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -214,6 +215,20 @@ public class AppsViewModel extends AndroidViewModel {
         } else {
             appsSwitchBar.setChecked(true);
             mEventTrigger.postValue(new Pair<>(AppsViewModelUiEvent.SWITCH_OFF_APPS, null));
+        }
+    }
+
+    /**
+     * Triggers opt out process for Privacy Sandbox. Also reverts the switch state, since
+     * confirmation dialog will handle switch change.
+     */
+    public void consentSwitchPreferenceClickHandler(SwitchPreferenceCompat appsSwitchBar) {
+        if (appsSwitchBar.isChecked()) {
+            appsSwitchBar.setChecked(false);
+            mEventTrigger.postValue(new Pair<>(AppsViewModelUiEvent.SWITCH_OFF_APPS, null));
+        } else {
+            appsSwitchBar.setChecked(true);
+            mEventTrigger.postValue(new Pair<>(AppsViewModelUiEvent.SWITCH_ON_APPS, null));
         }
     }
 
