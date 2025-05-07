@@ -327,8 +327,4 @@ public class AppsActivityFragmentActionDelegate extends BaseActionDelegate {
                 };
         mAppsViewModel.getUiEvents().observe(mActivity, observer);
     }
-
-    private String getResourcesString(int resId) {
-        return mActivity.getResources().getString(resId);
-    }
 }
