@@ -65,6 +65,7 @@ import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.common.AdPackageDenyResolver;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
@@ -152,7 +153,12 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                 debugFlags,
                 AdServicesLoggerImpl.getInstance(),
                 appImportanceFilter,
-                DevContextFilter.create(context, /* developerModeFeatureEnabled= */ false),
+                DevContextFilter.create(
+                        context,
+                        BinderFlagReader.readFlag(
+                                () ->
+                                        DebugFlags.getInstance()
+                                                .getDeveloperSessionFeatureEnabled())),
                 AdPackageDenyResolver.getInstance(),
                 AdServicesExecutors.getBackgroundExecutor());
     }
@@ -241,10 +247,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mConsentManager, mFlags, mDebugFlags),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
-                                    new DevContextAccessResolver(
-                                            mDevContextFilter.createDevContextFromCallingUid(
-                                                    callerUid),
-                                            request),
                                     new PackageDenyAccessResolver(
                                             mFlags.getEnableMsmtRegisterSourcePackageDenyList(),
                                             mAdPackageDenyResolver,
@@ -253,7 +255,13 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             Set.of(
                                                     PackageDenyAccessResolver.MEASUREMENT_GROUP,
                                                     PackageDenyAccessResolver
-                                                            .MEASUREMENT_API_REGISTER_SOURCE))),
+                                                            .MEASUREMENT_API_REGISTER_SOURCE)),
+                                    new DevContextAccessResolver(
+                                            () ->
+                                                    mDevContextFilter
+                                                            .createDevContextFromCallingUid(
+                                                                    callerUid),
+                                            request)),
                             callback,
                             apiNameId,
                             request.getAppPackageName(),
@@ -327,8 +335,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             /*blocklist*/ null,
                                             request.getAppPackageName()),
                                     new DevContextAccessResolver(
-                                            mDevContextFilter.createDevContextFromCallingUid(
-                                                    callerUid),
+                                            () ->
+                                                    mDevContextFilter
+                                                            .createDevContextFromCallingUid(
+                                                                    callerUid),
                                             request.getSourceRegistrationRequest())),
                             callback,
                             apiNameId,
@@ -395,8 +405,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             PermissionHelper.hasAttributionPermission(
                                                     mContext, request.getAppPackageName())),
                                     new DevContextAccessResolver(
-                                            mDevContextFilter.createDevContextFromCallingUid(
-                                                    callerUid),
+                                            () ->
+                                                    mDevContextFilter
+                                                            .createDevContextFromCallingUid(
+                                                                    callerUid),
                                             request.getSourceRegistrationRequest())),
                             callback,
                             apiNameId,
@@ -467,8 +479,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
                                     new DevContextAccessResolver(
-                                            mDevContextFilter.createDevContextFromCallingUid(
-                                                    callerUid),
+                                            () ->
+                                                    mDevContextFilter
+                                                            .createDevContextFromCallingUid(
+                                                                    callerUid),
                                             request.getTriggerRegistrationRequest())),
                             callback,
                             apiNameId,
@@ -533,7 +547,12 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                     new AppPackageAccessResolver(
                                             mFlags.getWebContextClientAppAllowList(),
                                             /*blocklist*/ null,
-                                            request.getAppPackageName())),
+                                            request.getAppPackageName()),
+                                    new DevContextAccessResolver(
+                                            () ->
+                                                    mDevContextFilter
+                                                            .createDevContextFromCallingUid(
+                                                                    callerUid))),
                             callback,
                             apiNameId,
                             request.getAppPackageName(),
