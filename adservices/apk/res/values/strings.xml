@@ -499,6 +499,10 @@
     <string name="settingsUI_apps_view_no_apps_text">No apps are generating interests for you right now</string>
     <!-- Text to show if there are no apps. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_view_no_apps_ga_text">No apps to show right now. \nLearn more about <a href="https://support.google.com/android?p=ad_privacy">app-suggested ads</a></string>
+    <!-- Text in fragment view to show if there are no apps. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_view_fragment_no_apps_ga_text">No apps to show right now.</string>
+    <!-- Text in fragment view to show if there are no apps link. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_view_fragment_no_apps_link_text">Learn more about app-suggested ads</string>
 
     <!-- Info text at the bottom of the apps view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_view_info_text1">Privacy Sandbox</string>
@@ -621,6 +625,8 @@
     <string name="settingsU_main_view_measurement_info">Apps you use can ask Android for information to help them measure the performance of their ads. Android lets apps collect limited types of data.</string>
     <!-- Text for the learn more of Ad privacy page. [CHAR LIMIT=NONE] -->
     <string name="settingsU_main_view_learn_more">Learn more about <a href="https://support.google.com/android?p=ad_privacy">ad privacy on Android</a></string>
+    <!-- Text for the learn more of Ad privacy fragment page. [CHAR LIMIT=NONE] -->
+    <string name="settingsU_main_view_fragment_learn_more">Learn more about ad privacy on Android</string>
     <!-- Text for the topic subtitle in the settings UI showing On and the count of topics. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_subtitle">On / <xliff:g id="topics_count" example="7">%1$d</xliff:g> topics</string>
     <!-- Text for the topic subtitle with plural changes in the settings UI showing On and the count of topics. [CHAR LIMIT=NONE] -->
@@ -639,6 +645,8 @@
     <string name="settingsUI_subtitle_consent_on">On</string>
     <!-- Text for the any subtitle in the settings UI showing whose consent is Off.[CHAR LIMIT=NONE] -->
     <string name="settingsUI_subtitle_consent_off">Off</string>
+    <!-- Footer text of the main view fragment for GA. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_main_view_fragment_footer"><b>Ad topics</b>\nAndroid notes topics of interest based on the apps you’ve used recently and how frequently you use them.\n\n<b>App-suggested ads</b>\nApps you use can also determine what you like based on how you use them.\n\n<b>Ad measurement</b>\nApps you use can ask Android for information to help them measure the performance of their ads. Android lets apps collect limited types of data.</string>
 
     <!-- Settings App UI topics view strings for GA UX ****************************************************-->
     <!-- Title text of the topics view. [CHAR LIMIT=NONE] -->
@@ -653,6 +661,10 @@
     <string name="settingsUI_reset_topics_ga_title">Reset all ad topics</string>
     <!-- Text for the info of ad topics. [CHAR LIMIT=NONE] -->
     <string name="settingsU_topics_view_footer">Android notes topics of interest based on the apps you’ve used in the last few weeks.\n\nLater, an app you use can ask Android for your topics to personalize the ads you see. Android shares up to 3 topics while protecting your identity and information about your app usage.\n\nAndroid auto-deletes topics regularly. As you continue using apps, a topic might reappear on the list. Or you can block topics you don’t want Android to share with apps.\n\nIn your apps, an ad you see may be personalized, depending on this setting, the app-suggested ads setting, your advertising ID settings, and whether the app you’re using personalizes ads.</string>
+    <!-- Text to show if there are no topics for fragment view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_view_fragment_no_topics_ga_text">No topics to show right now.</string>
+    <!-- Text to show link if there are no topics for fragment view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_view_fragment_no_topics_link_text">Learn more about ad topics</string>
 
     <!-- Settings App UI apps view strings for GA UX****************************************************-->
     <!-- Title text of the apps view. [CHAR LIMIT=NONE] -->
@@ -697,6 +709,8 @@
     <string name="settingsUI_u18_measurement_view_title" translatable="false">@string/settingsUI_main_view_info_text8</string>
     <!-- Text for the U18 explanation of ad measurement. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_u18_main_view_measurement_info">Apps you use can ask Android for information to help them measure the performance of their ads. Android lets apps collect only limited types of data.</string>
+    <!-- Footer text of the main view fragment for u18. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_main_u18_view_fragment_footer"><b>Ad measurement</b>\nApps you use can ask Android for information to help them measure the performance of their ads. Android lets apps collect limited types of data.</string>
 
     <!--*****************************************************************************************-->
     <!-- PAS Strings ****************************************************************************-->
@@ -824,11 +838,24 @@
     <string name="settingsUI_pas_apps_view_body_text">Apps and their advertising partners can use your activity across other apps on this device to personalize ads while still keeping information about you private and secure.\n\nFor example, if you regularly use cooking apps, you may see ads for grocery delivery services or related content in other apps.\n\nYou can block an app from sharing your activity data with advertising partners. Android also auto-deletes shared activity data regularly, so an app you use again might reappear on this list.\n\nWhile this feature can be turned on, you may not see a list of apps until this feature is fully available and apps start using it.</string>
     <!-- Text for the PAS footer explanation of apps/PAS API controls for ad privacy. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_pas_apps_view_footer">It’s common for apps and their advertising partners to remember things you’re interested in to personalize your experience. Apps can securely store this information so that it can only be used by their advertising partners to show ads on other apps.\n\nWhether an ad you see is personalized can depend on many factors like this setting, the ad topics setting, your advertising ID settings, and whether the app you’re using personalizes ads.\n\nGoogle requires companies to state publicly that they won’t use this data to re-identify you across apps. Some apps may use your activity to personalize your experience for more than just ads. They may also combine it with other information they already know about you. Companies are responsible for letting you know how they use your data. <a href="https://policies.google.com/privacy">Learn more about how Google protects your data in our Privacy Policy</a>\n\n<a href="https://support.google.com/android?p=manage_appsuggested_ads">Learn more about app-suggested ads</a></string>
+    <!-- Text for the PAS fragment footer explanation of apps/PAS API controls for ad privacy. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_pas_apps_view_fragment_footer">It’s common for apps and their advertising partners to remember things you’re interested in to personalize your experience. Apps can securely store this information so that it can only be used by their advertising partners to show ads on other apps.\n\nWhether an ad you see is personalized can depend on many factors like this setting, the ad topics setting, your advertising ID settings, and whether the app you’re using personalizes ads.\n\nGoogle requires companies to state publicly that they won’t use this data to re-identify you across apps. Some apps may use your activity to personalize your experience for more than just ads. They may also combine it with other information they already know about you. Companies are responsible for letting you know how they use your data.</string>
+    <!-- Text for the PAS fragment footer for privacy learn more. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_pas_apps_view_fragment_privacy_learn_more">Learn more about how Google protects your data in our Privacy Policy</string>
+    <!-- Text for the PAS fragment footer for learn more. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_pas_apps_view_fragment_app_learn_more">Learn more about app-suggested ads</string>
     <!-- Text for the PAS footer explanation of measurement API controls for ad privacy. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_pas_msmt_view_footer">Android uses multiple privacy measures such as aggregation and noising data to limit the information apps can share with one another and help protect your identity.\n\nYour browser may have a similar setting. If ad measurement is on for both Android and your browser, a company may be able to measure the effectiveness of an ad between apps you use and sites you visit. Your browsing history is kept private on your device.\n\n<a href="https://support.google.com/android?p=ad_privacy">Learn more about ad measurement</a></string>
-    <!-- Text for the PAS footer explanation of measurement API controls for ad privacy. [CHAR LIMIT=NONE] -->
+    <!-- Text for the PAS fragment footer explanation of measurement API controls for ad privacy. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_pas_msmt_view_fragment_footer">Android uses multiple privacy measures such as aggregation and noising data to limit the information apps can share with one another and help protect your identity.\n\nYour browser may have a similar setting. If ad measurement is on for both Android and your browser, a company may be able to measure the effectiveness of an ad between apps you use and sites you visit. Your browsing history is kept private on your device.</string>
+    <!-- Text for the PAS fragment footer explanation of measurement API controls for ad privacy. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_pas_msmt_view_fragment_footer_learn_more">Learn more about ad measurement</string>
+    <!-- Text for the PAS footer explanation of topics API controls for ad privacy. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_pas_topics_view_footer">Android notes topics of interest based on the apps you’ve used in the last few weeks.\n\nLater, an app you use can ask Android for your topics to personalize the ads you see. Android shares up to 3 topics while protecting your identity and information about your app usage.\n\nAndroid auto-deletes topics regularly. As you continue using apps, a topic might reappear on the list. Or you can block topics you don’t want Android to share with apps.\n\nWhether an ad you see is personalized can depend on many factors like this setting, the app-suggested ads setting, your advertising ID settings, and whether the app you’re using personalizes ads.\n\n<a href="https://support.google.com/android?p=ad_privacy">Learn more about ad topics</a></string>
-
+    <!-- Text for the PAS fragment footer explanation of topics API controls for ad privacy. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_pas_topics_view_fragment_footer">Android notes topics of interest based on the apps you’ve used in the last few weeks.\n\nLater, an app you use can ask Android for your topics to personalize the ads you see. Android shares up to 3 topics while protecting your identity and information about your app usage.\n\nAndroid auto-deletes topics regularly. As you continue using apps, a topic might reappear on the list. Or you can block topics you don’t want Android to share with apps.\n\nWhether an ad you see is personalized can depend on many factors like this setting, the app-suggested ads setting, your advertising ID settings, and whether the app you’re using personalizes ads.</string>
+    <!-- Text for the PAS fragment footer learn more. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_pas_topics_fragment_learn_more">Learn more about ad topics</string>
     <!--*****************************************************************************************-->
     <!-- Other Strings **************************************************************************-->
     <!--*****************************************************************************************-->
