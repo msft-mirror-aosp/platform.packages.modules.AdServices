@@ -29,25 +29,35 @@ import android.net.Uri;
 
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.devapi.DevContext;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 /** Resolves access related to development/testing context. */
 public class DevContextAccessResolver implements IAccessResolver {
-    private static final String ERROR_MESSAGE = "Localhost is only permitted on user-debug builds "
-            + "or with developer options enabled.";
-    private final boolean mIsAllowed;
+    private static final String ERROR_MESSAGE = "Developer options or dev session are not enabled.";
+    private boolean mIsAllowed;
 
     public DevContextAccessResolver(
-            @NonNull DevContext devContext,
+            @NonNull Supplier<DevContext> devContextSupplier,
             @NonNull RegistrationRequest registrationRequest) {
-        mIsAllowed =
-                WebAddresses.isLocalhost(registrationRequest.getRegistrationUri())
-                        ? devContext.getDeviceDevOptionsEnabled()
-                        : true;
+        Optional<DevContext> devContext = maybeGetDevContext(devContextSupplier);
+        boolean hasLocalhost = WebAddresses.isLocalhost(registrationRequest.getRegistrationUri());
+        setIsAllowed(hasLocalhost, devContext);
+    }
+
+    public DevContextAccessResolver(@NonNull Supplier<DevContext> devContextSupplier) {
+        // For a dev context that is not required to check a specific calling
+        // app, we assume the presence of the dev context is enough to allow access.
+        // If the app is not allowed to use dev context, the dev context filter
+        // would throw a SecurityException and reject the access.
+        Optional<DevContext> devContext = maybeGetDevContext(devContextSupplier);
+        mIsAllowed = devContext.isPresent();
     }
 
     public DevContextAccessResolver(
-            @NonNull DevContext devContext,
+            @NonNull Supplier<DevContext> devContextSupplier,
             @NonNull WebSourceRegistrationRequest webRegistrationRequest) {
+        Optional<DevContext> devContext = maybeGetDevContext(devContextSupplier);
         boolean hasLocalhost = false;
         for (WebSourceParams params : webRegistrationRequest.getSourceParams()) {
             if (WebAddresses.isLocalhost(params.getRegistrationUri())) {
@@ -55,12 +65,13 @@ public class DevContextAccessResolver implements IAccessResolver {
                 break;
             }
         }
-        mIsAllowed = hasLocalhost ? devContext.getDeviceDevOptionsEnabled() : true;
+        setIsAllowed(/* checkDevOptionsEnabled= */ hasLocalhost, devContext);
     }
 
     public DevContextAccessResolver(
-            @NonNull DevContext devContext,
+            @NonNull Supplier<DevContext> devContextSupplier,
             @NonNull SourceRegistrationRequest registrationRequest) {
+        Optional<DevContext> devContext = maybeGetDevContext(devContextSupplier);
         boolean hasLocalhost = false;
         for (Uri uri : registrationRequest.getRegistrationUris()) {
             if (WebAddresses.isLocalhost(uri)) {
@@ -68,12 +79,13 @@ public class DevContextAccessResolver implements IAccessResolver {
                 break;
             }
         }
-        mIsAllowed = hasLocalhost ? devContext.getDeviceDevOptionsEnabled() : true;
+        setIsAllowed(/* checkDevOptionsEnabled= */ hasLocalhost, devContext);
     }
 
     public DevContextAccessResolver(
-            @NonNull DevContext devContext,
+            @NonNull Supplier<DevContext> devContextSupplier,
             @NonNull WebTriggerRegistrationRequest webRegistrationRequest) {
+        Optional<DevContext> devContext = maybeGetDevContext(devContextSupplier);
         boolean hasLocalhost = false;
         for (WebTriggerParams params : webRegistrationRequest.getTriggerParams()) {
             if (WebAddresses.isLocalhost(params.getRegistrationUri())) {
@@ -81,7 +93,7 @@ public class DevContextAccessResolver implements IAccessResolver {
                 break;
             }
         }
-        mIsAllowed = hasLocalhost ? devContext.getDeviceDevOptionsEnabled() : true;
+        setIsAllowed(/* checkDevOptionsEnabled= */ hasLocalhost, devContext);
     }
 
     @Override
@@ -97,5 +109,22 @@ public class DevContextAccessResolver implements IAccessResolver {
     @Override
     public String getErrorMessage() {
         return ERROR_MESSAGE;
+    }
+
+    private void setIsAllowed(boolean checkDevOptionsEnabled, Optional<DevContext> devContext) {
+        mIsAllowed =
+                devContext.isPresent()
+                        && (checkDevOptionsEnabled
+                                ? devContext.get().getDeviceDevOptionsEnabled()
+                                : true);
+    }
+
+    private Optional<DevContext> maybeGetDevContext(
+            @NonNull Supplier<DevContext> devContextSupplier) {
+        try {
+            return Optional.of(devContextSupplier.get());
+        } catch (SecurityException e) {
+            return Optional.empty();
+        }
     }
 }
