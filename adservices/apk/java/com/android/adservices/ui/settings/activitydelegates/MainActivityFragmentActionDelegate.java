@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2025 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,19 @@
  */
 package com.android.adservices.ui.settings.activitydelegates;
 
+import static com.android.adservices.ui.settings.expressivefragments.MainActivityFragment.APPS_PREFERENCE;
+import static com.android.adservices.ui.settings.expressivefragments.MainActivityFragment.MAIN_LEARN_MORE_LINK;
+import static com.android.adservices.ui.settings.expressivefragments.MainActivityFragment.MAIN_VIEW_FOOTER;
+import static com.android.adservices.ui.settings.expressivefragments.MainActivityFragment.MEASUREMENT_PREFERENCE;
+import static com.android.adservices.ui.settings.expressivefragments.MainActivityFragment.TOPICS_PREFERENCE;
+
 import android.content.Intent;
 import android.os.Build;
-import android.view.View;
 
 import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceFragmentCompat;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.stats.UiStatsLogger;
@@ -29,19 +36,25 @@ import com.android.adservices.ui.settings.activities.AppsActivity;
 import com.android.adservices.ui.settings.activities.MeasurementActivity;
 import com.android.adservices.ui.settings.activities.TopicsActivity;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
+import com.android.settingslib.widget.FooterPreference;
+
+import java.util.Objects;
 
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
 @RequiresApi(Build.VERSION_CODES.S)
-public class MainActivityActionDelegate extends BaseActionDelegate {
+public class MainActivityFragmentActionDelegate extends BaseActionDelegate {
     private final MainViewModel mMainViewModel;
+    private final PreferenceFragmentCompat mFragment;
 
-    public MainActivityActionDelegate(
-            AdServicesSettingsMainActivity mainSettingsActivity, MainViewModel mainViewModel) {
+    public MainActivityFragmentActionDelegate(
+            AdServicesSettingsMainActivity mainSettingsActivity,
+            MainViewModel mainViewModel,
+            PreferenceFragmentCompat fragment) {
         super(mainSettingsActivity);
         mMainViewModel = mainViewModel;
-        initWithUx();
+        mFragment = fragment;
         listenToMainViewModelUiEvents();
     }
 
@@ -53,60 +66,56 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
     @Override
     public void initGA() {
         mActivity.setTitle(R.string.settingsUI_main_view_ga_title);
-
-        // privacy sandbox controls
-        mActivity.findViewById(R.id.privacy_sandbox_controls).setVisibility(View.VISIBLE);
         // topics button
-        configureElement(
-                R.id.topics_preference, button -> mMainViewModel.topicsButtonClickHandler());
-        configureElement(R.id.topics_preference_title, R.string.settingsUI_topics_ga_title);
+        Preference topicsPreference =
+                Objects.requireNonNull(mFragment.findPreference(TOPICS_PREFERENCE));
+        topicsPreference.setOnPreferenceClickListener(
+                preference -> {
+                    mMainViewModel.topicsButtonClickHandler();
+                    return true;
+                });
         if (mMainViewModel.getTopicsConsentFromConsentManager()) {
-            configureElement(
-                    R.id.topics_preference_subtitle,
+            topicsPreference.setSummary(
                     getQuantityString(
                             mMainViewModel.getCountOfTopics(),
                             R.string.settingsUI_topics_subtitle_plural));
         } else {
-            configureElement(
-                    R.id.topics_preference_subtitle, R.string.settingsUI_subtitle_consent_off);
+            topicsPreference.setSummary(R.string.settingsUI_subtitle_consent_off);
         }
         // apps button
-        configureElement(R.id.apps_preference, button -> mMainViewModel.appsButtonClickHandler());
-        configureElement(R.id.apps_preference_title, R.string.settingsUI_apps_ga_title);
+        Preference appsPreference =
+                Objects.requireNonNull(mFragment.findPreference(APPS_PREFERENCE));
+        appsPreference.setOnPreferenceClickListener(
+                preference -> {
+                    mMainViewModel.appsButtonClickHandler();
+                    return true;
+                });
         if (mMainViewModel.getAppsConsentFromConsentManager()) {
-            configureElement(
-                    R.id.apps_preference_subtitle,
+            appsPreference.setSummary(
                     getQuantityString(
                             mMainViewModel.getCountOfApps(),
                             R.string.settingsUI_apps_subtitle_plural));
         } else {
-            configureElement(
-                    R.id.apps_preference_subtitle, R.string.settingsUI_subtitle_consent_off);
+            appsPreference.setSummary(R.string.settingsUI_subtitle_consent_off);
         }
         // measurement button
-        configureElement(
-                R.id.measurement_preference, button -> mMainViewModel.measurementClickHandler());
-        configureElement(
-                R.id.measurement_preference_title, R.string.settingsUI_measurement_ga_title);
-        configureElement(
-                R.id.measurement_preference_subtitle,
-                mMainViewModel.getMeasurementConsentFromConsentManager()
-                        ? R.string.settingsUI_subtitle_consent_on
-                        : R.string.settingsUI_subtitle_consent_off);
-        configureLink(R.id.main_view_ga_footer_learn_more);
+        setMeasurement();
+
+        // footer
+        FooterPreference footer =
+                Objects.requireNonNull(mFragment.findPreference(MAIN_VIEW_FOOTER));
+        footer.setLearnMoreText(
+                mActivity
+                        .getResources()
+                        .getString(R.string.settingsU_main_view_fragment_learn_more));
+        footer.setLearnMoreAction(view -> setLinkAction(mActivity, MAIN_LEARN_MORE_LINK));
     }
 
     @Override
     public void initU18() {
         mActivity.setTitle(R.string.settingsUI_main_view_ga_title);
         // measurement button
-        configureElement(
-                R.id.measurement_preference, button -> mMainViewModel.measurementClickHandler());
-        configureElement(
-                R.id.measurement_preference_subtitle,
-                mMainViewModel.getMeasurementConsentFromConsentManager()
-                        ? R.string.settingsUI_subtitle_consent_on
-                        : R.string.settingsUI_subtitle_consent_off);
+        setMeasurement();
     }
 
     @Override
@@ -143,5 +152,20 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
                 };
         mMainViewModel.getUiEvents().removeObservers(mActivity);
         mMainViewModel.getUiEvents().observe(mActivity, observer);
+    }
+
+    private void setMeasurement() {
+        Preference measurementPreference =
+                Objects.requireNonNull(mFragment.findPreference(MEASUREMENT_PREFERENCE));
+        measurementPreference.setOnPreferenceClickListener(
+                preference -> {
+                    mMainViewModel.measurementClickHandler();
+                    return true;
+                });
+        int measurementSummaryResId =
+                mMainViewModel.getMeasurementConsentFromConsentManager()
+                        ? R.string.settingsUI_subtitle_consent_on
+                        : R.string.settingsUI_subtitle_consent_off;
+        measurementPreference.setSummary(measurementSummaryResId);
     }
 }
