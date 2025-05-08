@@ -39,11 +39,11 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 public final class DevContextAccessResolverTest extends AdServicesMockitoTestCase {
 
-    private static final String ERROR_MESSAGE = "Localhost is only permitted on user-debug builds "
-            + "or with developer options enabled.";
+    private static final String ERROR_MESSAGE = "Developer options or dev session are not enabled.";
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://registration-uri.test");
     private static final Uri LOCALHOST = Uri.parse("https://localhost");
 
@@ -62,8 +62,8 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
     public void isAllowed_register_nonLocalhost_devEnabled_returnsTrue() {
         // Setup
         when(mRegistrationRequest.getRegistrationUri()).thenReturn(REGISTRATION_URI);
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextEnabled(), mRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(getDevContextEnabledSupplier(), mRegistrationRequest);
 
         // Execution
         assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
@@ -73,8 +73,8 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
     public void isAllowed_register_nonLocalhost_devDisabled_returnsTrue() {
         // Setup
         when(mRegistrationRequest.getRegistrationUri()).thenReturn(REGISTRATION_URI);
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextDisabled(), mRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(getDevContextDisabledSupplier(), mRegistrationRequest);
 
         // Execution
         assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
@@ -84,8 +84,8 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
     public void isAllowed_register_localhost_devEnabled_returnsTrue() {
         // Setup
         when(mRegistrationRequest.getRegistrationUri()).thenReturn(LOCALHOST);
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextEnabled(), mRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(getDevContextEnabledSupplier(), mRegistrationRequest);
 
         // Execution
         assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
@@ -95,8 +95,8 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
     public void isAllowed_register_localhost_devDisabled_returnsFalse() {
         // Setup
         when(mRegistrationRequest.getRegistrationUri()).thenReturn(LOCALHOST);
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextDisabled(), mRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(getDevContextDisabledSupplier(), mRegistrationRequest);
 
         // Execution
         AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
@@ -109,8 +109,9 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         // Setup
         when(mWebSourceParams.getRegistrationUri()).thenReturn(REGISTRATION_URI);
         when(mWebSourceRegistrationRequest.getSourceParams()).thenReturn(List.of(mWebSourceParams));
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextEnabled(), mWebSourceRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextEnabledSupplier(), mWebSourceRegistrationRequest);
 
         // Execution
         assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
@@ -121,8 +122,9 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         // Setup
         when(mWebSourceParams.getRegistrationUri()).thenReturn(REGISTRATION_URI);
         when(mWebSourceRegistrationRequest.getSourceParams()).thenReturn(List.of(mWebSourceParams));
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextDisabled(), mWebSourceRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextDisabledSupplier(), mWebSourceRegistrationRequest);
 
         // Execution
         assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
@@ -133,8 +135,9 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         // Setup
         when(mWebSourceParams.getRegistrationUri()).thenReturn(LOCALHOST);
         when(mWebSourceRegistrationRequest.getSourceParams()).thenReturn(List.of(mWebSourceParams));
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextEnabled(), mWebSourceRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextEnabledSupplier(), mWebSourceRegistrationRequest);
 
         // Execution
         assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
@@ -147,8 +150,9 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         when(mWebSourceParams2.getRegistrationUri()).thenReturn(REGISTRATION_URI);
         when(mWebSourceRegistrationRequest.getSourceParams())
                 .thenReturn(List.of(mWebSourceParams, mWebSourceParams2));
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextEnabled(), mWebSourceRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextEnabledSupplier(), mWebSourceRegistrationRequest);
 
         // Execution
         assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
@@ -159,8 +163,9 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         // Setup
         when(mWebSourceParams.getRegistrationUri()).thenReturn(LOCALHOST);
         when(mWebSourceRegistrationRequest.getSourceParams()).thenReturn(List.of(mWebSourceParams));
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextDisabled(), mWebSourceRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextDisabledSupplier(), mWebSourceRegistrationRequest);
 
         // Execution
         AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
@@ -175,8 +180,9 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         when(mWebSourceParams2.getRegistrationUri()).thenReturn(REGISTRATION_URI);
         when(mWebSourceRegistrationRequest.getSourceParams())
                 .thenReturn(List.of(mWebSourceParams, mWebSourceParams2));
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextDisabled(), mWebSourceRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextDisabledSupplier(), mWebSourceRegistrationRequest);
 
         // Execution
         AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
@@ -190,8 +196,9 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         when(mWebTriggerParams.getRegistrationUri()).thenReturn(REGISTRATION_URI);
         when(mWebTriggerRegistrationRequest.getTriggerParams())
                 .thenReturn(List.of(mWebTriggerParams));
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextEnabled(), mWebTriggerRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextEnabledSupplier(), mWebTriggerRegistrationRequest);
 
         // Execution
         assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
@@ -203,8 +210,9 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         when(mWebTriggerParams.getRegistrationUri()).thenReturn(REGISTRATION_URI);
         when(mWebTriggerRegistrationRequest.getTriggerParams())
                 .thenReturn(List.of(mWebTriggerParams));
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextDisabled(), mWebTriggerRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextDisabledSupplier(), mWebTriggerRegistrationRequest);
 
         // Execution
         assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
@@ -216,8 +224,9 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         when(mWebTriggerParams.getRegistrationUri()).thenReturn(LOCALHOST);
         when(mWebTriggerRegistrationRequest.getTriggerParams())
                 .thenReturn(List.of(mWebTriggerParams));
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextEnabled(), mWebTriggerRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextEnabledSupplier(), mWebTriggerRegistrationRequest);
 
         // Execution
         assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
@@ -230,8 +239,9 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         when(mWebTriggerParams2.getRegistrationUri()).thenReturn(REGISTRATION_URI);
         when(mWebTriggerRegistrationRequest.getTriggerParams())
                 .thenReturn(List.of(mWebTriggerParams, mWebTriggerParams2));
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextEnabled(), mWebTriggerRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextEnabledSupplier(), mWebTriggerRegistrationRequest);
 
         // Execution
         assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
@@ -243,8 +253,9 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         when(mWebTriggerParams.getRegistrationUri()).thenReturn(LOCALHOST);
         when(mWebTriggerRegistrationRequest.getTriggerParams())
                 .thenReturn(List.of(mWebTriggerParams));
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextDisabled(), mWebTriggerRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextDisabledSupplier(), mWebTriggerRegistrationRequest);
 
         // Execution
         AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
@@ -259,8 +270,9 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         when(mWebTriggerParams2.getRegistrationUri()).thenReturn(REGISTRATION_URI);
         when(mWebTriggerRegistrationRequest.getTriggerParams())
                 .thenReturn(List.of(mWebTriggerParams, mWebTriggerParams2));
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextDisabled(), mWebTriggerRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextDisabledSupplier(), mWebTriggerRegistrationRequest);
 
         // Execution
         AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
@@ -274,7 +286,8 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         when(mSourceRegistrationRequest.getRegistrationUris())
                 .thenReturn(List.of(REGISTRATION_URI));
         mClassUnderTest =
-                new DevContextAccessResolver(getDevContextEnabled(), mSourceRegistrationRequest);
+                new DevContextAccessResolver(
+                        getDevContextEnabledSupplier(), mSourceRegistrationRequest);
 
         // Execution
         assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
@@ -286,7 +299,8 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         when(mSourceRegistrationRequest.getRegistrationUris())
                 .thenReturn(List.of(REGISTRATION_URI));
         mClassUnderTest =
-                new DevContextAccessResolver(getDevContextDisabled(), mSourceRegistrationRequest);
+                new DevContextAccessResolver(
+                        getDevContextDisabledSupplier(), mSourceRegistrationRequest);
 
         // Execution
         assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
@@ -297,7 +311,8 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         // Setup
         when(mSourceRegistrationRequest.getRegistrationUris()).thenReturn(List.of(LOCALHOST));
         mClassUnderTest =
-                new DevContextAccessResolver(getDevContextEnabled(), mSourceRegistrationRequest);
+                new DevContextAccessResolver(
+                        getDevContextEnabledSupplier(), mSourceRegistrationRequest);
 
         // Execution
         assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
@@ -309,7 +324,8 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         when(mSourceRegistrationRequest.getRegistrationUris())
                 .thenReturn(List.of(REGISTRATION_URI, LOCALHOST));
         mClassUnderTest =
-                new DevContextAccessResolver(getDevContextEnabled(), mSourceRegistrationRequest);
+                new DevContextAccessResolver(
+                        getDevContextEnabledSupplier(), mSourceRegistrationRequest);
 
         // Execution
         assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
@@ -320,7 +336,8 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         // Setup
         when(mSourceRegistrationRequest.getRegistrationUris()).thenReturn(List.of(LOCALHOST));
         mClassUnderTest =
-                new DevContextAccessResolver(getDevContextDisabled(), mSourceRegistrationRequest);
+                new DevContextAccessResolver(
+                        getDevContextDisabledSupplier(), mSourceRegistrationRequest);
 
         // Execution
         AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
@@ -334,7 +351,8 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         when(mSourceRegistrationRequest.getRegistrationUris())
                 .thenReturn(List.of(REGISTRATION_URI, LOCALHOST));
         mClassUnderTest =
-                new DevContextAccessResolver(getDevContextDisabled(), mSourceRegistrationRequest);
+                new DevContextAccessResolver(
+                        getDevContextDisabledSupplier(), mSourceRegistrationRequest);
 
         // Execution
         AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
@@ -346,8 +364,8 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
     public void getErrorMessageRegister() {
         // Setup
         when(mRegistrationRequest.getRegistrationUri()).thenReturn(REGISTRATION_URI);
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextEnabled(), mRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(getDevContextEnabledSupplier(), mRegistrationRequest);
 
         // Execution
         assertEquals(ERROR_MESSAGE, mClassUnderTest.getErrorMessage());
@@ -358,8 +376,9 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         // Setup
         when(mWebSourceParams.getRegistrationUri()).thenReturn(REGISTRATION_URI);
         when(mWebSourceRegistrationRequest.getSourceParams()).thenReturn(List.of(mWebSourceParams));
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextEnabled(), mWebSourceRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextEnabledSupplier(), mWebSourceRegistrationRequest);
 
         // Execution
         assertEquals(ERROR_MESSAGE, mClassUnderTest.getErrorMessage());
@@ -371,18 +390,149 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         when(mWebTriggerParams.getRegistrationUri()).thenReturn(REGISTRATION_URI);
         when(mWebTriggerRegistrationRequest.getTriggerParams())
                 .thenReturn(List.of(mWebTriggerParams));
-        mClassUnderTest = new DevContextAccessResolver(
-                getDevContextEnabled(), mWebTriggerRegistrationRequest);
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextEnabledSupplier(), mWebTriggerRegistrationRequest);
 
         // Execution
         assertEquals(ERROR_MESSAGE, mClassUnderTest.getErrorMessage());
     }
 
-    private DevContext getDevContextEnabled() {
-        return DevContext.builder(mPackageName).setDeviceDevOptionsEnabled(true).build();
+    @Test
+    public void isAllowed_register_localhost_throwsSecurityException() {
+        // Setup
+        when(mRegistrationRequest.getRegistrationUri()).thenReturn(LOCALHOST);
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextThrowsSecurityExceptionSupplier(), mRegistrationRequest);
+
+        // Execution
+        AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
+        assertFalse(accessInfo.isAllowedAccess());
+        assertEquals(STATUS_UNAUTHORIZED, accessInfo.getResponseCode());
     }
 
-    private static DevContext getDevContextDisabled() {
-        return DevContext.createForDevOptionsDisabled();
+    @Test
+    public void isAllowed_registerWebSource_allLocalhost_throwsSecurityException() {
+        // Setup
+        when(mWebSourceParams.getRegistrationUri()).thenReturn(LOCALHOST);
+        when(mWebSourceRegistrationRequest.getSourceParams()).thenReturn(List.of(mWebSourceParams));
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextThrowsSecurityExceptionSupplier(),
+                        mWebSourceRegistrationRequest);
+
+        // Execution
+        AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
+        assertFalse(accessInfo.isAllowedAccess());
+        assertEquals(STATUS_UNAUTHORIZED, accessInfo.getResponseCode());
+    }
+
+    @Test
+    public void isAllowed_registerWebSource_someLocalhost_throwsSecurityException() {
+        // Setup
+        when(mWebSourceParams.getRegistrationUri()).thenReturn(LOCALHOST);
+        when(mWebSourceParams2.getRegistrationUri()).thenReturn(REGISTRATION_URI);
+        when(mWebSourceRegistrationRequest.getSourceParams())
+                .thenReturn(List.of(mWebSourceParams, mWebSourceParams2));
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextThrowsSecurityExceptionSupplier(),
+                        mWebSourceRegistrationRequest);
+
+        // Execution
+        AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
+        assertFalse(accessInfo.isAllowedAccess());
+        assertEquals(STATUS_UNAUTHORIZED, accessInfo.getResponseCode());
+    }
+
+    @Test
+    public void isAllowed_registerWebTrigger_allLocalhost_throwsSecurityException() {
+        // Setup
+        when(mWebTriggerParams.getRegistrationUri()).thenReturn(LOCALHOST);
+        when(mWebTriggerRegistrationRequest.getTriggerParams())
+                .thenReturn(List.of(mWebTriggerParams));
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextThrowsSecurityExceptionSupplier(),
+                        mWebTriggerRegistrationRequest);
+
+        // Execution
+        AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
+        assertFalse(accessInfo.isAllowedAccess());
+        assertEquals(STATUS_UNAUTHORIZED, accessInfo.getResponseCode());
+    }
+
+    @Test
+    public void isAllowed_registerWebTrigger_someLocalhost_throwsSecurityException() {
+        // Setup
+        when(mWebTriggerParams.getRegistrationUri()).thenReturn(LOCALHOST);
+        when(mWebTriggerParams2.getRegistrationUri()).thenReturn(REGISTRATION_URI);
+        when(mWebTriggerRegistrationRequest.getTriggerParams())
+                .thenReturn(List.of(mWebTriggerParams, mWebTriggerParams2));
+        mClassUnderTest =
+                new DevContextAccessResolver(
+                        getDevContextThrowsSecurityExceptionSupplier(),
+                        mWebTriggerRegistrationRequest);
+
+        // Execution
+        AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
+        assertFalse(accessInfo.isAllowedAccess());
+        assertEquals(STATUS_UNAUTHORIZED, accessInfo.getResponseCode());
+    }
+
+    @Test
+    public void isAllowed_devContextOnly_devOptionsEnabled_returnsTrue() {
+        // Setup
+        mClassUnderTest = new DevContextAccessResolver(getDevContextEnabledSupplier());
+
+        // Execution
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
+    }
+
+    @Test
+    public void isAllowed_devContextOnly_devOptionsDisabled_returnsTrue() {
+        // Setup
+        mClassUnderTest = new DevContextAccessResolver(getDevContextDisabledSupplier());
+
+        // Execution
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
+    }
+
+    @Test
+    public void isAllowed_devContextOnly_devContextThrowsSecurityException_returnsFalse() {
+        // Setup
+        mClassUnderTest =
+                new DevContextAccessResolver(getDevContextThrowsSecurityExceptionSupplier());
+
+        // Execution
+        AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
+        assertFalse(accessInfo.isAllowedAccess());
+        assertEquals(STATUS_UNAUTHORIZED, accessInfo.getResponseCode());
+    }
+
+    @Test
+    public void isAllowed_devContextOnly_throwsSecurityException() {
+        // Setup
+        mClassUnderTest = new DevContextAccessResolver(getDevContextThrowsSecurityExceptionSupplier());
+
+        // Execution
+        AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
+        assertFalse(accessInfo.isAllowedAccess());
+        assertEquals(STATUS_UNAUTHORIZED, accessInfo.getResponseCode());
+    }
+
+    private Supplier<DevContext> getDevContextEnabledSupplier() {
+        return () -> DevContext.builder(mPackageName).setDeviceDevOptionsEnabled(true).build();
+    }
+
+    private Supplier<DevContext> getDevContextThrowsSecurityExceptionSupplier() {
+        return () -> {
+            throw new SecurityException();
+        };
+    }
+
+    private static Supplier<DevContext> getDevContextDisabledSupplier() {
+        return () -> DevContext.createForDevOptionsDisabled();
     }
 }

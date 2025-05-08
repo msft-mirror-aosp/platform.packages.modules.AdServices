@@ -189,6 +189,11 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
         mKillSwitchSnapshot.put(AD_SERVICES_API_CALLED__API_NAME__DELETE_REGISTRATIONS, false);
         mKillSwitchSnapshot.put(
                 AD_SERVICES_API_CALLED__API_NAME__GET_MEASUREMENT_API_STATUS, false);
+        // By default, assume we are in dev mode for the purpose of tests.
+        // This is to avoid having to mock the DevContextFilter in every test,
+        // while not blocking any requests by default.
+        when(mDevContextFilter.createDevContextFromCallingUid(anyInt()))
+                .thenReturn(DevContext.createForDevIdentity());
     }
 
     @Test
@@ -750,6 +755,8 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     public void testDeleteRegistrations_sessionStableDisabledAndKillSwitchFlipOff_success()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(false);
+        when(mDevContextFilter.createDevContext(anyInt()))
+                .thenReturn(DevContext.createForDevOptionsDisabled());
         runWithMocks(
                 Api.DELETE_REGISTRATIONS,
                 new AccessDenier().deniedByKillSwitch(),
