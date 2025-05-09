@@ -23,6 +23,7 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.preference.SwitchPreferenceCompat;
 
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -131,6 +132,20 @@ public class MeasurementViewModel extends AndroidViewModel {
         } else {
             measurementSwitchBar.setChecked(true);
             mEventTrigger.postValue(MeasurementViewModelUiEvent.SWITCH_OFF_MEASUREMENT);
+        }
+    }
+
+    /**
+     * Triggers opt out process for Privacy Sandbox. Also reverts the switch state, since
+     * confirmation dialog will handle switch change.
+     */
+    public void consentSwitchPreferenceClickHandler(SwitchPreferenceCompat measurementSwitchBar) {
+        if (measurementSwitchBar.isChecked()) {
+            measurementSwitchBar.setChecked(false);
+            mEventTrigger.postValue(MeasurementViewModelUiEvent.SWITCH_OFF_MEASUREMENT);
+        } else {
+            measurementSwitchBar.setChecked(true);
+            mEventTrigger.postValue(MeasurementViewModelUiEvent.SWITCH_ON_MEASUREMENT);
         }
     }
 
