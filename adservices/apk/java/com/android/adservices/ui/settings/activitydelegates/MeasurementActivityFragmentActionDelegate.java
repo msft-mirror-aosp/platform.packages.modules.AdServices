@@ -76,8 +76,14 @@ public class MeasurementActivityFragmentActionDelegate extends BaseActionDelegat
         FooterPreference footer =
                 Objects.requireNonNull(mFragment.findPreference(MEASUREMENT_FOOTER));
         String footerSummary =
-                mActivity.getResources().getString(R.string.settingsUI_pas_msmt_view_footer);
+                mActivity
+                        .getResources()
+                        .getString(R.string.settingsUI_pas_msmt_view_fragment_footer);
         footer.setSummary(footerSummary);
+        footer.setLearnMoreText(
+                mActivity
+                        .getResources()
+                        .getString(R.string.settingsUI_pas_msmt_view_fragment_footer_learn_more));
         footer.setLearnMoreAction(view -> setLinkAction(mActivity, MEASUREMENT_LEARN_MORE_LINK));
     }
 
