@@ -4248,6 +4248,10 @@ public class MeasurementDbSchemaTrail {
         return createStatements;
     }
 
+    private static Map<String, String> getCreateStatementByTableV50() {
+        return getCreateStatementByTableV49();
+    }
+
     private static Map<String, String> getCreateIndexesV7() {
         Map<String, String> createIndexes = new HashMap<>();
         createIndexes.putAll(CREATE_INDEXES_V6);
@@ -4438,6 +4442,10 @@ public class MeasurementDbSchemaTrail {
         return getCreateIndexesV48();
     }
 
+    private static Map<String, String> getCreateIndexesV50() {
+        return getCreateIndexesV49();
+    }
+
     private static final Map<Integer, Collection<String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
             new ImmutableMap.Builder<Integer, Collection<String>>()
                     .put(6, CREATE_STATEMENT_BY_TABLE_V6.values())
@@ -4484,6 +4492,7 @@ public class MeasurementDbSchemaTrail {
                     .put(47, getCreateStatementByTableV47().values())
                     .put(48, getCreateStatementByTableV48().values())
                     .put(49, getCreateStatementByTableV49().values())
+                    .put(50, getCreateStatementByTableV50().values())
                     .build();
 
     private static final Map<Integer, Collection<String>> CREATE_INDEXES_STATEMENTS_BY_VERSION =
@@ -4532,6 +4541,7 @@ public class MeasurementDbSchemaTrail {
                     .put(47, getCreateIndexesV47().values())
                     .put(48, getCreateIndexesV48().values())
                     .put(49, getCreateIndexesV49().values())
+                    .put(50, getCreateIndexesV50().values())
                     .build();
 
     /**
