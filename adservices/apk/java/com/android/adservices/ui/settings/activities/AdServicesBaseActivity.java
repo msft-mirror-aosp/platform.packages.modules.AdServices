@@ -25,11 +25,13 @@ import android.view.MenuItem;
 import androidx.annotation.RequiresApi;
 import androidx.core.view.WindowCompat;
 
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentConstants;
 import com.android.adservices.ui.OTAResourcesManager;
 import com.android.adservices.ui.UxSelector;
 import com.android.settingslib.collapsingtoolbar.CollapsingToolbarBaseActivity;
+import com.android.settingslib.widget.SettingsThemeHelper;
 
 /**
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
@@ -81,5 +83,22 @@ public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivi
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    /** check if it is in expressive theme */
+    public boolean isExpressiveTheme() {
+        // in debug mode, we will by pass the settings check and directly use the adservices flag
+        boolean debugModeEnabled =
+                DebugFlags.getInstance().getConsentSettingsActivityDebugModeEnabled();
+
+        // adservices flag to control the expressive theme
+        boolean expressEnableFlag = FlagsFactory.getFlags().getUiEnableExpressiveTheme();
+
+        if (debugModeEnabled) {
+            return expressEnableFlag;
+        }
+
+        boolean isExpressiveTheme = SettingsThemeHelper.isExpressiveTheme(getApplicationContext());
+        return isExpressiveTheme && expressEnableFlag;
     }
 }

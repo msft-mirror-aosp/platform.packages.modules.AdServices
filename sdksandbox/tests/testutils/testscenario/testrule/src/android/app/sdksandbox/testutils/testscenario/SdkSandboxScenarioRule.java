@@ -31,9 +31,11 @@ import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.app.sdksandbox.testutils.SdkLifecycleHelper;
 import android.app.sdksandbox.testutils.WaitableCountDownLatch;
+import android.app.sdksandbox.testutils.testscenario.SdkSandboxFailedException;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.IBinder.DeathRecipient;
 import android.text.TextUtils;
 import android.view.SurfaceView;
 import android.view.View;
@@ -134,19 +136,39 @@ public class SdkSandboxScenarioRule implements TestRule {
                     final IBinder textExecutor = loadTestSdk();
                     if (textExecutor != null) {
                         mTestExecutor = ISdkSandboxTestExecutor.Stub.asInterface(textExecutor);
+                        mTestExecutor
+                                .asBinder()
+                                .linkToDeath(
+                                        new DeathRecipient() {
+                                            @Override
+                                            public void binderDied() {
+                                                throw new SdkSandboxFailedException(
+                                                        "mTestExecutor binder died");
+                                            }
+                                        }, 0);
                     }
                     mSdkSandboxManager.addSdkSandboxProcessDeathCallback(
                             Runnable::run,
                             () -> {
                                 throw new IllegalStateException("Sandbox process died");
                             });
+                } catch (Exception e) {
+                    // Sandbox specific exception type to make it easier to
+                    // grep for bug routing.
+                    throw new SdkSandboxFailedException(
+                            "Failed to set up with exception: " + e.getMessage(), e);
                 }
                 try {
                     base.evaluate();
                 } finally {
                     try (ActivityScenario scenario =
                             ActivityScenario.launch(SdkSandboxCtsActivity.class)) {
-                        mSdkLifecycleHelper.unloadSdk(mSdkName);
+                        try {
+                          mSdkLifecycleHelper.unloadSdk(mSdkName);
+                        } catch (Exception e) {
+                            throw new SdkSandboxFailedException(
+                                    "Failed to unload SDK with exception: " + e.getMessage(), e);
+                        }
                         // Reset localhost restrictions for the sandbox of the client packagename
                         if (exemptPackage != null) {
                             setLocalhostInSandboxEnabled(false, exemptPackage);
@@ -163,14 +185,20 @@ public class SdkSandboxScenarioRule implements TestRule {
 
     public void assertSdkTestRunPasses(String testMethodName, Bundle params) throws Throwable {
         try (ActivityScenario scenario = ActivityScenario.launch(SdkSandboxCtsActivity.class)) {
-            if (mSdkSandboxManager.getSandboxedSdks().isEmpty()) {
-                final IBinder textExecutor = loadTestSdk();
-                if (textExecutor != null) {
-                    mTestExecutor = ISdkSandboxTestExecutor.Stub.asInterface(textExecutor);
+            try {
+                if (mSdkSandboxManager.getSandboxedSdks().isEmpty()) {
+                    final IBinder textExecutor = loadTestSdk();
+                    if (textExecutor != null) {
+                        mTestExecutor = ISdkSandboxTestExecutor.Stub.asInterface(textExecutor);
+                    }
                 }
+                Assume.assumeTrue(
+                        "No SDK executor. SDK sandbox is disabled",
+                        mTestExecutor != null);
+            } catch (Exception e) {
+                throw new SdkSandboxFailedException(
+                        "Failed to set up with exception: " + e.getMessage(), e);
             }
-            Assume.assumeTrue("No SDK executor. SDK sandbox is disabled", mTestExecutor != null);
-
             assertThat(scenario.getState()).isEqualTo(Lifecycle.State.RESUMED);
             setView(scenario);
 
@@ -277,7 +305,12 @@ public class SdkSandboxScenarioRule implements TestRule {
         loadParams.putBundle(ISdkSandboxTestExecutor.TEST_SETUP_PARAMS, mTestInstanceSetupParams);
         loadParams.putBinder(ISdkSandboxTestExecutor.TEST_AUTHOR_DEFINED_BINDER, mBinder);
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(mSdkName, loadParams, Runnable::run, callback);
+        try {
+            mSdkSandboxManager.loadSdk(mSdkName, loadParams, Runnable::run, callback);
+        } catch (Exception e) {
+            throw new SdkSandboxFailedException(
+                    "Failed to load sdk with exception: " + e.getMessage(), e);
+        }
         try {
             callback.assertLoadSdkIsSuccessful();
         } catch (IllegalStateException e) {
@@ -286,12 +319,13 @@ public class SdkSandboxScenarioRule implements TestRule {
             // response. In which case, we should _not_ attempt to retrieve the error code because
             // the getLoadSdkErrorCode call will likely fail as the callback would not have
             // resolved yet.
-            throw e;
+            throw new SdkSandboxFailedException(
+                    "Wait latch timeout for loading sdk: " + e.getMessage(), e);
         } catch (AssertionError | Exception e) {
             // We cannot use Assume here, since loadTestSdk runs in @BeforeClass.
             // We allow null and then check for null when test executes.
             if (callback.getLoadSdkErrorCode() != SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED) {
-                throw e;
+                throw new SdkSandboxFailedException("Load sdk error: " + e.getMessage(), e);
             }
         }
         final SandboxedSdk testSdk = callback.getSandboxedSdk();
@@ -329,9 +363,13 @@ public class SdkSandboxScenarioRule implements TestRule {
                     params.putInt(EXTRA_DISPLAY_ID, activity.getDisplay().getDisplayId());
                     params.putBinder(EXTRA_HOST_TOKEN, renderedView.getHostToken());
 
-                    mSdkSandboxManager.requestSurfacePackage(
+                    try {
+                        mSdkSandboxManager.requestSurfacePackage(
                             mSdkName, params, Runnable::run, surfacePackageCallback);
-
+                    } catch (Exception e) {
+                        throw new SdkSandboxFailedException(
+                                "Failed to requestSurfacePackage: " + e.getMessage(), e);
+                    }
                     if (!surfacePackageCallback.isRequestSurfacePackageSuccessful()) {
                         surfacePackageException.set(
                                 surfacePackageCallback.getSurfacePackageException());
@@ -348,7 +386,7 @@ public class SdkSandboxScenarioRule implements TestRule {
                     }
                 });
         if (surfacePackageException.get() != null) {
-            throw surfacePackageException.get();
+            throw new SdkSandboxFailedException(surfacePackageException.get().toString());
         }
     }
 

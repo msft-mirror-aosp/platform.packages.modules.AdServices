@@ -130,10 +130,10 @@ public final class MigrationHelpers {
     /** Returns true if {@code tableName} contains a column {@code columnName}. */
     static boolean isColumnPresent(SQLiteDatabase db, String tableName, String columnName) {
         final String query =
-                "select p.name from sqlite_master s join pragma_table_info(s.name) p where "
+                "SELECT p.name FROM sqlite_master s JOIN pragma_table_info(s.name) p WHERE "
                         + "s.tbl_name = '"
                         + tableName
-                        + "' and "
+                        + "' AND "
                         + "p.name = '"
                         + columnName
                         + "'";
@@ -147,7 +147,7 @@ public final class MigrationHelpers {
     private static boolean isTablePresent(SQLiteDatabase db, String tableName) {
         String query =
                 String.format(
-                        "SELECT name FROM sqlite_master where type = 'table' and name = '%1$s'",
+                        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = '%1$s'",
                         tableName);
         try (Cursor cursor = db.rawQuery(query, null)) {
             return cursor.getCount() != 0;

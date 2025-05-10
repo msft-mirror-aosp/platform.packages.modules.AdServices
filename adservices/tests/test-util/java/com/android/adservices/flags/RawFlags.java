@@ -3629,6 +3629,20 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
+    public boolean getMeasurementClickSourceFgCheck() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_CLICK_SOURCE_FG_CHECK,
+                DEFAULT_MEASUREMENT_CLICK_SOURCE_FG_CHECK);
+    }
+
+    @Override
+    public boolean getMeasurementViewSourceFgCheck() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_VIEW_SOURCE_FG_CHECK,
+                DEFAULT_MEASUREMENT_VIEW_SOURCE_FG_CHECK);
+    }
+
+    @Override
     public boolean getEnableLogSamplingInfra() {
         return mBackend.getFlag(KEY_ENABLE_LOG_SAMPLING_INFRA, DEFAULT_ENABLE_LOG_SAMPLING_INFRA);
     }

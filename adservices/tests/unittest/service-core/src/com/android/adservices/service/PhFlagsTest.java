@@ -98,8 +98,10 @@ import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ASYNC_REG
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_CLICK_SOURCE_FG_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_VIEW_SOURCE_FG_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION;
@@ -983,6 +985,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_CLICK_SOURCE_FG_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VIEW_SOURCE_FG_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_COUNT_UNIQUE_SERVICE;
@@ -2322,6 +2326,22 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK,
                 DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK,
                 Flags::getMeasurementEnablePackageNameUidCheck);
+    }
+
+    @Test
+    public void testGetMeasurementEnableClickSourceFgCheck() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_CLICK_SOURCE_FG_CHECK,
+                DEFAULT_MEASUREMENT_CLICK_SOURCE_FG_CHECK,
+                Flags::getMeasurementClickSourceFgCheck);
+    }
+
+    @Test
+    public void testGetMeasurementEnableViewSourceFgCheck() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_VIEW_SOURCE_FG_CHECK,
+                DEFAULT_MEASUREMENT_VIEW_SOURCE_FG_CHECK,
+                Flags::getMeasurementViewSourceFgCheck);
     }
 
     @Test
