@@ -153,4 +153,9 @@ public abstract class BaseActionDelegate implements UxSelector {
         arguments.put("count", count);
         return msgFormat.format(arguments);
     }
+
+    /** get string from resource */
+    public String getResourcesString(int resId) {
+        return mActivity.getResources().getString(resId);
+    }
 }

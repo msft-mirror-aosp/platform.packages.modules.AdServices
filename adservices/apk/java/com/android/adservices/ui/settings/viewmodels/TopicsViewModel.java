@@ -24,6 +24,7 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.preference.SwitchPreferenceCompat;
 
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
@@ -214,6 +215,20 @@ public class TopicsViewModel extends AndroidViewModel {
         } else {
             topicsSwitchBar.setChecked(true);
             mEventTrigger.postValue(new Pair<>(TopicsViewModelUiEvent.SWITCH_OFF_TOPICS, null));
+        }
+    }
+
+    /**
+     * Triggers opt out process for Privacy Sandbox. Also reverts the switch state, since
+     * confirmation dialog will handle switch change.
+     */
+    public void consentSwitchPreferenceClickHandler(SwitchPreferenceCompat topicsSwitchBar) {
+        if (topicsSwitchBar.isChecked()) {
+            topicsSwitchBar.setChecked(false);
+            mEventTrigger.postValue(new Pair<>(TopicsViewModelUiEvent.SWITCH_OFF_TOPICS, null));
+        } else {
+            topicsSwitchBar.setChecked(true);
+            mEventTrigger.postValue(new Pair<>(TopicsViewModelUiEvent.SWITCH_ON_TOPICS, null));
         }
     }
 
