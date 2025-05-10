@@ -19,9 +19,18 @@ package com.android.adservices.shared.metriclogger.logsampler;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.SharedUnitTestCase;
+import com.android.adservices.shared.proto.Dimension;
+import com.android.adservices.shared.proto.DimensionMatcher;
+import com.android.adservices.shared.proto.DimensionName;
 import com.android.adservices.shared.proto.LogSamplingConfig.PerEventSampling;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import org.junit.Test;
+
+import java.util.List;
+import java.util.function.Function;
 
 public final class PerEventSamplingConfigTest extends SharedUnitTestCase {
 
@@ -30,26 +39,91 @@ public final class PerEventSamplingConfigTest extends SharedUnitTestCase {
     private static final PerEventSampling EXAMPLE_PER_EVENT_SAMPLING_CONFIG =
             PerEventSampling.newBuilder().setSamplingRate(SAMPLE_RATE_50_PERCENT).build();
 
+    private static final ImmutableList<DimensionMatcher> SINGLE_DIMENSION_MATCHERS =
+            ImmutableList.of(
+                    DimensionMatcher.newBuilder()
+                            .setSamplingRate(0.01)
+                            .addDimension(
+                                    Dimension.newBuilder()
+                                            .setName(DimensionName.CEL_ERROR_CODE)
+                                            .addAllValue(List.of(101, 201, 301))
+                                            .build())
+                            .build());
+
+    private static final ImmutableMap<DimensionName, Function<ExampleEvent, Integer>>
+            VALUE_EXTRACTOR_FUNCTION_MAP =
+                    ImmutableMap.of(
+                            DimensionName.CEL_ERROR_CODE,
+                            ExampleEvent::getErrorCode,
+                            DimensionName.CEL_PPAPI_NAME,
+                            ExampleEvent::getId);
+
     @Test
     public void testCreatePerEventSamplingConfig() {
-        PerEventSamplingConfig config =
+        PerEventSamplingConfig<ExampleEvent> config =
                 PerEventSamplingConfig.createPerEventSamplingConfig(
-                        EXAMPLE_PER_EVENT_SAMPLING_CONFIG);
+                        EXAMPLE_PER_EVENT_SAMPLING_CONFIG,
+                        ImmutableMap.of(),
+                        /* supportDimensionInLogSamplingEnabled= */ false);
 
         expect.withMessage("sampleRate")
                 .that(config.getSamplingRate())
                 .isEqualTo(SAMPLE_RATE_50_PERCENT);
+        expect.withMessage("dimensionNameToValueFunctionMap")
+                .that(config.getDimensionNameToValueFunctionMap())
+                .isEqualTo(ImmutableMap.of());
+        expect.withMessage("dimensionMatcherList")
+                .that(config.getDimensionMatcherList())
+                .isEqualTo(ImmutableList.of());
+        expect.withMessage("supportDimensionInLogSamplingEnabled")
+                .that(config.getSupportDimensionInLogSamplingEnabled())
+                .isEqualTo(false);
     }
 
     @Test
     public void testCreatePerEventSamplingConfig_defaultConfig_alwaysLog() {
-        PerEventSamplingConfig config =
+        PerEventSamplingConfig<ExampleEvent> config =
                 PerEventSamplingConfig.createPerEventSamplingConfig(
-                        PerEventSampling.getDefaultInstance());
+                        PerEventSampling.getDefaultInstance(),
+                        ImmutableMap.of(),
+                        /* supportDimensionInLogSamplingEnabled= */ false);
 
         expect.withMessage("sampleRate")
                 .that(config.getSamplingRate())
                 .isEqualTo(SAMPLE_RATE_100_PERCENT);
+        expect.withMessage("dimensionNameToValueFunctionMap")
+                .that(config.getDimensionNameToValueFunctionMap())
+                .isEqualTo(ImmutableMap.of());
+        expect.withMessage("dimensionMatcherList")
+                .that(config.getDimensionMatcherList())
+                .isEqualTo(ImmutableList.of());
+        expect.withMessage("supportDimensionInLogSamplingEnabled")
+                .that(config.getSupportDimensionInLogSamplingEnabled())
+                .isEqualTo(false);
+    }
+
+    @Test
+    public void testCreatePerEventSamplingConfig_dimensionMatcherPresent() {
+        PerEventSamplingConfig<ExampleEvent> config =
+                PerEventSamplingConfig.createPerEventSamplingConfig(
+                        EXAMPLE_PER_EVENT_SAMPLING_CONFIG.toBuilder()
+                                .addAllDimensionMatcher(SINGLE_DIMENSION_MATCHERS)
+                                .build(),
+                        VALUE_EXTRACTOR_FUNCTION_MAP,
+                        /* supportDimensionInLogSamplingEnabled= */ true);
+
+        expect.withMessage("sampleRate")
+                .that(config.getSamplingRate())
+                .isEqualTo(SAMPLE_RATE_50_PERCENT);
+        expect.withMessage("dimensionNameToValueFunctionMap")
+                .that(config.getDimensionNameToValueFunctionMap())
+                .isEqualTo(VALUE_EXTRACTOR_FUNCTION_MAP);
+        expect.withMessage("dimensionMatcherList")
+                .that(config.getDimensionMatcherList())
+                .isEqualTo(SINGLE_DIMENSION_MATCHERS);
+        expect.withMessage("supportDimensionInLogSamplingEnabled")
+                .that(config.getSupportDimensionInLogSamplingEnabled())
+                .isEqualTo(true);
     }
 
     @Test
@@ -59,13 +133,35 @@ public final class PerEventSamplingConfigTest extends SharedUnitTestCase {
                 IllegalArgumentException.class,
                 () ->
                         PerEventSamplingConfig.createPerEventSamplingConfig(
-                                PerEventSampling.newBuilder().setSamplingRate(1.5).build()));
+                                PerEventSampling.newBuilder().setSamplingRate(1.5).build(),
+                                ImmutableMap.of(),
+                                /* supportDimensionInLogSamplingEnabled= */ false));
 
         // Lower bound is invalid
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         PerEventSamplingConfig.createPerEventSamplingConfig(
-                                PerEventSampling.newBuilder().setSamplingRate(-1).build()));
+                                PerEventSampling.newBuilder().setSamplingRate(-1).build(),
+                                ImmutableMap.of(),
+                                /* supportDimensionInLogSamplingEnabled= */ false));
+    }
+
+    private static final class ExampleEvent {
+        private final int mId;
+        private final int mErrorCode;
+
+        private ExampleEvent(int id, int errorCode) {
+            mId = id;
+            mErrorCode = errorCode;
+        }
+
+        public int getId() {
+            return mId;
+        }
+
+        public int getErrorCode() {
+            return mErrorCode;
+        }
     }
 }
