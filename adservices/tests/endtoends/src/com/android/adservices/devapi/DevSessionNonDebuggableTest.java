@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,7 @@ import static com.android.adservices.service.CommonDebugFlagsConstants.KEY_ADSER
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_DEVELOPER_SESSION_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH;
@@ -58,6 +59,8 @@ import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementManager;
+import android.adservices.measurement.WebSourceRegistrationRequest;
+import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.signals.UpdateSignalsRequest;
 import android.net.Uri;
 import android.os.OutcomeReceiver;
@@ -66,18 +69,17 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.AdServicesEndToEndTestCase;
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.annotations.EnableAllApis;
 import com.android.adservices.common.annotations.SetCompatModeFlags;
 import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
+import com.android.adservices.common.annotations.SetMsmtWebContextClientAppAllowList;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
-import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -101,6 +103,7 @@ import java.util.concurrent.TimeUnit;
 @SetFlagEnabled(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED)
 @SetFlagEnabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
 @SetFlagEnabled(KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK)
+@SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetFlagDisabled(KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH)
 @SetFlagDisabled(KEY_MEASUREMENT_KILL_SWITCH)
 @SetFlagDisabled(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH)
@@ -110,6 +113,7 @@ import java.util.concurrent.TimeUnit;
 @SetFlagDisabled(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH)
 @EnableAllApis
 @SetMsmtApiAppAllowList
+@SetMsmtWebContextClientAppAllowList("*")
 @SetCompatModeFlags
 @RequiresSdkLevelAtLeastT
 public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCase {
@@ -149,6 +153,7 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
         // Pretend we are in a dev session, and force end a dev session in case
         // we are in one from a previous test.
         mAdServicesShellCommandHelper.runCommand("adservices-api dev-session end --erase-db");
+        mCurrentDevSessionState = false;
     }
 
     @After
@@ -361,31 +366,58 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
     }
 
     @Test
-    public void testRegisterSource_devModeDisabledInMsmtService_success() throws Exception {
+    public void testRegisterSource_devSessionRestricts_throwsSecurityException() throws Exception {
         startDevSessionWithoutAllowlist();
         MeasurementManager mm = getMeasurementManager();
-        Uri uri = Uri.parse("https://www.example.com");
+        Uri uri = Uri.parse("https://www.example.com/source");
         OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
 
         mm.registerSource(uri, /* inputEvent= */ null, sCallbackExecutor, callback);
 
-        callback.assertResultReceived();
+        callback.assertFailureReceived(SecurityException.class);
     }
 
     @Test
-    public void testRegisterTrigger_devModeDisabledInMsmtService_success() throws Exception {
+    public void testRegisterSource_devSessionAllows_succeedsOrThrowsNonSecurityException()
+            throws Exception {
+        startDevSessionWithAllowlist();
+        MeasurementManager mm = getMeasurementManager();
+        Uri uri = Uri.parse("https://www.example.com/source");
+        OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
+
+        mm.registerSource(uri, /* inputEvent= */ null, sCallbackExecutor, callback);
+
+        assertOutcomeReceiverSucceedsOrThrowsNonSecurityException(callback, "registerSource");
+    }
+
+    @Test
+    public void testRegisterTrigger_devSessionRestricts_throwsSecurityException() throws Exception {
         startDevSessionWithoutAllowlist();
         MeasurementManager mm = getMeasurementManager();
-        Uri uri = Uri.parse("https://www.example.com");
+        Uri uri = Uri.parse("https://www.example.com/trigger");
         OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
 
         mm.registerTrigger(uri, sCallbackExecutor, callback);
 
-        callback.assertResultReceived();
+        callback.assertFailureReceived(SecurityException.class);
     }
 
     @Test
-    public void testDeleteRegistrations_devModeDisabledInMsmtService_success() throws Exception {
+    public void testRegisterTrigger_devSessionAllows_succeedsOrThrowsNonSecurityException()
+            throws Exception {
+        startDevSessionWithAllowlist();
+        MeasurementManager mm = getMeasurementManager();
+        Uri uri = Uri.parse("https://www.example.com/trigger");
+        OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
+
+        mm.registerTrigger(uri, sCallbackExecutor, callback);
+
+        assertOutcomeReceiverSucceedsOrThrowsNonSecurityException(callback, "registerTrigger");
+    }
+
+    @Test
+    public void testDeleteRegistrations_devSessionRestricts_throwsSecurityException()
+            throws Exception {
         startDevSessionWithoutAllowlist();
         MeasurementManager mm = getMeasurementManager();
         DeletionRequest request = new DeletionRequest.Builder().build();
@@ -393,45 +425,76 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
 
         mm.deleteRegistrations(request, sCallbackExecutor, callback);
 
-        callback.assertResultReceived();
+        callback.assertFailureReceived(SecurityException.class);
     }
 
     @Test
-    public void testRegisterWebSource_devModeDisabledInMsmtService_success() throws Exception {
-        startDevSessionWithoutAllowlist();
+    public void testDeleteRegistrations_devSessionAllows_succeedsOrThrowsNonSecurityException()
+            throws Exception {
+        startDevSessionWithAllowlist();
         MeasurementManager mm = getMeasurementManager();
+        DeletionRequest request = new DeletionRequest.Builder().build();
         OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
 
-        mm.registerWebSource(
-                buildDefaultWebSourceRegistrationRequest(), sCallbackExecutor, callback);
+        mm.deleteRegistrations(request, sCallbackExecutor, callback);
 
-        callback.assertResultReceived();
+        assertOutcomeReceiverSucceedsOrThrowsNonSecurityException(callback, "deleteRegistrations");
     }
 
     @Test
-    public void testRegisterWebTrigger_devModeDisabledInMsmtService_success() throws Exception {
-        startDevSessionWithoutAllowlist();
-        MeasurementManager mm = getMeasurementManager();
-        OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
-
-        mm.registerWebTrigger(
-                buildDefaultWebTriggerRegistrationRequest(), sCallbackExecutor, callback);
-
-        callback.assertResultReceived();
-    }
-
-    @Test
-    public void testGetMeasurementApiStatus_devModeDisabledInMsmtService_success()
+    public void testRegisterWebSource_devSessionRestricts_throwsSecurityException()
             throws Exception {
         startDevSessionWithoutAllowlist();
         MeasurementManager mm = getMeasurementManager();
-        OutcomeReceiverForTests<Integer> callback = new OutcomeReceiverForTests<>();
-        flags.setDebugFlag(KEY_CONSENT_NOTIFIED_DEBUG_MODE, true);
-        flags.setDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, true);
+        WebSourceRegistrationRequest webSourceRegistrationRequest =
+                buildDefaultWebSourceRegistrationRequest();
+        OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
 
-        mm.getMeasurementApiStatus(sCallbackExecutor, callback);
+        mm.registerWebSource(webSourceRegistrationRequest, sCallbackExecutor, callback);
 
-        callback.assertResultReceived();
+        callback.assertFailureReceived(SecurityException.class);
+    }
+
+    @Test
+    public void testRegisterWebSource_devSessionAllows_succeedsOrThrowsNonSecurityException()
+            throws Exception {
+        startDevSessionWithAllowlist();
+        MeasurementManager mm = getMeasurementManager();
+        WebSourceRegistrationRequest webSourceRegistrationRequest =
+                buildDefaultWebSourceRegistrationRequest();
+        OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
+
+        mm.registerWebSource(webSourceRegistrationRequest, sCallbackExecutor, callback);
+
+        assertOutcomeReceiverSucceedsOrThrowsNonSecurityException(callback, "registerWebSource");
+    }
+
+    @Test
+    public void testRegisterWebTrigger_devSessionRestricts_throwsSecurityException()
+            throws Exception {
+        startDevSessionWithoutAllowlist();
+        MeasurementManager mm = getMeasurementManager();
+        WebTriggerRegistrationRequest webTriggerRegistrationRequest =
+                buildDefaultWebTriggerRegistrationRequest();
+        OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
+
+        mm.registerWebTrigger(webTriggerRegistrationRequest, sCallbackExecutor, callback);
+
+        callback.assertFailureReceived(SecurityException.class);
+    }
+
+    @Test
+    public void testRegisterWebTrigger_devSessionAllows_succeedsOrThrowsNonSecurityException()
+            throws Exception {
+        startDevSessionWithAllowlist();
+        MeasurementManager mm = getMeasurementManager();
+        WebTriggerRegistrationRequest webTriggerRegistrationRequest =
+                buildDefaultWebTriggerRegistrationRequest();
+        OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
+
+        mm.registerWebTrigger(webTriggerRegistrationRequest, sCallbackExecutor, callback);
+
+        assertOutcomeReceiverSucceedsOrThrowsNonSecurityException(callback, "registerWebTrigger");
     }
 
     private void startDevSessionWithoutAllowlist() throws Exception {
@@ -449,13 +512,19 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
     }
 
     private void setDevSessionState(boolean state, String allowlistPattern) throws Exception {
+        // Prevent re-entrant calls if state is already as desired,
+        // unless we are trying to change the allowlistPattern for an active session (not supported
+        // here directly)
         if (mCurrentDevSessionState == state) {
-            fail("Dev session state is already " + state);
+            sLogger.v("Dev session state is already " + state + ", skipping command.");
             return;
         } else {
             mCurrentDevSessionState = state;
         }
-        sLogger.v("Starting setDevSession(%b)", state);
+
+        sLogger.v(
+                "Setting dev session state to %b with allowlist pattern '%s'",
+                state, allowlistPattern);
         final String commandPrefix = "adservices-api dev-session %s --erase-db";
         final String command;
         if (state && allowlistPattern != null) {
@@ -488,6 +557,15 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
             future.get(TIMEOUT_SEC, TimeUnit.SECONDS);
         } catch (Exception tolerated) {
             assertThat(tolerated).isNotInstanceOf(SecurityException.class);
+        }
+    }
+
+    private <T> void assertOutcomeReceiverSucceedsOrThrowsNonSecurityException(
+            @NonNull OutcomeReceiverForTests<T> callback, @NonNull String apiName)
+            throws Exception {
+        callback.assertCalled();
+        if (callback.getError() != null) {
+            assertThat(callback.getError()).isNotInstanceOf(SecurityException.class);
         }
     }
 }

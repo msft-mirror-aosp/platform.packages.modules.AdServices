@@ -88,6 +88,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_CLICK_SOURCE_FG_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME;
@@ -141,6 +142,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_BACKGROUN
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_EPOCH_JOB_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_PILOT_JOBS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_ENABLE_EXPRESSIVE_THEME;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS;
 import static com.android.adservices.shared.common.flags.Constants.MAX_PERCENTAGE;
 
@@ -4131,6 +4133,7 @@ public final class PhFlags implements Flags {
         uxMap.put(
                 KEY_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS,
                 getUiEnableSetAdsPersonalizationStatus());
+        uxMap.put(KEY_UI_ENABLE_EXPRESSIVE_THEME, getUiEnableExpressiveTheme());
         return uxMap;
     }
 
@@ -4803,6 +4806,20 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementClickSourceFgCheck() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_CLICK_SOURCE_FG_CHECK,
+                DEFAULT_MEASUREMENT_CLICK_SOURCE_FG_CHECK);
+    }
+
+    @Override
+    public boolean getMeasurementViewSourceFgCheck() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_VIEW_SOURCE_FG_CHECK,
+                DEFAULT_MEASUREMENT_VIEW_SOURCE_FG_CHECK);
+    }
+
+    @Override
     public boolean getEnableAdExtDataServiceApis() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS,
@@ -5439,8 +5456,15 @@ public final class PhFlags implements Flags {
                 DEFAULT_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING);
     }
 
+    @Override
     public boolean getEnableHpkeWithPlatformApis() {
         return getDeviceConfigFlag(
                 KEY_ENABLE_HPKE_WITH_PLATFORM_APIS, DEFAULT_ENABLE_HPKE_WITH_PLATFORM_APIS);
+    }
+
+    @Override
+    public boolean getUiEnableExpressiveTheme() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_UI_ENABLE_EXPRESSIVE_THEME, DEFAULT_UI__ENABLE_EXPRESSIVE_THEME);
     }
 }

@@ -15,6 +15,10 @@
  */
 package com.android.adservices.ui.settings.activitydelegates;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.icu.text.MessageFormat;
+import android.net.Uri;
 import android.os.Build;
 import android.text.method.LinkMovementMethod;
 import android.view.View;
@@ -29,6 +33,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.android.adservices.ui.UxSelector;
 import com.android.adservices.ui.settings.activities.AdServicesBaseActivity;
 
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -93,6 +100,11 @@ public abstract class BaseActionDelegate implements UxSelector {
                 .setMovementMethod(LinkMovementMethod.getInstance());
     }
 
+    void setLinkAction(Activity context, String uri) {
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+        context.startActivity(intent);
+    }
+
     <T> void configureRecyclerView(int recyclerViewId, RecyclerView.Adapter adapter) {
         // set adapter for recyclerView
         RecyclerView recyclerView = mActivity.findViewById(recyclerViewId);
@@ -122,5 +134,28 @@ public abstract class BaseActionDelegate implements UxSelector {
 
     void hideElement(int resId) {
         mActivity.findViewById(resId).setVisibility(View.GONE);
+    }
+
+    /**
+     * An alternative getQuantity method of Android plurals using
+     * Locale.getDefault(Locale.Category.FORMAT)
+     *
+     * @param count the count that determines the format
+     * @param stringId the id of the quantity string
+     * @return String in format (plural or singular) according to the count
+     */
+    public String getQuantityString(int count, int stringId) {
+        MessageFormat msgFormat =
+                new MessageFormat(
+                        mActivity.getResources().getString(stringId),
+                        Locale.getDefault(Locale.Category.FORMAT));
+        Map<String, Object> arguments = new HashMap<>();
+        arguments.put("count", count);
+        return msgFormat.format(arguments);
+    }
+
+    /** get string from resource */
+    public String getResourcesString(int resId) {
+        return mActivity.getResources().getString(resId);
     }
 }

@@ -26,6 +26,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.android.adservices.api.R;
 import com.android.adservices.ui.settings.activitydelegates.BlockedAppsActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.BlockedAppsActionDelegate;
+import com.android.adservices.ui.settings.expressivefragments.BlockedAppsActivityFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedAppsFragment;
 import com.android.adservices.ui.settings.viewmodels.BlockedAppsViewModel;
 
@@ -74,9 +75,18 @@ public class BlockedAppsActivity extends AdServicesBaseActivity {
     }
 
     private void initActivity() {
-        setContentView(R.layout.blocked_apps_activity);
-        // no need to store since not using
-        new BlockedAppsActivityActionDelegate(
-                this, new ViewModelProvider(this).get(BlockedAppsViewModel.class));
+        if (isExpressiveTheme()) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(
+                            com.android.settingslib.collapsingtoolbar.R.id.content_frame,
+                            new BlockedAppsActivityFragment())
+                    .commit();
+        } else {
+            setContentView(R.layout.blocked_apps_activity);
+            // no need to store since not using
+            new BlockedAppsActivityActionDelegate(
+                    this, new ViewModelProvider(this).get(BlockedAppsViewModel.class));
+        }
     }
 }

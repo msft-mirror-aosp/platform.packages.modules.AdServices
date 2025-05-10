@@ -98,8 +98,10 @@ import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ASYNC_REG
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_CLICK_SOURCE_FG_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_VIEW_SOURCE_FG_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION;
@@ -140,6 +142,7 @@ import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_PILOT_JOBS_BAT
 import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_PILOT_JOBS_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_U18_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS;
+import static com.android.adservices.service.Flags.DEFAULT_UI__ENABLE_EXPRESSIVE_THEME;
 import static com.android.adservices.service.Flags.DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT;
 import static com.android.adservices.service.Flags.DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.Flags.DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
@@ -982,6 +985,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_CLICK_SOURCE_FG_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VIEW_SOURCE_FG_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_COUNT_UNIQUE_SERVICE;
@@ -1209,6 +1214,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_TEST_ENCR
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_EEA_COUNTRIES;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_ENABLE_EXPRESSIVE_THEME;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_FEATURE_TYPE_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL;
@@ -2320,6 +2326,22 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK,
                 DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK,
                 Flags::getMeasurementEnablePackageNameUidCheck);
+    }
+
+    @Test
+    public void testGetMeasurementEnableClickSourceFgCheck() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_CLICK_SOURCE_FG_CHECK,
+                DEFAULT_MEASUREMENT_CLICK_SOURCE_FG_CHECK,
+                Flags::getMeasurementClickSourceFgCheck);
+    }
+
+    @Test
+    public void testGetMeasurementEnableViewSourceFgCheck() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_VIEW_SOURCE_FG_CHECK,
+                DEFAULT_MEASUREMENT_VIEW_SOURCE_FG_CHECK,
+                Flags::getMeasurementViewSourceFgCheck);
     }
 
     @Test
@@ -6643,6 +6665,14 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING,
                 DEFAULT_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING,
                 Flags::getEnableSupportDimensionInLogSampling);
+    }
+
+    @Test
+    public void testGetUiEnableExpressiveTheme() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_UI_ENABLE_EXPRESSIVE_THEME,
+                DEFAULT_UI__ENABLE_EXPRESSIVE_THEME,
+                Flags::getUiEnableExpressiveTheme);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

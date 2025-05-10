@@ -24,6 +24,7 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MAN
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_SETTINGS_ACTIVITY_DEBUG_MODE_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_DEVELOPER_SESSION_FEATURE_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED;
@@ -111,6 +112,8 @@ public class DebugFlags extends CommonDebugFlags {
             false;
 
     static final boolean DEFAULT_ATTRIBUTION_REPORTING_CLI_ENABLED = false;
+
+    static final boolean CONSENT_SETTINGS_ACTIVITY_DEBUG_MODE_ENABLED = false;
 
     public static DebugFlags getInstance() {
         return sInstance;
@@ -247,6 +250,13 @@ public class DebugFlags extends CommonDebugFlags {
                 KEY_ATTRIBUTION_REPORTING_CLI_ENABLED, DEFAULT_ATTRIBUTION_REPORTING_CLI_ENABLED);
     }
 
+    /** Returns whether the consent settings activity debug mode is enabled. */
+    public boolean getConsentSettingsActivityDebugModeEnabled() {
+        return getBoolean(
+                KEY_CONSENT_SETTINGS_ACTIVITY_DEBUG_MODE_ENABLED,
+                CONSENT_SETTINGS_ACTIVITY_DEBUG_MODE_ENABLED);
+    }
+
     @Override
     public void dump(PrintWriter pw) {
         super.dump(pw);
@@ -310,5 +320,9 @@ public class DebugFlags extends CommonDebugFlags {
                 KEY_FORCED_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED,
                 getForcedEncodingJobCompleteBroadcastEnabled());
         dump(pw, KEY_ATTRIBUTION_REPORTING_CLI_ENABLED, getAttributionReportingCommandsEnabled());
+        dump(
+                pw,
+                KEY_CONSENT_SETTINGS_ACTIVITY_DEBUG_MODE_ENABLED,
+                getConsentSettingsActivityDebugModeEnabled());
     }
 }

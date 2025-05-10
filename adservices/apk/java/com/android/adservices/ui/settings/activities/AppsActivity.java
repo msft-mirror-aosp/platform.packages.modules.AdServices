@@ -26,6 +26,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.android.adservices.api.R;
 import com.android.adservices.ui.settings.activitydelegates.AppsActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.AppsActionDelegate;
+import com.android.adservices.ui.settings.expressivefragments.AppsActivityFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
 import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 
@@ -77,8 +78,18 @@ public class AppsActivity extends AdServicesBaseActivity {
     }
 
     private void initActivity() {
-        setContentView(R.layout.apps_activity);
-        // no need to store since not using
-        new AppsActivityActionDelegate(this, new ViewModelProvider(this).get(AppsViewModel.class));
+        if (isExpressiveTheme()) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(
+                            com.android.settingslib.collapsingtoolbar.R.id.content_frame,
+                            new AppsActivityFragment())
+                    .commit();
+        } else {
+            setContentView(R.layout.apps_activity);
+            // no need to store since not using
+            new AppsActivityActionDelegate(
+                    this, new ViewModelProvider(this).get(AppsViewModel.class));
+        }
     }
 }

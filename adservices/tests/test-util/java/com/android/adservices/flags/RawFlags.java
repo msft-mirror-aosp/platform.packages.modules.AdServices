@@ -3629,6 +3629,20 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
+    public boolean getMeasurementClickSourceFgCheck() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_CLICK_SOURCE_FG_CHECK,
+                DEFAULT_MEASUREMENT_CLICK_SOURCE_FG_CHECK);
+    }
+
+    @Override
+    public boolean getMeasurementViewSourceFgCheck() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_VIEW_SOURCE_FG_CHECK,
+                DEFAULT_MEASUREMENT_VIEW_SOURCE_FG_CHECK);
+    }
+
+    @Override
     public boolean getEnableLogSamplingInfra() {
         return mBackend.getFlag(KEY_ENABLE_LOG_SAMPLING_INFRA, DEFAULT_ENABLE_LOG_SAMPLING_INFRA);
     }
@@ -3838,5 +3852,10 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     public final boolean getEnableHpkeWithPlatformApis() {
         return mBackend.getFlag(
                 KEY_ENABLE_HPKE_WITH_PLATFORM_APIS, DEFAULT_ENABLE_HPKE_WITH_PLATFORM_APIS);
+    }
+
+    public final boolean getUiEnableExpressiveTheme() {
+        return mBackend.getFlag(
+                KEY_UI_ENABLE_EXPRESSIVE_THEME, DEFAULT_UI__ENABLE_EXPRESSIVE_THEME);
     }
 }

@@ -520,6 +520,10 @@ public final class FlagsConstants {
             "measurement_enable_destination_limit_algorithm_field";
     public static final String KEY_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK =
             "Measurement__enable_package_name_uid_check";
+    public static final String KEY_MEASUREMENT_CLICK_SOURCE_FG_CHECK =
+            "Measurement__click_source_fg_check";
+    public static final String KEY_MEASUREMENT_VIEW_SOURCE_FG_CHECK =
+            "Measurement__view_source_fg_check";
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
@@ -1871,4 +1875,7 @@ public final class FlagsConstants {
     /** Key to enable support dimension in log sampling. */
     public static final String KEY_ENABLE_SUPPORT_DIMENSION_IN_LOG_SAMPLING =
             "LogSampling__enable_support_dimension_in_log_sampling";
+
+    /** Key to enable expressive theme. */
+    public static final String KEY_UI_ENABLE_EXPRESSIVE_THEME = "Ui__enable_expressive_theme";
 }

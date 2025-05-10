@@ -16,7 +16,6 @@
 package com.android.adservices.ui.settings.activitydelegates;
 
 import android.content.Intent;
-import android.icu.text.MessageFormat;
 import android.os.Build;
 import android.view.View;
 
@@ -30,10 +29,6 @@ import com.android.adservices.ui.settings.activities.AppsActivity;
 import com.android.adservices.ui.settings.activities.MeasurementActivity;
 import com.android.adservices.ui.settings.activities.TopicsActivity;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
-
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
 
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
@@ -148,23 +143,5 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
                 };
         mMainViewModel.getUiEvents().removeObservers(mActivity);
         mMainViewModel.getUiEvents().observe(mActivity, observer);
-    }
-
-    /**
-     * An alternative getQuantity method of Android <plurals> using
-     * Locale.getDefault(Locale.Category.FORMAT)
-     *
-     * @param count the count that determines the format
-     * @param stringId the id of the quantity string
-     * @return String in format (plural or singular) according to the count
-     */
-    private String getQuantityString(int count, int stringId) {
-        MessageFormat msgFormat =
-                new MessageFormat(
-                        mActivity.getResources().getString(stringId),
-                        Locale.getDefault(Locale.Category.FORMAT));
-        Map<String, Object> arguments = new HashMap<>();
-        arguments.put("count", count);
-        return msgFormat.format(arguments);
     }
 }

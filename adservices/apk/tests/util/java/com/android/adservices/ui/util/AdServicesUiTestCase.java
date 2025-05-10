@@ -16,7 +16,9 @@
 
 package com.android.adservices.ui.util;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_SETTINGS_ACTIVITY_DEBUG_MODE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_ENABLE_EXPRESSIVE_THEME;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -36,6 +38,8 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
 import com.android.adservices.common.annotations.SetAllLogcatTags;
 import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 
 import org.junit.After;
@@ -51,6 +55,8 @@ import org.junit.Rule;
 @SetAllLogcatTags
 @SetCompatModeFlags
 @SetFlagTrue(KEY_GA_UX_FEATURE_ENABLED)
+@SetFlagFalse(KEY_UI_ENABLE_EXPRESSIVE_THEME)
+@EnableDebugFlag(KEY_CONSENT_SETTINGS_ACTIVITY_DEBUG_MODE_ENABLED)
 public abstract class AdServicesUiTestCase extends AdServicesExtendedMockitoTestCase {
 
     public static final int LAUNCH_TIMEOUT_MS = 5_000;

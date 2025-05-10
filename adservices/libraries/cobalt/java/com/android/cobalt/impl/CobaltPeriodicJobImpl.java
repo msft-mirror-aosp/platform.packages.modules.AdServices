@@ -45,6 +45,7 @@ import com.google.cobalt.ObservationBatch;
 import com.google.cobalt.ObservationMetadata;
 import com.google.cobalt.ReleaseStage;
 import com.google.cobalt.ReportDefinition;
+import com.google.cobalt.SystemProfile;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.FluentFuture;
@@ -304,18 +305,36 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
             byMetadata.computeIfAbsent(metadata, k -> new ArrayList<>()).addAll(encryptedMessages);
         }
 
-        ImmutableList.Builder<ObservationBatch> newObservationBatches = ImmutableList.builder();
+        ArrayList<ObservationBatch.Builder> newObservationBatches = new ArrayList();
         for (Map.Entry<ObservationMetadata, List<EncryptedMessage>> entry : byMetadata.entrySet()) {
             newObservationBatches.add(
                     ObservationBatch.newBuilder()
                             .setMetaData(entry.getKey())
-                            .addAllEncryptedObservation(entry.getValue())
-                            .build());
+                            .addAllEncryptedObservation(entry.getValue()));
         }
-        return Envelope.newBuilder()
-                .setApiKey(mApiKey)
-                .addAllBatch(newObservationBatches.build())
-                .build();
+
+        Envelope.Builder envelope = Envelope.newBuilder().setApiKey(mApiKey);
+
+        for (ObservationBatch.Builder batch : newObservationBatches) {
+            SystemProfile systemProfile = batch.getMetaData().getSystemProfile();
+            int systemProfileIndex = envelope.getSystemProfilesList().indexOf(systemProfile);
+
+            if (systemProfileIndex == -1) {
+                envelope.addSystemProfiles(systemProfile);
+                systemProfileIndex = envelope.getSystemProfilesList().size() - 1;
+            }
+
+            ObservationMetadata newMetadata =
+                    batch.getMetaData().toBuilder()
+                            .clearSystemProfile()
+                            .setSystemProfileIndex(systemProfileIndex)
+                            .build();
+            batch.setMetaData(newMetadata);
+
+            envelope.addBatch(batch);
+        }
+
+        return envelope.build();
     }
 
     private FluentFuture<Void> uploadDone() {

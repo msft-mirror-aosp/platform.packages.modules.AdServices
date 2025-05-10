@@ -8040,6 +8040,51 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    public void keyValueData_getReportingJobNextExecutionTime_nullValue_success() {
+        KeyValueData keyValueData =
+                new KeyValueData.Builder()
+                        .setDataType(DataType.AGGREGATE_REPORT_RETRY_COUNT)
+                        .setKey("key_key")
+                        .build();
+        keyValueData.setReportingJobNextExecutionTime(null);
+        mDatastoreManager.runInTransaction((dao) -> dao.insertOrUpdateKeyValueData(keyValueData));
+        Optional<KeyValueData> optKeyValueData =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        "key_key", DataType.AGGREGATE_REPORT_RETRY_COUNT));
+        assertTrue(optKeyValueData.isPresent());
+        KeyValueData keyValueDataRetrieved = optKeyValueData.get();
+        assertEquals(DataType.AGGREGATE_REPORT_RETRY_COUNT, keyValueDataRetrieved.getDataType());
+        assertEquals("key_key", keyValueDataRetrieved.getKey());
+        assertNull(keyValueDataRetrieved.getValue());
+        assertNull(keyValueDataRetrieved.getReportingJobNextExecutionTime());
+    }
+
+    @Test
+    public void keyValueData_getReportingJobNextExecutionTime_nonNullValue_success() {
+        Long value = Long.valueOf(13457L);
+        KeyValueData keyValueData =
+                new KeyValueData.Builder()
+                        .setDataType(DataType.AGGREGATE_REPORT_RETRY_COUNT)
+                        .setKey("key_key")
+                        .build();
+        keyValueData.setReportingJobNextExecutionTime(value);
+        mDatastoreManager.runInTransaction((dao) -> dao.insertOrUpdateKeyValueData(keyValueData));
+        Optional<KeyValueData> optKeyValueData =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        "key_key", DataType.AGGREGATE_REPORT_RETRY_COUNT));
+        assertTrue(optKeyValueData.isPresent());
+        KeyValueData keyValueDataRetrieved = optKeyValueData.get();
+        assertEquals(DataType.AGGREGATE_REPORT_RETRY_COUNT, keyValueDataRetrieved.getDataType());
+        assertEquals("key_key", keyValueDataRetrieved.getKey());
+        assertEquals(String.valueOf(value), keyValueDataRetrieved.getValue());
+        assertEquals(value, keyValueDataRetrieved.getReportingJobNextExecutionTime());
+    }
+
+    @Test
     public void getRegistrationRedirectCount_keyMissing() {
         Optional<KeyValueData> optKeyValueData =
                 mDatastoreManager.runInTransactionWithResult(

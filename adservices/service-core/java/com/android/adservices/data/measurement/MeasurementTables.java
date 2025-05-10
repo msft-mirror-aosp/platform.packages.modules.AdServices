@@ -1231,7 +1231,7 @@ public final class MeasurementTables {
     public static final String CREATE_TABLE_XNA_IGNORED_SOURCES_LATEST =
             CREATE_TABLE_XNA_IGNORED_SOURCES_V6;
 
-    public static final String CREATE_TABLE_KEY_VALUE_STORE_LATEST =
+    public static final String CREATE_TABLE_KEY_VALUE_DATA_LATEST =
             "CREATE TABLE "
                     + MeasurementTables.KeyValueDataContract.TABLE
                     + " ("
@@ -1620,7 +1620,7 @@ public final class MeasurementTables {
                             CREATE_TABLE_DEBUG_REPORT_LATEST,
                             CREATE_TABLE_AGGREGATABLE_DEBUG_REPORT_BUDGET_TRACKER_LATEST,
                             CREATE_TABLE_XNA_IGNORED_SOURCES_LATEST,
-                            CREATE_TABLE_KEY_VALUE_STORE_LATEST,
+                            CREATE_TABLE_KEY_VALUE_DATA_LATEST,
                             CREATE_TABLE_APP_REPORT_HISTORY_LATEST,
                             CREATE_TABLE_COUNT_UNIQUE_REPORTING_LATEST,
                             CREATE_TABLE_COUNT_UNIQUE_METADATA_LATEST));

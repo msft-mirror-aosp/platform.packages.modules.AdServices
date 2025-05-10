@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2024 The Android Open Source Project
+<!-- Copyright (C) 2025 The Android Open Source Project
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -1040,4 +1040,18 @@
     <public type="string" name="notificationUI_pas_combined_dropdown_body6" id="0x7f017ce4" />
     <public type="string" name="notificationUI_pas_app_body2_part2" id="0x7f017ce3" />
     <public type="string" name="notificationUI_pas_learn_more_msmt_link" id="0x7f017ce2" />
+    <public type="string" name="settingsUI_apps_view_fragment_no_apps_ga_text" id="0x7f017ce1" />
+    <public type="string" name="settingsUI_apps_view_fragment_no_apps_link_text" id="0x7f017ce0" />
+    <public type="string" name="settingsU_main_view_fragment_learn_more" id="0x7f017cdf" />
+    <public type="string" name="settingsUI_main_view_fragment_footer" id="0x7f017cde" />
+    <public type="string" name="settingsUI_topics_view_fragment_no_topics_ga_text" id="0x7f017cdd" />
+    <public type="string" name="settingsUI_topics_view_fragment_no_topics_link_text" id="0x7f017cdc" />
+    <public type="string" name="settingsUI_main_u18_view_fragment_footer" id="0x7f017cdb" />
+    <public type="string" name="settingsUI_pas_apps_view_fragment_footer" id="0x7f017cda" />
+    <public type="string" name="settingsUI_pas_msmt_view_fragment_footer" id="0x7f017cd8" />
+    <public type="string" name="settingsUI_pas_msmt_view_fragment_footer_learn_more" id="0x7f017cd7" />
+    <public type="string" name="settingsUI_pas_topics_view_fragment_footer" id="0x7f017cd6" />
+    <public type="string" name="settingsUI_pas_topics_fragment_learn_more" id="0x7f017cd5" />
+    <public type="string" name="settingsUI_pas_apps_view_fragment_privacy_learn_more" id="0x7f017cd4" />
+    <public type="string" name="settingsUI_pas_apps_view_fragment_app_learn_more" id="0x7f017cd3" />
 </resources>

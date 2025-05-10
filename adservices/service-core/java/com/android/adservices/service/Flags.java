@@ -6376,6 +6376,26 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_SPE_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_POLICY;
     }
 
+    /**
+     * Foreground check is enabled by default for click source registrations.
+     */
+    @ConfigFlag
+    boolean DEFAULT_MEASUREMENT_CLICK_SOURCE_FG_CHECK = true;
+
+    /** Config flag to enable foreground check for click source registrations. */
+    default boolean getMeasurementClickSourceFgCheck() {
+        return DEFAULT_MEASUREMENT_CLICK_SOURCE_FG_CHECK;
+    }
+
+    /** Foreground check is enabled by default for view source registrations. */
+    @ConfigFlag
+    boolean DEFAULT_MEASUREMENT_VIEW_SOURCE_FG_CHECK = true;
+
+    /** Config flag to enable foreground check for view source registrations. */
+    default boolean getMeasurementViewSourceFgCheck() {
+        return DEFAULT_MEASUREMENT_VIEW_SOURCE_FG_CHECK;
+    }
+
     String DEFAULT_SPE__COUNT_UNIQUE_REPORTING_JOB_POLICY = "";
 
     default String getSpeCountUniqueReportingJobPolicy() {
@@ -6388,6 +6408,14 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the default enablement of HPKE to call platform APIs instead of relying on JNI. */
     default boolean getEnableHpkeWithPlatformApis() {
         return DEFAULT_ENABLE_HPKE_WITH_PLATFORM_APIS;
+    }
+
+    /** Feature flag to enable expressive theme. */
+    @FeatureFlag boolean DEFAULT_UI__ENABLE_EXPRESSIVE_THEME = true;
+
+    /** Returns whether experssive theme is enabled. */
+    default boolean getUiEnableExpressiveTheme() {
+        return DEFAULT_UI__ENABLE_EXPRESSIVE_THEME;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

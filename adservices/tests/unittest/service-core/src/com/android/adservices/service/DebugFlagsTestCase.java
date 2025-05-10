@@ -20,6 +20,7 @@ import static com.android.adservices.service.DebugFlags.CONSENT_MANAGER_DEBUG_MO
 import static com.android.adservices.service.DebugFlags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlags.CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlags.CONSENT_NOTIFIED_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlags.CONSENT_SETTINGS_ACTIVITY_DEBUG_MODE_ENABLED;
 import static com.android.adservices.service.DebugFlags.DEFAULT_AD_SELECTION_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlags.DEFAULT_ATTRIBUTION_REPORTING_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlags.DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
@@ -40,6 +41,7 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MAN
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_SETTINGS_ACTIVITY_DEBUG_MODE_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_DEVELOPER_SESSION_FEATURE_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
@@ -196,6 +198,14 @@ public abstract class DebugFlagsTestCase<T extends DebugFlags>
                 KEY_ATTRIBUTION_REPORTING_CLI_ENABLED,
                 DEFAULT_ATTRIBUTION_REPORTING_CLI_ENABLED,
                 DebugFlags::getAttributionReportingCommandsEnabled);
+    }
+
+    @Test
+    public final void testConsentSettingsActivityDebugModeEnabled() {
+        testDebugFlag(
+                KEY_CONSENT_SETTINGS_ACTIVITY_DEBUG_MODE_ENABLED,
+                CONSENT_SETTINGS_ACTIVITY_DEBUG_MODE_ENABLED,
+                DebugFlags::getConsentSettingsActivityDebugModeEnabled);
     }
 
     private void testDebugFlag(
