@@ -34,6 +34,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.configdelivery.ConfigurationManager;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.signals.SignalsMaintenanceTasksWorker;
@@ -132,11 +133,22 @@ public final class MaintenanceJobService extends JobService {
                             this::doProtectedSignalsDataMaintenanceTasks);
         }
 
+        ListenableFuture<Boolean> argonConfigDeliveryFuture;
+        if (FlagsFactory.getFlags().getUseConfigsManagerToQueryEnrollment()) {
+            argonConfigDeliveryFuture = submitRunnableAndHandleExceptions(
+                    "Failed to complete Argon Config Delivery data maintenance tasks.",
+                    this::doConfigDeliveryMaintenanceTasks);
+        } else {
+            LogUtil.d("Argon configs are not being used, skipping Argon config delivery cleanup");
+            argonConfigDeliveryFuture = Futures.immediateFuture(true);
+        }
+
         ListenableFuture<List<Boolean>> futuresList =
                 Futures.allAsList(
                         fledgeMaintenanceTasksFuture,
                         protectedSignalsMaintenanceTasksFuture,
-                        appReconciliationFuture);
+                        appReconciliationFuture,
+                        argonConfigDeliveryFuture);
 
         Futures.addCallback(
                 futuresList,
@@ -319,5 +331,10 @@ public final class MaintenanceJobService extends JobService {
     private void doProtectedSignalsDataMaintenanceTasks() {
         LogUtil.v("Performing protected signals maintenance tasks");
         getSignalsMaintenanceTasksWorker().clearInvalidProtectedSignalsData();
+    }
+
+    private void doConfigDeliveryMaintenanceTasks() {
+        LogUtil.v("Performing argon config delivery maintenance tasks");
+        ConfigurationManager.cleanupUnusedOlderConfigurations();
     }
 }

@@ -43,6 +43,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import com.android.adservices.common.AdServicesJobServiceTestCase;
+import com.android.adservices.data.configdelivery.ConfigurationManager;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.signals.SignalsMaintenanceTasksWorker;
@@ -748,5 +749,29 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
         // Verify logging has not happened even though logging is enabled because this field is not
         // logged
         verifyLoggingNotHappened(mSpyLogger);
+    }
+
+    @Test
+    @MockStatic(ConfigurationManager.class)
+    public void testOnStartJob_withUseConfigsManagerToQueryEnrollmentDisabled() {
+        doReturn(false).when(mMockFlags).getUseConfigsManagerToQueryEnrollment();
+
+        mSpyMaintenanceJobService.onStartJob(mMockJobParameters);
+
+        verify(
+                ConfigurationManager::cleanupUnusedOlderConfigurations,
+                timeout(BACKGROUND_THREAD_TIMEOUT_MS).times(0));
+    }
+
+    @Test
+    @MockStatic(ConfigurationManager.class)
+    public void testOnStartJob_withUseConfigsManagerToQueryEnrollmentEnabled() {
+        doReturn(true).when(mMockFlags).getUseConfigsManagerToQueryEnrollment();
+
+        mSpyMaintenanceJobService.onStartJob(mMockJobParameters);
+
+        verify(
+                ConfigurationManager::cleanupUnusedOlderConfigurations,
+                timeout(BACKGROUND_THREAD_TIMEOUT_MS));
     }
 }

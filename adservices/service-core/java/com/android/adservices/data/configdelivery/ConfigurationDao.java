@@ -28,12 +28,24 @@ import com.android.adservices.service.proto.config_delivery.ConfigurationRecord;
 import com.android.adservices.service.proto.config_delivery.ConfigurationType;
 import com.android.adservices.service.proto.config_delivery.VersionedConfiguration;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.List;
 
+/** DAO for querying configurations related to Argon Config Delivery System. */
 @Dao
 public abstract class ConfigurationDao {
+
+    @VisibleForTesting protected static int MAX_VERSIONS_TO_RETAIN_PER_TYPE = 100;
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     @VisibleForTesting
     public abstract void insertConfigurationEntities(
@@ -51,7 +63,7 @@ public abstract class ConfigurationDao {
      */
     @VisibleForTesting
     @Query("SELECT * FROM labels WHERE config_row_id = :configRowId")
-    protected abstract List<LabelEntity> getLabelEntitiesByConfigRowId(long configRowId);
+    protected abstract ImmutableList<LabelEntity> getLabelEntitiesByConfigRowId(long configRowId);
 
     /**
      * Gets the maximum config_row_id from the configurations table.
@@ -79,7 +91,20 @@ public abstract class ConfigurationDao {
      * @return A list of all versions of the configuration entities of the given type.
      */
     @Query("SELECT DISTINCT version FROM configurations WHERE type = :type ORDER BY version DESC")
-    public abstract List<Long> getAllVersions(ConfigurationType type);
+    public abstract ImmutableList<Long> getAllVersions(ConfigurationType type);
+
+    @Query("SELECT DISTINCT type FROM configurations")
+    public abstract ImmutableList<ConfigurationType> getAllConfigurationTypes();
+
+    @Transaction
+    public ImmutableMap<ConfigurationType, Set<Long>> getAllConfigurationTypesToVersionsMap() {
+        return getAllConfigurationTypes().stream()
+                .distinct()
+                .collect(
+                        ImmutableMap.toImmutableMap(
+                                Function.identity(),
+                                configType -> ImmutableSet.copyOf(getAllVersions(configType))));
+    }
 
     /**
      * Gets the configuration entities of a given type and version.
@@ -90,7 +115,7 @@ public abstract class ConfigurationDao {
      *     entities exist.
      */
     @Query("SELECT * FROM configurations WHERE type = :type AND version = :version")
-    public abstract List<ConfigurationEntity> getConfigurationEntities(
+    public abstract ImmutableList<ConfigurationEntity> getConfigurationEntities(
             ConfigurationType type, long version);
 
     /**
@@ -115,8 +140,7 @@ public abstract class ConfigurationDao {
                 DELETE FROM configurations
                     WHERE configurations.type = :type AND version IN (:versions)
             """)
-    @VisibleForTesting
-    public abstract void deleteConfigurationEntities(ConfigurationType type, List<Long> versions);
+    public abstract void deleteConfigurationEntities(ConfigurationType type, Set<Long> versions);
 
     /**
      * Inserts the given configuration entities and label entities.
@@ -124,7 +148,7 @@ public abstract class ConfigurationDao {
      * @param versionedConfiguration The versioned configuration to insert.
      */
     @Transaction
-    public void insertConfigurations(VersionedConfiguration versionedConfiguration) {
+    protected void insertConfigurations(VersionedConfiguration versionedConfiguration) {
         List<ConfigurationEntity> configurationEntities = new ArrayList<>();
         List<LabelEntity> labelEntities = new ArrayList<>();
 
@@ -151,6 +175,16 @@ public abstract class ConfigurationDao {
         }
         insertConfigurationEntities(configurationEntities);
         insertLabelEntities(labelEntities);
+
+        List<Long> versions = getAllVersions(configuration.getConfigurationType());
+
+        // This is in order to prevent unintentional adding of too many versions.
+        if (versions.size() > MAX_VERSIONS_TO_RETAIN_PER_TYPE) {
+            deleteConfigurationEntities(
+                    configuration.getConfigurationType(),
+                    new HashSet<>(
+                            versions.subList(MAX_VERSIONS_TO_RETAIN_PER_TYPE, versions.size())));
+        }
     }
 
     /**
@@ -172,7 +206,7 @@ public abstract class ConfigurationDao {
 
     /**
      * Gets the configuration entities associated with any of the specified labels for the given
-     * type and version
+     * type and version. In other words, matching configs have at least one of the specified labels.
      *
      * @param configurationType The type of the configuration entity.
      * @param labels The set of labels to filter by.
@@ -186,12 +220,12 @@ public abstract class ConfigurationDao {
                 INNER JOIN labels l ON c.config_row_id = l.config_row_id
                 WHERE c.type = :configurationType AND c.version = :version AND l.label IN (:labels)
             """)
-    public abstract List<ConfigurationEntity> getConfigurationEntitiesByAnyLabel(
+    public abstract ImmutableList<ConfigurationEntity> getConfigurationEntitiesByAnyLabel(
             ConfigurationType configurationType, long version, Set<String> labels);
 
     /**
-     * Gets the configuration entities associated with all of the specified labels for the given
-     * type and version
+     * Gets the configuration entities that are associated with all of the specified labels for the
+     * given type and version. In other words, matchings config have all the specified labels.
      *
      * @param configurationType The type of the configuration entity.
      * @param labels The set of labels to filter by.
@@ -210,6 +244,6 @@ public abstract class ConfigurationDao {
                 GROUP BY c.id, c.version, c.type
                 HAVING COUNT(DISTINCT l.label) = :labelsCount
             """)
-    public abstract List<ConfigurationEntity> getConfigurationEntitiesByAllLabels(
+    public abstract ImmutableList<ConfigurationEntity> getConfigurationEntitiesByAllLabels(
             ConfigurationType configurationType, long version, Set<String> labels, int labelsCount);
 }
