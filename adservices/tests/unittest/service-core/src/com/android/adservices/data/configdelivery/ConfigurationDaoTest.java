@@ -288,6 +288,54 @@ public class ConfigurationDaoTest {
     }
 
     @Test
+    public void testInsertConfigurations_deletesOlderConfigurations() {
+        VersionedConfiguration versionedConfigurationV1 =
+                VersionedConfiguration.newBuilder()
+                        .setVersion(VERSION_1)
+                        .setConfiguration(
+                                Configuration.newBuilder()
+                                        .setConfigurationType(ConfigurationType.TYPE_RB_ENROLLMENT)
+                                        .addConfigurationRecords(
+                                                ConfigurationRecord.newBuilder()
+                                                        .setId("id1")
+                                                        .build())
+                                        .build())
+                        .build();
+        VersionedConfiguration versionedConfigurationV2 =
+                VersionedConfiguration.newBuilder()
+                        .setVersion(VERSION_2)
+                        .setConfiguration(
+                                Configuration.newBuilder()
+                                        .setConfigurationType(ConfigurationType.TYPE_RB_ENROLLMENT)
+                                        .addConfigurationRecords(
+                                                ConfigurationRecord.newBuilder()
+                                                        .setId("id1")
+                                                        .build())
+                                        .build())
+                        .build();
+        VersionedConfiguration versionedConfigurationV3 =
+                VersionedConfiguration.newBuilder()
+                        .setVersion(VERSION_3)
+                        .setConfiguration(
+                                Configuration.newBuilder()
+                                        .setConfigurationType(ConfigurationType.TYPE_RB_ENROLLMENT)
+                                        .addConfigurationRecords(
+                                                ConfigurationRecord.newBuilder()
+                                                        .setId("id1")
+                                                        .build())
+                                        .build())
+                        .build();
+
+        configurationDao.MAX_VERSIONS_TO_RETAIN_PER_TYPE = 2;
+        configurationDao.insertConfigurations(versionedConfigurationV1);
+        configurationDao.insertConfigurations(versionedConfigurationV2);
+        configurationDao.insertConfigurations(versionedConfigurationV3);
+
+        assertThat(configurationDao.getAllVersions(ConfigurationType.TYPE_RB_ENROLLMENT))
+                .containsExactlyElementsIn(List.of(3L, 2L));
+    }
+
+    @Test
     public void testInsertConfigurations_withEmptyConfigurationsList() {
         configurationDao.insertConfigurations(
                 VersionedConfiguration.newBuilder().setVersion(VERSION_1).build());
@@ -392,7 +440,7 @@ public class ConfigurationDaoTest {
                 Arrays.asList(configurationEntity1_v1, configurationEntity2_v1));
 
         configurationDao.deleteConfigurationEntities(
-                ConfigurationType.TYPE_RB_ENROLLMENT, Collections.singletonList(VERSION_1));
+                ConfigurationType.TYPE_RB_ENROLLMENT, Set.of(VERSION_1));
         List<ConfigurationEntity> returnedList =
                 configurationDao.getConfigurationEntities(
                         ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_1);
@@ -414,7 +462,7 @@ public class ConfigurationDaoTest {
 
         // Delete configuration entities
         configurationDao.deleteConfigurationEntities(
-                ConfigurationType.TYPE_RB_ENROLLMENT, Collections.singletonList(VERSION_1));
+                ConfigurationType.TYPE_RB_ENROLLMENT, Set.of(VERSION_1));
 
         // To verify that no configuration entities exist
         List<LabelEntity> labelEntities =
