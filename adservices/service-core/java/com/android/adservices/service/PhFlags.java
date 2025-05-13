@@ -17,6 +17,7 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.service.DeviceConfigFlagsHelper.getDeviceConfigFlag;
+import static com.android.adservices.service.FlagsConstants.KEY_ADID_ENABLE_SYNCHRONOUS_AD_ID_API;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_CEL_SAMPLING_CONFIG;
@@ -4135,6 +4136,7 @@ public final class PhFlags implements Flags {
                 KEY_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS,
                 getUiEnableSetAdsPersonalizationStatus());
         uxMap.put(KEY_UI_ENABLE_EXPRESSIVE_THEME, getUiEnableExpressiveTheme());
+        uxMap.put(KEY_ADID_ENABLE_SYNCHRONOUS_AD_ID_API, getAdidEnableSynchronousAdIdApi());
         return uxMap;
     }
 
@@ -5470,5 +5472,11 @@ public final class PhFlags implements Flags {
     public boolean getUiEnableExpressiveTheme() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_UI_ENABLE_EXPRESSIVE_THEME, DEFAULT_UI__ENABLE_EXPRESSIVE_THEME);
+    }
+
+    @Override
+    public boolean getAdidEnableSynchronousAdIdApi() {
+        return getDeviceConfigFlag(
+                KEY_ADID_ENABLE_SYNCHRONOUS_AD_ID_API, DEFAULT_ADID__ENABLE_SYNCHRONOUS_AD_ID_API);
     }
 }

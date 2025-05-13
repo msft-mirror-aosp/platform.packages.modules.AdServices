@@ -48,6 +48,7 @@ import static com.android.adservices.service.Flags.CONSENT_ALREADY_INTERACTED_FI
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_RESET_TOKEN;
 import static com.android.adservices.service.Flags.DEBUG_UX;
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_TTL_MS;
+import static com.android.adservices.service.Flags.DEFAULT_ADID__ENABLE_SYNCHRONOUS_AD_ID_API;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
@@ -609,6 +610,7 @@ import static com.android.adservices.service.Flags.UI_EEA_COUNTRIES;
 import static com.android.adservices.service.Flags.UI_FEATURE_TYPE_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.UI_OTA_RESOURCES_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.UI_OTA_STRINGS_MANIFEST_FILE_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_ADID_ENABLE_SYNCHRONOUS_AD_ID_API;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_APK_SHA_CERTS;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
@@ -6673,6 +6675,14 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_UI_ENABLE_EXPRESSIVE_THEME,
                 DEFAULT_UI__ENABLE_EXPRESSIVE_THEME,
                 Flags::getUiEnableExpressiveTheme);
+    }
+
+    @Test
+    public void testGetAdidEnableSynchronousAdIdApi() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_ADID_ENABLE_SYNCHRONOUS_AD_ID_API,
+                DEFAULT_ADID__ENABLE_SYNCHRONOUS_AD_ID_API,
+                Flags::getAdidEnableSynchronousAdIdApi);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
