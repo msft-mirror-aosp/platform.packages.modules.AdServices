@@ -25,9 +25,9 @@ import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JOB_
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB;
-import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__MDD_MANIFEST_URLS;
-import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT;
+import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD;
+import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__MDD_CONFIGS;
+import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT;
 import static com.android.adservices.service.FlagsConstants.KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_HPKE_WITH_PLATFORM_APIS;
@@ -88,7 +88,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_CLICK_SOURCE_FG_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME;
@@ -155,6 +154,8 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.common.ProtoParserUtil;
+import com.android.adservices.service.proto.config_delivery.MddConfigs;
 import com.android.adservices.shared.common.flags.Constants;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
@@ -5080,23 +5081,26 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnableEnrollmentConfigV3Db() {
+    public boolean getConfigDeliveryEnableEnrollmentConfigV3DataDownload() {
         return getDeviceConfigFlag(
-                KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB,
-                DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB);
+                KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD,
+                DEFAULT_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD);
     }
 
     @Override
-    public boolean getUseConfigsManagerToQueryEnrollment() {
+    public boolean getConfigDeliveryUseArgonConfigManagerToQueryEnrollment() {
         return getDeviceConfigFlag(
-                KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT,
-                DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT);
+                KEY_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT,
+                DEFAULT_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT);
     }
 
     @Override
-    public String getConfigDeliveryMddManifestUrls() {
-        return getDeviceConfigFlag(
-                KEY_CONFIG_DELIVERY__MDD_MANIFEST_URLS, DEFAULT_CONFIG_DELIVERY__MDD_MANIFEST_URLS);
+    public MddConfigs getConfigDeliveryMddConfigs() {
+        return ProtoParserUtil.fromBase64(
+                getDeviceConfigFlag(
+                        KEY_CONFIG_DELIVERY__MDD_CONFIGS,
+                        ProtoParserUtil.toBase64(DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS)),
+                MddConfigs.parser());
     }
 
     @Override
