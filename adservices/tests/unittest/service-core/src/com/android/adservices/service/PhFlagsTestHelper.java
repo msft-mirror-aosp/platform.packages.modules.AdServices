@@ -33,6 +33,7 @@ import com.android.adservices.shared.testing.flags.TestableFlagsBackend;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.truth.Expect;
+import com.google.protobuf.MessageLite;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -402,6 +403,19 @@ public final class PhFlagsTestHelper {
                 flaginator,
                 /* overriddenValue= */ defaultConstantValue + 1,
                 /* illegalValue= */ Optional.of(-1));
+    }
+
+    /** Tests the behavior of a feature flag and verifies default value, overridden value. */
+    public void testConfigFlag(
+            String flagName,
+            MessageLite defaultConstantValue,
+            Flaginator<Flags, MessageLite> flaginator) {
+        testFeatureFlagDefaultOverriddenAndIllegalValue(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* overriddenValue= */ null,
+                /* illegalValue= */ Optional.empty());
     }
 
     /** Tests the behavior of a feature flag and verifies default value, overridden value. */

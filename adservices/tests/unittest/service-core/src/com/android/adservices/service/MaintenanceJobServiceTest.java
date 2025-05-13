@@ -754,7 +754,7 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
     @Test
     @MockStatic(ConfigurationManager.class)
     public void testOnStartJob_withUseConfigsManagerToQueryEnrollmentDisabled() {
-        doReturn(false).when(mMockFlags).getUseConfigsManagerToQueryEnrollment();
+        doReturn(false).when(mMockFlags).getConfigDeliveryUseArgonConfigManagerToQueryEnrollment();
 
         mSpyMaintenanceJobService.onStartJob(mMockJobParameters);
 
@@ -766,7 +766,7 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
     @Test
     @MockStatic(ConfigurationManager.class)
     public void testOnStartJob_withUseConfigsManagerToQueryEnrollmentEnabled() {
-        doReturn(true).when(mMockFlags).getUseConfigsManagerToQueryEnrollment();
+        doReturn(true).when(mMockFlags).getConfigDeliveryUseArgonConfigManagerToQueryEnrollment();
 
         mSpyMaintenanceJobService.onStartJob(mMockJobParameters);
 

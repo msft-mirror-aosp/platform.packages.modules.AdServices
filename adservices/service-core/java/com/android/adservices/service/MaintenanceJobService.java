@@ -28,7 +28,7 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
-import android.os.Build;
+import android.os.Build.VERSION_CODES;
 
 import androidx.annotation.RequiresApi;
 
@@ -50,7 +50,7 @@ import java.util.List;
 import java.util.Objects;
 
 /** Maintenance job to clean up. */
-@RequiresApi(Build.VERSION_CODES.S)
+@RequiresApi(VERSION_CODES.S)
 public final class MaintenanceJobService extends JobService {
     private static final int MAINTENANCE_JOB_ID = MAINTENANCE_JOB.getJobId();
 
@@ -134,7 +134,7 @@ public final class MaintenanceJobService extends JobService {
         }
 
         ListenableFuture<Boolean> argonConfigDeliveryFuture;
-        if (FlagsFactory.getFlags().getUseConfigsManagerToQueryEnrollment()) {
+        if (flags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()) {
             argonConfigDeliveryFuture = submitRunnableAndHandleExceptions(
                     "Failed to complete Argon Config Delivery data maintenance tasks.",
                     this::doConfigDeliveryMaintenanceTasks);

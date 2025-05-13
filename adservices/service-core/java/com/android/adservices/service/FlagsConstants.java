@@ -1210,12 +1210,11 @@ public final class FlagsConstants {
     public static final String KEY_MDD_ENROLLMENT_MANIFEST_FILE_URL =
             "mdd_enrollment_manifest_file_url";
     public static final String KEY_ENROLLMENT_PROTO_FILE_ENABLED = "enrollment_proto_file_enabled";
-    public static final String KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB =
-            "ConfigDelivery__enable_enrollment_config_v3_db";
-    public static final String KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT =
-            "ConfigDelivery__use_configs_manager_to_query_enrollment";
-    public static final String KEY_CONFIG_DELIVERY__MDD_MANIFEST_URLS =
-            "ConfigDelivery__mdd_manifest_urls";
+    public static final String KEY_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT =
+            "ConfigDelivery__use_argon_config_manager_to_query_enrollment";
+    public static final String KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD =
+            "ConfigDelivery__enable_enrollment_config_v3_data_download";
+    public static final String KEY_CONFIG_DELIVERY__MDD_CONFIGS = "ConfigDelivery__mdd_configs";
 
     // New Feature Flags
     public static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED =
