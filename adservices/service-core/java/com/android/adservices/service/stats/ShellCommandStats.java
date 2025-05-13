@@ -60,6 +60,10 @@ public final class ShellCommandStats {
     public static final int COMMAND_SET_MODULE_STATES =
             AdServicesStatsLog.AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_SET_MODULE_STATES;
 
+    public static final int COMMAND_SET_ADS_PERSONALIZATION_STATUS =
+            AdServicesStatsLog
+                    .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_SET_ADS_PERSONALIZATION_STATUS;
+
     public static final int COMMAND_CUSTOM_AUDIENCE_VIEW =
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_CUSTOM_AUDIENCE_VIEW;
@@ -129,6 +133,7 @@ public final class ShellCommandStats {
         COMMAND_DEV_SESSION,
         COMMAND_SET_USER_CHOICES,
         COMMAND_SET_MODULE_STATES,
+        COMMAND_SET_ADS_PERSONALIZATION_STATUS,
 
         // Custom audience commands
         COMMAND_CUSTOM_AUDIENCE_VIEW,
