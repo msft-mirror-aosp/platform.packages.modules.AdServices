@@ -6418,6 +6418,14 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_UI__ENABLE_EXPRESSIVE_THEME;
     }
 
+    /** Feature flag to enable synchronous AdId API. */
+    @FeatureFlag boolean DEFAULT_ADID__ENABLE_SYNCHRONOUS_AD_ID_API = false;
+
+    /** Returns whether synchronous AdId API is enabled. */
+    default boolean getAdidEnableSynchronousAdIdApi() {
+        return DEFAULT_ADID__ENABLE_SYNCHRONOUS_AD_ID_API;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
     ////////////////////////////////////////////////////////////////////////////////////////////////

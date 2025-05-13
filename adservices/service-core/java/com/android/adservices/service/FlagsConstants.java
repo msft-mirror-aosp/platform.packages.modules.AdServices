@@ -1878,4 +1878,8 @@ public final class FlagsConstants {
 
     /** Key to enable expressive theme. */
     public static final String KEY_UI_ENABLE_EXPRESSIVE_THEME = "Ui__enable_expressive_theme";
+
+    /** Key to enable synchronous AdId api. */
+    public static final String KEY_ADID_ENABLE_SYNCHRONOUS_AD_ID_API =
+            "Adid__enable_synchronous_ad_id_api";
 }

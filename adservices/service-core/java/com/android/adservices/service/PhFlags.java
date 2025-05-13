@@ -17,6 +17,7 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.service.DeviceConfigFlagsHelper.getDeviceConfigFlag;
+import static com.android.adservices.service.FlagsConstants.KEY_ADID_ENABLE_SYNCHRONOUS_AD_ID_API;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_CEL_SAMPLING_CONFIG;
@@ -88,7 +89,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_CLICK_SOURCE_FG_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME;
@@ -4134,6 +4134,7 @@ public final class PhFlags implements Flags {
                 KEY_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS,
                 getUiEnableSetAdsPersonalizationStatus());
         uxMap.put(KEY_UI_ENABLE_EXPRESSIVE_THEME, getUiEnableExpressiveTheme());
+        uxMap.put(KEY_ADID_ENABLE_SYNCHRONOUS_AD_ID_API, getAdidEnableSynchronousAdIdApi());
         return uxMap;
     }
 
@@ -5466,5 +5467,11 @@ public final class PhFlags implements Flags {
     public boolean getUiEnableExpressiveTheme() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_UI_ENABLE_EXPRESSIVE_THEME, DEFAULT_UI__ENABLE_EXPRESSIVE_THEME);
+    }
+
+    @Override
+    public boolean getAdidEnableSynchronousAdIdApi() {
+        return getDeviceConfigFlag(
+                KEY_ADID_ENABLE_SYNCHRONOUS_AD_ID_API, DEFAULT_ADID__ENABLE_SYNCHRONOUS_AD_ID_API);
     }
 }
