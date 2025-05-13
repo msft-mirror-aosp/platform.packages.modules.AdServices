@@ -24,12 +24,15 @@ import com.android.adservices.shared.metriclogger.logsampler.PerEventLogSampler;
 import com.android.adservices.shared.metriclogger.logsampler.PerEventSamplingConfig;
 import com.android.adservices.shared.metriclogger.logsampler.deviceselection.PerDeviceLogSampler;
 import com.android.adservices.shared.metriclogger.logsampler.deviceselection.PerDeviceSamplingConfig;
+import com.android.adservices.shared.proto.DimensionName;
 import com.android.adservices.shared.proto.LogSamplingConfig;
 import com.android.adservices.shared.proto.MetricId;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.collect.ImmutableMap;
 
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 
 /**
  * Describes the configuration for a single metric.
@@ -66,6 +69,17 @@ public abstract class MetricLoggerConfig<L> {
     /** Returns the per-device sampling config. */
     public abstract @Nullable PerDeviceSamplingConfig<L> getPerDeviceSamplingConfig();
 
+    /**
+     * Returns the map of dimension name to value {@link Function} for per-event sampling. Each
+     * function takes a log event and extracts its corresponding integer value for the associated
+     * dimension.
+     */
+    public abstract @Nullable ImmutableMap<DimensionName, Function<L, Integer>>
+            getPerEventDimensionNameToValueFunctionMap();
+
+    /** Return {@link Boolean} indicating whether dimension in logs sampling is supported. */
+    public abstract boolean getSupportDimensionInLogSamplingEnabled();
+
     /** Returns a generic builder. */
     @SuppressWarnings("AvoidStaticContext") // Method shared across modules
     public static <L> Builder<L> builder(
@@ -81,7 +95,9 @@ public abstract class MetricLoggerConfig<L> {
                 .logUploader(logUploader)
                 .context(context)
                 .lightweightExecutor(lightweightExecutor)
-                .backgroundExecutor(backgroundExecutor);
+                .backgroundExecutor(backgroundExecutor)
+                .perEventDimensionNameToValueFunctionMap(ImmutableMap.of())
+                .supportDimensionInLogSamplingEnabled(false);
     }
 
     private static <L> Builder<L> builderWithoutSamplingConfig(
@@ -89,13 +105,17 @@ public abstract class MetricLoggerConfig<L> {
             Executor lightweightExecutor,
             Executor backgroundExecutor,
             Context context,
+            ImmutableMap<DimensionName, Function<L, Integer>> dimensionNameToValueFunctionMap,
+            boolean supportDimensionInLogSamplingEnabled,
             LogUploader<L> logUploader) {
         return new AutoValue_MetricLoggerConfig.Builder<L>()
                 .metricId(metricId)
                 .logUploader(logUploader)
                 .context(context)
+                .perEventDimensionNameToValueFunctionMap(dimensionNameToValueFunctionMap)
                 .lightweightExecutor(lightweightExecutor)
-                .backgroundExecutor(backgroundExecutor);
+                .backgroundExecutor(backgroundExecutor)
+                .supportDimensionInLogSamplingEnabled(supportDimensionInLogSamplingEnabled);
     }
 
     /**
@@ -152,6 +172,18 @@ public abstract class MetricLoggerConfig<L> {
         public abstract Builder<L> perDeviceSamplingConfig(
                 PerDeviceSamplingConfig<L> deviceSamplingConfig);
 
+        /**
+         * Sets the map of dimension name to value {@link Function} for per-event sampling. Each
+         * function takes a log event and extracts its corresponding integer value for the
+         * associated dimension.
+         */
+        public abstract Builder<L> perEventDimensionNameToValueFunctionMap(
+                ImmutableMap<DimensionName, Function<L, Integer>> dimensionNameToValueFunctionMap);
+
+        /** Sets {@link Boolean} indicating whether dimension in logs sampling is supported. */
+        public abstract Builder<L> supportDimensionInLogSamplingEnabled(
+                boolean dimensionSamplingEnabled);
+
         abstract MetricLoggerConfig<L> autoBuild();
 
         /** Builds the instance of {@link MetricLoggerConfig} */
@@ -177,13 +209,18 @@ public abstract class MetricLoggerConfig<L> {
                             original.getLightweightExecutor(),
                             original.getBackgroundExecutor(),
                             original.getContext(),
+                            original.getPerEventDimensionNameToValueFunctionMap(),
+                            original.getSupportDimensionInLogSamplingEnabled(),
                             original.getLogUploader());
+
             // Extract the sampling strategies from proto to create relevant sampling config objects
             // for each strategy.
             if (config.hasPerEventSampling()) {
                 builder.perEventSamplingConfig(
                         PerEventSamplingConfig.createPerEventSamplingConfig(
-                                config.getPerEventSampling()));
+                                config.getPerEventSampling(),
+                                original.getPerEventDimensionNameToValueFunctionMap(),
+                                original.getSupportDimensionInLogSamplingEnabled()));
             }
             if (config.hasPerDeviceSampling()) {
                 builder.perDeviceSamplingConfig(

@@ -62,13 +62,28 @@ public final class PerEventLogSampler<L> implements LogSampler<L> {
             return ALWAYS_LOG_SAMPLING_RESULT;
         }
 
-        boolean logDecision = Math.random() <= mConfig.getSamplingRate();
+        double sampleRate = mConfig.getSamplingRate();
+        if (mConfig.getSupportDimensionInLogSamplingEnabled()) {
+            // Use custom sample rate if dimension matcher matches the event.
+            sampleRate =
+                    DimensionMatcherHelper.getDimensionSampleRateOrDefault(
+                            mConfig.getDimensionMatcherList(),
+                            mConfig.getDimensionNameToValueFunctionMap(),
+                            logSupplier,
+                            mConfig.getSamplingRate());
+        }
+
+        return shouldLog(sampleRate);
+    }
+
+    private SamplerResult shouldLog(double sampleRate) {
+        boolean logDecision = Math.random() <= sampleRate;
         Log.v(
                 TAG,
                 String.format(
-                        "%s %s: Computed Per event sampling decision whether to log the metric:"
-                                + " %b",
-                        mMetricId.name(), EVENT_SAMPLER, logDecision));
-        return SamplerResult.create(logDecision, mConfig.getSamplingRate());
+                        "%s %s: Computed Per event sampling decision whether to log the metric with"
+                                + " sample rate:%f %b",
+                        mMetricId.name(), EVENT_SAMPLER, sampleRate, logDecision));
+        return SamplerResult.create(logDecision, sampleRate);
     }
 }
