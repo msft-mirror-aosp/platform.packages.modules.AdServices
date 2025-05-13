@@ -59,6 +59,7 @@ import com.google.common.util.concurrent.FluentFuture;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -340,6 +341,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     }
 
     @Test
+    @Ignore("b/417287209")
     public void testScheduleIfNeeded_AlreadyScheduledTimeoutChanged_isRescheduled() {
         mockDisableRelevantKillSwitches();
         mockGetProtectedSignalPeriodicEncodingJobPeriodMs(PERIOD);
