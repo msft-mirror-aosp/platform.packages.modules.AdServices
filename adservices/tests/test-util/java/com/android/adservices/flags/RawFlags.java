@@ -3863,4 +3863,9 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
         return mBackend.getFlag(
                 KEY_UI_ENABLE_EXPRESSIVE_THEME, DEFAULT_UI__ENABLE_EXPRESSIVE_THEME);
     }
+
+    public final boolean getAdidEnableSynchronousAdIdApi() {
+        return mBackend.getFlag(
+                KEY_ADID_ENABLE_SYNCHRONOUS_AD_ID_API, DEFAULT_ADID__ENABLE_SYNCHRONOUS_AD_ID_API);
+    }
 }

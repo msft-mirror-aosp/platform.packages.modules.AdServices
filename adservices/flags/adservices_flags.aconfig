@@ -80,6 +80,15 @@ flag {
     is_fixed_read_only: true
 }
 
+flag {
+    name: "ui_enable_set_ads_personalization_status"
+    namespace: "adservices_aconfig"
+    bug: "406852710"
+    description: "Enables set ads personalization status API."
+    is_exported: true
+    is_fixed_read_only: true
+}
+
 ####################################################################################################
 ### Do NOT add any more flags beyond this point - it only contains the "legacy" flags that uses the #
 ### 'adservices' namespace (instead of 'adservices_aconfig')                                       #
@@ -213,15 +222,6 @@ flag {
     namespace: "adservices"
     bug: "303727027"
     description: "Enables encrypted Topics feature for Topics API."
-    is_exported: true
-    is_fixed_read_only: true
-}
-
-flag {
-    name: "ui_enable_set_ads_personalization_status"
-    namespace: "adservices"
-    bug: "406852710"
-    description: "Enables set ads personalization status API."
     is_exported: true
     is_fixed_read_only: true
 }

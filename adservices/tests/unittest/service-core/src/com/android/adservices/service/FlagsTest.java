@@ -21,6 +21,7 @@ import static com.android.adservices.service.Flags.APPSEARCH_ONLY;
 import static com.android.adservices.service.Flags.COBALT__IGNORED_REPORT_ID_LIST;
 import static com.android.adservices.service.Flags.COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES;
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_TTL_MS;
+import static com.android.adservices.service.Flags.DEFAULT_ADID__ENABLE_SYNCHRONOUS_AD_ID_API;
 import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_CEL_SAMPLING_CONFIG;
 import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG;
 import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG;
@@ -36,15 +37,15 @@ import static com.android.adservices.service.Flags.DEFAULT_ENABLE_LOG_SAMPLING_I
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_CLICK_SOURCE_FG_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW;
-import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_CLICK_SOURCE_FG_CHECK;
-import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_VIEW_SOURCE_FG_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_SERVICE;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_VIEW_SOURCE_FG_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST;
 import static com.android.adservices.service.Flags.DEFAULT_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
@@ -1723,6 +1724,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getUiEnableExpressiveTheme",
                 DEFAULT_UI__ENABLE_EXPRESSIVE_THEME,
                 Flags::getUiEnableExpressiveTheme);
+    }
+
+    @Test
+    public void testGetAdidEnableSynchronousAdIdApi() {
+        testFlag(
+                "getAdIdEnableSynchronousAdIdApi",
+                DEFAULT_ADID__ENABLE_SYNCHRONOUS_AD_ID_API,
+                Flags::getAdidEnableSynchronousAdIdApi);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {
