@@ -25,6 +25,9 @@ public abstract class StressScenarioTestAction {
     // Common Options
     private static final String ALLOCATE_AMOUNT = "allocate_amount";
     private static final String ALLOCATE_PERCENTAGE = "allocate_percentage";
+    private static final String CPU_THREADS_COUNT = "cpu_threads_count";
+    private static final String CPU_INNER_LOOP_ITERATIONS = "cpu_inner_loop_iterations";
+    private static final String CPU_THREAD_SLEEP_MS = "cpu_thread_sleep_ms";
 
     protected static final String TAG = "StressScenarioTestAction";
 
@@ -35,4 +38,16 @@ public abstract class StressScenarioTestAction {
     @Rule
     public final IntegerOption mAllocatePercentageOption =
             new IntegerOption(ALLOCATE_PERCENTAGE).setRequired(false).setDefault(-1);
+
+    @Rule
+    public final IntegerOption mCpuThreadsCountOption =
+            new IntegerOption(CPU_THREADS_COUNT).setRequired(false).setDefault(-1);
+
+    @Rule
+    public final IntegerOption mCpuInnerLoopIterationsOption =
+            new IntegerOption(CPU_INNER_LOOP_ITERATIONS).setRequired(false).setDefault(-1);
+
+    @Rule
+    public final IntegerOption mCpuThreadSleepMsOption =
+            new IntegerOption(CPU_THREAD_SLEEP_MS).setRequired(false).setDefault(-1);
 }
