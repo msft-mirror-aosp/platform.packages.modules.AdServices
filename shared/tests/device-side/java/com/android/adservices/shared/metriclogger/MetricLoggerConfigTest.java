@@ -22,6 +22,8 @@ import com.android.adservices.shared.metriclogger.logsampler.deviceselection.Per
 import com.android.adservices.shared.proto.LogSamplingConfig;
 import com.android.adservices.shared.proto.MetricId;
 
+import com.google.common.collect.ImmutableMap;
+
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -65,6 +67,7 @@ public final class MetricLoggerConfigTest extends SharedMockitoTestCase {
                                 mMockExecutor,
                                 mMockContext,
                                 mMockLogUploader)
+                        .supportDimensionInLogSamplingEnabled(true)
                         .build();
 
         expect.withMessage("metricId").that(actual.getMetricId()).isEqualTo(MetricId.EXAMPLE_STATS);
@@ -72,7 +75,9 @@ public final class MetricLoggerConfigTest extends SharedMockitoTestCase {
                 .that(actual.getPerEventSamplingConfig())
                 .isEqualTo(
                         PerEventSamplingConfig.createPerEventSamplingConfig(
-                                EXAMPLE_SAMPLING_CONFIG.getPerEventSampling()));
+                                EXAMPLE_SAMPLING_CONFIG.getPerEventSampling(),
+                                ImmutableMap.of(),
+                                /* supportDimensionInLogSamplingEnabled= */ true));
         expect.withMessage("logUploader").that(actual.getLogUploader()).isEqualTo(mMockLogUploader);
     }
 
@@ -94,7 +99,9 @@ public final class MetricLoggerConfigTest extends SharedMockitoTestCase {
                 .isEqualTo(
                         PerEventSamplingConfig.createPerEventSamplingConfig(
                                 EXAMPLE_SAMPLING_CONFIG_WITH_PER_DEVICE_SAMPLING
-                                        .getPerEventSampling()));
+                                        .getPerEventSampling(),
+                                ImmutableMap.of(),
+                                /* supportDimensionInLogSamplingEnabled= */ false));
         expect.withMessage("perDeviceSamplingConfig")
                 .that(actual.getPerDeviceSamplingConfig())
                 .isEqualTo(

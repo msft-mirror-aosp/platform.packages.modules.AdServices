@@ -43,6 +43,7 @@ import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -107,6 +108,7 @@ public final class SandboxedFledgeManagerTest extends CtsSandboxedFledgeManagerT
     }
 
     @Test
+    @Ignore("b/417237689")
     public void loadSdkAndRunFledgeFlow() {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 

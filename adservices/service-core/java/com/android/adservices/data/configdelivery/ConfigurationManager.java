@@ -18,22 +18,31 @@ package com.android.adservices.data.configdelivery;
 
 import static com.android.adservices.data.configdelivery.ConfigurationManager.DataConsistencyStrategy.*;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.proto.config_delivery.ConfigurationType;
 import com.android.adservices.service.proto.config_delivery.VersionedConfiguration;
 import com.android.internal.annotations.GuardedBy;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
+import java.lang.ref.WeakReference;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * Manages configurations, providing methods to retrieve and manipulate configuration data based on
- * different consistency strategies.
+ * Manages configurations for the Argon Configuration Delivery System, providing methods to retrieve
+ * and manipulate configuration data based on different consistency strategies.
  *
  * <p>The {@code ConfigurationManager} provides an interface to interact with configuration data
  * stored in the {@link ConfigurationDatabase}. It supports different {@link
@@ -122,9 +131,14 @@ public class ConfigurationManager {
 
     private static final Object processConsistentInstancesLock = new Object();
 
+    @VisibleForTesting
     @GuardedBy("processConsistentInstancesLock")
-    private static final ConcurrentHashMap<ConfigurationType, ConfigurationManager>
+    protected static final ConcurrentHashMap<ConfigurationType, ConfigurationManager>
             processConsistentInstances = new ConcurrentHashMap<>();
+
+    @VisibleForTesting
+    protected static final HashMap<ConfigurationType, Set<WeakReference<ConfigurationManager>>>
+            instantiationConsistentInstances = new HashMap<>();
 
     private final DataConsistencyStrategy dataConsistencyStrategy;
     private final ConfigurationType configurationType;
@@ -169,12 +183,25 @@ public class ConfigurationManager {
             case USE_LATEST_VERSION:
                 return new ConfigurationManager(USE_LATEST_VERSION, configurationType);
             case USE_VERSION_AT_INSTANTIATION:
-                return new ConfigurationManager(
-                        USE_VERSION_AT_INSTANTIATION,
-                        configurationType,
-                        ConfigurationDatabase.getInstance()
-                                .configurationDao()
-                                .getLatestVersion(configurationType));
+                ConfigurationManager configurationManager =
+                        new ConfigurationManager(
+                                USE_VERSION_AT_INSTANTIATION,
+                                configurationType,
+                                ConfigurationDatabase.getInstance()
+                                        .configurationDao()
+                                        .getLatestVersion(configurationType));
+                if (instantiationConsistentInstances.containsKey(configurationType)) {
+                    instantiationConsistentInstances
+                            .get(configurationType)
+                            .add(new WeakReference<>(configurationManager));
+                } else {
+                    HashSet<WeakReference<ConfigurationManager>> configurationManagerWeakRef =
+                            new HashSet<>();
+                    configurationManagerWeakRef.add(new WeakReference<>(configurationManager));
+                    instantiationConsistentInstances.put(
+                            configurationType, configurationManagerWeakRef);
+                }
+                return configurationManager;
             // For PROCESS_CONSISTENT, the ConfigurationManager must be a singleton.
             case PROCESS_CONSISTENT:
                 // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition.
@@ -257,18 +284,18 @@ public class ConfigurationManager {
      *
      * @return A list of all configurations for the current type and version.
      */
-    public List<Configuration> getConfigurations() {
+    public ImmutableList<Configuration> getConfigurations() {
         Long configurationVersion = getConfigurationVersion();
         if (configurationVersion == null) {
             // Version is null, so no configurations exist.
-            return Collections.emptyList();
+            return ImmutableList.of();
         }
         return ConfigurationDatabase.getInstance()
                 .configurationDao()
                 .getConfigurationEntities(configurationType, configurationVersion)
                 .stream()
                 .map(ConfigurationManager::toConfiguration)
-                .collect(Collectors.toList());
+                .collect(toImmutableList());
     }
 
     /**
@@ -294,14 +321,16 @@ public class ConfigurationManager {
     /**
      * Retrieves a list of configurations that have at least one of the specified labels.
      *
+     * <p>Labels are case-sensitive.
+     *
      * @param labels The set of labels to search for.
      * @return A list of configurations that have at least one of the specified labels.
      */
-    public List<Configuration> getConfigurationsByAnyLabel(Set<String> labels) {
+    public ImmutableList<Configuration> getConfigurationsByAnyLabel(Set<String> labels) {
         Long configurationVersion = getConfigurationVersion();
         if (configurationVersion == null) {
             // Version is null, so no configurations exist.
-            return Collections.emptyList();
+            return ImmutableList.of();
         }
         return ConfigurationDatabase.getInstance()
                 .configurationDao()
@@ -309,20 +338,22 @@ public class ConfigurationManager {
                         configurationType, getConfigurationVersion(), labels)
                 .stream()
                 .map(ConfigurationManager::toConfiguration)
-                .collect(Collectors.toList());
+                .collect(toImmutableList());
     }
 
     /**
      * Retrieves a list of configurations that have all the specified labels.
      *
+     * <p>Labels are case-sensitive.
+     *
      * @param labels The set of labels that must all be present in the configurations.
      * @return A list of configurations that have all the specified labels.
      */
-    public List<Configuration> getConfigurationsByAllLabels(Set<String> labels) {
+    public ImmutableList<Configuration> getConfigurationsByAllLabels(Set<String> labels) {
         Long configurationVersion = getConfigurationVersion();
         if (configurationVersion == null) {
             // Version is null, so no configurations exist.
-            return Collections.emptyList();
+            return ImmutableList.of();
         }
         return ConfigurationDatabase.getInstance()
                 .configurationDao()
@@ -330,7 +361,61 @@ public class ConfigurationManager {
                         configurationType, configurationVersion, labels, labels.size())
                 .stream()
                 .map(ConfigurationManager::toConfiguration)
-                .collect(Collectors.toList());
+                .collect(toImmutableList());
+    }
+
+    // processConsistentInstancesLock is safe to read outside of the lock.
+    @SuppressWarnings("GuardedBy")
+    public static void cleanupUnusedOlderConfigurations() {
+        ConfigurationDao configurationDao = ConfigurationDatabase.getInstance().configurationDao();
+        ImmutableMap<ConfigurationType, Set<Long>> configTypesWithVersions =
+                configurationDao.getAllConfigurationTypesToVersionsMap();
+        HashMap<ConfigurationType, Set<Long>> configVersionsToIgnore = new HashMap<>();
+
+        // Retain the latest version of each configuration type that will be returned by
+        // DataConsistencyStrategy.USE_LATEST_VERSION strategy.
+        configTypesWithVersions.forEach(
+                (configurationType, versions) ->
+                        configVersionsToIgnore
+                                .computeIfAbsent(configurationType, k -> new HashSet<>())
+                                .add(Collections.max(versions)));
+
+        // Retain the versions in use by DataConsistencyStrategy.PROCESS_CONSISTENT instances.
+        processConsistentInstances.forEach(
+                (configurationType, configurationManager) ->
+                        configVersionsToIgnore
+                                .computeIfAbsent(configurationType, k -> new HashSet<>())
+                                .add(configurationManager.configurationVersion));
+
+        // Retain the versions in use by DataConsistencyStrategy.USE_VERSION_AT_INSTANTIATION
+        // instances.
+        for (Map.Entry<ConfigurationType, Set<WeakReference<ConfigurationManager>>> entry :
+                instantiationConsistentInstances.entrySet()) {
+            for (WeakReference<ConfigurationManager> weakReference : entry.getValue()) {
+                        if (weakReference.get() != null) {
+                    configVersionsToIgnore
+                            .computeIfAbsent(entry.getKey(), k -> new HashSet<>())
+                            .add(weakReference.get().configurationVersion);
+                        }
+                    }
+        }
+
+        // Identify and store the versions to delete for each configuration type.
+        HashMap<ConfigurationType, Set<Long>> configTypeWithVersionsToDelete = new HashMap<>();
+        for (Map.Entry<ConfigurationType, Set<Long>> entry : configTypesWithVersions.entrySet()) {
+            ConfigurationType configurationType = entry.getKey();
+            Set<Long> versions = entry.getValue();
+                    Set<Long> versionsToDelete = new HashSet<>();
+                    Set<Long> versionsToIgnore = configVersionsToIgnore.get(configurationType);
+                    for (Long version : versions) {
+                        if (!versionsToIgnore.contains(version)) {
+                            versionsToDelete.add(version);
+                        }
+                    }
+                    configTypeWithVersionsToDelete.put(configurationType, versionsToDelete);
+        }
+
+        configTypeWithVersionsToDelete.forEach(configurationDao::deleteConfigurationEntities);
     }
 
     /**

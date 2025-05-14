@@ -451,16 +451,17 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testGetEnableEnrollmentConfigV3Db() {
+    public void testGetConfigDeliveryEnableEnrollmentConfigV3DataDownload() {
         testFeatureFlag(
-                "DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB", Flags::getEnableEnrollmentConfigV3Db);
+                "DEFAULT_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD",
+                Flags::getConfigDeliveryEnableEnrollmentConfigV3DataDownload);
     }
 
     @Test
-    public void testGetUseConfigsManagerToQueryEnrollment() {
+    public void testGetConfigDeliveryUseArgonConfigManagerToQueryEnrollment() {
         testFeatureFlag(
-                "DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT",
-                Flags::getUseConfigsManagerToQueryEnrollment);
+                "DEFAULT_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT",
+                Flags::getConfigDeliveryUseArgonConfigManagerToQueryEnrollment);
     }
 
     @Test

@@ -18,6 +18,8 @@ package com.android.adservices.data.configdelivery;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.os.SystemClock;
+
 import com.android.adservices.service.proto.RbEnrollment;
 import com.android.adservices.service.proto.config_delivery.ConfigurationRecord;
 import com.android.adservices.service.proto.config_delivery.ConfigurationType;
@@ -27,15 +29,16 @@ import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class ConfigurationManagerTest {
-    private ConfigurationDatabase configurationDatabase;
-
     private static final VersionedConfiguration ENROLLMENT_CONFIG_V1;
     private static final VersionedConfiguration ENROLLMENT_CONFIG_V2;
 
@@ -86,14 +89,13 @@ public class ConfigurationManagerTest {
         }
     }
 
-    @Before
-    public void setUp() {
-        configurationDatabase = ConfigurationDatabase.getInstance();
-    }
-
     @After
+    // processConsistentInstancesLock is safe to read outside of the lock.
+    @SuppressWarnings("GuardedBy")
     public void tearDown() {
-        configurationDatabase.clearAllTables();
+        ConfigurationDatabase.getInstance().clearAllTables();
+        ConfigurationManager.processConsistentInstances.clear();
+        ConfigurationManager.instantiationConsistentInstances.clear();
     }
 
     @Test
@@ -135,9 +137,7 @@ public class ConfigurationManagerTest {
         List<Configuration> configurationsBeforeV2Download =
                 configurationManager.getConfigurations();
 
-        ConfigurationDatabase.getInstance()
-                .configurationDao()
-                .insertConfigurations(ENROLLMENT_CONFIG_V2);
+        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
 
         List<Configuration> configurationsAfterV2Download =
                 configurationManager.getConfigurations();
@@ -154,22 +154,15 @@ public class ConfigurationManagerTest {
                 ConfigurationManager.getInstance(
                         ConfigurationType.TYPE_RB_ENROLLMENT,
                         ConfigurationManager.DataConsistencyStrategy.USE_VERSION_AT_INSTANTIATION);
-
         List<Configuration> configurationsBeforeV2DownloadFromInstance1 =
                 configurationManagerInstance1.getConfigurations();
-
-        ConfigurationDatabase.getInstance()
-                .configurationDao()
-                .insertConfigurations(ENROLLMENT_CONFIG_V2);
-
+        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
         List<Configuration> configurationsAfterV2DownloadFromInstance1 =
                 configurationManagerInstance1.getConfigurations();
-
         ConfigurationManager configurationManagerInstance2 =
                 ConfigurationManager.getInstance(
                         ConfigurationType.TYPE_RB_ENROLLMENT,
                         ConfigurationManager.DataConsistencyStrategy.USE_VERSION_AT_INSTANTIATION);
-
         List<Configuration> configurationsAfterV2DownloadFromInstance2 =
                 configurationManagerInstance2.getConfigurations();
 
@@ -185,14 +178,9 @@ public class ConfigurationManagerTest {
                 ConfigurationManager.getInstance(
                         ConfigurationType.TYPE_RB_ENROLLMENT,
                         ConfigurationManager.DataConsistencyStrategy.PROCESS_CONSISTENT);
-
         List<Configuration> configurationsBeforeV2Download =
                 configurationManager.getConfigurations();
-
-        ConfigurationDatabase.getInstance()
-                .configurationDao()
-                .insertConfigurations(ENROLLMENT_CONFIG_V2);
-
+        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
         List<Configuration> configurationsAfterV2Download =
                 configurationManager.getConfigurations();
 
@@ -209,10 +197,14 @@ public class ConfigurationManagerTest {
                         ConfigurationManager.DataConsistencyStrategy.USE_LATEST_VERSION);
 
         Configuration configuration = configurationManager.getConfigurationById("id1_v1");
-        RbEnrollment rbEnrollment = configuration.getValue(RbEnrollment.getDefaultInstance());
 
+        assertThat(configuration).isNotNull();
         assertThat(configuration.getId()).isEqualTo("id1_v1");
-        assertThat(rbEnrollment.getEnrolledSite()).isEqualTo("https://example.com");
+        assertThat(
+                        Objects.requireNonNull(
+                                        configuration.getValue(RbEnrollment.getDefaultInstance()))
+                                .getEnrolledSite())
+                .isEqualTo("https://example.com");
     }
 
     @Test
@@ -286,4 +278,93 @@ public class ConfigurationManagerTest {
 
         assertThat(configuration.size()).isEqualTo(0);
     }
+
+    @Test
+    public void cleanupUnusedOlderConfigurations_withEmptyTable_notThrowsException() {
+        ConfigurationManager.cleanupUnusedOlderConfigurations();
+    }
+
+    @Test
+    public void cleanupUnusedOlderConfigurations_retainsLatestConfigs() {
+        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
+        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
+
+        ConfigurationManager.cleanupUnusedOlderConfigurations();
+
+        List<Long> versions =
+                ConfigurationDatabase.getInstance()
+                        .configurationDao()
+                        .getAllVersions(ConfigurationType.TYPE_RB_ENROLLMENT);
+        assertThat(versions).containsExactlyElementsIn(List.of(2L)).inOrder();
+    }
+
+    @Test
+    public void cleanupUnusedOlderConfigurations_retainsConfigsInUseByProcessConsistentStrategy() {
+        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
+        ConfigurationManager.getInstance(
+                ConfigurationType.TYPE_RB_ENROLLMENT,
+                ConfigurationManager.DataConsistencyStrategy.PROCESS_CONSISTENT);
+        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
+
+        ConfigurationManager.cleanupUnusedOlderConfigurations();
+
+        List<Long> versions =
+                ConfigurationDatabase.getInstance()
+                        .configurationDao()
+                        .getAllVersions(ConfigurationType.TYPE_RB_ENROLLMENT);
+        assertThat(versions).containsExactlyElementsIn(List.of(2L, 1L)).inOrder();
+    }
+
+    @Test
+    public void
+            cleanupUnusedOlderConfigurations_retainsConfigsInUseByInstantiationConsistentStrategy() {
+        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
+        ConfigurationManager configurationManager =
+                ConfigurationManager.getInstance(
+                        ConfigurationType.TYPE_RB_ENROLLMENT,
+                        ConfigurationManager.DataConsistencyStrategy.USE_VERSION_AT_INSTANTIATION);
+        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
+
+        ConfigurationManager.cleanupUnusedOlderConfigurations();
+        // This will usage prevent the ConfigurationManager instance from being garbage collected.
+        configurationManager.getConfigurations();
+
+        List<Long> versions =
+                ConfigurationDatabase.getInstance()
+                        .configurationDao()
+                        .getAllVersions(ConfigurationType.TYPE_RB_ENROLLMENT);
+        assertThat(versions).containsExactlyElementsIn(List.of(2L, 1L)).inOrder();
+    }
+
+    @Test
+    public void
+            cleanupUnusedOlderConfigurations_deletesConfigsReleasedByInstantiationConsistentStrategy()
+                    throws InterruptedException {
+        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
+        WeakReference<ConfigurationManager> configurationManagerWeakRef =
+                new WeakReference<>(
+                        ConfigurationManager.getInstance(
+                                ConfigurationType.TYPE_RB_ENROLLMENT,
+                                ConfigurationManager.DataConsistencyStrategy
+                                        .USE_VERSION_AT_INSTANTIATION));
+        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
+        // This ensures the instance is garbage collected before triggering cleanup
+        @SuppressWarnings("ModifiedButNotUsed")
+        List<Byte[]> memoryPressure = new ArrayList<>();
+        while (configurationManagerWeakRef.get() != null) {
+            int allocationSize = 1024 * 1024; // allocate 1MB on each attempt
+            memoryPressure.add(new Byte[allocationSize]);
+            System.gc();
+            TimeUnit.SECONDS.sleep(1);
+        }
+
+        ConfigurationManager.cleanupUnusedOlderConfigurations();
+
+        List<Long> versions =
+                ConfigurationDatabase.getInstance()
+                        .configurationDao()
+                        .getAllVersions(ConfigurationType.TYPE_RB_ENROLLMENT);
+        assertThat(versions).containsExactlyElementsIn(List.of(2L));
+    }
+
 }
