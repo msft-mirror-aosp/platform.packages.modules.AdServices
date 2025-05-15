@@ -20,6 +20,7 @@ import android.adservices.adid.GetAdIdParam;
 import android.adservices.adid.IGetAdIdCallback;
 import android.adservices.common.CallerMetadata;
 import android.adservices.adid.GetAdIdResult;
+import android.adservices.adid.RecreateAdIdResult;
 
 /**
  * AdId Service.
@@ -33,8 +34,18 @@ interface IAdIdService {
     void getAdId(in GetAdIdParam adIdParam, in CallerMetadata callerMetadata,
             in IGetAdIdCallback callback);
 
-     /**
-     * Synchronous API to get AdId.
+    /**
+    * Synchronous API to get AdId.
+    */
+    GetAdIdResult getAdIdSync();
+
+    /**
+     * Synchronous API to recreate a new AdId.
      */
-     GetAdIdResult getAdIdSync();
+    RecreateAdIdResult recreateAdId();
+
+    /**
+     * Synchronous API to delete AdId.
+     */
+    void deleteAdId();
 }

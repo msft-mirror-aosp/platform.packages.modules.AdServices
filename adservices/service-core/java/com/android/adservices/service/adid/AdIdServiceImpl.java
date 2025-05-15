@@ -16,6 +16,7 @@
 package com.android.adservices.service.adid;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
+import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
@@ -43,6 +44,7 @@ import android.adservices.adid.GetAdIdParam;
 import android.adservices.adid.GetAdIdResult;
 import android.adservices.adid.IAdIdService;
 import android.adservices.adid.IGetAdIdCallback;
+import android.adservices.adid.RecreateAdIdResult;
 import android.adservices.common.CallerMetadata;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
@@ -101,6 +103,23 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
         mFlags = flags;
         mThrottler = throttler;
         mAppImportanceFilter = appImportanceFilter;
+    }
+
+    @Override
+    @RequiresPermission(UPDATE_PRIVILEGED_AD_ID)
+    public RecreateAdIdResult recreateAdId() {
+        // TODO(b/417522613): implement the API.
+        return new RecreateAdIdResult.Builder()
+                .setAdId(AdId.ZERO_OUT)
+                .setLatEnabled(true)
+                .setStatusCode(STATUS_SUCCESS)
+                .build();
+    }
+
+    @Override
+    @RequiresPermission(UPDATE_PRIVILEGED_AD_ID)
+    public void deleteAdId() {
+        // TODO(b/417522613): implement the API.
     }
 
     @Override

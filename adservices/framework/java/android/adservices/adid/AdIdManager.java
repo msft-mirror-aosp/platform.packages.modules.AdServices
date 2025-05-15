@@ -16,6 +16,7 @@
 package android.adservices.adid;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
+import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID;
 import static android.adservices.common.AdServicesStatusUtils.SERVICE_UNAVAILABLE_ERROR_MESSAGE;
 import static android.adservices.common.AndroidRCommonUtil.invokeCallbackOnErrorOnRvc;
 
@@ -29,6 +30,7 @@ import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
+import android.annotation.SystemApi;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.Build;
@@ -270,5 +272,68 @@ public class AdIdManager {
     // TODO: change to @VisibleForTesting
     public void unbindFromService() {
         mServiceBinder.unbindFromService();
+    }
+
+    /**
+     * Synchronous API to recreate a new {@link AdId}. The old {@link AdId} will be replaced with
+     * the new one, and the "Limit Ad Tracking" bit will be set to false (enables ads
+     * personalization). This API should not be called on the main thread, as it may block it
+     * leading to ANRs.
+     *
+     * @throws IllegalStateException when something wrong happened while recreating a new {@link
+     *     AdId}.
+     * @return result of recreate new {@link AdId}. Contains the new {@link AdId}.
+     * @hide
+     */
+    @SystemApi
+    @FlaggedApi(Flags.FLAG_ADID_ENABLE_SYNCHRONOUS_AD_ID_API)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    @RequiresPermission(UPDATE_PRIVILEGED_AD_ID)
+    @NonNull
+    public AdId recreateAdId() {
+        IAdIdService service;
+        try {
+            service = mServiceBinder.getService();
+
+            // Throw ServiceUnavailableException.
+            if (service == null) {
+                throw new ServiceUnavailableException();
+            }
+
+            RecreateAdIdResult result = service.recreateAdId();
+            if (result == null) {
+                throw new IllegalStateException();
+            }
+            return new AdId(result.getAdId(), result.isLimitAdTrackingEnabled());
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Synchronous API to delete {@link AdId}. This will set the {@link AdId} to zeroed-out and set
+     * the "Limit Ad Tracking" bit to true (disables ads personalization). This API should not be
+     * called on the main thread, as it may block it leading to ANRs.
+     *
+     * @hide
+     */
+    @SystemApi
+    @FlaggedApi(Flags.FLAG_ADID_ENABLE_SYNCHRONOUS_AD_ID_API)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    @RequiresPermission(UPDATE_PRIVILEGED_AD_ID)
+    public void deleteAdId() {
+        IAdIdService service;
+        try {
+            service = mServiceBinder.getService();
+
+            // Throw ServiceUnavailableException.
+            if (service == null) {
+                throw new ServiceUnavailableException();
+            }
+
+            service.deleteAdId();
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
