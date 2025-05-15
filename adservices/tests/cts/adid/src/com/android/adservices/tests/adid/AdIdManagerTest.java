@@ -165,6 +165,14 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
         receiver.assertFailure(IllegalStateException.class);
     }
 
+    @Test
+    public void testAdIdManager_getAdvertisingIdInfo() throws Exception {
+        AdIdManager adIdManager = AdIdManager.get(sContext);
+        AdId adId = adIdManager.getAdvertisingIdInfo();
+        assertWithMessage("get AdId ").that(adId.getAdId()).isEqualTo(AdId.ZERO_OUT);
+        assertWithMessage("get lat ").that(adId.isLimitAdTrackingEnabled()).isTrue();
+    }
+
     private static String toString(AdId adId) {
         return adId == null ? null : adId.getAdId();
     }

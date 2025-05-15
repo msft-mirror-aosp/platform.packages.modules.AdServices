@@ -8,6 +8,15 @@ container: "com.android.adservices"
 ####################################################################################################
 
 flag {
+    name: "adid_enable_synchronous_ad_id_api"
+    namespace: "adservices_aconfig"
+    bug: "417303289"
+    description: "Enables AdId in synchronous API."
+    is_exported: true
+    is_fixed_read_only: true
+}
+
+flag {
     name: "adservices_enable_consent_data_migration_api"
     namespace: "adservices_aconfig"
     bug: "404905080"

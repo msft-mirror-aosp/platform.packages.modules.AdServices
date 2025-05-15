@@ -234,6 +234,37 @@ public class AdIdManager {
     }
 
     /**
+     * Synchronous API to get AdId, The AdID is a unique, user-resettable, and user-deletable ID for
+     * advertising.
+     *
+     * @throws IllegalStateException when return AdId is not valid,like a zero out AdId with lat set
+     *     to false.
+     */
+    @FlaggedApi(Flags.FLAG_ADID_ENABLE_SYNCHRONOUS_AD_ID_API)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    @RequiresPermission(ACCESS_ADSERVICES_AD_ID)
+    @NonNull
+    public AdId getAdvertisingIdInfo() throws RuntimeException {
+        IAdIdService service = null;
+        try {
+            service = mServiceBinder.getService();
+
+            // Throw ServiceUnavailableException.
+            if (service == null) {
+                return new AdId(AdId.ZERO_OUT, true);
+            }
+
+            GetAdIdResult getAdIdResult = service.getAdvertisingIdInfo();
+            if (getAdIdResult == null) {
+                throw new IllegalStateException();
+            }
+            return new AdId(getAdIdResult.getAdId(), getAdIdResult.isLatEnabled());
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * If the service is in an APK (as opposed to the system service), unbind it from the service to
      * allow the APK process to die.
      *
