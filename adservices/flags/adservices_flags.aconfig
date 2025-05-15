@@ -9,9 +9,9 @@ container: "com.android.adservices"
 
 flag {
     name: "adid_enable_synchronous_ad_id_api"
-    namespace: "adservices"
+    namespace: "adservices_aconfig"
     bug: "417303289"
-    description: "Enables get AdId in sync API."
+    description: "Enables AdId in synchronous API."
     is_exported: true
     is_fixed_read_only: true
 }
