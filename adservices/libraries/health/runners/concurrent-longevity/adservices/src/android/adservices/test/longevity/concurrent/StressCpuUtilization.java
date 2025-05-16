@@ -26,7 +26,7 @@ import org.junit.runners.JUnit4;
 /** Stress test used to utilize the CPU while running in parallel with CUJs. */
 @Scenario
 @RunWith(JUnit4.class)
-public final class StressCpuUtilization extends StressScenarioTestAction {
+public final class StressCpuUtilization extends HoldingStressScenarioTestAction {
     private static final int NUMBER_OF_THREADS = 200;
     private static final int INNER_LOOP_ITERATIONS = 1000000;
     private static final int THREAD_SLEEP_MS = 100;
