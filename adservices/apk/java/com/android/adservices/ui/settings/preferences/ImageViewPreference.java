@@ -17,14 +17,45 @@ package com.android.adservices.ui.settings.preferences;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.View;
 
 import androidx.preference.Preference;
+import androidx.preference.PreferenceViewHolder;
 
+import com.android.adservices.api.R;
 import com.android.settingslib.widget.GroupSectionDividerMixin;
 
 /** Simple class to hold image in preferences. */
 public class ImageViewPreference extends Preference implements GroupSectionDividerMixin {
+    Context mContext;
+
+    public ImageViewPreference(
+            Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
+        mContext = context;
+    }
+
+    public ImageViewPreference(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        mContext = context;
+    }
+
     public ImageViewPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
+        mContext = context;
+    }
+
+    public ImageViewPreference(Context context) {
+        super(context);
+        mContext = context;
+    }
+
+    @Override
+    public void onBindViewHolder(PreferenceViewHolder holder) {
+        super.onBindViewHolder(holder);
+
+        View imageView = holder.findViewById(R.id.main_view_image);
+        imageView.setContentDescription(
+                mContext.getString(R.string.ic_main_view_ga_image_description));
     }
 }
