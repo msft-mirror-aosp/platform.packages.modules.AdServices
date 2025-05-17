@@ -30,6 +30,7 @@ import androidx.annotation.Nullable;
 import com.android.adservices.cobalt.AppNameApiErrorLogger;
 import com.android.adservices.cobalt.CobaltConstants;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.proto.config_delivery.MddConfigs;
 import com.android.adservices.shared.common.flags.ConfigFlag;
 import com.android.adservices.shared.common.flags.FeatureFlag;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
@@ -6169,39 +6170,53 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
     }
 
-    /**
-     * Feature flag to enable enrollment configuration v3 delivery (mdd download + database
-     * population).
-     */
-    @FeatureFlag boolean DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB = false;
-
-    /** Enables enrollment configuration v3 delivery (mdd download + database population). */
-    default boolean getEnableEnrollmentConfigV3Db() {
-        return DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB;
-    }
-
-    /**
-     * Feature flag to provide latest mdd manifest urls for config delivery system.
-     *
-     * <p>Mdd manifest urls in this flag are separated by comma.
-     *
-     * <p>All file groups and files within the mdd manifest urls provided in this flag will be
-     * downloaded.
-     */
-    @FeatureFlag String DEFAULT_CONFIG_DELIVERY__MDD_MANIFEST_URLS = "";
+    /** Feature flag to enable v3 enrollment data download. */
+    @FeatureFlag boolean DEFAULT_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD = false;
 
     /**
      * @return latest mdd manifest urls for config delivery.
      */
-    default String getConfigDeliveryMddManifestUrls() {
-        return DEFAULT_CONFIG_DELIVERY__MDD_MANIFEST_URLS;
+    default boolean getConfigDeliveryEnableEnrollmentConfigV3DataDownload() {
+        return DEFAULT_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD;
     }
 
-    /** Flag to use configurations manager to query enrollment data. */
-    @FeatureFlag boolean DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT = false;
+    /**
+     * Feature flag to provide latest mdd manifest urls and group names for argon config delivery
+     * system.
+     *
+     * <p>All files within the mdd file group provided in this flag will be downloaded.
+     */
+    @ConfigFlag
+    MddConfigs DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS =
+            MddConfigs.newBuilder()
+                    .addMddConfigs(
+                            MddConfigs.MddConfig.newBuilder()
+                                    .setManifestId("enrollment")
+                                    .setManifestUrl(
+                                            "https://www.gstatic.com/mdi-serving"
+                                                + "/rubidium-adservices-enrollment"
+                                                + "/10327/f6ad222f19ab7b49b5d06fc717e2273e1625fc74")
+                                    .build())
+                    .build();
 
-    default boolean getUseConfigsManagerToQueryEnrollment() {
-        return DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT;
+    /**
+     * @return latest mdd configurations for Argon Config Delivery (ACD)
+     */
+    default MddConfigs getConfigDeliveryMddConfigs() {
+        return DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS;
+    }
+
+    /**
+     * Flag to use Argon Configuration Manager to query enrollment data.
+     *
+     * <p>Note: This flag must be treated as enabled only when
+     * CONFIG_DELIVERY__ENABLE_ENROLLMENT_V3_DATA_DOWNLOAD is enabled.
+     */
+    @FeatureFlag
+    boolean DEFAULT_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT = false;
+
+    default boolean getConfigDeliveryUseArgonConfigManagerToQueryEnrollment() {
+        return DEFAULT_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT;
     }
 
     @FeatureFlag boolean DEFAULT_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER = false;
@@ -6416,6 +6431,14 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether experssive theme is enabled. */
     default boolean getUiEnableExpressiveTheme() {
         return DEFAULT_UI__ENABLE_EXPRESSIVE_THEME;
+    }
+
+    /** Feature flag to enable synchronous AdId API. */
+    @FeatureFlag boolean DEFAULT_ADID__ENABLE_SYNCHRONOUS_AD_ID_API = false;
+
+    /** Returns whether synchronous AdId API is enabled. */
+    default boolean getAdidEnableSynchronousAdIdApi() {
+        return DEFAULT_ADID__ENABLE_SYNCHRONOUS_AD_ID_API;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

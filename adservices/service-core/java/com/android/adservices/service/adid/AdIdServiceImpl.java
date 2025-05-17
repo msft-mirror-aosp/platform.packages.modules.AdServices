@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service.adid;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
@@ -37,11 +38,14 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RATE_LIMIT_CALLBACK_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID;
 
+import android.adservices.adid.AdId;
 import android.adservices.adid.GetAdIdParam;
+import android.adservices.adid.GetAdIdResult;
 import android.adservices.adid.IAdIdService;
 import android.adservices.adid.IGetAdIdCallback;
 import android.adservices.common.CallerMetadata;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Binder;
@@ -180,6 +184,17 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                                 mFlags);
                     }
                 });
+    }
+
+    @Override
+    @RequiresPermission(ACCESS_ADSERVICES_AD_ID)
+    public GetAdIdResult getAdvertisingIdInfo() {
+        // TODO(b/417522613): implement the API.
+        return new GetAdIdResult.Builder()
+                .setAdId(AdId.ZERO_OUT)
+                .setLatEnabled(true)
+                .setStatusCode(STATUS_SUCCESS)
+                .build();
     }
 
     // Throttle the AdId API.

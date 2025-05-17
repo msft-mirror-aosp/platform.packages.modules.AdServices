@@ -48,6 +48,7 @@ import static com.android.adservices.service.Flags.CONSENT_ALREADY_INTERACTED_FI
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_RESET_TOKEN;
 import static com.android.adservices.service.Flags.DEBUG_UX;
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_TTL_MS;
+import static com.android.adservices.service.Flags.DEFAULT_ADID__ENABLE_SYNCHRONOUS_AD_ID_API;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_DATA_MIGRATION_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
@@ -65,7 +66,9 @@ import static com.android.adservices.service.Flags.DEFAULT_AUCTION_SERVER_AD_ID_
 import static com.android.adservices.service.Flags.DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED;
-import static com.android.adservices.service.Flags.DEFAULT_CONFIG_DELIVERY__MDD_MANIFEST_URLS;
+import static com.android.adservices.service.Flags.DEFAULT_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD;
+import static com.android.adservices.service.Flags.DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS;
+import static com.android.adservices.service.Flags.DEFAULT_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_EEA_PAS_UX_ENABLED;
@@ -74,7 +77,6 @@ import static com.android.adservices.service.Flags.DEFAULT_ENABLE_AD_SERVICES_SY
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_BACK_COMPAT_INIT;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_CONSENT_MANAGER_V2;
-import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_HPKE_WITH_PLATFORM_APIS;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_LOG_SAMPLING_INFRA;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_PACKAGE_DENY_BG_JOB;
@@ -96,12 +98,11 @@ import static com.android.adservices.service.Flags.DEFAULT_MAINLINE_TRAIN_VERSIO
 import static com.android.adservices.service.Flags.DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_CLICK_SOURCE_FG_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
-import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_CLICK_SOURCE_FG_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK;
-import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_VIEW_SOURCE_FG_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION;
@@ -115,6 +116,7 @@ import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_MAX_VALUE
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_VIEW_SOURCE_FG_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
 import static com.android.adservices.service.Flags.DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST;
 import static com.android.adservices.service.Flags.DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
@@ -143,7 +145,6 @@ import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_PILOT_JOBS_ENA
 import static com.android.adservices.service.Flags.DEFAULT_U18_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS;
 import static com.android.adservices.service.Flags.DEFAULT_UI__ENABLE_EXPRESSIVE_THEME;
-import static com.android.adservices.service.Flags.DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT;
 import static com.android.adservices.service.Flags.DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.Flags.DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
 import static com.android.adservices.service.Flags.DISABLE_TOPICS_ENROLLMENT_CHECK;
@@ -609,6 +610,7 @@ import static com.android.adservices.service.Flags.UI_EEA_COUNTRIES;
 import static com.android.adservices.service.Flags.UI_FEATURE_TYPE_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.UI_OTA_RESOURCES_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.UI_OTA_STRINGS_MANIFEST_FILE_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_ADID_ENABLE_SYNCHRONOUS_AD_ID_API;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_APK_SHA_CERTS;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
@@ -652,9 +654,9 @@ import static com.android.adservices.service.FlagsConstants.KEY_COBALT__FALL_BAC
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT__IGNORED_REPORT_ID_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES;
-import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB;
-import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__MDD_MANIFEST_URLS;
-import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT;
+import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD;
+import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__MDD_CONFIGS;
+import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_RESET_TOKEN;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
@@ -944,6 +946,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTR
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_CLICK_SOURCE_FG_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_AGGREGATION_COORDINATOR_ORIGIN;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_APP_SIGNATURE_ALLOWLIST;
@@ -985,8 +988,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_CLICK_SOURCE_FG_CHECK;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VIEW_SOURCE_FG_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_COUNT_UNIQUE_SERVICE;
@@ -1137,6 +1138,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_TRIG
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VIEW_SOURCE_FG_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_MSMT_API_APP_BLOCK_LIST;
@@ -6304,27 +6306,27 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetEnableEnrollmentConfigV3Db() {
+    public void testGetConfigDeliveryEnableEnrollmentConfigV3DataDownload() {
         mFlagsTestHelper.testConfigFlag(
-                KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB,
-                DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB,
-                Flags::getEnableEnrollmentConfigV3Db);
+                KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD,
+                DEFAULT_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD,
+                Flags::getConfigDeliveryEnableEnrollmentConfigV3DataDownload);
     }
 
     @Test
-    public void testGetConfigDeliveryMddManifestUrls() {
+    public void testGetConfigDeliveryMddConfigs() {
         mFlagsTestHelper.testConfigFlag(
-                KEY_CONFIG_DELIVERY__MDD_MANIFEST_URLS,
-                DEFAULT_CONFIG_DELIVERY__MDD_MANIFEST_URLS,
-                Flags::getConfigDeliveryMddManifestUrls);
+                KEY_CONFIG_DELIVERY__MDD_CONFIGS,
+                DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS,
+                Flags::getConfigDeliveryMddConfigs);
     }
 
     @Test
-    public void testGetUseConfigsManagerToQueryEnrollment() {
+    public void testGetConfigDeliveryUseArgonConfigManagerToQueryEnrollment() {
         mFlagsTestHelper.testConfigFlag(
-                KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT,
-                DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT,
-                Flags::getUseConfigsManagerToQueryEnrollment);
+                KEY_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT,
+                DEFAULT_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT,
+                Flags::getConfigDeliveryUseArgonConfigManagerToQueryEnrollment);
     }
 
     @Test
@@ -6673,6 +6675,14 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_UI_ENABLE_EXPRESSIVE_THEME,
                 DEFAULT_UI__ENABLE_EXPRESSIVE_THEME,
                 Flags::getUiEnableExpressiveTheme);
+    }
+
+    @Test
+    public void testGetAdidEnableSynchronousAdIdApi() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_ADID_ENABLE_SYNCHRONOUS_AD_ID_API,
+                DEFAULT_ADID__ENABLE_SYNCHRONOUS_AD_ID_API,
+                Flags::getAdidEnableSynchronousAdIdApi);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

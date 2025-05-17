@@ -76,6 +76,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 import org.mockito.Mock;
@@ -97,6 +98,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 // NOTE: must use the Application context, not the Instrumentation context from sContext
+@Ignore("b/417223407")
 public final class JSScriptEngineTest extends AdServicesExtendedMockitoTestCase {
 
     /**

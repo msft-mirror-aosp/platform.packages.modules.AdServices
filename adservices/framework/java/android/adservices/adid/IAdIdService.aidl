@@ -19,6 +19,7 @@ package android.adservices.adid;
 import android.adservices.adid.GetAdIdParam;
 import android.adservices.adid.IGetAdIdCallback;
 import android.adservices.common.CallerMetadata;
+import android.adservices.adid.GetAdIdResult;
 
 /**
  * AdId Service.
@@ -31,4 +32,9 @@ interface IAdIdService {
      */
     void getAdId(in GetAdIdParam adIdParam, in CallerMetadata callerMetadata,
             in IGetAdIdCallback callback);
+
+     /**
+     * Synchronous API to get AdId.
+     */
+     GetAdIdResult getAdvertisingIdInfo();
 }

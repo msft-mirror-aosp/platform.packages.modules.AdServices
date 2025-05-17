@@ -166,6 +166,8 @@
     <string name="settingsUI_reset_apps_title" msgid="3102875782600625477">"アプリが推定した興味 / 関心をリセット"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="5821437091309568626">"現時点であなたの興味 / 関心を推定するアプリはありません"</string>
     <string name="settingsUI_apps_view_no_apps_ga_text" msgid="827670084273365802">"現在、表示できるアプリはありません、\n詳しくは、"<a href="https://support.google.com/android?p=ad_privacy">"アプリによる広告の提案"</a>"についての説明をご覧ください"</string>
+    <string name="settingsUI_apps_view_fragment_no_apps_ga_text" msgid="4363382656885208799">"現在、表示できるアプリがありません。"</string>
+    <string name="settingsUI_apps_view_fragment_no_apps_link_text" msgid="1493101148713107587">"アプリによる広告の提案について"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="8524518056879001890">"プライバシー サンドボックス"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="6191835773793395323">"Android の広告のプライバシー（ベータ版）は、アプリがユーザーにおすすめの広告を表示する場合に役立つ新しい機能を提供しています。これらの技術でデバイス識別子が使用されることはありません。\n\nアプリにより、ユーザーが興味や関心を持ちそうな広告の種類が推測され、その興味や関心がデバイスに一時的に保存されます。これにより、アプリは、他のデベロッパーのウェブサイトやアプリでユーザーのアクティビティを追跡することなく、関連性の高い広告を表示することができます。"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="6386103688779633888">"ブロック中のアプリはありません"</string>
@@ -214,17 +216,21 @@
     <string name="settingsUI_main_view_apps_info" msgid="3093099990301760086">"ユーザーが使用するアプリは、アプリの使われ方を元にユーザーの好みを特定する場合もあります。"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7231616293146266690">"ユーザーが使用しているアプリから Android に対して広告の効果を測定するための情報が要求されると、Android は限定的な種類のデータの収集のみをアプリに許可します。"</string>
     <string name="settingsU_main_view_learn_more" msgid="1510918572255886819">"詳しくは、"<a href="https://support.google.com/android?p=ad_privacy">"Android における広告のプライバシー"</a>"についての説明をご覧ください"</string>
+    <string name="settingsU_main_view_fragment_learn_more" msgid="184774314084649596">"Android における広告のプライバシーについて"</string>
     <string name="settingsUI_topics_subtitle" msgid="6972706530860751586">"ON / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> 件のトピック"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="7938363290536769313">"{count,plural, =1{ON / # 件のトピック}other{ON / # 件のトピック}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="5488403228775310943">"ON / <xliff:g id="APPS_COUNT">%1$d</xliff:g> 個のアプリ"</string>
     <string name="settingsUI_apps_subtitle_plural" msgid="7184167843623106783">"{count,plural, =1{ON / # 個のアプリ}other{ON / # 個のアプリ}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="4526152882066971753">"ON"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="3699617207496648034">"OFF"</string>
+    <string name="settingsUI_main_view_fragment_footer" msgid="4011871888988203657"><b>"広告のトピック"</b>\n"Android は、ユーザーが最近使ったアプリとその使用頻度に基づいて興味 / 関心のあるトピックを記録します。\n\n"<b>"アプリによる広告の提案"</b>\n"ユーザーが使用するアプリは、アプリの使われ方を元にユーザーの好みを特定する場合もあります。\n\n"<b>"広告の測定"</b>\n"ユーザーが使用するアプリが、広告のパフォーマンスを測定するための情報を Android に求めることがあります。Android では、限られた種類のデータのみをアプリが収集できるよう設定できます。"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="4448883758817660143">"広告のトピックは、最近使用されたアプリに基づいており、パーソナライズド広告を表示するためにアプリが使用します。\n\nアプリで共有されたくないトピックをブロックできます。また Android では、トピックを定期的に自動で削除しています。\n\nこの機能を ON にすることもできますが、この機能が全面的に利用可能になって各種アプリで使用されるようになるまでは、トピックの一覧は表示されません。"</string>
     <string name="settingsUI_topics_switch_title" msgid="6138535622464144001">"広告トピックを許可"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="1855691597262481021">"ブロックした広告トピック"</string>
     <string name="settingsUI_reset_topics_ga_title" msgid="1580902912944562790">"すべての広告トピックをリセット"</string>
     <string name="settingsU_topics_view_footer" msgid="1030678323154113993">"Android は、過去数週間にユーザーが使用したアプリに基づいて興味 / 関心のあるトピックを記録します。\n\nパーソナライズド広告のため、使用するアプリから後で Android に対してトピックが求められることがあります。Android は個人情報とアプリの使用に関する情報を保護する形で最大 3 件のトピックを共有します。\n\nAndroid は定期的にトピックを自動削除します。アプリを引き続き使用すると、トピックはリストに再表示される可能性があります。また、Android にアプリと共有されたくないトピックをブロックすることもできます。\n\nアプリにパーソナライズド広告が表示されるかどうかは、この設定のほか、アプリから提案される広告の設定、広告 ID の設定、使用しているアプリが広告をパーソナライズするかどうかによって決まります。"</string>
+    <string name="settingsUI_topics_view_fragment_no_topics_ga_text" msgid="1997662820271400146">"現在、表示できるトピックはありません。"</string>
+    <string name="settingsUI_topics_view_fragment_no_topics_link_text" msgid="7536185953399870580">"広告のトピックについて"</string>
     <string name="settingsUI_apps_switch_title" msgid="4459742127173310507">"アプリによる広告の提案を許可"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="4376440601964010807">"ユーザーが使用するアプリがユーザーの好みを特定して、別のアプリで広告を提案する場合があります。\n\n広告の提案を行わないようアプリをブロックできます。また Android では、アプリによるおすすめのデータを定期的に自動で削除しています。\n\nこの機能を ON にすることもできますが、この機能が全面的に利用可能になって各種アプリで使用されるようになるまでは、アプリの一覧は表示されません。"</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="3403673196085504304">"ブロックしたアプリ"</string>
@@ -235,6 +241,7 @@
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"このたび、「広告の測定」という広告プライバシーの新しい機能をリリースします。Android では、アプリによる広告の効果測定に役立てるため、広告が表示されたタイミングなどの限定的な情報のみをアプリ間で共有するようになります。"</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"広告プライバシー設定で変更できます。"</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"ユーザーが使用しているアプリから Android に対して広告の効果を測定するための情報が要求されると、Android は限定的な種類のデータの収集のみをアプリに許可します。"</string>
+    <string name="settingsUI_main_u18_view_fragment_footer" msgid="7651031920045695046"><b>"広告の測定"</b>\n"ユーザーが使用するアプリが、広告のパフォーマンスを測定するための情報を Android に求めることがあります。Android では、限られた種類のデータのみをアプリが収集できるよう設定できます。"</string>
     <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"広告のプライバシーの新機能"</string>
     <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"個人情報を保護できるようにしつつ、表示される広告をご自身でより細かく選択できます"</string>
     <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"広告のプライバシー機能に関する最新情報"</string>
@@ -263,8 +270,15 @@
     <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=manage_appsuggested_ads">"プライバシーを保護する Android の仕組みの詳細を確認"</a></string>
     <string name="settingsUI_pas_apps_view_body_text" msgid="954711203060462705">"アプリとその広告パートナーは、個人情報のプライバシーとセキュリティを確保しながら、広告をパーソナライズするためにこのデバイス上の他のアプリでのユーザーのアクティビティを使用できます。\n\nたとえば、料理アプリを定期的に使用している場合、食料品の宅配サービスや関連コンテンツの広告が他のアプリに表示される可能性があります。\n\nユーザーは、アプリでアクティビティ データが広告パートナーと共有されないようにブロックできます。Android では、共有されたアクティビティ データを定期的に自動で削除しています。再度使用したアプリはこのリストに再度表示される可能性があります。\n\nこの機能をオンにすることもできますが、この機能が全面的に利用可能になって各種アプリで使用されるようになるまでは、アプリの一覧は表示されません。"</string>
     <string name="settingsUI_pas_apps_view_footer" msgid="7708188361421000402">"アプリとその広告パートナーがユーザーの興味の対象を記憶してエクスペリエンスのパーソナライズを行うのは一般的なことです。この情報は、広告パートナーが他のアプリで広告を表示する目的以外で使用できないよう、アプリで安全に保管することができます。\n\nパーソナライズド広告が表示されるかどうかは、この設定のほか、広告トピックの設定、広告 ID の設定、使用しているアプリが広告をパーソナライズするかなど、さまざまな要因に左右されます。\n\nGoogle は企業に対し、アプリ間でユーザーを再識別するためにこのデータを使用しないことを公表するよう義務付けています。一部のアプリでは、広告以外のユーザー エクスペリエンスをカスタマイズするために、ユーザーのアクティビティが使用されることがあります。ユーザーに関する既存の情報と組み合わせて使用されることもあります。企業は、ユーザーのデータの使用方法をユーザーに通知する責任を負います。"<a href="https://policies.google.com/privacy">"Google によるユーザーデータの保護について詳しくは、プライバシー ポリシーをご覧ください"</a>\n\n<a href="https://support.google.com/android?p=manage_appsuggested_ads">"アプリによる広告の提案について"</a></string>
+    <string name="settingsUI_pas_apps_view_fragment_footer" msgid="1136991892447761994">"アプリとその広告パートナーがユーザーの興味の対象を記憶してエクスペリエンスのパーソナライズを行うのは一般的なことです。この情報は、広告パートナーが他のアプリで広告を表示する目的以外で使用できないよう、アプリで安全に保管できます。\n\nパーソナライズド広告が表示されるかどうかは、この設定のほか、広告トピックの設定、広告 ID の設定、使用しているアプリが広告をパーソナライズするかなど、さまざまな要因に左右されます。\n\nGoogle は企業に対し、アプリ間でユーザーを再識別するためにこのデータを使用しないことを公表するよう義務付けています。一部のアプリでは、広告以外のユーザー エクスペリエンスをカスタマイズするために、ユーザーのアクティビティが使用されることがあります。ユーザーに関する既存の情報と組み合わせて使用されることもあります。企業は、ユーザーのデータの使用方法をユーザーに通知する責任を負います。"</string>
+    <string name="settingsUI_pas_apps_view_fragment_privacy_learn_more" msgid="9048187442388869479">"Google によるユーザーデータの保護について詳しくは、プライバシー ポリシーをご覧ください"</string>
+    <string name="settingsUI_pas_apps_view_fragment_app_learn_more" msgid="1862930198175771953">"アプリによる広告の提案について"</string>
     <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"Android では、集約やデータへのノイズ付加などの複数のプライバシー対策を使用してアプリ同士の情報共有を制限し、個人情報を保護できるようにしています。\n\nブラウザにも同様の設定がある場合があります。Android とブラウザの両方で広告の測定が ON の場合、広告主はユーザーが使用しているアプリとアクセスしているサイトの間で広告の効果を測定できることがあります。閲覧履歴は非公開で、デバイスから外部に送信されることはありません。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"広告の測定の詳細を確認"</a></string>
+    <string name="settingsUI_pas_msmt_view_fragment_footer" msgid="604389446442292263">"Android では、集約やデータへのノイズ付加などの複数のプライバシー対策を使用してアプリ同士の情報共有を制限し、個人情報を保護できるようにしています。\n\nブラウザにも同様の設定がある場合があります。Android とブラウザの両方で広告の測定が ON の場合、広告主はユーザーが使用しているアプリとアクセスしているサイトの間で広告の効果を測定できることがあります。閲覧履歴は非公開で、デバイスから外部に送信されることはありません。"</string>
+    <string name="settingsUI_pas_msmt_view_fragment_footer_learn_more" msgid="5693484886919399404">"広告の測定について"</string>
     <string name="settingsUI_pas_topics_view_footer" msgid="4957955199367073977">"Android は、過去数週間にユーザーが使用したアプリに基づいて興味 / 関心のあるトピックを記録します。\n\nパーソナライズド広告のため、使用するアプリから後で Android に対してトピックが求められることがあります。Android は個人情報とアプリの使用に関する情報を保護する形で最大 3 件のトピックを共有します。\n\nAndroid は定期的にトピックを自動削除します。アプリを引き続き使用すると、トピックはリストに再表示される可能性があります。また、Android にアプリと共有されたくないトピックをブロックすることもできます。\n\n表示される広告がパーソナライズされるかどうかは、この設定、アプリによる広告の提案の設定、広告 ID の設定、使用しているアプリで広告のパーソナライズが行われたかどうかなど、さまざまな要因の影響を受けます。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"広告のトピックの詳細を確認"</a></string>
+    <string name="settingsUI_pas_topics_view_fragment_footer" msgid="3618283677604144740">"Android は、過去数週間にユーザーが使用したアプリに基づいて興味 / 関心のあるトピックを記録します。\n\nパーソナライズド広告のため、使用するアプリから後で Android に対してトピックが求められることがあります。Android は個人情報とアプリの使用に関する情報を保護する形で最大 3 件のトピックを共有します。\n\nAndroid は定期的にトピックを自動削除します。アプリを引き続き使用すると、トピックはリストに再表示される可能性があります。また、Android にアプリと共有されたくないトピックをブロックすることもできます。\n\nパーソナライズド広告が表示されるかどうかは、この設定のほか、アプリによる広告の提案の設定、広告 ID の設定、使用しているアプリが広告をパーソナライズするかなど、さまざまな要因に左右されます。"</string>
+    <string name="settingsUI_pas_topics_fragment_learn_more" msgid="5203298590287092492">"広告のトピックについて"</string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"音楽、ニュース、スポーツなど、興味 / 関心のあるトピックを表すカラフルなイラスト"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"円の中に鍵が描かれているカラフルなイラスト"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"9 個の点で四角形が描かれているモノクロの小さなイラスト"</string>

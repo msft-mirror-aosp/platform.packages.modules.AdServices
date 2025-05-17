@@ -37,6 +37,8 @@ import com.android.adservices.shared.proto.LogSamplingConfig;
 import com.android.adservices.shared.proto.MetricId;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import com.google.common.collect.ImmutableMap;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -118,6 +120,8 @@ public final class CelMetricLoggerTest extends AdServicesExtendedMockitoTestCase
                 .that(actual.getPerEventSamplingConfig())
                 .isEqualTo(
                         PerEventSamplingConfig.createPerEventSamplingConfig(
-                                configProto.getPerEventSampling()));
+                                configProto.getPerEventSampling(),
+                                ImmutableMap.of(),
+                                /* supportDimensionInLogSamplingEnabled= */ false));
     }
 }

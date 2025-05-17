@@ -25,6 +25,8 @@ import android.text.TextUtils;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.PhFlags;
+import com.android.adservices.service.common.ProtoParserUtil;
+import com.android.adservices.service.proto.config_delivery.MddConfigs;
 import com.android.adservices.shared.common.flags.Constants;
 import com.android.adservices.shared.flags.FlagsBackend;
 
@@ -3363,23 +3365,26 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
-    public final boolean getEnableEnrollmentConfigV3Db() {
+    public boolean getConfigDeliveryEnableEnrollmentConfigV3DataDownload() {
         return mBackend.getFlag(
-                KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB,
-                DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB);
+                KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD,
+                DEFAULT_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD);
     }
 
     @Override
-    public final boolean getUseConfigsManagerToQueryEnrollment() {
+    public boolean getConfigDeliveryUseArgonConfigManagerToQueryEnrollment() {
         return mBackend.getFlag(
-                KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT,
-                DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT);
+                KEY_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT,
+                DEFAULT_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT);
     }
 
     @Override
-    public final String getConfigDeliveryMddManifestUrls() {
-        return mBackend.getFlag(
-                KEY_CONFIG_DELIVERY__MDD_MANIFEST_URLS, DEFAULT_CONFIG_DELIVERY__MDD_MANIFEST_URLS);
+    public MddConfigs getConfigDeliveryMddConfigs() {
+        return ProtoParserUtil.fromBase64(
+                mBackend.getFlag(
+                        KEY_CONFIG_DELIVERY__MDD_CONFIGS,
+                        ProtoParserUtil.toBase64(DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS)),
+                MddConfigs.parser());
     }
 
     @Override
@@ -3857,5 +3862,10 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     public final boolean getUiEnableExpressiveTheme() {
         return mBackend.getFlag(
                 KEY_UI_ENABLE_EXPRESSIVE_THEME, DEFAULT_UI__ENABLE_EXPRESSIVE_THEME);
+    }
+
+    public final boolean getAdidEnableSynchronousAdIdApi() {
+        return mBackend.getFlag(
+                KEY_ADID_ENABLE_SYNCHRONOUS_AD_ID_API, DEFAULT_ADID__ENABLE_SYNCHRONOUS_AD_ID_API);
     }
 }

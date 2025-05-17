@@ -57,6 +57,7 @@ import com.android.adservices.service.shell.adselection.ViewAuctionResultCommand
 import com.android.adservices.service.shell.adservicesapi.DevSessionCommand;
 import com.android.adservices.service.shell.adservicesapi.EnableAdServicesCommand;
 import com.android.adservices.service.shell.adservicesapi.ResetConsentCommand;
+import com.android.adservices.service.shell.adservicesapi.SetAdsPersonalizationStatusCommand;
 import com.android.adservices.service.shell.adservicesapi.SetModuleStatesCommand;
 import com.android.adservices.service.shell.adservicesapi.SetUserChoicesCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceListCommand;
@@ -300,7 +301,8 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                                 ResetConsentCommand.HELP_RESET_CONSENT_DATA,
                                 DevSessionCommand.HELP,
                                 SetModuleStatesCommand.HELP,
-                                SetUserChoicesCommand.HELP));
+                                SetUserChoicesCommand.HELP,
+                                SetAdsPersonalizationStatusCommand.HELP));
     }
 
     private void expectInvalidArgument(String syntax, String... args) throws IOException {

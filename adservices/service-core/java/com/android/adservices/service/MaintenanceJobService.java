@@ -28,12 +28,13 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
-import android.os.Build;
+import android.os.Build.VERSION_CODES;
 
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.configdelivery.ConfigurationManager;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.signals.SignalsMaintenanceTasksWorker;
@@ -49,7 +50,7 @@ import java.util.List;
 import java.util.Objects;
 
 /** Maintenance job to clean up. */
-@RequiresApi(Build.VERSION_CODES.S)
+@RequiresApi(VERSION_CODES.S)
 public final class MaintenanceJobService extends JobService {
     private static final int MAINTENANCE_JOB_ID = MAINTENANCE_JOB.getJobId();
 
@@ -132,11 +133,22 @@ public final class MaintenanceJobService extends JobService {
                             this::doProtectedSignalsDataMaintenanceTasks);
         }
 
+        ListenableFuture<Boolean> argonConfigDeliveryFuture;
+        if (flags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()) {
+            argonConfigDeliveryFuture = submitRunnableAndHandleExceptions(
+                    "Failed to complete Argon Config Delivery data maintenance tasks.",
+                    this::doConfigDeliveryMaintenanceTasks);
+        } else {
+            LogUtil.d("Argon configs are not being used, skipping Argon config delivery cleanup");
+            argonConfigDeliveryFuture = Futures.immediateFuture(true);
+        }
+
         ListenableFuture<List<Boolean>> futuresList =
                 Futures.allAsList(
                         fledgeMaintenanceTasksFuture,
                         protectedSignalsMaintenanceTasksFuture,
-                        appReconciliationFuture);
+                        appReconciliationFuture,
+                        argonConfigDeliveryFuture);
 
         Futures.addCallback(
                 futuresList,
@@ -319,5 +331,10 @@ public final class MaintenanceJobService extends JobService {
     private void doProtectedSignalsDataMaintenanceTasks() {
         LogUtil.v("Performing protected signals maintenance tasks");
         getSignalsMaintenanceTasksWorker().clearInvalidProtectedSignalsData();
+    }
+
+    private void doConfigDeliveryMaintenanceTasks() {
+        LogUtil.v("Performing argon config delivery maintenance tasks");
+        ConfigurationManager.cleanupUnusedOlderConfigurations();
     }
 }

@@ -42,6 +42,7 @@ import com.android.adservices.data.signals.DBEncodedPayloadFixture;
 import com.android.adservices.service.customaudience.CustomAudienceWithComponentAds;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -755,6 +756,7 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
 
     @Test
     @SuppressWarnings("ReturnValueIgnored")
+    @RequiresSdkLevelAtLeastT
     public void compressedBuyerInputsLargeCaseIsValid() throws Exception {
         // Large case involves 20 buyers
         int sellerMaxSize = 30 * KILOBYTES_TO_BYTES;
@@ -791,6 +793,7 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT
     @SuppressWarnings("ReturnValueIgnored")
     public void compressedBuyerInputsMaxCaseIsValid() throws Exception {
         int sellerMaxSize = 64 * KILOBYTES_TO_BYTES;

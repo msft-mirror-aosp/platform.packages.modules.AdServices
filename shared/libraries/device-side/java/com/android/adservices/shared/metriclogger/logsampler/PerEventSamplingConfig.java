@@ -16,10 +16,15 @@
 
 package com.android.adservices.shared.metriclogger.logsampler;
 
+import com.android.adservices.shared.proto.DimensionMatcher;
+import com.android.adservices.shared.proto.DimensionName;
 import com.android.adservices.shared.proto.LogSamplingConfig;
 
 import com.google.auto.value.AutoValue;
-import com.google.errorprone.annotations.Immutable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
+import java.util.function.Function;
 
 /**
  * Describes the on-device per-event sampling configuration for a metric.
@@ -31,11 +36,23 @@ import com.google.errorprone.annotations.Immutable;
  * @param <L> the type of the log event.
  */
 @AutoValue
-@Immutable
 public abstract class PerEventSamplingConfig<L> {
 
     /** Returns the sampling rate to use. */
     public abstract double getSamplingRate();
+
+    /** Returns a list of {@link DimensionMatcher} used for matching against events. */
+    public abstract ImmutableList<DimensionMatcher> getDimensionMatcherList();
+
+    /**
+     * Returns the map of dimension name to value {@link Function}. Each function takes a log event
+     * and extracts its corresponding integer value for the associated dimension.
+     */
+    public abstract ImmutableMap<DimensionName, Function<L, Integer>>
+            getDimensionNameToValueFunctionMap();
+
+    /** Return {@link Boolean} indicating whether dimension in logs sampling is supported. */
+    public abstract boolean getSupportDimensionInLogSamplingEnabled();
 
     /** Returns the builder for {@link PerEventSamplingConfig}. */
     public abstract Builder<L> toBuilder();
@@ -45,9 +62,14 @@ public abstract class PerEventSamplingConfig<L> {
      * per-event sampling.
      */
     public static <L> PerEventSamplingConfig<L> createPerEventSamplingConfig(
-            LogSamplingConfig.PerEventSampling config) {
+            LogSamplingConfig.PerEventSampling config,
+            ImmutableMap<DimensionName, Function<L, Integer>> dimensionNameToValueFunctionMap,
+            boolean supportDimensionInLogSamplingEnabled) {
         Builder<L> builder = PerEventSamplingConfig.builder();
         builder.samplingRate(getSamplingRate(config));
+        builder.dimensionMatcherList(ImmutableList.copyOf(config.getDimensionMatcherList()));
+        builder.dimensionNameToValueFunctionMap(dimensionNameToValueFunctionMap);
+        builder.supportDimensionInLogSamplingEnabled(supportDimensionInLogSamplingEnabled);
         return builder.build();
     }
 
@@ -65,6 +87,20 @@ public abstract class PerEventSamplingConfig<L> {
 
         /** Sets the value for {@link #getSamplingRate()}. */
         public abstract Builder<L> samplingRate(double samplingRate);
+
+        /**
+         * Sets the map of dimension name to value {@link Function}. Each function takes a log event
+         * and extracts its corresponding integer value for the associated dimension.
+         */
+        public abstract Builder<L> dimensionNameToValueFunctionMap(
+                ImmutableMap<DimensionName, Function<L, Integer>> samplingDimensionFunction);
+
+        /** Sets a list of {@link DimensionMatcher} used for matching against events. */
+        abstract Builder<L> dimensionMatcherList(ImmutableList<DimensionMatcher> dimensionMatcher);
+
+        /** Sets {@link Boolean} indicating whether dimension in logs sampling is supported. */
+        abstract Builder<L> supportDimensionInLogSamplingEnabled(
+                boolean supportDimensionInLogSamplingEnabled);
 
         /** Builds a new {@link PerEventSamplingConfig} instance. */
         public abstract PerEventSamplingConfig<L> build();

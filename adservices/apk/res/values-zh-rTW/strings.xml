@@ -166,6 +166,8 @@
     <string name="settingsUI_reset_apps_title" msgid="3102875782600625477">"重設應用程式推測的興趣喜好"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="5821437091309568626">"目前沒有任何應用程式推測你的興趣喜好"</string>
     <string name="settingsUI_apps_view_no_apps_ga_text" msgid="827670084273365802">"目前沒有可顯示的應用程式。\n進一步瞭解"<a href="https://support.google.com/android?p=ad_privacy">"應用程式建議廣告"</a></string>
+    <string name="settingsUI_apps_view_fragment_no_apps_ga_text" msgid="4363382656885208799">"目前沒有可顯示的應用程式。"</string>
+    <string name="settingsUI_apps_view_fragment_no_apps_link_text" msgid="1493101148713107587">"進一步瞭解應用程式建議廣告"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="8524518056879001890">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="6191835773793395323">"Android 廣告隱私權 Beta 版提供全新功能，可讓應用程式用來向你顯示可能喜歡的廣告。這些技術並未使用裝置 ID。\n\n應用程式可以推測你可能感興趣的廣告類別，並在裝置上暫時儲存你的興趣喜好。這樣一來，應用程式不必追蹤你在其他開發商的網站和應用程式內的活動，也能向你顯示貼近需求的廣告。"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="6386103688779633888">"你沒有封鎖任何應用程式"</string>
@@ -214,17 +216,21 @@
     <string name="settingsUI_main_view_apps_info" msgid="3093099990301760086">"你使用的應用程式也能根據你的使用方式，判斷你喜愛的主題。"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7231616293146266690">"你使用的應用程式可要求 Android 提供相關資訊，用於評估放送廣告的成效。Android 允許應用程式收集少數幾種資料。"</string>
     <string name="settingsU_main_view_learn_more" msgid="1510918572255886819">"進一步瞭解 "<a href="https://support.google.com/android?p=ad_privacy">"Android 上的廣告隱私權"</a></string>
+    <string name="settingsU_main_view_fragment_learn_more" msgid="184774314084649596">"進一步瞭解 Android 的廣告隱私權"</string>
     <string name="settingsUI_topics_subtitle" msgid="6972706530860751586">"已啟用/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> 個主題"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="7938363290536769313">"{count,plural, =1{已開啟/# 個主題}other{已開啟/# 個主題}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="5488403228775310943">"已啟用/<xliff:g id="APPS_COUNT">%1$d</xliff:g> 個應用程式"</string>
     <string name="settingsUI_apps_subtitle_plural" msgid="7184167843623106783">"{count,plural, =1{已開啟/# 個應用程式}other{已開啟/# 個應用程式}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="4526152882066971753">"已啟用"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="3699617207496648034">"已停用"</string>
+    <string name="settingsUI_main_view_fragment_footer" msgid="4011871888988203657"><b>"廣告主題"</b>\n"Android 會根據你最近使用的應用程式和使用頻率，記錄感興趣的主題。\n\n"<b>"應用程式建議廣告"</b>\n"你使用的應用程式也能根據使用方式，判斷你的喜好。\n\n"<b>"廣告評估"</b>\n"你使用的應用程式可要求 Android 提供相關資訊，以評估廣告成效。Android 允許應用程式收集少數幾種類型的資料。"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="4448883758817660143">"系統會根據你最近使用的應用程式，判斷你感興趣的主題，應用程式則會使用這類資訊向你顯示個人化廣告。\n\n你可以封鎖不想與應用程式分享的主題，Android 也會定期自動刪除這類資訊。\n\n這項功能雖然已可開啟，但你不一定會看到主題清單。只有在功能完全開放，且應用程式開始使用後，系統才會顯示主題清單。"</string>
     <string name="settingsUI_topics_switch_title" msgid="6138535622464144001">"允許廣告主題"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="1855691597262481021">"你封鎖的廣告主題"</string>
     <string name="settingsUI_reset_topics_ga_title" msgid="1580902912944562790">"重設所有廣告主題"</string>
     <string name="settingsU_topics_view_footer" msgid="1030678323154113993">"Android 會根據你最近幾週使用的應用程式記錄喜好的主題。\n\n這些應用程式之後就能要求 Android 提供這項資訊，向你顯示個人化廣告。Android 最多會分享 3 個主題，同時保護你的身分和應用程式使用情況資訊。\n\nAndroid 會定期自動刪除主題，但如果你繼續使用應用程式，就可能會在清單中再次看到先前已自動刪除的主題。你也可以封鎖不希望 Android 與應用程式分享的主題。\n\n你可能會在應用程式中看到個人化廣告，實際情況取決於這項設定、應用程式建議廣告設定、廣告 ID 設定，以及你使用的應用程式是否會顯示個人化廣告。"</string>
+    <string name="settingsUI_topics_view_fragment_no_topics_ga_text" msgid="1997662820271400146">"目前沒有可顯示的主題。"</string>
+    <string name="settingsUI_topics_view_fragment_no_topics_link_text" msgid="7536185953399870580">"進一步瞭解廣告主題"</string>
     <string name="settingsUI_apps_switch_title" msgid="4459742127173310507">"允許應用程式建議的廣告"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="4376440601964010807">"你使用的應用程式可以判斷你感興趣的主題，然後為其他應用程式建議廣告。\n\n如果不希望應用程式建議廣告，可以選擇封鎖，Android 也會定期自動刪除應用程式建議資料。\n\n這項功能雖然已可開啟，但你不一定會看到應用程式清單。只有在功能完全開放，且應用程式開始使用後，系統才會顯示應用程式清單。"</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="3403673196085504304">"你封鎖的應用程式"</string>
@@ -235,6 +241,7 @@
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"我們推出名為「廣告評估」的全新廣告隱私權功能。Android 現在只會在應用程式間分享有限的資訊 (例如：廣告的放送時間)，協助應用程式評估廣告成效。"</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"你可以前往廣告隱私權設定進行變更。"</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"你使用的應用程式可要求 Android 提供資訊，以便評估廣告成效。Android 僅允許應用程式收集少數幾種資料。"</string>
+    <string name="settingsUI_main_u18_view_fragment_footer" msgid="7651031920045695046"><b>"廣告評估"</b>\n"你使用的應用程式可要求 Android 提供相關資訊，以評估廣告成效。Android 允許應用程式收集少數幾種類型的資料。"</string>
     <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"新的廣告隱私權功能"</string>
     <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"取得更多廣告控管選項，同時保護身分隱私"</string>
     <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"廣告隱私權功能更新"</string>
@@ -263,8 +270,15 @@
     <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=manage_appsuggested_ads">"進一步瞭解 Android 如何保護隱私權"</a></string>
     <string name="settingsUI_pas_apps_view_body_text" msgid="954711203060462705">"應用程式及其廣告合作夥伴可根據這部裝置上其他應用程式中的活動記錄，放送個人化廣告，同時保護身分資訊的隱私和安全。\n\n舉例來說，假如您經常使用烹飪應用程式，可能會在其他應用程式中看到食品雜貨外送服務或相關內容的廣告。\n\n您可以禁止應用程式將活動記錄提供給廣告合作夥伴。Android 也會定期自動刪除收到的活動記錄，所以您再次使用應用程式時，該應用程式可能會重新出現在這份清單中。\n\n這項功能雖然已可開啟，但可能要等到功能完全開放，且應用程式開始使用後，您才會看到應用程式清單。"</string>
     <string name="settingsUI_pas_apps_view_footer" msgid="7708188361421000402">"一般來說，應用程式及其廣告合作夥伴會記住您感興趣的內容，用於提供個人化體驗。應用程式可安全儲存這類資訊，只供廣告合作夥伴用來在其他應用程式中放送廣告。\n\n您看到的廣告是否個人化取決於多項因素，例如這項設定、廣告主題設定、廣告 ID 設定，以及您使用的應用程式是否會放送個人化廣告。\n\nGoogle 會要求公司公開聲明，不跨應用程式使用這類資料重新識別您的身分。某些應用程式可能會根據您的活動記錄提供個人化體驗 (不限於廣告)，也可能會將活動記錄與應用程式中有關您的其他個人資訊整合在一起。公司必須負責向使用者告知資料用途。"<a href="https://policies.google.com/privacy">"想進一步瞭解 Google 如何保護您的資料，請參閱《隱私權政策》"</a>\n\n<a href="https://support.google.com/android?p=manage_appsuggested_ads">"進一步瞭解應用程式建議廣告"</a></string>
+    <string name="settingsUI_pas_apps_view_fragment_footer" msgid="1136991892447761994">"一般來說，應用程式及其廣告合作夥伴會記住你感興趣的內容，用於提供個人化體驗。應用程式可安全儲存這類資訊，只供廣告合作夥伴用來在其他應用程式中放送廣告。\n\n你看到的廣告是否個人化，取決於多項因素，例如這項設定、廣告主題設定、廣告 ID 設定，以及你使用的應用程式是否會放送個人化廣告。\n\nGoogle 會要求公司公開聲明，不跨應用程式使用這類資料重新識別你的身分。某些應用程式可能會根據你的活動記錄提供個人化體驗 (不限於廣告)，也可能會將活動記錄與應用程式中有關你的其他個人資訊整合在一起。公司必須負責向使用者告知資料用途。"</string>
+    <string name="settingsUI_pas_apps_view_fragment_privacy_learn_more" msgid="9048187442388869479">"想進一步瞭解 Google 如何保護你的資料，請參閱《隱私權政策》"</string>
+    <string name="settingsUI_pas_apps_view_fragment_app_learn_more" msgid="1862930198175771953">"進一步瞭解應用程式建議廣告"</string>
     <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"為了限制可在應用程式之間分享哪些資訊，並協助保護你的身分資料，Android 會採用多項隱私保護措施，例如匯總資料和加入雜訊。\n\n瀏覽器可能具有類似設定。如果 Android 和瀏覽器都開啟了廣告評估功能，相關公司或許能在你使用的應用程式和造訪的網站上評估廣告成效差異。瀏覽記錄只會儲存在你的裝置上。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解廣告評估"</a></string>
+    <string name="settingsUI_pas_msmt_view_fragment_footer" msgid="604389446442292263">"Android 會採用多項隱私保護措施 (例如匯總資料和加入雜訊)，限制應用程式間可共用哪些資訊，並協助保護你的身分資料。\n\n瀏覽器可能具有類似設定。如果 Android 和瀏覽器都開啟廣告評估功能，廣告技術公司或許就能在你使用的應用程式和造訪的網站上評估廣告成效差異。你的瀏覽記錄會保留在裝置上，僅供本人存取。"</string>
+    <string name="settingsUI_pas_msmt_view_fragment_footer_learn_more" msgid="5693484886919399404">"進一步瞭解廣告評估"</string>
     <string name="settingsUI_pas_topics_view_footer" msgid="4957955199367073977">"Android 會根據你最近幾週的應用程式使用情形，記錄你感興趣的主題。\n\n之後，你使用的應用程式可以要求 Android 提供這類資訊，用於放送個人化廣告。Android 最多會分享 3 個主題，同時保護你的身分和應用程式使用情形資訊。\n\nAndroid 會定期自動刪除主題，但如果你繼續使用應用程式，就可能會在清單中再次看到已刪除的主題。你也可以禁止 Android 將你感興趣的特定主題告知應用程式。\n\n你可能會在應用程式中看到個人化廣告，實際情況取決於多項因素，例如這項設定、應用程式建議廣告設定、廣告 ID 設定，以及你使用的應用程式是否會顯示個人化廣告。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解廣告主題"</a></string>
+    <string name="settingsUI_pas_topics_view_fragment_footer" msgid="3618283677604144740">"Android 會根據你最近幾週使用的應用程式，記錄感興趣的主題。\n\n之後，你使用的應用程式可以要求 Android 提供這類資訊，用於放送個人化廣告。Android 最多會分享 3 個主題，同時保護你的身分和應用程式使用情況資訊。\n\nAndroid 會定期自動刪除主題，如果繼續使用應用程式，就可能會在清單中再次看到已刪除的主題。或者，你可以封鎖不希望 Android 與應用程式分享的主題。\n\n你看到的廣告是否個人化，取決於多項因素，例如這項設定、應用程式建議廣告設定、廣告 ID 設定，以及你使用的應用程式是否會放送個人化廣告。"</string>
+    <string name="settingsUI_pas_topics_fragment_learn_more" msgid="5203298590287092492">"進一步瞭解廣告主題"</string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"這張彩色插圖中的符號代表音樂、新聞和體育賽事等興趣喜好主題"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"這張彩色插圖中的圓圈內有一個鎖頭"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"這張小型黑白插圖中有由九個圓點組成的正方形"</string>
