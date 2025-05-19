@@ -16,16 +16,12 @@
 
 package android.adservices.test.longevity.concurrent;
 
-import static org.junit.Assert.assertTrue;
-
 import android.platform.test.option.IntegerOption;
 
 import org.junit.Rule;
 
 /** Base class for stress scenarios. */
 public abstract class StressScenarioTestAction {
-    private static final int MAIN_LOOP_DELAY_MS = 500;
-
     // Common Options
     private static final String ALLOCATE_AMOUNT = "allocate_amount";
     private static final String ALLOCATE_PERCENTAGE = "allocate_percentage";
@@ -39,20 +35,4 @@ public abstract class StressScenarioTestAction {
     @Rule
     public final IntegerOption mAllocatePercentageOption =
             new IntegerOption(ALLOCATE_PERCENTAGE).setRequired(false).setDefault(-1);
-
-    protected boolean needToCancel() {
-        return ConcurrentScenariosStatement.needToCancelStressTests();
-    }
-
-    /** Holds the thread to stress the system while the CUJs in the current scenario are running. */
-    protected void holdUntilCujsRunning() {
-        while (!needToCancel()) {
-            try {
-                Thread.sleep(MAIN_LOOP_DELAY_MS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                assertTrue(false);
-            }
-        }
-    }
 }

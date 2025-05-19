@@ -40,7 +40,7 @@ public class ConcurrentScenariosStatement extends Statement {
     private static final Executor sExecutor = Executors.newCachedThreadPool();
     private static final AtomicInteger sJourneysToFinish = new AtomicInteger(0);
 
-    private final Class mStressClass;
+    private final Class mHoldingStressClass;
     private final List<Object> mJourneys;
     private final List<FrameworkMethod> mMethods;
 
@@ -55,10 +55,11 @@ public class ConcurrentScenariosStatement extends Statement {
 
         sJourneysToFinish.set(0);
 
-        mStressClass = android.adservices.test.longevity.concurrent.StressScenarioTestAction.class;
+        mHoldingStressClass =
+                android.adservices.test.longevity.concurrent.HoldingStressScenarioTestAction.class;
 
         for (Object object : journeys) {
-            if (!isAssignableFromStressClass(object)) {
+            if (!isAssignableFromHoldingStressClass(object)) {
                 sJourneysToFinish.incrementAndGet();
             }
         }
@@ -71,8 +72,8 @@ public class ConcurrentScenariosStatement extends Statement {
         return sJourneysToFinish.get() == 0;
     }
 
-    private boolean isAssignableFromStressClass(Object object) {
-        return mStressClass.isAssignableFrom(object.getClass());
+    private boolean isAssignableFromHoldingStressClass(Object object) {
+        return mHoldingStressClass.isAssignableFrom(object.getClass());
     }
 
     @Override
@@ -106,7 +107,7 @@ public class ConcurrentScenariosStatement extends Statement {
                                             testMethod.getName()));
                             latch.countDown();
 
-                            if (!isAssignableFromStressClass(testClass)) {
+                            if (!isAssignableFromHoldingStressClass(testClass)) {
                                 sJourneysToFinish.decrementAndGet();
                             }
                         }

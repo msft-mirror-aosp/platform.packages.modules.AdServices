@@ -25,7 +25,6 @@ import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -44,23 +43,8 @@ public final class StressMemoryUtilization extends StressScenarioTestAction {
 
     private final List<Bitmap> mBitmaps = new ArrayList<>();
 
-    /**
-     * Make sure all resources are cleaned up and garbage collected before moving on to the next
-     * test.
-     */
-    @After
-    public void tearDown() {
-        mBitmaps.clear();
-
-        System.gc();
-        System.runFinalization();
-        System.gc();
-        Log.d(TAG, "Memory cleaned.");
-        debugLogMemoryInfo();
-    }
-
     @Test
-    public void startMemoryStress() {
+    public void allocateMemory() {
         String imageName = "test_image_uk-lon-6ps";
 
         Context context = ApplicationProvider.getApplicationContext();
@@ -75,8 +59,17 @@ public final class StressMemoryUtilization extends StressScenarioTestAction {
 
         debugLogAllocatedBitmapMemory();
         debugLogMemoryInfo();
+    }
 
-        holdUntilCujsRunning();
+    /** Make sure all resources are cleaned up and garbage collected. */
+    @Test
+    public void releaseMemory() {
+        mBitmaps.clear();
+        System.gc();
+        System.runFinalization();
+        System.gc();
+        Log.d(TAG, "Memory cleaned.");
+        debugLogMemoryInfo();
     }
 
     private void allocateByAmount() {
