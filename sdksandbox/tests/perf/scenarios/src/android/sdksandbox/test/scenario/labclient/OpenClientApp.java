@@ -40,17 +40,18 @@ public class OpenClientApp {
 
     private static final Bundle sArgsBundle = InstrumentationRegistry.getArguments();
 
-    protected String mClientAppPackageName = sArgsBundle.getString(CLIENT_APP_PACKAGE_NAME_KEY);
+    protected static String sClientAppPackageName =
+        sArgsBundle.getString(CLIENT_APP_PACKAGE_NAME_KEY);
 
     @Test
     public void testOpenClientWithNSdks() throws Exception {
-        sUiDevice.executeShellCommand("am start -n " + mClientAppPackageName + "/.MainActivity");
+        sUiDevice.executeShellCommand("am start -n " + sClientAppPackageName + "/.MainActivity");
         // Allow metrics to stabilize after CUJ completion.
         Thread.sleep(WAIT_TIME_BEFORE_END_TEST_MS);
     }
 
     @AfterClass
     public static void closeApp() throws IOException {
-        sUiDevice.pressHome();
+        sUiDevice.executeShellCommand("am force-stop " + sClientAppPackageName);
     }
 }
