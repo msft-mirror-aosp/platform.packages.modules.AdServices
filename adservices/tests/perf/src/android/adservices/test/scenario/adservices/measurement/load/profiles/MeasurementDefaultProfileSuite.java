@@ -20,6 +20,7 @@ import android.Manifest;
 import android.adservices.test.longevity.concurrent.ProfileSuite;
 import android.adservices.test.longevity.concurrent.StressBatterySaverMode;
 import android.adservices.test.longevity.concurrent.StressCpuUtilization;
+import android.adservices.test.longevity.concurrent.StressLowDiskSpace;
 import android.adservices.test.longevity.concurrent.StressMemoryUtilization;
 import android.adservices.test.longevity.concurrent.SuiteUtils;
 import android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource;
@@ -64,6 +65,7 @@ import java.io.IOException;
     DeviceExecuteShellCommand.class,
     StressBatterySaverMode.class,
     StressCpuUtilization.class,
+    StressLowDiskSpace.class,
     StressMemoryUtilization.class
 })
 public class MeasurementDefaultProfileSuite {

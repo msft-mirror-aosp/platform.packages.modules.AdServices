@@ -19,7 +19,6 @@ package android.sdksandbox.test.scenario.labclient;
 import android.platform.test.microbenchmark.Microbenchmark;
 import android.platform.test.rule.DropCachesRule;
 import android.platform.test.rule.KillAppsRule;
-import android.platform.test.rule.PressHomeRule;
 
 import org.junit.Rule;
 import org.junit.rules.RuleChain;
@@ -27,10 +26,8 @@ import org.junit.runner.RunWith;
 
 @RunWith(Microbenchmark.class)
 public class OpenClientAppMicrobenchmark extends OpenClientApp {
-    @Rule
+    @Rule(order = 0)
     public RuleChain rules =
-            RuleChain.outerRule(
-                            new KillAppsRule(mClientAppPackageName)) // kill the app
-                    .around(new DropCachesRule())
-                    .around(new PressHomeRule());
+            RuleChain.outerRule(new KillAppsRule(sClientAppPackageName))
+        .around(new DropCachesRule());
 }

@@ -28,7 +28,7 @@ import org.junit.runners.JUnit4;
 /** Stress test used to enable the Battery Saver mode while running in parallel with CUJs. */
 @Scenario
 @RunWith(JUnit4.class)
-public final class StressBatterySaverMode extends StressScenarioTestAction {
+public final class StressBatterySaverMode extends HoldingStressScenarioTestAction {
 
     private static final String TAG = "StressBatteryUtilization";
 
