@@ -17,10 +17,8 @@ package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.measurement.registration.AsyncFetchStatus.EntityStatus;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_GET_MANAGER_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
-import android.adservices.ondevicepersonalization.OnDevicePersonalizationSystemEventManager;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.net.Uri;
@@ -44,8 +42,7 @@ import com.android.adservices.service.measurement.aggregation.AggregatableKeyVal
 import com.android.adservices.service.measurement.aggregation.AggregatableNamedBudget.NamedBudgetContract;
 import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig.AggregatableValuesConfigContract;
 import com.android.adservices.service.measurement.ondevicepersonalization.IOdpDelegationWrapper;
-import com.android.adservices.service.measurement.ondevicepersonalization.NoOdpDelegationWrapper;
-import com.android.adservices.service.measurement.ondevicepersonalization.OdpDelegationWrapperImpl;
+import com.android.adservices.service.measurement.ondevicepersonalization.OdpDelegationWrapperFactory;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Enrollment;
@@ -53,7 +50,6 @@ import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.Filter.FilterContract;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -86,9 +82,9 @@ public class AsyncTriggerFetcher {
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final Context mContext;
-    private final IOdpDelegationWrapper mOdpWrapper;
     private final DatastoreManager mDatastoreManager;
     private final DebugReportApi mDebugReportApi;
+    private final OdpDelegationWrapperFactory mOdpDelegationWrapperFactory;
     private static final long ONE_BYTE = (long) Math.pow(2, 8);
 
     public AsyncTriggerFetcher(Context context) {
@@ -96,9 +92,9 @@ public class AsyncTriggerFetcher {
                 context,
                 EnrollmentDao.getInstance(),
                 FlagsFactory.getFlags(),
-                getOdpDelegationManager(context, FlagsFactory.getFlags()),
                 DatastoreManagerFactory.getDatastoreManager(),
-                new DebugReportApi(context, FlagsFactory.getFlags()));
+                new DebugReportApi(context, FlagsFactory.getFlags()),
+                new OdpDelegationWrapperFactory());
     }
 
     @VisibleForTesting
@@ -106,16 +102,16 @@ public class AsyncTriggerFetcher {
             Context context,
             EnrollmentDao enrollmentDao,
             Flags flags,
-            IOdpDelegationWrapper odpWrapper,
             DatastoreManager datastoreManager,
-            DebugReportApi debugReportApi) {
+            DebugReportApi debugReportApi,
+            OdpDelegationWrapperFactory odpDelegationWrapperFactory) {
         mContext = context;
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
         mNetworkConnection = new MeasurementHttpClient(context);
         mDatastoreManager = datastoreManager;
         mDebugReportApi = debugReportApi;
-        mOdpWrapper = odpWrapper;
+        mOdpDelegationWrapperFactory = odpDelegationWrapperFactory;
     }
 
     /**
@@ -375,7 +371,9 @@ public class AsyncTriggerFetcher {
             long odpHeaderSize = 0;
             Optional<Map<String, List<String>>> odpHeader = getOdpTriggerHeader(headers);
             if (odpHeader.isPresent()) {
-                mOdpWrapper.registerOdpTrigger(
+                IOdpDelegationWrapper odpWrapper =
+                        mOdpDelegationWrapperFactory.getOdpDelegationWrapperImpl();
+                odpWrapper.registerOdpTrigger(
                         asyncRegistration, odpHeader.get(), enrollmentId.isPresent());
                 odpHeaderSize = FetcherUtil.calculateHeadersCharactersLength(odpHeader.get());
             }
@@ -448,11 +446,6 @@ public class AsyncTriggerFetcher {
             return Optional.empty();
         }
         return parseTrigger(asyncRegistration, enrollmentId.get(), headers, asyncFetchStatus);
-    }
-
-    /** Return instance of IOdpDelegationWrapper. */
-    public IOdpDelegationWrapper getOdpWrapper() {
-        return mOdpWrapper;
     }
 
     private boolean parseValidateTrigger(
@@ -1302,28 +1295,6 @@ public class AsyncTriggerFetcher {
         return registrationType == AsyncRegistration.RegistrationType.APP_TRIGGER
                 ? BaseUriExtractor.getBaseUri(destination)
                 : destination;
-    }
-
-    // TODO(b/311183933): Remove passed in Context from static method.
-    @SuppressWarnings("AvoidStaticContext")
-    private static IOdpDelegationWrapper getOdpDelegationManager(Context context, Flags flags) {
-        if (!SdkLevel.isAtLeastT() || !flags.getMeasurementEnableOdpWebTriggerRegistration()) {
-            return new NoOdpDelegationWrapper();
-        }
-
-        OnDevicePersonalizationSystemEventManager odpSystemEventManager = null;
-        try {
-            odpSystemEventManager =
-                    context.getSystemService(OnDevicePersonalizationSystemEventManager.class);
-        } catch (Exception e) {
-            LoggerFactory.getMeasurementLogger().d(e, "getOdpDelegationManager: Unknown Exception");
-            ErrorLogUtil.e(
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_GET_MANAGER_ERROR,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
-        }
-        return (odpSystemEventManager != null)
-                ? new OdpDelegationWrapperImpl(odpSystemEventManager)
-                : new NoOdpDelegationWrapper();
     }
 
     private void logInvalidTriggerField(String field, String enrollmentId, String triggerId) {
