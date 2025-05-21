@@ -32,6 +32,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -54,11 +55,17 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.data.configdelivery.ArgonConfigurationManager;
+import com.android.adservices.data.configdelivery.Configuration;
+import com.android.adservices.data.configdelivery.ConfigurationDatabase;
 import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.proto.PrivacySandboxApi;
+import com.android.adservices.service.proto.config_delivery.ConfigurationRecord;
+import com.android.adservices.service.proto.config_delivery.ConfigurationType;
+import com.android.adservices.service.stats.AdServicesEnrollmentTransactionStats.TransactionStatus;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.util.Clock;
 
@@ -78,6 +85,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     private SharedDbHelper mDbHelper;
     private EnrollmentDao mEnrollmentDao;
+    private ArgonConfigurationManager mMockArgonConfigurationManager;
 
     @Mock private AdServicesLogger mLogger;
     @Mock private EnrollmentUtil mEnrollmentUtil;
@@ -250,8 +258,13 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     @Before
     public void setup() {
         mDbHelper = DbTestUtil.getSharedDbHelperForTest();
+        mMockArgonConfigurationManager =
+                ArgonConfigurationManager.getInstance(
+                        ConfigurationType.TYPE_RB_ENROLLMENT,
+                        ArgonConfigurationManager.DataConsistencyStrategy.USE_LATEST_VERSION);
         when(mMockFlags.isEnableEnrollmentTestSeed()).thenReturn(false);
         when(mEnrollmentUtil.getBuildId()).thenReturn(1);
+
         mEnrollmentDao =
                 new EnrollmentDao(
                         mContext,
@@ -260,7 +273,8 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         mMockClock,
                         mMockFlags.isEnableEnrollmentTestSeed(),
                         mLogger,
-                        mEnrollmentUtil);
+                        mEnrollmentUtil,
+                        mMockArgonConfigurationManager);
         // We want to clear the shared pref boolean value before each test.
         mEnrollmentDao.unSeed();
     }
@@ -274,6 +288,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         for (String table : EnrollmentTables.ENROLLMENT_TABLES) {
             mDbHelper.safeGetWritableDatabase().delete(table, null, null);
         }
+        ConfigurationDatabase.getInstance().clearAllTables();
     }
 
     @Test
@@ -288,7 +303,8 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                                 mMockClock,
                                 mMockFlags.isEnableEnrollmentTestSeed(),
                                 mLogger,
-                                mEnrollmentUtil));
+                                mEnrollmentUtil,
+                                mMockArgonConfigurationManager));
         Mockito.doReturn(false).when(spyEnrollmentDao).isSeeded();
 
         spyEnrollmentDao.seed();
@@ -393,7 +409,8 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         mMockClock,
                         mMockFlags.isEnableEnrollmentTestSeed(),
                         mLogger,
-                        mEnrollmentUtil);
+                        mEnrollmentUtil,
+                        mMockArgonConfigurationManager);
         when(helper.safeGetWritableDatabase()).thenReturn(db);
         when(helper.safeGetReadableDatabase()).thenReturn(readDb);
 
@@ -442,12 +459,67 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void getEnrollmentData_withV3Enrollment_returnsMatch() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(
+                PreEnrolledAdTechForTest.getV3List());
+
+        EnrollmentData enrollmentData =
+                mEnrollmentDao.getEnrollmentData(
+                        PreEnrolledAdTechForTest.SIMPLE_ENROLLMENT_V3.getId());
+
+        assertThat(enrollmentData)
+                .isEqualTo(toEnrollmentData(PreEnrolledAdTechForTest.SIMPLE_ENROLLMENT_V3));
+    }
+
+    @Test
+    public void getEnrollmentData_withV3EnrollmentAndEmptyTable_returnsNull() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+
+        EnrollmentData enrollmentData =
+                mEnrollmentDao.getEnrollmentData(
+                        PreEnrolledAdTechForTest.SIMPLE_ENROLLMENT_V3.getId());
+
+        assertThat(enrollmentData).isNull();
+        verify(mEnrollmentUtil)
+                .logTransactionStats(eq(mLogger), any(), eq(0), eq(0), anyInt(), anyInt());
+    }
+
+    @Test
     public void testGetAllEnrollmentData() {
         mEnrollmentDao.insert(ENROLLMENT_DATA1);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
 
         List<EnrollmentData> enrollmentDataList = mEnrollmentDao.getAllEnrollmentData();
         assertThat(enrollmentDataList).hasSize(2);
+    }
+
+    @Test
+    public void getAllEnrollmentData_withV3Enrollment_returnsList() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(
+                PreEnrolledAdTechForTest.getV3List());
+
+        List<EnrollmentData> enrollmentDataList = mEnrollmentDao.getAllEnrollmentData();
+
+        assertThat(enrollmentDataList)
+                .hasSize(
+                        PreEnrolledAdTechForTest.getV3List()
+                                .getConfiguration()
+                                .getConfigurationRecordsCount());
+    }
+
+    @Test
+    public void getAllEnrollmentData_withV3EnrollmentAndEmptyTable_returnsEmptyList() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+
+        List<EnrollmentData> enrollmentDataList = mEnrollmentDao.getAllEnrollmentData();
+
+        assertThat(enrollmentDataList).isEmpty();
     }
 
     @Test
@@ -461,7 +533,8 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         mMockClock,
                         mMockFlags.isEnableEnrollmentTestSeed(),
                         mLogger,
-                        mEnrollmentUtil);
+                        mEnrollmentUtil,
+                        mMockArgonConfigurationManager);
 
         for (EnrollmentData enrollmentData : PreEnrolledAdTechForTest.getList()) {
             EnrollmentData e = enrollmentDao.getEnrollmentData(enrollmentData.getEnrollmentId());
@@ -558,6 +631,37 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(true),
                         eq(1));
         verify(mEnrollmentUtil, times(4)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
+    }
+
+    @Test
+    public void getEnrollmentDataFromMeasurementUrl_withV3Enrollment_returnsMatch() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(
+                PreEnrolledAdTechForTest.getV3List());
+
+        EnrollmentData enrollmentData =
+                mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
+                        Uri.parse("https://www.some-prefix.GOOGLE-analytics.com:8080/somePath"));
+
+        assertThat(enrollmentData)
+                .isEqualTo(toEnrollmentData(PreEnrolledAdTechForTest.AR_ENROLLMENT_V3));
+        verify(mEnrollmentUtil)
+                .logTransactionStats(eq(mLogger), any(), anyInt(), anyInt(), anyInt(), anyInt());
+    }
+
+    @Test
+    public void getEnrollmentDataFromMeasurementUrl_withV3EnrollmentAndEmptyTable_returnsNull() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+
+        EnrollmentData enrollmentData =
+                mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
+                        Uri.parse("https://GOOGLE-analytics.com"));
+
+        assertThat(enrollmentData).isNull();
+        verify(mEnrollmentUtil)
+                .logTransactionStats(eq(mLogger), any(), anyInt(), anyInt(), anyInt(), anyInt());
     }
 
     @Test
@@ -996,6 +1100,70 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void
+            getEnrollmentDataFromMeasurementUrl_withV3EnrollmentAndInvalidPublicSuffix_returnsNull() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+        // This insert list contains an enrollment with invalid public suffix
+        // (https://example.invalid). But still it should not match with the invalid public suffix
+        // and return null.
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(
+                PreEnrolledAdTechForTest.getV3List());
+
+        EnrollmentData enrollmentData =
+                mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
+                        Uri.parse("https://example.invalid"));
+
+        assertThat(enrollmentData).isNull();
+        verify(mEnrollmentUtil)
+                .logTransactionStatsNoResult(
+                        eq(mLogger),
+                        any(),
+                        eq(TransactionStatus.INVALID_INPUT),
+                        anyInt(),
+                        anyInt());
+    }
+
+    @Test
+    public void getEnrollmentDataFromMeasurementUrl_withV3EnrollmentAndNullUri_returnsNull() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(
+                PreEnrolledAdTechForTest.getV3List());
+
+        EnrollmentData enrollmentData = mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(null);
+
+        assertThat(enrollmentData).isNull();
+        verify(mEnrollmentUtil)
+                .logTransactionStatsNoResult(
+                        eq(mLogger),
+                        any(),
+                        eq(TransactionStatus.INVALID_INPUT),
+                        anyInt(),
+                        anyInt());
+    }
+
+    @Test
+    public void
+            getEnrollmentDataFromMeasurementUrl_withV3EnrollmentAndNoRegistrationBaseUri_returnsNull() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(
+                PreEnrolledAdTechForTest.getV3List());
+
+        EnrollmentData enrollmentData = mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(null);
+
+        assertThat(enrollmentData).isNull();
+        verify(mEnrollmentUtil)
+                .logTransactionStatsNoResult(
+                        eq(mLogger),
+                        any(),
+                        eq(TransactionStatus.INVALID_INPUT),
+                        anyInt(),
+                        anyInt());
+    }
+
+    @Test
     public void testGetEnrollmentDataForFledgeByAdTechIdentifier() {
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(1))
@@ -1019,6 +1187,41 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testGetEnrollmentDataForFledgeByAdTechIdentifier_withV3Enrollment_returnsMatch() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(
+                PreEnrolledAdTechForTest.getV3List());
+        AdTechIdentifier adtechIdentifier =
+                AdTechIdentifier.fromString(
+                        "https://some-subdomain.Pa-test.com:8080/some/path", false);
+
+        EnrollmentData enrollmentData =
+                mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adtechIdentifier);
+
+        assertThat(enrollmentData)
+                .isEqualTo(toEnrollmentData(PreEnrolledAdTechForTest.PA_ENROLLMENT_V3));
+        verify(mEnrollmentUtil)
+                .logTransactionStats(eq(mLogger), any(), eq(1), eq(1), anyInt(), anyInt());
+    }
+
+    @Test
+    public void
+            testGetEnrollmentDataForFledgeByAdTechIdentifier_withV3EnrollmentAndEmptyTable_returnsNull() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+        AdTechIdentifier adtechIdentifier =
+                AdTechIdentifier.fromString("https://pas-Test.com", false);
+
+        EnrollmentData enrollmentData =
+                mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adtechIdentifier);
+
+        assertThat(enrollmentData).isNull();
+        verify(mEnrollmentUtil)
+                .logTransactionStats(eq(mLogger), any(), anyInt(), anyInt(), anyInt(), anyInt());
+    }
+
+    @Test
     public void testGetAllFledgeEnrolledAdTechs_noEntries() {
         // Delete any entries in the database
         clearAllTables();
@@ -1030,6 +1233,18 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
                         eq(true),
                         eq(1));
+    }
+
+    @Test
+    public void testGetAllFledgeEnrolledAdTechs_withV3EnrollmentAndEmptyTable_returnsNull() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+
+        Set<AdTechIdentifier> adTechIdentifiers = mEnrollmentDao.getAllFledgeEnrolledAdTechs();
+
+        assertThat(adTechIdentifiers).isEmpty();
+        verify(mEnrollmentUtil)
+                .logTransactionStats(eq(mLogger), any(), eq(0), eq(0), anyInt(), anyInt());
     }
 
     @Test
@@ -1061,6 +1276,20 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testGetAllFledgeEnrolledAdTechs_withV3Enrollment_returnsMatches() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(
+                PreEnrolledAdTechForTest.getV3List());
+
+        Set<AdTechIdentifier> adTechIdentifiers = mEnrollmentDao.getAllFledgeEnrolledAdTechs();
+
+        assertThat(adTechIdentifiers).containsExactly(AdTechIdentifier.fromString("pa-test.com"));
+        verify(mEnrollmentUtil)
+                .logTransactionStats(eq(mLogger), any(), anyInt(), anyInt(), anyInt(), anyInt());
+    }
+
+    @Test
     public void testGetEnrollmentDataForFledgeByMatchingAdTechIdentifier_nullUri() {
         assertWithMessage("Returned enrollment pair")
                 .that(mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(null))
@@ -1076,6 +1305,27 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                                 Uri.EMPTY))
                 .isNull();
         verifyNoMoreInteractions(mLogger);
+    }
+
+    @Test
+    public void
+            testGetEnrollmentDataForFledgeByMatchingAdTechIdentifier_withV3EnrollmentAndEmptyUri_returnsNull() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(
+                PreEnrolledAdTechForTest.getV3List());
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(Uri.parse(""));
+
+        assertThat(enrollmentResult).isNull();
+        verify(mEnrollmentUtil)
+                .logTransactionStatsNoResult(
+                        eq(mLogger),
+                        any(),
+                        eq(TransactionStatus.INVALID_INPUT),
+                        anyInt(),
+                        anyInt());
     }
 
     @Test
@@ -1102,6 +1352,21 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(true),
                         eq(1));
         verify(mEnrollmentUtil, times(1)).logEnrollmentMatchStats(eq(mLogger), eq(false), eq(1));
+    }
+
+    @Test
+    public void
+            testGetEnrollmentDataForFledgeByMatchingAdTechIdentifier_withV3EnrollmentAndEmptyTable_returnsNull() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
+                        Uri.parse("https://pa-test.COM"));
+
+        assertThat(enrollmentResult).isNull();
+        verify(mEnrollmentUtil)
+                .logTransactionStats(eq(mLogger), any(), eq(0), eq(0), anyInt(), anyInt());
     }
 
     @Test
@@ -1133,6 +1398,27 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(true),
                         eq(1));
         verify(mEnrollmentUtil, times(1)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
+    }
+
+    @Test
+    public void
+            testGetEnrollmentDataForFledgeByMatchingAdTechIdentifier_withV3Enrollment_returnsMatch() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(
+                PreEnrolledAdTechForTest.getV3List());
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
+                        Uri.parse("https://PA-TEST.com"));
+
+        assertNotNull(enrollmentResult);
+        assertThat(enrollmentResult.first).isEqualTo(AdTechIdentifier.fromString("pa-test.com"));
+        assertThat(enrollmentResult.second)
+                .isEqualTo(toEnrollmentData(PreEnrolledAdTechForTest.PA_ENROLLMENT_V3));
+
+        verify(mEnrollmentUtil)
+                .logTransactionStats(eq(mLogger), any(), eq(1), eq(1), anyInt(), anyInt());
     }
 
     @Test
@@ -1249,6 +1535,33 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testGetEnrollmentDataFromSdkName_withV3EnrollmentAndEmptyTable_returnsNull() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+
+        EnrollmentData enrollmentData = mEnrollmentDao.getEnrollmentDataFromSdkName("sdk");
+
+        assertThat(enrollmentData).isNull();
+        verify(mEnrollmentUtil)
+                .logTransactionStats(eq(mLogger), any(), eq(0), eq(0), anyInt(), anyInt());
+    }
+
+    @Test
+    public void testGetEnrollmentDataFromSdkName_withV3Enrollment_returnsMatch() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(
+                PreEnrolledAdTechForTest.getV3List());
+
+        EnrollmentData enrollmentData = mEnrollmentDao.getEnrollmentDataFromSdkName("SdkNAME1");
+
+        assertThat(enrollmentData)
+                .isEqualTo(toEnrollmentData(PreEnrolledAdTechForTest.TOPICS_SAMPLE_APPS_V3));
+        verify(mEnrollmentUtil)
+                .logTransactionStats(eq(mLogger), any(), eq(1), eq(1), anyInt(), anyInt());
+    }
+
+    @Test
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_GET_PAS_ENROLLMENT_DATA_FROM_DB_FAILED,
@@ -1322,7 +1635,8 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         mMockClock,
                         mMockFlags.isEnableEnrollmentTestSeed(),
                         mLogger,
-                        mEnrollmentUtil);
+                        mEnrollmentUtil,
+                        mMockArgonConfigurationManager);
         enrollmentDao.insert(ENROLLMENT_DATA1);
         enrollmentDao.insert(ENROLLMENT_DATA2);
         enrollmentDao.insert(ENROLLMENT_DATA3);
@@ -1385,6 +1699,40 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         PrivacySandboxApi.PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING);
         assertThat(enrollmentData3.getEnrolledAPIs()).hasSize(3);
         assertThat(enrollmentData3.getEnrolledAPIs()).containsExactlyElementsIn(enrolledAPIs3);
+    }
+
+    @Test
+    public void
+            getEnrollmentDataForPASByMatchingAdTechIdentifier_withV3EnrollmentAndEmptyTable_returnsNull() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForPASByMatchingAdTechIdentifier(
+                        Uri.parse("https://pas-test.com"));
+
+        assertThat(enrollmentResult).isNull();
+        verify(mEnrollmentUtil)
+                .logTransactionStats(eq(mLogger), any(), eq(0), eq(0), anyInt(), anyInt());
+    }
+
+    @Test
+    public void getEnrollmentDataForPASByMatchingAdTechIdentifier_withV3Enrollment_returnsMatch() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(
+                PreEnrolledAdTechForTest.getV3List());
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForPASByMatchingAdTechIdentifier(
+                        Uri.parse("https://something.PAs-test.com/"));
+
+        assertNotNull(enrollmentResult);
+        assertThat(enrollmentResult.first).isEqualTo(AdTechIdentifier.fromString("pas-test.com"));
+        assertThat(enrollmentResult.second)
+                .isEqualTo(toEnrollmentData(PreEnrolledAdTechForTest.PAS_ENROLLMENT_V3));
+        verify(mEnrollmentUtil)
+                .logTransactionStats(eq(mLogger), any(), eq(1), eq(1), anyInt(), anyInt());
     }
 
     @Test
@@ -1488,6 +1836,87 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void
+            getEnrollmentDataForPASByAdTechIdentifier_withV3EnrollmentWithEmptyTable_returnsNull() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+
+        EnrollmentData enrollmentData =
+                mEnrollmentDao.getEnrollmentDataForPASByAdTechIdentifier(
+                        AdTechIdentifier.fromString("pas-test.com"));
+
+        assertThat(enrollmentData).isNull();
+        verify(mEnrollmentUtil)
+                .logTransactionStats(eq(mLogger), any(), eq(0), eq(0), anyInt(), anyInt());
+    }
+
+    @Test
+    public void getEnrollmentDataForPASByAdTechIdentifier_withV3Enrollment_returnsMatch() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(
+                PreEnrolledAdTechForTest.getV3List());
+
+        EnrollmentData enrollmentData1 =
+                mEnrollmentDao.getEnrollmentDataForPASByAdTechIdentifier(
+                        AdTechIdentifier.fromString("pAS-test.com"));
+        EnrollmentData enrollmentData2 =
+                mEnrollmentDao.getEnrollmentDataForPASByAdTechIdentifier(
+                        AdTechIdentifier.fromString("something.pas-Test.com"));
+        EnrollmentData enrollmentData3 =
+                mEnrollmentDao.getEnrollmentDataForPASByAdTechIdentifier(
+                        AdTechIdentifier.fromString("https://pas-test.Com"));
+
+        assertThat(enrollmentData1)
+                .isEqualTo(toEnrollmentData(PreEnrolledAdTechForTest.PAS_ENROLLMENT_V3));
+        assertThat(enrollmentData2)
+                .isEqualTo(toEnrollmentData(PreEnrolledAdTechForTest.PAS_ENROLLMENT_V3));
+        assertThat(enrollmentData3)
+                .isEqualTo(toEnrollmentData(PreEnrolledAdTechForTest.PAS_ENROLLMENT_V3));
+        verify(mEnrollmentUtil, times(3))
+                .logTransactionStats(eq(mLogger), any(), eq(1), eq(1), anyInt(), anyInt());
+    }
+
+    @Test
+    public void
+            getEnrollmentDataForPASByAdTechIdentifier_withV3EnrollmentWithNullAdTechIdentifier_returnsNull() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+
+        EnrollmentData enrollmentData =
+                mEnrollmentDao.getEnrollmentDataForPASByAdTechIdentifier(null);
+
+        assertThat(enrollmentData).isNull();
+        verify(mEnrollmentUtil)
+                .logTransactionStatsNoResult(
+                        eq(mLogger),
+                        any(),
+                        eq(TransactionStatus.INVALID_INPUT),
+                        anyInt(),
+                        anyInt());
+    }
+
+    @Test
+    public void
+            getEnrollmentDataForPASByAdTechIdentifier_withV3EnrollmentWithNoRegistrationBaseUri_returnsNull() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+
+        EnrollmentData enrollmentData =
+                mEnrollmentDao.getEnrollmentDataForPASByAdTechIdentifier(
+                        AdTechIdentifier.fromString(""));
+
+        assertThat(enrollmentData).isNull();
+        verify(mEnrollmentUtil)
+                .logTransactionStatsNoResult(
+                        eq(mLogger),
+                        any(),
+                        eq(TransactionStatus.INVALID_INPUT),
+                        anyInt(),
+                        anyInt());
+    }
+
+    @Test
     public void getEnrollmentDataForPASByAdTechIdentifier_isNotMatch() {
         mEnrollmentDao.insert(ENROLLMENT_DATA1);
         verify(mEnrollmentUtil, times(1))
@@ -1552,6 +1981,36 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
                         eq(true),
                         eq(1));
+    }
+
+    @Test
+    public void getAllPASEnrolledAdTechs_withV3EnrollmentAndEmptyTable_returnsNull() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+
+        Set<AdTechIdentifier> pASEnrolledAdTechs = mEnrollmentDao.getAllPASEnrolledAdTechs();
+
+        assertThat(pASEnrolledAdTechs).isEmpty();
+        verify(mEnrollmentUtil)
+                .logTransactionStats(eq(mLogger), any(), eq(0), eq(0), anyInt(), anyInt());
+    }
+
+    @Test
+    public void getAllPASEnrolledAdTechs_withV3Enrollment_returnsMatch() {
+        when(mMockFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(
+                PreEnrolledAdTechForTest.getV3List());
+
+        Set<AdTechIdentifier> pASEnrolledAdTechs = mEnrollmentDao.getAllPASEnrolledAdTechs();
+
+        assertThat(pASEnrolledAdTechs).hasSize(2);
+        assertThat(pASEnrolledAdTechs)
+                .containsExactly(
+                        AdTechIdentifier.fromString("localhost"),
+                        AdTechIdentifier.fromString("pas-test.com"));
+        verify(mEnrollmentUtil)
+                .logTransactionStats(eq(mLogger), any(), eq(2), eq(2), anyInt(), anyInt());
     }
 
     @Test
@@ -2013,5 +2472,10 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
                         eq(true),
                         eq(1));
+    }
+
+    private static EnrollmentData toEnrollmentData(ConfigurationRecord record) {
+        return EnrollmentUtil.toEnrollmentData(
+                new Configuration(record.getId(), record.getValue()));
     }
 }

@@ -134,7 +134,12 @@ public class EnrollmentData {
         return mEnrolledSite;
     }
 
-    /** Return Enrolled APIs of given enrollment in string format */
+    /**
+     * Return Enrolled APIs of given enrollment in string format.
+     *
+     * <p>This is deprecated and should not be used. Use {@link #getEnrolledAPIs()} instead.
+     */
+    @Deprecated
     @Nullable
     public String getEnrolledAPIsString() {
         return mEnrolledAPIsString;
@@ -276,6 +281,11 @@ public class EnrollmentData {
         public Builder setEnrolledAPIs(String enrolledAPIs) {
             mBuilding.mEnrolledAPIsString = enrolledAPIs;
             mBuilding.mEnrolledAPIs = enrolledApisToEnums(enrolledAPIs);
+            return this;
+        }
+
+        public Builder setEnrolledAPIs(List<PrivacySandboxApi> enrolledApis) {
+            mBuilding.mEnrolledAPIs = enrolledApis;
             return this;
         }
 

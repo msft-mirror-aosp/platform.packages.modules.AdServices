@@ -34,7 +34,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.configdelivery.ConfigurationManager;
+import com.android.adservices.data.configdelivery.ArgonConfigurationManager;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.signals.SignalsMaintenanceTasksWorker;
@@ -335,6 +335,6 @@ public final class MaintenanceJobService extends JobService {
 
     private void doConfigDeliveryMaintenanceTasks() {
         LogUtil.v("Performing argon config delivery maintenance tasks");
-        ConfigurationManager.cleanupUnusedOlderConfigurations();
+        ArgonConfigurationManager.cleanupUnusedOlderConfigurations();
     }
 }
