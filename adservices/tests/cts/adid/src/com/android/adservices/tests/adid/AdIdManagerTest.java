@@ -166,9 +166,9 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
     }
 
     @Test
-    public void testAdIdManager_getAdvertisingIdInfo() throws Exception {
+    public void testAdIdManager_getAdId() throws Exception {
         AdIdManager adIdManager = AdIdManager.get(sContext);
-        AdId adId = adIdManager.getAdvertisingIdInfo();
+        AdId adId = adIdManager.getAdId();
         assertWithMessage("get AdId ").that(adId.getAdId()).isEqualTo(AdId.ZERO_OUT);
         assertWithMessage("get lat ").that(adId.isLimitAdTrackingEnabled()).isTrue();
     }

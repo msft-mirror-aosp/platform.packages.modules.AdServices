@@ -36,5 +36,5 @@ interface IAdIdService {
      /**
      * Synchronous API to get AdId.
      */
-     GetAdIdResult getAdvertisingIdInfo();
+     GetAdIdResult getAdIdSync();
 }
