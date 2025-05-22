@@ -27,6 +27,7 @@ import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
@@ -235,28 +236,24 @@ public class AdIdManager {
 
     /**
      * Synchronous API to get AdId, The AdID is a unique, user-resettable, and user-deletable ID for
-     * advertising.
-     *
-     * @throws IllegalStateException when return AdId is not valid,like a zero out AdId with lat set
-     *     to false.
+     * advertising. This method cannot be called in the main thread as it may block leading to ANRs.
      */
     @FlaggedApi(Flags.FLAG_ADID_ENABLE_SYNCHRONOUS_AD_ID_API)
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @RequiresPermission(ACCESS_ADSERVICES_AD_ID)
-    @NonNull
-    public AdId getAdvertisingIdInfo() throws RuntimeException {
+    @Nullable
+    public AdId getAdId() {
         IAdIdService service = null;
         try {
             service = mServiceBinder.getService();
 
-            // Throw ServiceUnavailableException.
             if (service == null) {
-                return new AdId(AdId.ZERO_OUT, true);
+                return null;
             }
 
-            GetAdIdResult getAdIdResult = service.getAdvertisingIdInfo();
+            GetAdIdResult getAdIdResult = service.getAdIdSync();
             if (getAdIdResult == null) {
-                throw new IllegalStateException();
+                return null;
             }
             return new AdId(getAdIdResult.getAdId(), getAdIdResult.isLatEnabled());
         } catch (RemoteException e) {
