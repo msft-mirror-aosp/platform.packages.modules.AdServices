@@ -47,6 +47,10 @@ apex {
         "libtflite_support_classifiers_native",
         "libhpke_jni",
     ],
+    licenses: [
+        "Android-Apache-2.0",
+        "opensourcerequest",
+    ],
 }
 
 sdk {
