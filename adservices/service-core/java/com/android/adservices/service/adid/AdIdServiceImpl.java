@@ -186,9 +186,9 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                 });
     }
 
-    @Override
     @RequiresPermission(ACCESS_ADSERVICES_AD_ID)
-    public GetAdIdResult getAdvertisingIdInfo() {
+    @Override
+    public GetAdIdResult getAdIdSync() {
         // TODO(b/417522613): implement the API.
         return new GetAdIdResult.Builder()
                 .setAdId(AdId.ZERO_OUT)

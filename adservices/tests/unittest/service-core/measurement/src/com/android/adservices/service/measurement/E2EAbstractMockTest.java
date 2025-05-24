@@ -75,7 +75,7 @@ import com.android.adservices.service.measurement.countunique.CountUniqueRegistr
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseUtil;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
-import com.android.adservices.service.measurement.ondevicepersonalization.NoOdpDelegationWrapper;
+import com.android.adservices.service.measurement.ondevicepersonalization.OdpDelegationWrapperFactory;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationContentProvider;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
@@ -155,6 +155,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
     private final Map<String, String> mUriToEnrollmentId = new HashMap<>();
     protected DebugReportApi mDebugReportApi;
     protected AggregateDebugReportApi mAggregateDebugReportApi;
+    protected OdpDelegationWrapperFactory mOdpDelegationWrapperFactory;
 
     @Rule(order = 11)
     public final AdServicesExtendedMockitoRule extendedMockito;
@@ -252,9 +253,9 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                                 sContext,
                                 mEnrollmentDao,
                                 mFlags,
-                                new NoOdpDelegationWrapper(),
                                 mDatastoreManager,
-                                mDebugReportApi));
+                                mDebugReportApi,
+                                mOdpDelegationWrapperFactory));
         mMockContentResolver = mock(ContentResolver.class);
         mMockContentProviderClient = mock(ContentProviderClient.class);
 

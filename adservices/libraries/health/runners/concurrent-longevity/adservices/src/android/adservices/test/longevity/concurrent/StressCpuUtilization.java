@@ -26,26 +26,48 @@ import org.junit.runners.JUnit4;
 /** Stress test used to utilize the CPU while running in parallel with CUJs. */
 @Scenario
 @RunWith(JUnit4.class)
-public final class StressCpuUtilization extends StressScenarioTestAction {
-    private static final int NUMBER_OF_THREADS = 200;
-    private static final int INNER_LOOP_ITERATIONS = 1000000;
-    private static final int THREAD_SLEEP_MS = 100;
+public final class StressCpuUtilization extends HoldingStressScenarioTestAction {
+    private static final int DEFAULT_THREADS_COUNT = 200;
+    private static final int DEFAULT_INNER_LOOP_ITERATIONS = 1000000;
+    private static final int DEFAULT_THREAD_SLEEP_MS = 100;
     private static final String TAG = "StressCpuUtilization";
 
     @Test
     public void startCpuStress() {
-        for (int i = 0; i < NUMBER_OF_THREADS; i++) {
+        int numberOfThreads =
+                mCpuThreadsCountOption.get() == -1
+                        ? DEFAULT_THREADS_COUNT
+                        : mCpuThreadsCountOption.get();
+        int innerLoopIterations =
+                mCpuInnerLoopIterationsOption.get() == -1
+                        ? DEFAULT_INNER_LOOP_ITERATIONS
+                        : mCpuInnerLoopIterationsOption.get();
+        int threadSleepMs =
+                mCpuThreadSleepMsOption.get() == -1
+                        ? DEFAULT_THREAD_SLEEP_MS
+                        : mCpuThreadSleepMsOption.get();
+
+        Log.i(
+                TAG,
+                "Starting CPU stress test. Keeping "
+                        + numberOfThreads
+                        + " threads busy, calculating Fibonacci up to "
+                        + innerLoopIterations
+                        + ", keeping the thread in sleep for "
+                        + threadSleepMs
+                        + "Ms");
+        for (int i = 0; i < numberOfThreads; i++) {
             new Thread(
                             new Runnable() {
                                 @Override
                                 public void run() {
-                                    for (int j = 0; j < INNER_LOOP_ITERATIONS; j++) {
+                                    for (int j = 0; j < innerLoopIterations; j++) {
                                         performComplexCalculations();
                                         if (needToCancel()) {
                                             return;
                                         }
                                         try {
-                                            Thread.sleep(THREAD_SLEEP_MS);
+                                            Thread.sleep(threadSleepMs);
                                         } catch (InterruptedException e) {
                                             Log.e(TAG, "CPU stress thread interrupted", e);
                                             Thread.currentThread().interrupt();

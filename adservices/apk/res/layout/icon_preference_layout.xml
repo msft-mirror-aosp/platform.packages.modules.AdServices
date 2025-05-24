@@ -22,6 +22,7 @@
     android:gravity="center_vertical"
     android:minHeight="?android:attr/listPreferredItemHeightSmall">
     <ImageView
+        android:id="@+id/main_view_image"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_main_view_ga_image"

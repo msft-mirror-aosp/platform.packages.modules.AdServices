@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-package android.sdksandbox.test.scenario.labclient;
+package com.android.adservices.service.measurement.ondevicepersonalization;
 
-import android.platform.test.microbenchmark.Microbenchmark;
-import android.platform.test.rule.DropCachesRule;
-import android.platform.test.rule.KillAppsRule;
+public final class OdpDelegationWrapperFactory {
+    private IOdpDelegationWrapper mOdpWrapper;
 
-import org.junit.Rule;
-import org.junit.rules.RuleChain;
-import org.junit.runner.RunWith;
+    public OdpDelegationWrapperFactory() {
+        mOdpWrapper = null;
+    }
 
-@RunWith(Microbenchmark.class)
-public class OpenClientAppMicrobenchmark extends OpenClientApp {
-    @Rule(order = 0)
-    public RuleChain rules =
-            RuleChain.outerRule(new KillAppsRule(sClientAppPackageName))
-        .around(new DropCachesRule());
+    /** Returns the wrapper implementation for ODP. */
+    public IOdpDelegationWrapper getOdpDelegationWrapperImpl() {
+        mOdpWrapper = OdpDelegationWrapperImpl.getInstance();
+        if (mOdpWrapper == null) {
+            mOdpWrapper = new NoOdpDelegationWrapper();
+        }
+        return mOdpWrapper;
+    }
 }

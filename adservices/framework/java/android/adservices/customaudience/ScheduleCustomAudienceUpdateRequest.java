@@ -183,7 +183,7 @@ public final class ScheduleCustomAudienceUpdateRequest {
             this.mUpdateUri = Objects.requireNonNull(updateUri, "Update URI must not be null");
             this.mMinDelay = Objects.requireNonNull(minDelay, "Minimum delay must not be null");
             Preconditions.checkArgument(
-                    !minDelay.isNegative(), "Minimum delay %d must not be negative", minDelay);
+                    !minDelay.isNegative(), "Minimum delay %s must not be negative", minDelay);
         }
 
         /**
@@ -212,7 +212,7 @@ public final class ScheduleCustomAudienceUpdateRequest {
         public Builder setMinDelay(@NonNull Duration minDelay) {
             Objects.requireNonNull(minDelay, "Minimum delay must not be null");
             Preconditions.checkArgument(
-                    !minDelay.isNegative(), "Minimum delay %d must not be negative", minDelay);
+                    !minDelay.isNegative(), "Minimum delay %s must not be negative", minDelay);
             this.mMinDelay = minDelay;
             return this;
         }

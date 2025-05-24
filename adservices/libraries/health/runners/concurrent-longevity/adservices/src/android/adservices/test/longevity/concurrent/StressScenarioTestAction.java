@@ -16,19 +16,18 @@
 
 package android.adservices.test.longevity.concurrent;
 
-import static org.junit.Assert.assertTrue;
-
 import android.platform.test.option.IntegerOption;
 
 import org.junit.Rule;
 
 /** Base class for stress scenarios. */
 public abstract class StressScenarioTestAction {
-    private static final int MAIN_LOOP_DELAY_MS = 500;
-
     // Common Options
     private static final String ALLOCATE_AMOUNT = "allocate_amount";
     private static final String ALLOCATE_PERCENTAGE = "allocate_percentage";
+    private static final String CPU_THREADS_COUNT = "cpu_threads_count";
+    private static final String CPU_INNER_LOOP_ITERATIONS = "cpu_inner_loop_iterations";
+    private static final String CPU_THREAD_SLEEP_MS = "cpu_thread_sleep_ms";
 
     protected static final String TAG = "StressScenarioTestAction";
 
@@ -40,19 +39,15 @@ public abstract class StressScenarioTestAction {
     public final IntegerOption mAllocatePercentageOption =
             new IntegerOption(ALLOCATE_PERCENTAGE).setRequired(false).setDefault(-1);
 
-    protected boolean needToCancel() {
-        return ConcurrentScenariosStatement.needToCancelStressTests();
-    }
+    @Rule
+    public final IntegerOption mCpuThreadsCountOption =
+            new IntegerOption(CPU_THREADS_COUNT).setRequired(false).setDefault(-1);
 
-    /** Holds the thread to stress the system while the CUJs in the current scenario are running. */
-    protected void holdUntilCujsRunning() {
-        while (!needToCancel()) {
-            try {
-                Thread.sleep(MAIN_LOOP_DELAY_MS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                assertTrue(false);
-            }
-        }
-    }
+    @Rule
+    public final IntegerOption mCpuInnerLoopIterationsOption =
+            new IntegerOption(CPU_INNER_LOOP_ITERATIONS).setRequired(false).setDefault(-1);
+
+    @Rule
+    public final IntegerOption mCpuThreadSleepMsOption =
+            new IntegerOption(CPU_THREAD_SLEEP_MS).setRequired(false).setDefault(-1);
 }
