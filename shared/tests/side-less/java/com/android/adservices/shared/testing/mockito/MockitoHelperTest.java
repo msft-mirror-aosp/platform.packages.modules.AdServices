@@ -103,7 +103,12 @@ public final class MockitoHelperTest extends SharedSidelessMockitoTestCase {
 
     @Test
     public void testToString_varArgs() {
-        doAnswer(mAnswer).when(mFixture).iJustCalled(any());
+        // The way the device side mockito (ver 2 / 3) and the hostside mockito (5) match
+        // varargs is different. We need to set it up in both ways.
+        // See also RavenwoodMockitoVarargTest.
+        doAnswer(mAnswer).when(mFixture).iJustCalled(any()); // For mockito 4 and below
+        doAnswer(mAnswer).when(mFixture).iJustCalled(any(Object[].class)); // For mockito 5+
+
         mFixture.iJustCalled("", "to", "say", ",", "I", "love", "you", "!");
 
         String toString = MockitoHelper.toString(mAnswer.invocation);
@@ -115,7 +120,10 @@ public final class MockitoHelperTest extends SharedSidelessMockitoTestCase {
 
     @Test
     public void testToString_nullVarArgs() {
+        // See comment in testToString_varArgs().
         doAnswer(mAnswer).when(mFixture).iJustCalled(any());
+        doAnswer(mAnswer).when(mFixture).iJustCalled(any(Object[].class));
+
         mFixture.iJustCalled((Object[]) null);
 
         String toString = MockitoHelper.toString(mAnswer.invocation);
@@ -127,7 +135,10 @@ public final class MockitoHelperTest extends SharedSidelessMockitoTestCase {
 
     @Test
     public void testToString_varArgsWithNull() {
+        // See comment in testToString_varArgs().
         doAnswer(mAnswer).when(mFixture).iJustCalled(any());
+        doAnswer(mAnswer).when(mFixture).iJustCalled(any(Object[].class));
+
         mFixture.iJustCalled("", "to", "say", ",", "I", null, "you", "!");
 
         String toString = MockitoHelper.toString(mAnswer.invocation);
@@ -178,6 +189,7 @@ public final class MockitoHelperTest extends SharedSidelessMockitoTestCase {
 
         @Override
         public Void answer(InvocationOnMock invocation) throws Throwable {
+            android.util.Log.i("XXX", "Invoked", new RuntimeException());
             this.invocation = invocation;
             return null;
         }
