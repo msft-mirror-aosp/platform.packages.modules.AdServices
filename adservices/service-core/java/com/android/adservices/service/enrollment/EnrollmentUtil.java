@@ -19,6 +19,11 @@ package com.android.adservices.service.enrollment;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.android.adservices.data.configdelivery.ArgonConfigurationManager;
+import com.android.adservices.data.configdelivery.Configuration;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.proto.RbEnrollment;
+import com.android.adservices.service.proto.config_delivery.ConfigurationType;
 import com.android.adservices.service.stats.AdServicesEnrollmentTransactionStats;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
@@ -37,7 +42,7 @@ public class EnrollmentUtil {
         mContext = context;
     }
 
-    /** Returns an instance of the EnrollmentDao given a context. */
+    /** Returns an instance of the EnrollmentUtil. */
     public static EnrollmentUtil getInstance() {
         synchronized (EnrollmentUtil.class) {
             if (sSingleton == null) {
@@ -47,8 +52,23 @@ public class EnrollmentUtil {
         }
     }
 
-    /** Get build ID from shared preference */
+    /**
+     * Get build ID.
+     *
+     * <p>If V3 enrollment is enabled, get the latest config version from {@link
+     * ArgonConfigurationManager}. Otherwise, get the MDD build ID from shared preferences.
+     */
     public int getBuildId() {
+        // DIDN'T FIX CustomAudienceManagerTest
+        if (FlagsFactory.getFlags().getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()
+                && FlagsFactory.getFlags()
+                        .getConfigDeliveryEnableEnrollmentConfigV3DataDownload()) {
+            return ArgonConfigurationManager.getInstance(
+                            ConfigurationType.TYPE_RB_ENROLLMENT,
+                            ArgonConfigurationManager.DataConsistencyStrategy.USE_LATEST_VERSION)
+                    .getLatestVersion()
+                    .intValue();
+        }
         SharedPreferences prefs = getPrefs();
         return prefs.getInt(BUILD_ID, /* defaultValue */ -1);
     }
@@ -76,6 +96,27 @@ public class EnrollmentUtil {
             return "";
         }
         return queryParameter;
+    }
+
+    public static EnrollmentData toEnrollmentData(Configuration configuration) {
+        if (configuration == null) {
+            return null;
+        }
+        RbEnrollment enrollment = configuration.getValue(RbEnrollment.getDefaultInstance());
+        if (enrollment == null) {
+            return null;
+        }
+        return new EnrollmentData.Builder()
+                .setEnrollmentId(configuration.getId())
+                .setEnrolledAPIs(enrollment.getEnrolledApisList())
+                .setSdkNames(enrollment.getSdkNamesList())
+                .setAttributionSourceRegistrationUrl(enrollment.getEnrolledSite())
+                .setAttributionTriggerRegistrationUrl(enrollment.getEnrolledSite())
+                .setAttributionReportingUrl(enrollment.getEnrolledSite())
+                .setRemarketingResponseBasedRegistrationUrl(enrollment.getEnrolledSite())
+                .setEncryptionKeyUrl(enrollment.getEnrolledSite())
+                .setEnrolledSite(enrollment.getEnrolledSite())
+                .build();
     }
 
     /** Log EnrollmentData atom metrics for enrollment database transactions */
@@ -161,6 +202,33 @@ public class EnrollmentUtil {
                 status,
                 /* queryResultCount= */ 0,
                 /* transactionResultCount= */ 0,
+                dataSourceRecordCount,
+                latencyMs);
+    }
+
+    public void logTransactionStats(
+            AdServicesLogger logger,
+            AdServicesEnrollmentTransactionStats.Builder statsBuilder,
+            int queryResultCount,
+            int transactionResultCount,
+            int dataSourceRecordCount,
+            int latencyMs) {
+        if (queryResultCount == 0) {
+            logTransactionStatsNoResult(
+                    logger,
+                    statsBuilder,
+                    AdServicesEnrollmentTransactionStats.TransactionStatus.MATCH_NOT_FOUND,
+                    dataSourceRecordCount,
+                    latencyMs);
+            return;
+        }
+
+        logTransactionStats(
+                logger,
+                statsBuilder,
+                AdServicesEnrollmentTransactionStats.TransactionStatus.SUCCESS,
+                queryResultCount,
+                transactionResultCount,
                 dataSourceRecordCount,
                 latencyMs);
     }

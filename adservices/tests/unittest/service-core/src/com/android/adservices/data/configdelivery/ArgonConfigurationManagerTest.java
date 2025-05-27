@@ -18,8 +18,6 @@ package com.android.adservices.data.configdelivery;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.os.SystemClock;
-
 import com.android.adservices.service.proto.RbEnrollment;
 import com.android.adservices.service.proto.config_delivery.ConfigurationRecord;
 import com.android.adservices.service.proto.config_delivery.ConfigurationType;
@@ -38,7 +36,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-public class ConfigurationManagerTest {
+public class ArgonConfigurationManagerTest {
+
     private static final VersionedConfiguration ENROLLMENT_CONFIG_V1;
     private static final VersionedConfiguration ENROLLMENT_CONFIG_V2;
 
@@ -94,19 +93,19 @@ public class ConfigurationManagerTest {
     @SuppressWarnings("GuardedBy")
     public void tearDown() {
         ConfigurationDatabase.getInstance().clearAllTables();
-        ConfigurationManager.processConsistentInstances.clear();
-        ConfigurationManager.instantiationConsistentInstances.clear();
+        ArgonConfigurationManager.processConsistentInstances.clear();
+        ArgonConfigurationManager.instantiationConsistentInstances.clear();
     }
 
     @Test
     public void insertConfigurationsIfNotExist_insertsNewConfigurations() {
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
-        ConfigurationManager configurationManager =
-                ConfigurationManager.getInstance(
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
+        ArgonConfigurationManager argonConfigurationManager =
+                ArgonConfigurationManager.getInstance(
                         ConfigurationType.TYPE_RB_ENROLLMENT,
-                        ConfigurationManager.DataConsistencyStrategy.USE_LATEST_VERSION);
+                        ArgonConfigurationManager.DataConsistencyStrategy.USE_LATEST_VERSION);
 
-        List<Configuration> configurations = configurationManager.getConfigurations();
+        List<Configuration> configurations = argonConfigurationManager.getConfigurations();
 
         assertThat(configurations.size()).isEqualTo(1);
         assertThat(configurations.get(0).getId()).isEqualTo("id1_v1");
@@ -114,11 +113,11 @@ public class ConfigurationManagerTest {
 
     @Test
     public void insertConfigurationsIfNotExist_doesNotInsertExistingConfigurations() {
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
 
         long lastConfigRowIdBeforeExistingConfigInsert =
                 ConfigurationDatabase.getInstance().configurationDao().getLastConfigRowId();
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
         long lastConfigRowIdAfterExistingConfigInsert =
                 ConfigurationDatabase.getInstance().configurationDao().getLastConfigRowId();
 
@@ -128,19 +127,21 @@ public class ConfigurationManagerTest {
 
     @Test
     public void createConfigurationManager_withUseLatestVersionStrategy_alwaysUsesLatestVersion() {
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
-        ConfigurationManager configurationManager =
-                ConfigurationManager.getInstance(
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
+        ArgonConfigurationManager argonConfigurationManager =
+                ArgonConfigurationManager.getInstance(
                         ConfigurationType.TYPE_RB_ENROLLMENT,
-                        ConfigurationManager.DataConsistencyStrategy.USE_LATEST_VERSION);
+                        ArgonConfigurationManager.DataConsistencyStrategy.USE_LATEST_VERSION);
 
         List<Configuration> configurationsBeforeV2Download =
-                configurationManager.getConfigurations();
+                argonConfigurationManager.getConfigurations();
 
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
+        ConfigurationDatabase.getInstance()
+                .configurationDao()
+                .insertConfigurations(ENROLLMENT_CONFIG_V2);
 
         List<Configuration> configurationsAfterV2Download =
-                configurationManager.getConfigurations();
+                argonConfigurationManager.getConfigurations();
 
         assertThat(configurationsBeforeV2Download.get(0).getId()).isEqualTo("id1_v1");
         assertThat(configurationsAfterV2Download.get(0).getId()).isEqualTo("id1_v2");
@@ -149,22 +150,31 @@ public class ConfigurationManagerTest {
     @Test
     public void
             createConfManager_withUseVersionAtInstantiationStrategy_usesSameVersionPerInstance() {
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
-        ConfigurationManager configurationManagerInstance1 =
-                ConfigurationManager.getInstance(
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
+        ArgonConfigurationManager argonConfigurationManagerInstance1 =
+                ArgonConfigurationManager.getInstance(
                         ConfigurationType.TYPE_RB_ENROLLMENT,
-                        ConfigurationManager.DataConsistencyStrategy.USE_VERSION_AT_INSTANTIATION);
+                        ArgonConfigurationManager.DataConsistencyStrategy
+                                .USE_VERSION_AT_INSTANTIATION);
+
         List<Configuration> configurationsBeforeV2DownloadFromInstance1 =
-                configurationManagerInstance1.getConfigurations();
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
+                argonConfigurationManagerInstance1.getConfigurations();
+
+        ConfigurationDatabase.getInstance()
+                .configurationDao()
+                .insertConfigurations(ENROLLMENT_CONFIG_V2);
+
         List<Configuration> configurationsAfterV2DownloadFromInstance1 =
-                configurationManagerInstance1.getConfigurations();
-        ConfigurationManager configurationManagerInstance2 =
-                ConfigurationManager.getInstance(
+                argonConfigurationManagerInstance1.getConfigurations();
+
+        ArgonConfigurationManager argonConfigurationManagerInstance2 =
+                ArgonConfigurationManager.getInstance(
                         ConfigurationType.TYPE_RB_ENROLLMENT,
-                        ConfigurationManager.DataConsistencyStrategy.USE_VERSION_AT_INSTANTIATION);
+                        ArgonConfigurationManager.DataConsistencyStrategy
+                                .USE_VERSION_AT_INSTANTIATION);
+
         List<Configuration> configurationsAfterV2DownloadFromInstance2 =
-                configurationManagerInstance2.getConfigurations();
+                argonConfigurationManagerInstance2.getConfigurations();
 
         assertThat(configurationsBeforeV2DownloadFromInstance1.get(0).getId()).isEqualTo("id1_v1");
         assertThat(configurationsAfterV2DownloadFromInstance1.get(0).getId()).isEqualTo("id1_v1");
@@ -173,16 +183,21 @@ public class ConfigurationManagerTest {
 
     @Test
     public void createConfigurationManager_withProcessConsistentStrategy_alwaysUsesSameVersion() {
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
-        ConfigurationManager configurationManager =
-                ConfigurationManager.getInstance(
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
+        ArgonConfigurationManager argonConfigurationManager =
+                ArgonConfigurationManager.getInstance(
                         ConfigurationType.TYPE_RB_ENROLLMENT,
-                        ConfigurationManager.DataConsistencyStrategy.PROCESS_CONSISTENT);
+                        ArgonConfigurationManager.DataConsistencyStrategy.PROCESS_CONSISTENT);
+
         List<Configuration> configurationsBeforeV2Download =
-                configurationManager.getConfigurations();
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
+                argonConfigurationManager.getConfigurations();
+
+        ConfigurationDatabase.getInstance()
+                .configurationDao()
+                .insertConfigurations(ENROLLMENT_CONFIG_V2);
+
         List<Configuration> configurationsAfterV2Download =
-                configurationManager.getConfigurations();
+                argonConfigurationManager.getConfigurations();
 
         assertThat(configurationsBeforeV2Download.get(0).getId()).isEqualTo("id1_v1");
         assertThat(configurationsAfterV2Download.get(0).getId()).isEqualTo("id1_v1");
@@ -190,45 +205,43 @@ public class ConfigurationManagerTest {
 
     @Test
     public void getConfigurationById_returnsMatchingConfiguration() {
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
-        ConfigurationManager configurationManager =
-                ConfigurationManager.getInstance(
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
+        ArgonConfigurationManager argonConfigurationManager =
+                ArgonConfigurationManager.getInstance(
                         ConfigurationType.TYPE_RB_ENROLLMENT,
-                        ConfigurationManager.DataConsistencyStrategy.USE_LATEST_VERSION);
+                        ArgonConfigurationManager.DataConsistencyStrategy.USE_LATEST_VERSION);
 
-        Configuration configuration = configurationManager.getConfigurationById("id1_v1");
+        Configuration configuration = argonConfigurationManager.getConfigurationById("id1_v1");
+        RbEnrollment rbEnrollment =
+                Objects.requireNonNull(configuration).getValue(RbEnrollment.getDefaultInstance());
 
-        assertThat(configuration).isNotNull();
         assertThat(configuration.getId()).isEqualTo("id1_v1");
-        assertThat(
-                        Objects.requireNonNull(
-                                        configuration.getValue(RbEnrollment.getDefaultInstance()))
-                                .getEnrolledSite())
-                .isEqualTo("https://example.com");
+        assertThat(rbEnrollment).isNotNull();
+        assertThat(rbEnrollment.getEnrolledSite()).isEqualTo("https://example.com");
     }
 
     @Test
     public void getConfigurationById_withEmptyTable_returnsNull() {
-        ConfigurationManager configurationManager =
-                ConfigurationManager.getInstance(
+        ArgonConfigurationManager argonConfigurationManager =
+                ArgonConfigurationManager.getInstance(
                         ConfigurationType.TYPE_RB_ENROLLMENT,
-                        ConfigurationManager.DataConsistencyStrategy.USE_LATEST_VERSION);
+                        ArgonConfigurationManager.DataConsistencyStrategy.USE_LATEST_VERSION);
 
-        Configuration configuration = configurationManager.getConfigurationById("id1_v1");
+        Configuration configuration = argonConfigurationManager.getConfigurationById("id1_v1");
 
         assertThat(configuration).isNull();
     }
 
     @Test
     public void getConfigurationsByAnyLabel_returnsMatchingConfigurations() {
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
-        ConfigurationManager configurationManager =
-                ConfigurationManager.getInstance(
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
+        ArgonConfigurationManager argonConfigurationManager =
+                ArgonConfigurationManager.getInstance(
                         ConfigurationType.TYPE_RB_ENROLLMENT,
-                        ConfigurationManager.DataConsistencyStrategy.PROCESS_CONSISTENT);
+                        ArgonConfigurationManager.DataConsistencyStrategy.PROCESS_CONSISTENT);
 
         List<Configuration> configuration =
-                configurationManager.getConfigurationsByAnyLabel(
+                argonConfigurationManager.getConfigurationsByAnyLabel(
                         Set.of("id1_v1#label1", "id1_v1#label2"));
 
         assertThat(configuration.size()).isEqualTo(1);
@@ -237,13 +250,13 @@ public class ConfigurationManagerTest {
 
     @Test
     public void getConfigurationsByAnyLabel_withEmptyTable_returnsEmptyList() {
-        ConfigurationManager configurationManager =
-                ConfigurationManager.getInstance(
+        ArgonConfigurationManager argonConfigurationManager =
+                ArgonConfigurationManager.getInstance(
                         ConfigurationType.TYPE_RB_ENROLLMENT,
-                        ConfigurationManager.DataConsistencyStrategy.PROCESS_CONSISTENT);
+                        ArgonConfigurationManager.DataConsistencyStrategy.PROCESS_CONSISTENT);
 
         List<Configuration> configuration =
-                configurationManager.getConfigurationsByAnyLabel(
+                argonConfigurationManager.getConfigurationsByAnyLabel(
                         Set.of("id1_v1#label1", "id1_v1#label2"));
 
         assertThat(configuration.size()).isEqualTo(0);
@@ -251,14 +264,14 @@ public class ConfigurationManagerTest {
 
     @Test
     public void getConfigurationsByAllLabels_returnsMatchingConfigurations() {
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
-        ConfigurationManager configurationManager =
-                ConfigurationManager.getInstance(
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
+        ArgonConfigurationManager argonConfigurationManager =
+                ArgonConfigurationManager.getInstance(
                         ConfigurationType.TYPE_RB_ENROLLMENT,
-                        ConfigurationManager.DataConsistencyStrategy.PROCESS_CONSISTENT);
+                        ArgonConfigurationManager.DataConsistencyStrategy.PROCESS_CONSISTENT);
 
         List<Configuration> configuration =
-                configurationManager.getConfigurationsByAllLabels(
+                argonConfigurationManager.getConfigurationsByAllLabels(
                         Set.of("id1_v1#label1", "id1_v1#label2"));
 
         assertThat(configuration.size()).isEqualTo(1);
@@ -267,29 +280,30 @@ public class ConfigurationManagerTest {
 
     @Test
     public void getConfigurationsByAllLabels_withEmptyTable_returnsEmptyList() {
-        ConfigurationManager configurationManager =
-                ConfigurationManager.getInstance(
+        ArgonConfigurationManager argonConfigurationManager =
+                ArgonConfigurationManager.getInstance(
                         ConfigurationType.TYPE_RB_ENROLLMENT,
-                        ConfigurationManager.DataConsistencyStrategy.PROCESS_CONSISTENT);
+                        ArgonConfigurationManager.DataConsistencyStrategy.PROCESS_CONSISTENT);
 
         List<Configuration> configuration =
-                configurationManager.getConfigurationsByAllLabels(
+                argonConfigurationManager.getConfigurationsByAllLabels(
                         Set.of("id1_v1#label1", "id1_v1#label2"));
 
         assertThat(configuration.size()).isEqualTo(0);
     }
 
+
     @Test
     public void cleanupUnusedOlderConfigurations_withEmptyTable_notThrowsException() {
-        ConfigurationManager.cleanupUnusedOlderConfigurations();
+        ArgonConfigurationManager.cleanupUnusedOlderConfigurations();
     }
 
     @Test
     public void cleanupUnusedOlderConfigurations_retainsLatestConfigs() {
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
 
-        ConfigurationManager.cleanupUnusedOlderConfigurations();
+        ArgonConfigurationManager.cleanupUnusedOlderConfigurations();
 
         List<Long> versions =
                 ConfigurationDatabase.getInstance()
@@ -300,13 +314,13 @@ public class ConfigurationManagerTest {
 
     @Test
     public void cleanupUnusedOlderConfigurations_retainsConfigsInUseByProcessConsistentStrategy() {
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
-        ConfigurationManager.getInstance(
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
+        ArgonConfigurationManager.getInstance(
                 ConfigurationType.TYPE_RB_ENROLLMENT,
-                ConfigurationManager.DataConsistencyStrategy.PROCESS_CONSISTENT);
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
+                ArgonConfigurationManager.DataConsistencyStrategy.PROCESS_CONSISTENT);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
 
-        ConfigurationManager.cleanupUnusedOlderConfigurations();
+        ArgonConfigurationManager.cleanupUnusedOlderConfigurations();
 
         List<Long> versions =
                 ConfigurationDatabase.getInstance()
@@ -317,17 +331,19 @@ public class ConfigurationManagerTest {
 
     @Test
     public void
-            cleanupUnusedOlderConfigurations_retainsConfigsInUseByInstantiationConsistentStrategy() {
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
-        ConfigurationManager configurationManager =
-                ConfigurationManager.getInstance(
+    cleanupUnusedOlderConfigurations_retainsConfigsInUseByInstantiationConsistentStrategy() {
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
+        ArgonConfigurationManager argonConfigurationManager =
+                ArgonConfigurationManager.getInstance(
                         ConfigurationType.TYPE_RB_ENROLLMENT,
-                        ConfigurationManager.DataConsistencyStrategy.USE_VERSION_AT_INSTANTIATION);
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
+                        ArgonConfigurationManager.DataConsistencyStrategy
+                                .USE_VERSION_AT_INSTANTIATION);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
 
-        ConfigurationManager.cleanupUnusedOlderConfigurations();
-        // This will usage prevent the ConfigurationManager instance from being garbage collected.
-        configurationManager.getConfigurations();
+        ArgonConfigurationManager.cleanupUnusedOlderConfigurations();
+        // This will usage prevent the ArgonConfigurationManager instance from being garbage
+        // collected.
+        argonConfigurationManager.getConfigurations();
 
         List<Long> versions =
                 ConfigurationDatabase.getInstance()
@@ -338,27 +354,27 @@ public class ConfigurationManagerTest {
 
     @Test
     public void
-            cleanupUnusedOlderConfigurations_deletesConfigsReleasedByInstantiationConsistentStrategy()
-                    throws InterruptedException {
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
-        WeakReference<ConfigurationManager> configurationManagerWeakRef =
+    cleanupUnusedOlderConfigurations_deletesConfigsReleasedByInstantiationConsistentStrategy()
+            throws InterruptedException {
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V1);
+        WeakReference<ArgonConfigurationManager> argonConfigurationManagerWeakRef =
                 new WeakReference<>(
-                        ConfigurationManager.getInstance(
+                        ArgonConfigurationManager.getInstance(
                                 ConfigurationType.TYPE_RB_ENROLLMENT,
-                                ConfigurationManager.DataConsistencyStrategy
+                                ArgonConfigurationManager.DataConsistencyStrategy
                                         .USE_VERSION_AT_INSTANTIATION));
-        ConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
+        ArgonConfigurationManager.insertConfigurationsIfNotExist(ENROLLMENT_CONFIG_V2);
         // This ensures the instance is garbage collected before triggering cleanup
         @SuppressWarnings("ModifiedButNotUsed")
         List<Byte[]> memoryPressure = new ArrayList<>();
-        while (configurationManagerWeakRef.get() != null) {
+        while (argonConfigurationManagerWeakRef.get() != null) {
             int allocationSize = 1024 * 1024; // allocate 1MB on each attempt
             memoryPressure.add(new Byte[allocationSize]);
             System.gc();
             TimeUnit.SECONDS.sleep(1);
         }
 
-        ConfigurationManager.cleanupUnusedOlderConfigurations();
+        ArgonConfigurationManager.cleanupUnusedOlderConfigurations();
 
         List<Long> versions =
                 ConfigurationDatabase.getInstance()
@@ -366,5 +382,4 @@ public class ConfigurationManagerTest {
                         .getAllVersions(ConfigurationType.TYPE_RB_ENROLLMENT);
         assertThat(versions).containsExactlyElementsIn(List.of(2L));
     }
-
 }

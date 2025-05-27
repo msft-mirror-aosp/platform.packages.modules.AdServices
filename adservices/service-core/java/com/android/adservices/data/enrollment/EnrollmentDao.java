@@ -17,6 +17,7 @@
 package com.android.adservices.data.enrollment;
 
 import static com.android.adservices.service.enrollment.EnrollmentUtil.ENROLLMENT_SHARED_PREF;
+import static com.android.adservices.service.enrollment.EnrollmentUtil.toEnrollmentData;
 import static com.android.adservices.service.stats.AdServicesEnrollmentTransactionStats.Builder;
 import static com.android.adservices.service.stats.AdServicesEnrollmentTransactionStats.TransactionStatus;
 import static com.android.adservices.service.stats.AdServicesEnrollmentTransactionStats.TransactionType;
@@ -49,6 +50,7 @@ import android.util.Pair;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.configdelivery.ArgonConfigurationManager;
 import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
@@ -59,6 +61,7 @@ import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.proto.PrivacySandboxApi;
+import com.android.adservices.service.proto.config_delivery.ConfigurationType;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
@@ -76,12 +79,13 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /** Data Access Object for the EnrollmentData. */
 public class EnrollmentDao implements IEnrollmentDao {
 
     private static volatile EnrollmentDao sSingleton;
-    private static Supplier<EnrollmentDao> sEnrollmentDaoSingletonSupplier =
+    private static final Supplier<EnrollmentDao> sEnrollmentDaoSingletonSupplier =
             Suppliers.memoize(
                     () -> {
                         Flags flags = FlagsFactory.getFlags();
@@ -92,7 +96,11 @@ public class EnrollmentDao implements IEnrollmentDao {
                                 Clock.getInstance(),
                                 flags.isEnableEnrollmentTestSeed(),
                                 AdServicesLoggerImpl.getInstance(),
-                                EnrollmentUtil.getInstance());
+                                EnrollmentUtil.getInstance(),
+                                ArgonConfigurationManager.getInstance(
+                                        ConfigurationType.TYPE_RB_ENROLLMENT,
+                                        ArgonConfigurationManager.DataConsistencyStrategy
+                                                .USE_LATEST_VERSION));
                     });
 
     private final SharedDbHelper mDbHelper;
@@ -101,10 +109,15 @@ public class EnrollmentDao implements IEnrollmentDao {
     private final Clock mClock;
     private final AdServicesLogger mLogger;
     private final EnrollmentUtil mEnrollmentUtil;
+    private final ArgonConfigurationManager mArgonConfigurationManager;
     @VisibleForTesting static final String IS_SEEDED = "is_seeded";
     static final int READ_QUERY = EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue();
     static final int WRITE_QUERY =
             EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue();
+
+    private static final String LABEL_PREFIX_SITE = "SITE:";
+    private static final String LABEL_PREFIX_API = "API:";
+    private static final String LABEL_PREFIX_SDK = "SDK:";
 
     @VisibleForTesting
     public EnrollmentDao(Context context, SharedDbHelper dbHelper, Flags flags, Clock clock) {
@@ -115,7 +128,10 @@ public class EnrollmentDao implements IEnrollmentDao {
                 clock,
                 flags.isEnableEnrollmentTestSeed(),
                 AdServicesLoggerImpl.getInstance(),
-                EnrollmentUtil.getInstance());
+                EnrollmentUtil.getInstance(),
+                ArgonConfigurationManager.getInstance(
+                        ConfigurationType.TYPE_RB_ENROLLMENT,
+                        ArgonConfigurationManager.DataConsistencyStrategy.USE_LATEST_VERSION));
     }
 
     @VisibleForTesting
@@ -126,7 +142,8 @@ public class EnrollmentDao implements IEnrollmentDao {
             Clock clock,
             boolean enableTestSeed,
             AdServicesLogger logger,
-            EnrollmentUtil enrollmentUtil) {
+            EnrollmentUtil enrollmentUtil,
+            ArgonConfigurationManager argonConfigurationManager) {
         // enableTestSeed is needed
         mContext = context;
         mDbHelper = dbHelper;
@@ -134,6 +151,7 @@ public class EnrollmentDao implements IEnrollmentDao {
         mClock = clock;
         mLogger = logger;
         mEnrollmentUtil = enrollmentUtil;
+        mArgonConfigurationManager = argonConfigurationManager;
         if (enableTestSeed) {
             seed();
         }
@@ -234,6 +252,22 @@ public class EnrollmentDao implements IEnrollmentDao {
                 getEnrollmentStatsBuilder(
                         TransactionType.GET_ALL_ENROLLMENT_DATA,
                         /* transactionParameterCount= */ 0);
+
+        if (useV3EnrollmentData()) {
+            List<EnrollmentData> enrollmentDataList =
+                    mArgonConfigurationManager.getConfigurations().stream()
+                            .map(EnrollmentUtil::toEnrollmentData)
+                            .collect(Collectors.toList());
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    enrollmentDataList.size(),
+                    enrollmentDataList.size(),
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
+            return enrollmentDataList;
+        }
+
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         List<EnrollmentData> enrollmentDataList = new ArrayList<>();
 
@@ -298,6 +332,20 @@ public class EnrollmentDao implements IEnrollmentDao {
         Builder stats =
                 getEnrollmentStatsBuilder(
                         TransactionType.GET_ENROLLMENT_DATA, /* transactionParameterCount= */ 1);
+
+        if (useV3EnrollmentData()) {
+            EnrollmentData enrollmentData =
+                    toEnrollmentData(mArgonConfigurationManager.getConfigurationById(enrollmentId));
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    enrollmentData == null ? 0 : 1,
+                    enrollmentData == null ? 0 : 1,
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
+            return enrollmentData;
+        }
+
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
             mEnrollmentUtil.logTransactionStatsNoResult(
@@ -352,26 +400,61 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @Override
     @Nullable
-    public EnrollmentData getEnrollmentDataFromMeasurementUrl(Uri url) {
+    public EnrollmentData getEnrollmentDataFromMeasurementUrl(Uri uri) {
         final long startTime = mClock.currentTimeMillis();
         Builder stats =
                 getEnrollmentStatsBuilder(
                         TransactionType.GET_ENROLLMENT_DATA_FROM_MEASUREMENT_URL,
                         /* transactionParameterCount= */ 1);
 
-        if (url == null) {
+        if (uri == null) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.INVALID_INPUT,
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return null;
         }
 
         if (getEnrollmentApiBasedSchema()) {
             return getEnrollmentDataForAPIByUrl(
-                    url, PrivacySandboxApi.PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING);
+                    uri, PrivacySandboxApi.PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING);
         }
 
-        Optional<Uri> registrationBaseUri = WebAddresses.topPrivateDomainAndScheme(url);
-        if (!registrationBaseUri.isPresent()) {
+        Optional<Uri> registrationBaseUri = WebAddresses.topPrivateDomainAndScheme(uri);
+        if (registrationBaseUri.isEmpty()) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.INVALID_INPUT,
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
             return null;
         }
+
+        if (useV3EnrollmentData()) {
+            Set<String> labels =
+                    Set.of(
+                            createLabel(LabelType.SITE, registrationBaseUri.get().toString()),
+                            createLabel(LabelType.API, LabelApi.ATTRIBUTION_REPORTING.name()));
+            List<EnrollmentData> enrollmentDataList =
+                    mArgonConfigurationManager.getConfigurationsByAllLabels(labels).stream()
+                            .map(EnrollmentUtil::toEnrollmentData)
+                            .collect(Collectors.toList());
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    enrollmentDataList.size(),
+                    /* transactionResultCount= */ enrollmentDataList.isEmpty() ? 0 : 1,
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
+            if (enrollmentDataList.isEmpty()) {
+                return null;
+            }
+            return enrollmentDataList.get(0);
+        }
+
         int buildId = mEnrollmentUtil.getBuildId();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
@@ -407,7 +490,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /* orderBy= */ null,
                         /* limit= */ null)) {
             if (cursor == null || cursor.getCount() == 0) {
-                LogUtil.d("Failed to match enrollment for url \"%s\"", url);
+                LogUtil.d("Failed to match enrollment for uri \"%s\"", uri);
                 mEnrollmentUtil.logTransactionStatsNoResult(
                         mLogger,
                         stats,
@@ -510,6 +593,39 @@ public class EnrollmentDao implements IEnrollmentDao {
                 getEnrollmentStatsBuilder(
                         TransactionType.GET_ENROLLMENT_DATA_FOR_FLEDGE_BY_ADTECH_IDENTIFIER,
                         /* transactionParameterCount= */ 1);
+        if (useV3EnrollmentData()) {
+            Uri registrationBaseUri = validateAndDeriveRegistrationBaseUri(adTechIdentifier);
+
+            if (registrationBaseUri == null) {
+                mEnrollmentUtil.logTransactionStatsNoResult(
+                        mLogger,
+                        stats,
+                        TransactionStatus.INVALID_INPUT,
+                        getEnrollmentRecordCountForLogging(),
+                        getLatencyMs(startTime));
+                return null;
+            }
+
+            Set<String> labels =
+                    Set.of(
+                            createLabel(LabelType.SITE, registrationBaseUri.toString()),
+                            createLabel(LabelType.API, LabelApi.PROTECTED_AUDIENCE.name()));
+            List<EnrollmentData> enrollmentDataList =
+                    mArgonConfigurationManager.getConfigurationsByAllLabels(labels).stream()
+                            .map(EnrollmentUtil::toEnrollmentData)
+                            .collect(Collectors.toList());
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    enrollmentDataList.size(),
+                    /* transactionResultCount= */ enrollmentDataList.isEmpty() ? 0 : 1,
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
+            if (enrollmentDataList.isEmpty()) {
+                return null;
+            }
+            return enrollmentDataList.get(0);
+        }
         if (getEnrollmentApiBasedSchema()) {
             return getEnrollmentDataForAPIByAdTechIdentifier(
                     adTechIdentifier, PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE);
@@ -624,11 +740,32 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /* transactionParameterCount= */ 0);
         Set<AdTechIdentifier> enrolledAdTechIdentifiers = new HashSet<>();
 
+        if (useV3EnrollmentData()) {
+            List<EnrollmentData> enrollmentDataList =
+                    mArgonConfigurationManager
+                            .getConfigurationsByAnyLabel(
+                                    Set.of(
+                                            createLabel(
+                                                    LabelType.API,
+                                                    LabelApi.PROTECTED_AUDIENCE.name())))
+                            .stream()
+                            .map(EnrollmentUtil::toEnrollmentData)
+                            .collect(Collectors.toList());
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    enrollmentDataList.size(),
+                    enrollmentDataList.size(),
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
+            return getAdTechIdentifiersFromEnrollmentData(enrollmentDataList);
+        }
+
         if (getEnrollmentApiBasedSchema()) {
             List<EnrollmentData> enrollmentDataFledge =
                     getAllEnrollmentDataByAPI(
                             PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE);
-            return getAllEnrolledAdTechs(enrollmentDataFledge);
+            return getAdTechIdentifiersFromEnrollmentData(enrollmentDataFledge);
         }
 
         int buildId = mEnrollmentUtil.getBuildId();
@@ -720,6 +857,38 @@ public class EnrollmentDao implements IEnrollmentDao {
                     getEnrollmentRecordCountForLogging(),
                     getLatencyMs(startTime));
             return null;
+        }
+
+        if (useV3EnrollmentData()) {
+            Optional<Uri> registrationBaseUri = WebAddresses.topPrivateDomainAndScheme(originalUri);
+            if (registrationBaseUri.isEmpty()) {
+                mEnrollmentUtil.logTransactionStatsNoResult(
+                        mLogger,
+                        stats,
+                        TransactionStatus.INVALID_INPUT,
+                        getEnrollmentRecordCountForLogging(),
+                        getLatencyMs(startTime));
+                return null;
+            }
+            Set<String> labels =
+                    Set.of(
+                            createLabel(LabelType.SITE, registrationBaseUri.toString()),
+                            createLabel(LabelType.API, LabelApi.PROTECTED_AUDIENCE.name()));
+            List<EnrollmentData> enrollmentDataList =
+                    mArgonConfigurationManager.getConfigurationsByAnyLabel(labels).stream()
+                            .map(EnrollmentUtil::toEnrollmentData)
+                            .collect(Collectors.toList());
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    enrollmentDataList.size(),
+                    /* transactionResultCount= */ enrollmentDataList.isEmpty() ? 0 : 1,
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
+            if (enrollmentDataList.isEmpty()) {
+                return null;
+            }
+            return getEnrollmentDataWithMatchingAdTechIdentifier(enrollmentDataList.get(0));
         }
 
         if (getEnrollmentApiBasedSchema()) {
@@ -880,6 +1049,26 @@ public class EnrollmentDao implements IEnrollmentDao {
                     getLatencyMs(startTime));
             return null;
         }
+
+        if (useV3EnrollmentData()) {
+            Set<String> labels = Set.of(createLabel(LabelType.SDK, sdkName));
+            List<EnrollmentData> enrollmentDataList =
+                    mArgonConfigurationManager.getConfigurationsByAnyLabel(labels).stream()
+                            .map(EnrollmentUtil::toEnrollmentData)
+                            .collect(Collectors.toList());
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    enrollmentDataList.size(),
+                    /* transactionResultCount= */ enrollmentDataList.isEmpty() ? 0 : 1,
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
+            if (enrollmentDataList.isEmpty()) {
+                return null;
+            }
+            return enrollmentDataList.get(0);
+        }
+
         int buildId = mEnrollmentUtil.getBuildId();
         SQLiteDatabase db = getReadableDatabase(buildId);
         if (db == null) {
@@ -981,6 +1170,28 @@ public class EnrollmentDao implements IEnrollmentDao {
                     getLatencyMs(startTime));
             return null;
         }
+
+        if (useV3EnrollmentData()) {
+            Set<String> labels = Set.of(createLabel(LabelType.SITE, topDomainUri.get().toString()));
+            List<EnrollmentData> enrollmentDataList =
+                    mArgonConfigurationManager.getConfigurationsByAnyLabel(labels).stream()
+                            .map(EnrollmentUtil::toEnrollmentData)
+                            .collect(Collectors.toList());
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    enrollmentDataList.size(),
+                    /* transactionResultCount= */ enrollmentDataList.isEmpty() ? 0 : 1,
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
+            if (enrollmentDataList.isEmpty()) {
+                return null;
+            }
+            return new Pair<>(
+                    AdTechIdentifier.fromString(topDomainUri.get().getHost()),
+                    enrollmentDataList.get(0));
+        }
+
         String originalUriHost = topDomainUri.get().getHost();
 
         int buildId = mEnrollmentUtil.getBuildId();
@@ -1098,6 +1309,40 @@ public class EnrollmentDao implements IEnrollmentDao {
                 getEnrollmentStatsBuilder(
                         TransactionType.GET_ENROLLMENT_DATA_FOR_PAS_BY_ADTECH_IDENTIFIER,
                         /* transactionParameterCount= */ 1);
+
+        if (useV3EnrollmentData()) {
+            Uri registrationBaseUri = validateAndDeriveRegistrationBaseUri(adTechIdentifier);
+
+            if (registrationBaseUri == null) {
+                mEnrollmentUtil.logTransactionStatsNoResult(
+                        mLogger,
+                        stats,
+                        TransactionStatus.INVALID_INPUT,
+                        getEnrollmentRecordCountForLogging(),
+                        getLatencyMs(startTime));
+                return null;
+            }
+
+            Set<String> labels =
+                    Set.of(
+                            createLabel(LabelType.SITE, registrationBaseUri.toString()),
+                            createLabel(LabelType.API, LabelApi.PROTECTED_APP_SIGNALS.name()));
+            List<EnrollmentData> enrollmentDataList =
+                    mArgonConfigurationManager.getConfigurationsByAllLabels(labels).stream()
+                            .map(EnrollmentUtil::toEnrollmentData)
+                            .collect(Collectors.toList());
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    enrollmentDataList.size(),
+                    /* transactionResultCount= */ enrollmentDataList.isEmpty() ? 0 : 1,
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
+            if (enrollmentDataList.isEmpty()) {
+                return null;
+            }
+            return enrollmentDataList.get(0);
+        }
 
         if (getEnrollmentApiBasedSchema()) {
             return getEnrollmentDataForAPIByAdTechIdentifier(
@@ -1217,11 +1462,33 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /* transactionParameterCount= */ 0);
 
         Set<AdTechIdentifier> enrolledAdTechIdentifiers = new HashSet<>();
+
+        if (useV3EnrollmentData()) {
+            List<EnrollmentData> enrollmentDataList =
+                    mArgonConfigurationManager
+                            .getConfigurationsByAllLabels(
+                                    Set.of(
+                                            createLabel(
+                                                    LabelType.API,
+                                                    LabelApi.PROTECTED_APP_SIGNALS.name())))
+                            .stream()
+                            .map(EnrollmentUtil::toEnrollmentData)
+                            .collect(Collectors.toList());
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    enrollmentDataList.size(),
+                    enrollmentDataList.size(),
+                    getEnrollmentRecordCountForLogging(),
+                    getLatencyMs(startTime));
+            return getAdTechIdentifiersFromEnrollmentData(enrollmentDataList);
+        }
+
         if (getEnrollmentApiBasedSchema()) {
             List<EnrollmentData> enrollmentDataList =
                     getAllEnrollmentDataByAPI(
                             PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS);
-            return getAllEnrolledAdTechs(enrollmentDataList);
+            return getAdTechIdentifiersFromEnrollmentData(enrollmentDataList);
         }
         int buildId = mEnrollmentUtil.getBuildId();
         SQLiteDatabase db = getReadableDatabase(buildId);
@@ -1310,6 +1577,12 @@ public class EnrollmentDao implements IEnrollmentDao {
     public int getEnrollmentRecordCountForLogging() {
         int limitedLoggingEnabled = -2;
         int dbError = -1;
+        int v3RecordCountDefault = -3;
+        // Records count is not very helpful for v3 enrollment data.
+        // Hence avoiding an expensive query to the database.
+        if (useV3EnrollmentData()) {
+            return v3RecordCountDefault;
+        }
         if (BinderFlagReader.readFlag(mFlags::getEnrollmentEnableLimitedLogging)) {
             return limitedLoggingEnabled;
         }
@@ -1834,7 +2107,7 @@ public class EnrollmentDao implements IEnrollmentDao {
     }
 
     /** Obtain Set of {@link AdTechIdentifier} from {@link EnrollmentData}. */
-    private static Set<AdTechIdentifier> getAllEnrolledAdTechs(
+    private static Set<AdTechIdentifier> getAdTechIdentifiersFromEnrollmentData(
             List<EnrollmentData> enrollmentDataList) {
         Set<AdTechIdentifier> enrolledAdTechIdentifiers = new HashSet<>();
         for (EnrollmentData enrollmentData : enrollmentDataList) {
@@ -1862,6 +2135,11 @@ public class EnrollmentDao implements IEnrollmentDao {
         // and enrolled_site columns, and supportsEnrollmentAPISchemaColumns is used to ensure table
         // contains enrolled_apis and enrolled_site columns
         return mFlags.getEnrollmentApiBasedSchemaEnabled() && supportsEnrollmentAPISchemaColumns();
+    }
+
+    public boolean useV3EnrollmentData() {
+        return mFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()
+                && mFlags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment();
     }
 
     @SuppressWarnings({"AvoidSharedPreferences"}) // Legacy usage
@@ -1893,5 +2171,52 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     private int getLatencyMs(long startTime) {
         return (int) (mClock.currentTimeMillis() - startTime);
+    }
+
+    private static Uri validateAndDeriveRegistrationBaseUri(AdTechIdentifier adTechIdentifier) {
+        if (adTechIdentifier == null) {
+            return null;
+        }
+
+        // Note: adTechIdentifier may not have a scheme, but the label in enrollment config
+        // always contains scheme (https). Therefore forcefully prefixing "https://".
+        String adTechIdentifierString = adTechIdentifier.toString();
+        if (!adTechIdentifierString.startsWith("https://")) {
+            adTechIdentifierString = "https://" + adTechIdentifier;
+        }
+
+        Optional<Uri> registrationBaseUri =
+                WebAddresses.topPrivateDomainAndScheme(Uri.parse(adTechIdentifierString));
+
+        return registrationBaseUri.orElse(null);
+    }
+
+    private enum LabelType {
+        SITE,
+        API,
+        SDK
+    }
+
+    private enum LabelApi {
+        ATTRIBUTION_REPORTING,
+        PROTECTED_AUDIENCE,
+        PROTECTED_APP_SIGNALS
+    }
+
+    /**
+     * Creates a label string based on the specified type and value.
+     *
+     * <ul>
+     *   <li>For SITE: value is uri.toString(), will be lowercased.
+     *   <li>For API: value is the API name, used as is.
+     *   <li>For SDK: value is the SDK name, will be lowercased.
+     * </ul>
+     */
+    private static String createLabel(LabelType type, String value) {
+        return switch (type) {
+            case SITE -> LABEL_PREFIX_SITE + value.toLowerCase(Locale.ENGLISH);
+            case API -> LABEL_PREFIX_API + value;
+            case SDK -> LABEL_PREFIX_SDK + value.toLowerCase(Locale.ENGLISH);
+        };
     }
 }
