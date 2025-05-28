@@ -1,6 +1,11 @@
 // Signature format: 2.0
 package android.adservices.adid {
 
+  public class AdIdManager {
+    method @FlaggedApi("com.android.adservices.flags.adid_enable_synchronous_ad_id_api") @RequiresPermission(android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID) public void deleteAdId();
+    method @FlaggedApi("com.android.adservices.flags.adid_enable_synchronous_ad_id_api") @NonNull @RequiresPermission(android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID) public android.adservices.adid.AdId recreateAdId();
+  }
+
   public abstract class AdIdProviderService extends android.app.Service {
     ctor public AdIdProviderService();
     method @Nullable public final android.os.IBinder onBind(@Nullable android.content.Intent);

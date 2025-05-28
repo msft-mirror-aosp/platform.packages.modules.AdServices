@@ -173,6 +173,14 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
         assertWithMessage("get lat ").that(adId.isLimitAdTrackingEnabled()).isTrue();
     }
 
+    @Test
+    public void testAdIdManager_recreateAdIdInfo() throws Exception {
+        AdIdManager adIdManager = AdIdManager.get(sContext);
+        AdId result = adIdManager.recreateAdId();
+        assertWithMessage("get AdId ").that(result.getAdId()).isEqualTo(AdId.ZERO_OUT);
+        assertWithMessage("get lat ").that(result.isLimitAdTrackingEnabled()).isTrue();
+    }
+
     private static String toString(AdId adId) {
         return adId == null ? null : adId.getAdId();
     }
