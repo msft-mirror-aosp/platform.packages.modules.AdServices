@@ -430,6 +430,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DATASTORE_
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DEBUG_REPORT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DELETION_THROW_UNACCOUNTED_EXCEPTION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW;
@@ -995,6 +996,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DEBUG_REPORT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DELETION_THROW_UNACCOUNTED_EXCEPTION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT;
@@ -4606,6 +4608,14 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT,
                 DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT,
                 Flags::getMeasurementVtcConfigurableMaxEventReportsCount);
+    }
+
+    @Test
+    public void testGetMeasurementEnableDeletionThrowUnaccountedException() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_ENABLE_DELETION_THROW_UNACCOUNTED_EXCEPTION,
+                MEASUREMENT_ENABLE_DELETION_THROW_UNACCOUNTED_EXCEPTION,
+                Flags::getMeasurementEnableDeletionThrowUnaccountedException);
     }
 
     @Test

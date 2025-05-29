@@ -361,6 +361,9 @@ public final class MeasurementImpl {
         } catch (NullPointerException | IllegalArgumentException e) {
             LoggerFactory.getMeasurementLogger()
                     .e(e, "Delete registration received invalid parameters");
+            if (mFlags.getMeasurementEnableDeletionThrowUnaccountedException()) {
+                throw e;
+            }
             return STATUS_INVALID_ARGUMENT;
         } finally {
             mReadWriteLock.readLock().unlock();
@@ -384,6 +387,9 @@ public final class MeasurementImpl {
         } catch (NullPointerException | IllegalArgumentException e) {
             LoggerFactory.getMeasurementLogger()
                     .e(e, "Delete package records received invalid parameters");
+            if (mFlags.getMeasurementEnableDeletionThrowUnaccountedException()) {
+                throw e;
+            }
         } finally {
             mReadWriteLock.writeLock().unlock();
         }

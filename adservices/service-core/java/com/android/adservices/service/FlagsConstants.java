@@ -349,6 +349,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING =
             "measurement_enable_app_package_name_logging";
 
+    public static final String KEY_MEASUREMENT_ENABLE_DELETION_THROW_UNACCOUNTED_EXCEPTION =
+            "Measurement__enable_deletion_throw_unaccounted_exception";
+
     public static final String KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION =
             "measurement_enable_reporting_jobs_throw_accounted_exception";
 
