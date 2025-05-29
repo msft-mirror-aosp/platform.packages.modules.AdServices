@@ -26,6 +26,7 @@ import android.annotation.Nullable;
 import android.content.Context;
 import android.util.Log;
 
+import com.android.adservices.shared.metriclogger.logsampler.DimensionMatcherHelper;
 import com.android.adservices.shared.metriclogger.logsampler.LogSampler;
 import com.android.adservices.shared.metriclogger.logsampler.SamplerResult;
 import com.android.adservices.shared.proto.MetricId;
@@ -53,7 +54,7 @@ public final class PerDeviceLogSampler<L> implements LogSampler<L> {
     private final Object mLock = new Object();
 
     @GuardedBy("mLock")
-    public boolean mShouldSelectDevice;
+    private long mHashForDeviceMetric;
 
     // Store the end time of the current staggering period. This ensures that device selection
     // logging results are computed only once per period, after the period has ended.
@@ -124,16 +125,29 @@ public final class PerDeviceLogSampler<L> implements LogSampler<L> {
             return NEVER_LOG_SAMPLING_RESULT;
         }
 
-        return shouldLog(Instant.ofEpochMilli(mClock.currentTimeMillis()));
+        return shouldLog(Instant.ofEpochMilli(mClock.currentTimeMillis()), logSupplier);
     }
 
-    private SamplerResult shouldLog(Instant eventTime) {
+    private SamplerResult shouldLog(Instant eventTime, Supplier<L> logSupplier) {
         synchronized (mLock) {
             // Use the stored sampling decision if the logging decision is already computed and
             // is before the staggering end time.
             if (mCurrentStaggerPeriodEndTime != null
                     && eventTime.isBefore(mCurrentStaggerPeriodEndTime)) {
-                if (mShouldSelectDevice) {
+                double sampleRate = mConfig.getSamplingRate();
+                if (mConfig.getSupportDimensionInLogSamplingEnabled()) {
+                    // Use custom sample rate if dimension matcher matches the event.
+                    sampleRate =
+                            DimensionMatcherHelper.getDimensionSampleRateOrDefault(
+                                    mConfig.getDimensionMatcherList(),
+                                    mConfig.getDimensionNameToValueFunctionMap(),
+                                    logSupplier,
+                                    mConfig.getSamplingRate());
+                }
+
+                boolean shouldSelectDevice = shouldSample(mHashForDeviceMetric, sampleRate);
+
+                if (shouldSelectDevice) {
                     Log.v(
                             TAG,
                             String.format(
@@ -146,7 +160,7 @@ public final class PerDeviceLogSampler<L> implements LogSampler<L> {
                                     "%s %s: Cached sampling decision is negative, rejecting event.",
                                     mMetricId.name(), DEVICE_SAMPLER));
                 }
-                return SamplerResult.create(mShouldSelectDevice, mConfig.getSamplingRate());
+                return SamplerResult.create(shouldSelectDevice, sampleRate);
             }
 
             // Compute the sampling decision
@@ -166,12 +180,20 @@ public final class PerDeviceLogSampler<L> implements LogSampler<L> {
             mCurrentStaggerPeriodEndTime = periodInfo.getStaggerPeriodEndTime();
             long periodNumber = periodInfo.getPeriodNumber();
 
-            long hashForDeviceMetric = getHash(selectionId, periodNumber, mConfig.getGroupName());
+            mHashForDeviceMetric = getHash(selectionId, periodNumber, mConfig.getGroupName());
 
-            long hashWindow = (long) (Long.MAX_VALUE * mConfig.getSamplingRate());
+            double sampleRate = mConfig.getSamplingRate();
+            if (mConfig.getSupportDimensionInLogSamplingEnabled()) {
+                // Use custom sample rate if dimension matcher matches the event.
+                sampleRate =
+                        DimensionMatcherHelper.getDimensionSampleRateOrDefault(
+                                mConfig.getDimensionMatcherList(),
+                                mConfig.getDimensionNameToValueFunctionMap(),
+                                logSupplier,
+                                mConfig.getSamplingRate());
+            }
 
-            // The device is chosen for logging if it falls within the hash window range.
-            mShouldSelectDevice = Math.abs(hashForDeviceMetric) < hashWindow;
+            boolean shouldSelectDevice = shouldSample(mHashForDeviceMetric, sampleRate);
 
             Log.v(
                     TAG,
@@ -182,9 +204,16 @@ public final class PerDeviceLogSampler<L> implements LogSampler<L> {
                             DEVICE_SAMPLER,
                             selectionId,
                             periodNumber,
-                            mShouldSelectDevice));
-            return SamplerResult.create(mShouldSelectDevice, mConfig.getSamplingRate());
+                            shouldSelectDevice));
+            return SamplerResult.create(shouldSelectDevice, sampleRate);
         }
+    }
+
+    private static boolean shouldSample(long hashForDeviceMetric, double sampleRate) {
+        long hashWindow = (long) (Long.MAX_VALUE * sampleRate);
+
+        // The device is chosen for logging if it falls within the hash window range.
+        return Math.abs(hashForDeviceMetric) < hashWindow;
     }
 
     private long getHash(long selectionId, long periodNumber, String groupName) {
