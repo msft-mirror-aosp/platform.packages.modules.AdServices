@@ -77,6 +77,14 @@ public abstract class MetricLoggerConfig<L> {
     public abstract @Nullable ImmutableMap<DimensionName, Function<L, Integer>>
             getPerEventDimensionNameToValueFunctionMap();
 
+    /**
+     * Returns the map of dimension name to value {@link Function} for per-device sampling. Each
+     * function takes a log event and extracts its corresponding integer value for the associated
+     * dimension.
+     */
+    public abstract @Nullable ImmutableMap<DimensionName, Function<L, Integer>>
+            getPerDeviceDimensionNameToValueFunctionMap();
+
     /** Return {@link Boolean} indicating whether dimension in logs sampling is supported. */
     public abstract boolean getSupportDimensionInLogSamplingEnabled();
 
@@ -97,6 +105,7 @@ public abstract class MetricLoggerConfig<L> {
                 .lightweightExecutor(lightweightExecutor)
                 .backgroundExecutor(backgroundExecutor)
                 .perEventDimensionNameToValueFunctionMap(ImmutableMap.of())
+                .perDeviceDimensionNameToValueFunctionMap(ImmutableMap.of())
                 .supportDimensionInLogSamplingEnabled(false);
     }
 
@@ -105,14 +114,18 @@ public abstract class MetricLoggerConfig<L> {
             Executor lightweightExecutor,
             Executor backgroundExecutor,
             Context context,
-            ImmutableMap<DimensionName, Function<L, Integer>> dimensionNameToValueFunctionMap,
+            ImmutableMap<DimensionName, Function<L, Integer>>
+                    perEventDimensionNameToValueFunctionMap,
+            ImmutableMap<DimensionName, Function<L, Integer>>
+                    perDeviceDimensionNameToValueFunctionMap,
             boolean supportDimensionInLogSamplingEnabled,
             LogUploader<L> logUploader) {
         return new AutoValue_MetricLoggerConfig.Builder<L>()
                 .metricId(metricId)
                 .logUploader(logUploader)
                 .context(context)
-                .perEventDimensionNameToValueFunctionMap(dimensionNameToValueFunctionMap)
+                .perEventDimensionNameToValueFunctionMap(perEventDimensionNameToValueFunctionMap)
+                .perDeviceDimensionNameToValueFunctionMap(perDeviceDimensionNameToValueFunctionMap)
                 .lightweightExecutor(lightweightExecutor)
                 .backgroundExecutor(backgroundExecutor)
                 .supportDimensionInLogSamplingEnabled(supportDimensionInLogSamplingEnabled);
@@ -180,6 +193,14 @@ public abstract class MetricLoggerConfig<L> {
         public abstract Builder<L> perEventDimensionNameToValueFunctionMap(
                 ImmutableMap<DimensionName, Function<L, Integer>> dimensionNameToValueFunctionMap);
 
+        /**
+         * Sets the map of dimension name to value {@link Function} for per-device sampling. Each
+         * function takes a log event and extracts its corresponding integer value for the
+         * associated dimension.
+         */
+        public abstract Builder<L> perDeviceDimensionNameToValueFunctionMap(
+                ImmutableMap<DimensionName, Function<L, Integer>> dimensionNameToValueFunctionMap);
+
         /** Sets {@link Boolean} indicating whether dimension in logs sampling is supported. */
         public abstract Builder<L> supportDimensionInLogSamplingEnabled(
                 boolean dimensionSamplingEnabled);
@@ -210,6 +231,7 @@ public abstract class MetricLoggerConfig<L> {
                             original.getBackgroundExecutor(),
                             original.getContext(),
                             original.getPerEventDimensionNameToValueFunctionMap(),
+                            original.getPerDeviceDimensionNameToValueFunctionMap(),
                             original.getSupportDimensionInLogSamplingEnabled(),
                             original.getLogUploader());
 
@@ -225,7 +247,9 @@ public abstract class MetricLoggerConfig<L> {
             if (config.hasPerDeviceSampling()) {
                 builder.perDeviceSamplingConfig(
                         PerDeviceSamplingConfig.createPerDeviceSamplingConfig(
-                                config.getPerDeviceSampling()));
+                                config.getPerDeviceSampling(),
+                                original.getPerDeviceDimensionNameToValueFunctionMap(),
+                                original.getSupportDimensionInLogSamplingEnabled()));
             }
 
             return builder.autoBuild();

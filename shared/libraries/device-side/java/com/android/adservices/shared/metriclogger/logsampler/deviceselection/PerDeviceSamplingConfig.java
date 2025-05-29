@@ -16,13 +16,17 @@
 
 package com.android.adservices.shared.metriclogger.logsampler.deviceselection;
 
+import com.android.adservices.shared.proto.DimensionMatcher;
+import com.android.adservices.shared.proto.DimensionName;
 import com.android.adservices.shared.proto.LogSamplingConfig;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.auto.value.AutoValue;
-import com.google.errorprone.annotations.Immutable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.time.Duration;
+import java.util.function.Function;
 
 /**
  * Describes the on-device per-device sampling configuration for a metric.
@@ -33,7 +37,6 @@ import java.time.Duration;
  * @param <L> the type of the log event.
  */
 @AutoValue
-@Immutable
 public abstract class PerDeviceSamplingConfig<L> {
 
     // Default rotation period is 35 days or 3024000 seconds.
@@ -74,17 +77,35 @@ public abstract class PerDeviceSamplingConfig<L> {
      */
     public abstract String getGroupName();
 
+    /** Returns a list of {@link DimensionMatcher} used for matching against events. */
+    public abstract ImmutableList<DimensionMatcher> getDimensionMatcherList();
+
+    /**
+     * Returns the map of dimension name to value {@link Function}. Each function takes a log event
+     * and extracts its corresponding integer value for the associated dimension.
+     */
+    public abstract ImmutableMap<DimensionName, Function<L, Integer>>
+            getDimensionNameToValueFunctionMap();
+
+    /** Return {@link Boolean} indicating whether dimension in logs sampling is supported. */
+    public abstract boolean getSupportDimensionInLogSamplingEnabled();
+
     /**
      * Creates an instance of {@link PerDeviceSamplingConfig} which contains configuration for
      * per-device sampling.
      */
     public static <L> PerDeviceSamplingConfig<L> createPerDeviceSamplingConfig(
-            LogSamplingConfig.PerDeviceSampling config) {
+            LogSamplingConfig.PerDeviceSampling config,
+            ImmutableMap<DimensionName, Function<L, Integer>> dimensionNameToValueFunctionMap,
+            boolean supportDimensionInLogSamplingEnabled) {
         return PerDeviceSamplingConfig.<L>builder()
                 .groupName(getGroupNameOrDefault(config))
                 .rotationPeriod(getRotationPeriodOrDefault(config))
                 .staggeringPeriod(getStaggeringPeriodOrDefault(config))
                 .samplingRate(getSamplingRateOrDefault(config))
+                .dimensionMatcherList(ImmutableList.copyOf(config.getDimensionMatcherList()))
+                .dimensionNameToValueFunctionMap(dimensionNameToValueFunctionMap)
+                .supportDimensionInLogSamplingEnabled(supportDimensionInLogSamplingEnabled)
                 .build();
     }
 
@@ -160,5 +181,19 @@ public abstract class PerDeviceSamplingConfig<L> {
 
         /** Builds a new {@link PerDeviceSamplingConfig} instance. */
         public abstract PerDeviceSamplingConfig<L> build();
+
+        /**
+         * Sets the map of dimension name to value {@link Function}. Each function takes a log event
+         * and extracts its corresponding integer value for the associated dimension.
+         */
+        public abstract Builder<L> dimensionNameToValueFunctionMap(
+                ImmutableMap<DimensionName, Function<L, Integer>> samplingDimensionFunction);
+
+        /** Sets a list of {@link DimensionMatcher} used for matching against events. */
+        abstract Builder<L> dimensionMatcherList(ImmutableList<DimensionMatcher> dimensionMatcher);
+
+        /** Sets {@link Boolean} indicating whether dimension in logs sampling is supported. */
+        abstract Builder<L> supportDimensionInLogSamplingEnabled(
+                boolean supportDimensionInLogSamplingEnabled);
     }
 }
