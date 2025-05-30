@@ -76,6 +76,7 @@ public class SandboxedSdkContextUnitTest extends DeviceSupportedBaseTest {
                         .mockStatic(StrictMode.class)
                         .startMocking();
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandbox());
+        ExtendedMockito.doReturn(Process.FIRST_SDK_SANDBOX_UID).when(() -> Process.myUid());
         ExtendedMockito.doNothing().when(() -> StrictMode.setVmPolicy(Mockito.any()));
 
         Context context = Mockito.spy(InstrumentationRegistry.getContext());
