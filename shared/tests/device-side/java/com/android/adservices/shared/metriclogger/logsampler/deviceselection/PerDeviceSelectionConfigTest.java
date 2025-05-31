@@ -24,11 +24,19 @@ import static com.android.adservices.shared.metriclogger.logsampler.deviceselect
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.SharedUnitTestCase;
+import com.android.adservices.shared.proto.Dimension;
+import com.android.adservices.shared.proto.DimensionMatcher;
+import com.android.adservices.shared.proto.DimensionName;
 import com.android.adservices.shared.proto.LogSamplingConfig.PerDeviceSampling;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.function.Function;
 
 public final class PerDeviceSelectionConfigTest extends SharedUnitTestCase {
 
@@ -40,11 +48,32 @@ public final class PerDeviceSelectionConfigTest extends SharedUnitTestCase {
                     .setGroupName("example")
                     .build();
 
+    private static final ImmutableList<DimensionMatcher> SINGLE_DIMENSION_MATCHERS =
+            ImmutableList.of(
+                    DimensionMatcher.newBuilder()
+                            .setSamplingRate(0.01)
+                            .addDimension(
+                                    Dimension.newBuilder()
+                                            .setName(DimensionName.CEL_ERROR_CODE)
+                                            .addAllValue(List.of(101, 201, 301))
+                                            .build())
+                            .build());
+
+    private static final ImmutableMap<DimensionName, Function<ExampleEvent, Integer>>
+            VALUE_EXTRACTOR_FUNCTION_MAP =
+                    ImmutableMap.of(
+                            DimensionName.CEL_ERROR_CODE,
+                            ExampleEvent::getErrorCode,
+                            DimensionName.CEL_PPAPI_NAME,
+                            ExampleEvent::getId);
+
     @Test
     public void testCreatePerDeviceSamplingConfig_defaultConfig_alwaysLog() {
-        PerDeviceSamplingConfig config =
+        PerDeviceSamplingConfig<ExampleEvent> config =
                 PerDeviceSamplingConfig.createPerDeviceSamplingConfig(
-                        PerDeviceSampling.getDefaultInstance());
+                        PerDeviceSampling.getDefaultInstance(),
+                        ImmutableMap.of(),
+                        /* supportDimensionInLogSamplingEnabled= */ false);
 
         expect.withMessage("samplingRate")
                 .that(config.getSamplingRate())
@@ -56,13 +85,24 @@ public final class PerDeviceSelectionConfigTest extends SharedUnitTestCase {
                 .that(config.getStaggeringPeriod())
                 .isEqualTo(DEFAULT_STAGGERING_PERIOD);
         expect.withMessage("groupName").that(config.getGroupName()).isEqualTo(DEFAULT_GROUP_NAME);
+        expect.withMessage("dimensionNameToValueFunctionMap")
+                .that(config.getDimensionNameToValueFunctionMap())
+                .isEqualTo(ImmutableMap.of());
+        expect.withMessage("dimensionMatcherList")
+                .that(config.getDimensionMatcherList())
+                .isEqualTo(ImmutableList.of());
+        expect.withMessage("supportDimensionInLogSamplingEnabled")
+                .that(config.getSupportDimensionInLogSamplingEnabled())
+                .isEqualTo(false);
     }
 
     @Test
     public void testCreatePerDeviceSamplingConfig() {
-        PerDeviceSamplingConfig config =
+        PerDeviceSamplingConfig<ExampleEvent> config =
                 PerDeviceSamplingConfig.createPerDeviceSamplingConfig(
-                        EXAMPLE_PER_DEVICE_SAMPLING_CONFIG);
+                        EXAMPLE_PER_DEVICE_SAMPLING_CONFIG,
+                        ImmutableMap.of(),
+                        /* supportDimensionInLogSamplingEnabled= */ false);
 
         expect.withMessage("samplingRate").that(config.getSamplingRate()).isEqualTo(0.5);
         expect.withMessage("rotationPeriod")
@@ -72,22 +112,82 @@ public final class PerDeviceSelectionConfigTest extends SharedUnitTestCase {
                 .that(config.getStaggeringPeriod())
                 .isEqualTo(Duration.ofDays(2));
         expect.withMessage("groupName").that(config.getGroupName()).isEqualTo("example");
+        expect.withMessage("dimensionNameToValueFunctionMap")
+                .that(config.getDimensionNameToValueFunctionMap())
+                .isEqualTo(ImmutableMap.of());
+        expect.withMessage("dimensionMatcherList")
+                .that(config.getDimensionMatcherList())
+                .isEqualTo(ImmutableList.of());
+        expect.withMessage("supportDimensionInLogSamplingEnabled")
+                .that(config.getSupportDimensionInLogSamplingEnabled())
+                .isEqualTo(false);
     }
 
     @Test
-    public void testCreatePerEventSamplingConfig_invalidSamplingRate_alwaysLog() {
+    public void testCreatePerDeviceSamplingConfig_dimensionMatcherPresent() {
+        PerDeviceSamplingConfig<ExampleEvent> config =
+                PerDeviceSamplingConfig.createPerDeviceSamplingConfig(
+                        EXAMPLE_PER_DEVICE_SAMPLING_CONFIG.toBuilder()
+                                .addAllDimensionMatcher(SINGLE_DIMENSION_MATCHERS)
+                                .build(),
+                        VALUE_EXTRACTOR_FUNCTION_MAP,
+                        /* supportDimensionInLogSamplingEnabled= */ true);
+
+        expect.withMessage("samplingRate").that(config.getSamplingRate()).isEqualTo(0.5);
+        expect.withMessage("rotationPeriod")
+                .that(config.getRotationPeriod())
+                .isEqualTo(Duration.ofDays(50));
+        expect.withMessage("staggeringPeriod")
+                .that(config.getStaggeringPeriod())
+                .isEqualTo(Duration.ofDays(2));
+        expect.withMessage("groupName").that(config.getGroupName()).isEqualTo("example");
+        expect.withMessage("dimensionNameToValueFunctionMap")
+                .that(config.getDimensionNameToValueFunctionMap())
+                .isEqualTo(VALUE_EXTRACTOR_FUNCTION_MAP);
+        expect.withMessage("dimensionMatcherList")
+                .that(config.getDimensionMatcherList())
+                .isEqualTo(SINGLE_DIMENSION_MATCHERS);
+        expect.withMessage("supportDimensionInLogSamplingEnabled")
+                .that(config.getSupportDimensionInLogSamplingEnabled())
+                .isEqualTo(true);
+    }
+
+    @Test
+    public void testCreatePerDeviceSamplingConfig_invalidSamplingRate_alwaysLog() {
         // Upper bound is invalid
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         PerDeviceSamplingConfig.createPerDeviceSamplingConfig(
-                                PerDeviceSampling.newBuilder().setSamplingRate(1.5).build()));
+                                PerDeviceSampling.newBuilder().setSamplingRate(1.5).build(),
+                                ImmutableMap.of(),
+                                /* supportDimensionInLogSamplingEnabled= */ false));
 
         // Lower bound is invalid
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         PerDeviceSamplingConfig.createPerDeviceSamplingConfig(
-                                PerDeviceSampling.newBuilder().setSamplingRate(-1).build()));
+                                PerDeviceSampling.newBuilder().setSamplingRate(-1).build(),
+                                ImmutableMap.of(),
+                                /* supportDimensionInLogSamplingEnabled= */ false));
+    }
+
+    private static final class ExampleEvent {
+        private final int mId;
+        private final int mErrorCode;
+
+        private ExampleEvent(int id, int errorCode) {
+            mId = id;
+            mErrorCode = errorCode;
+        }
+
+        public int getId() {
+            return mId;
+        }
+
+        public int getErrorCode() {
+            return mErrorCode;
+        }
     }
 }

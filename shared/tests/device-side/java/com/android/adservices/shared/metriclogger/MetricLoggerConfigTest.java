@@ -107,7 +107,9 @@ public final class MetricLoggerConfigTest extends SharedMockitoTestCase {
                 .isEqualTo(
                         PerDeviceSamplingConfig.createPerDeviceSamplingConfig(
                                 EXAMPLE_SAMPLING_CONFIG_WITH_PER_DEVICE_SAMPLING
-                                        .getPerDeviceSampling()));
+                                        .getPerDeviceSampling(),
+                                ImmutableMap.of(),
+                                /* supportDimensionInLogSamplingEnabled= */ false));
         expect.withMessage("logUploader").that(actual.getLogUploader()).isEqualTo(mMockLogUploader);
     }
 

@@ -43,6 +43,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.WebUtil;
+import com.android.adservices.data.configdelivery.ArgonConfigurationManager;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
@@ -210,6 +211,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                 new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         extendedMockito = E2EMockStatic.newE2EMockStaticRule(paramsProvider);
         mMeasurementDataDeleter = spy(new MeasurementDataDeleter(mDatastoreManager, mFlags));
+        doReturn(false).when(mFlags).getConfigDeliveryEnableEnrollmentConfigV3DataDownload();
         Clock mMockClock = mock(Clock.class);
         mEnrollmentDao =
                 new EnrollmentDao(
@@ -219,7 +221,8 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         mMockClock,
                         /* enable seed */ true,
                         new NoOpLoggerImpl(),
-                        EnrollmentUtil.getInstance());
+                        mock(EnrollmentUtil.class),
+                        mock(ArgonConfigurationManager.class));
         mDebugReportApi =
                 new DebugReportApi(
                         ApplicationProvider.getApplicationContext(),

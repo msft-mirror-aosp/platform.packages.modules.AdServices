@@ -16,7 +16,9 @@
 
 package com.android.adservices.data.configdelivery;
 
-import static com.android.adservices.data.configdelivery.ConfigurationManager.DataConsistencyStrategy.*;
+import static com.android.adservices.data.configdelivery.ArgonConfigurationManager.DataConsistencyStrategy.PROCESS_CONSISTENT;
+import static com.android.adservices.data.configdelivery.ArgonConfigurationManager.DataConsistencyStrategy.USE_LATEST_VERSION;
+import static com.android.adservices.data.configdelivery.ArgonConfigurationManager.DataConsistencyStrategy.USE_VERSION_AT_INSTANTIATION;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
@@ -38,23 +40,22 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * Manages configurations for the Argon Configuration Delivery System, providing methods to retrieve
  * and manipulate configuration data based on different consistency strategies.
  *
- * <p>The {@code ConfigurationManager} provides an interface to interact with configuration data
- * stored in the {@link ConfigurationDatabase}. It supports different {@link
+ * <p>The {@code ArgonConfigurationManager} provides an interface to interact with configuration
+ * data stored in the {@link ConfigurationDatabase}. It supports different {@link
  * DataConsistencyStrategy} options to handle how configuration updates and versioning are treated,
  * offering flexibility for various use cases.
  */
-public class ConfigurationManager {
+public class ArgonConfigurationManager {
 
     /**
-     * Enum defining data consistency strategies for the ConfigurationManager.
+     * Enum defining data consistency strategies for the ArgonConfigurationManager.
      *
-     * <p>This enum controls how the ConfigurationManager handles updates and versioning of
+     * <p>This enum controls how the ArgonConfigurationManager handles updates and versioning of
      * configuration data. It offers different strategies to balance between always using the newest
      * configuration and maintaining consistency within a specific context (instance, process,
      * etc.).
@@ -67,51 +68,51 @@ public class ConfigurationManager {
         /**
          * Always uses the latest available configuration version.
          *
-         * <p>The ConfigurationManager will fetch and use the most recent configuration available in
-         * the database *every time* an operation is performed. This guarantees that the operation
-         * performed will always use the latest configuration available. Depending on your use case,
-         * using this strategy might lead to data inconsistencies as the configuration might change
-         * between operations within the same logical context.
+         * <p>The ArgonConfigurationManager will fetch and use the most recent configuration
+         * available in the database *every time* an operation is performed. This guarantees that
+         * the operation performed will always use the latest configuration available. Depending on
+         * your use case, using this strategy might lead to data inconsistencies as the
+         * configuration might change between operations within the same logical context.
          *
          * <p>Example:
          *
          * <ol>
-         *   <li>ConfigurationManager instance is created. Version 1 is the latest.
+         *   <li>ArgonConfigurationManager instance is created. Version 1 is the latest.
          *   <li>A background job downloads Version 2.
-         *   <li>A second operation using the *same* ConfigurationManager instance is performed. It
-         *       uses Version 2.
+         *   <li>A second operation using the *same* ArgonConfigurationManager instance is
+         *       performed. It uses Version 2.
          * </ol>
          */
         USE_LATEST_VERSION,
 
         /**
-         * Uses the configuration version that was latest when the ConfigurationManager instance was
-         * created.
+         * Uses the configuration version that was latest when the ArgonConfigurationManager
+         * instance was created.
          *
-         * <p>This strategy ensures that a single instance of the ConfigurationManager operates on a
-         * consistent snapshot of the configuration. Newer versions downloaded in the background
-         * *will not* affect this instance. This is useful to prevent unexpected behavior changes
-         * during the lifetime of a single ConfigurationManager instance.
+         * <p>This strategy ensures that a single instance of the ArgonConfigurationManager operates
+         * on a consistent snapshot of the configuration. Newer versions downloaded in the
+         * background *will not* affect this instance. This is useful to prevent unexpected behavior
+         * changes during the lifetime of a single ArgonConfigurationManager instance.
          *
          * <p>Example:
          *
          * <ol>
-         *   <li>ConfigurationManager instance is created. Version 1 is the latest.
+         *   <li>ArgonConfigurationManager instance is created. Version 1 is the latest.
          *   <li>A background job downloads Version 2.
-         *   <li>A second operation using the *same* ConfigurationManager instance is performed. It
-         *       *still* uses Version 1.
+         *   <li>A second operation using the *same* ArgonConfigurationManager instance is
+         *       performed. It *still* uses Version 1.
          * </ol>
          */
         USE_VERSION_AT_INSTANTIATION,
 
         /**
-         * Uses the configuration version that was latest when the *first* ConfigurationManager
+         * Uses the configuration version that was latest when the *first* ArgonConfigurationManager
          * instance with PROCESS_CONSISTENT strategy was created in the current process.
          *
-         * <p>This strategy provides process-wide consistency. All ConfigurationManager instances
-         * will use the same configuration version, even if new instances are created later. This is
-         * useful in long-running processes or services where you want all parts of the application
-         * to use the same configuration version throughout life of the process.
+         * <p>This strategy provides process-wide consistency. All ArgonConfigurationManager
+         * instances will use the same configuration version, even if new instances are created
+         * later. This is useful in long-running processes or services where you want all parts of
+         * the application to use the same configuration version throughout life of the process.
          *
          * <p>Example:
          *
@@ -120,10 +121,10 @@ public class ConfigurationManager {
          *   <li>A background job downloads Version 2.
          *   <li>An operation is performed using the first instance (or any other instance created
          *       later). It uses Version 1.
-         *   <li>A second ConfigurationManager instance is created.
+         *   <li>A second ArgonConfigurationManager instance is created.
          *   <li>An operation is performed using the second instance. It *also* uses Version 1.
-         *   <li>The process restarts. The next ConfigurationManager instance will use the latest
-         *       version at *that* time.
+         *   <li>The process restarts. The next ArgonConfigurationManager instance will use the
+         *       latest version at *that* time.
          * </ol>
          */
         PROCESS_CONSISTENT,
@@ -133,11 +134,11 @@ public class ConfigurationManager {
 
     @VisibleForTesting
     @GuardedBy("processConsistentInstancesLock")
-    protected static final ConcurrentHashMap<ConfigurationType, ConfigurationManager>
+    protected static final ConcurrentHashMap<ConfigurationType, ArgonConfigurationManager>
             processConsistentInstances = new ConcurrentHashMap<>();
 
     @VisibleForTesting
-    protected static final HashMap<ConfigurationType, Set<WeakReference<ConfigurationManager>>>
+    protected static final HashMap<ConfigurationType, Set<WeakReference<ArgonConfigurationManager>>>
             instantiationConsistentInstances = new HashMap<>();
 
     private final DataConsistencyStrategy dataConsistencyStrategy;
@@ -154,13 +155,13 @@ public class ConfigurationManager {
      */
     private Long configurationVersion;
 
-    private ConfigurationManager(
+    private ArgonConfigurationManager(
             DataConsistencyStrategy dataConsistencyStrategy, ConfigurationType configurationType) {
         this.dataConsistencyStrategy = dataConsistencyStrategy;
         this.configurationType = configurationType;
     }
 
-    private ConfigurationManager(
+    private ArgonConfigurationManager(
             DataConsistencyStrategy dataConsistencyStrategy,
             ConfigurationType configurationType,
             Long configurationVersion) {
@@ -170,21 +171,21 @@ public class ConfigurationManager {
     }
 
     /**
-     * Returns an instance of {@link ConfigurationManager} based on the provided {@link
+     * Returns an instance of {@link ArgonConfigurationManager} based on the provided {@link
      * ConfigurationType} and {@link DataConsistencyStrategy}.
      *
      * @param configurationType The type of configuration to query.
      * @param dataConsistencyStrategy The strategy to use for data consistency.
-     * @return A {@link ConfigurationManager} instance.
+     * @return A {@link ArgonConfigurationManager} instance.
      */
-    public static ConfigurationManager getInstance(
+    public static ArgonConfigurationManager getInstance(
             ConfigurationType configurationType, DataConsistencyStrategy dataConsistencyStrategy) {
         switch (dataConsistencyStrategy) {
             case USE_LATEST_VERSION:
-                return new ConfigurationManager(USE_LATEST_VERSION, configurationType);
+                return new ArgonConfigurationManager(USE_LATEST_VERSION, configurationType);
             case USE_VERSION_AT_INSTANTIATION:
-                ConfigurationManager configurationManager =
-                        new ConfigurationManager(
+                ArgonConfigurationManager argonConfigurationManager =
+                        new ArgonConfigurationManager(
                                 USE_VERSION_AT_INSTANTIATION,
                                 configurationType,
                                 ConfigurationDatabase.getInstance()
@@ -193,40 +194,42 @@ public class ConfigurationManager {
                 if (instantiationConsistentInstances.containsKey(configurationType)) {
                     instantiationConsistentInstances
                             .get(configurationType)
-                            .add(new WeakReference<>(configurationManager));
+                            .add(new WeakReference<>(argonConfigurationManager));
                 } else {
-                    HashSet<WeakReference<ConfigurationManager>> configurationManagerWeakRef =
-                            new HashSet<>();
-                    configurationManagerWeakRef.add(new WeakReference<>(configurationManager));
+                    HashSet<WeakReference<ArgonConfigurationManager>>
+                            argonConfigurationManagerWeakRef = new HashSet<>();
+                    argonConfigurationManagerWeakRef.add(
+                            new WeakReference<>(argonConfigurationManager));
                     instantiationConsistentInstances.put(
-                            configurationType, configurationManagerWeakRef);
+                            configurationType, argonConfigurationManagerWeakRef);
                 }
-                return configurationManager;
-            // For PROCESS_CONSISTENT, the ConfigurationManager must be a singleton.
+                return argonConfigurationManager;
+            // For PROCESS_CONSISTENT, the ArgonConfigurationManager must be a singleton.
             case PROCESS_CONSISTENT:
                 // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition.
                 // Author states it provided 1.4x performance improvement.
                 // Lint is not smart enough to understand the optimization.
                 @SuppressWarnings("GuardedBy")
-                ConfigurationManager singleReadResult =
+                ArgonConfigurationManager singleReadResult =
                         processConsistentInstances.get(configurationType);
                 if (singleReadResult != null) {
                     return singleReadResult;
                 }
                 synchronized (processConsistentInstancesLock) {
-                    ConfigurationManager pSConfigurationManager =
+                    ArgonConfigurationManager pSArgonConfigurationManager =
                             processConsistentInstances.get(configurationType);
-                    if (pSConfigurationManager == null) {
-                        pSConfigurationManager =
-                                new ConfigurationManager(
+                    if (pSArgonConfigurationManager == null) {
+                        pSArgonConfigurationManager =
+                                new ArgonConfigurationManager(
                                         PROCESS_CONSISTENT,
                                         configurationType,
                                         ConfigurationDatabase.getInstance()
                                                 .configurationDao()
                                                 .getLatestVersion(configurationType));
-                        processConsistentInstances.put(configurationType, pSConfigurationManager);
+                        processConsistentInstances.put(configurationType,
+                                pSArgonConfigurationManager);
                     }
-                    return pSConfigurationManager;
+                    return pSArgonConfigurationManager;
                 }
             default:
                 throw new IllegalArgumentException(
@@ -294,7 +297,7 @@ public class ConfigurationManager {
                 .configurationDao()
                 .getConfigurationEntities(configurationType, configurationVersion)
                 .stream()
-                .map(ConfigurationManager::toConfiguration)
+                .map(ArgonConfigurationManager::toConfiguration)
                 .collect(toImmutableList());
     }
 
@@ -321,7 +324,7 @@ public class ConfigurationManager {
     /**
      * Retrieves a list of configurations that have at least one of the specified labels.
      *
-     * <p>Labels are case-sensitive.
+     * <p>Note: Labels are case-sensitive.
      *
      * @param labels The set of labels to search for.
      * @return A list of configurations that have at least one of the specified labels.
@@ -337,14 +340,14 @@ public class ConfigurationManager {
                 .getConfigurationEntitiesByAnyLabel(
                         configurationType, getConfigurationVersion(), labels)
                 .stream()
-                .map(ConfigurationManager::toConfiguration)
+                .map(ArgonConfigurationManager::toConfiguration)
                 .collect(toImmutableList());
     }
 
     /**
      * Retrieves a list of configurations that have all the specified labels.
      *
-     * <p>Labels are case-sensitive.
+     * <p>Note: Labels are case-sensitive.
      *
      * @param labels The set of labels that must all be present in the configurations.
      * @return A list of configurations that have all the specified labels.
@@ -360,7 +363,7 @@ public class ConfigurationManager {
                 .getConfigurationEntitiesByAllLabels(
                         configurationType, configurationVersion, labels, labels.size())
                 .stream()
-                .map(ConfigurationManager::toConfiguration)
+                .map(ArgonConfigurationManager::toConfiguration)
                 .collect(toImmutableList());
     }
 
@@ -382,22 +385,22 @@ public class ConfigurationManager {
 
         // Retain the versions in use by DataConsistencyStrategy.PROCESS_CONSISTENT instances.
         processConsistentInstances.forEach(
-                (configurationType, configurationManager) ->
+                (configurationType, argonConfigurationManager) ->
                         configVersionsToIgnore
                                 .computeIfAbsent(configurationType, k -> new HashSet<>())
-                                .add(configurationManager.configurationVersion));
+                                .add(argonConfigurationManager.configurationVersion));
 
         // Retain the versions in use by DataConsistencyStrategy.USE_VERSION_AT_INSTANTIATION
         // instances.
-        for (Map.Entry<ConfigurationType, Set<WeakReference<ConfigurationManager>>> entry :
+        for (Map.Entry<ConfigurationType, Set<WeakReference<ArgonConfigurationManager>>> entry :
                 instantiationConsistentInstances.entrySet()) {
-            for (WeakReference<ConfigurationManager> weakReference : entry.getValue()) {
-                        if (weakReference.get() != null) {
+            for (WeakReference<ArgonConfigurationManager> weakReference : entry.getValue()) {
+                if (weakReference.get() != null) {
                     configVersionsToIgnore
                             .computeIfAbsent(entry.getKey(), k -> new HashSet<>())
                             .add(weakReference.get().configurationVersion);
-                        }
-                    }
+                }
+            }
         }
 
         // Identify and store the versions to delete for each configuration type.
@@ -405,14 +408,14 @@ public class ConfigurationManager {
         for (Map.Entry<ConfigurationType, Set<Long>> entry : configTypesWithVersions.entrySet()) {
             ConfigurationType configurationType = entry.getKey();
             Set<Long> versions = entry.getValue();
-                    Set<Long> versionsToDelete = new HashSet<>();
-                    Set<Long> versionsToIgnore = configVersionsToIgnore.get(configurationType);
-                    for (Long version : versions) {
-                        if (!versionsToIgnore.contains(version)) {
-                            versionsToDelete.add(version);
-                        }
-                    }
-                    configTypeWithVersionsToDelete.put(configurationType, versionsToDelete);
+            Set<Long> versionsToDelete = new HashSet<>();
+            Set<Long> versionsToIgnore = configVersionsToIgnore.get(configurationType);
+            for (Long version : versions) {
+                if (!versionsToIgnore.contains(version)) {
+                    versionsToDelete.add(version);
+                }
+            }
+            configTypeWithVersionsToDelete.put(configurationType, versionsToDelete);
         }
 
         configTypeWithVersionsToDelete.forEach(configurationDao::deleteConfigurationEntities);

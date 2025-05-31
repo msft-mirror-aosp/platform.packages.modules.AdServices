@@ -93,10 +93,12 @@ public class ConfigurationDaoTest {
         }
     }
 
-    private static final LabelEntity labelEntity1_v1 =
-            LabelEntity.create(configurationEntity1_v1_row_id, "label1");
-    private static final LabelEntity labelEntity2_v1 =
-            LabelEntity.create(configurationEntity2_v1_row_id, "label2");
+    private static final LabelEntity configurationEntity1_v1_labelEntity1 =
+            LabelEntity.create(configurationEntity1_v1_row_id, "c1_v1_label1");
+    private static final LabelEntity configurationEntity1_v1_labelEntity2 =
+            LabelEntity.create(configurationEntity1_v1_row_id, "c1_v1_label2");
+    private static final LabelEntity configurationEntity2_v1_labelEntity1 =
+            LabelEntity.create(configurationEntity2_v1_row_id, "c2_v1_label1");
 
     //  Rb enrollment version 2 test configuration data
     private static final ConfigurationEntity configurationEntity1_v2;
@@ -134,10 +136,10 @@ public class ConfigurationDaoTest {
         }
     }
 
-    private static final LabelEntity labelEntity1_v2 =
-            LabelEntity.create(configurationEntity1_v2_row_id, "label1");
-    private static final LabelEntity labelEntity2_v2 =
-            LabelEntity.create(configurationEntity2_v2_row_id, "label2");
+    private static final LabelEntity configurationEntity1_v2_labelEntity1 =
+            LabelEntity.create(configurationEntity1_v2_row_id, "c1_v2_label1");
+    private static final LabelEntity configurationEntity2_v2_labelEntity2 =
+            LabelEntity.create(configurationEntity2_v2_row_id, "c2_v2_label2");
 
     @Before
     public void setUp() {
@@ -386,40 +388,44 @@ public class ConfigurationDaoTest {
 
     @Test
     public void testInsertAndReadLabelEntity() {
-        // There is no direct read method for LabelEntity, so we need to use
-        // getConfigurationEntitiesByAnyLabel to indirectly verify the insertion.
-        // We need to first insert corresponding ConfigurationEntity to make the join work.
         configurationDao.insertConfigurationEntities(
-                Arrays.asList(configurationEntity1_v1, configurationEntity2_v1));
-        configurationDao.insertLabelEntities(Arrays.asList(labelEntity1_v1, labelEntity2_v1));
+                Arrays.asList(
+                        configurationEntity1_v1, configurationEntity2_v1, configurationEntity1_v2));
+        configurationDao.insertLabelEntities(
+                Arrays.asList(
+                        configurationEntity1_v1_labelEntity1,
+                        configurationEntity1_v1_labelEntity2,
+                        configurationEntity1_v2_labelEntity1,
+                        configurationEntity1_v2_labelEntity1));
 
-        Set<String> labels = Set.of("label1", "label2");
-        List<ConfigurationEntity> configurationEntities =
-                configurationDao.getConfigurationEntitiesByAnyLabel(
-                        ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_1, labels);
+        List<LabelEntity> labelEntities =
+                configurationDao.getLabelEntitiesByConfigRowId(configurationEntity1_v1_row_id);
 
-        assertThat(configurationEntities)
-                .containsExactly(configurationEntity1_v1, configurationEntity2_v1);
+        assertThat(labelEntities)
+                .containsExactlyElementsIn(
+                        Arrays.asList(
+                                configurationEntity1_v1_labelEntity1,
+                                configurationEntity1_v1_labelEntity2));
     }
 
     @Test
     public void testInsertAndReadLabelEntity_conflictReplace() {
-        // Populate configuration and label entities
         configurationDao.insertConfigurationEntities(
                 Collections.singletonList(configurationEntity1_v1));
-        configurationDao.insertLabelEntities(Collections.singletonList(labelEntity1_v1));
-        long configRowId =
-                configurationDao
-                        .getConfigurationEntities(ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_1)
-                        .get(0)
-                        .getConfigRowId();
+        configurationDao.insertLabelEntities(
+                Collections.singletonList(configurationEntity1_v1_labelEntity1));
 
-        // Replace label
-        configurationDao.insertLabelEntities(Collections.singletonList(labelEntity1_v1));
+        configurationDao.insertLabelEntities(
+                Collections.singletonList(configurationEntity1_v1_labelEntity1));
 
         List<LabelEntity> labelEntities =
-                configurationDao.getLabelEntitiesByConfigRowId(configRowId);
-        assertThat(labelEntities).containsExactly(labelEntity1_v1);
+                configurationDao.getLabelEntitiesByConfigRowId(
+                        configurationDao
+                                .getConfigurationEntities(
+                                        ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_1)
+                                .get(0)
+                                .getConfigRowId());
+        assertThat(labelEntities).containsExactly(configurationEntity1_v1_labelEntity1);
     }
 
     @Test
@@ -450,21 +456,19 @@ public class ConfigurationDaoTest {
 
     @Test
     public void testDeleteConfigurationEntities_deletesLabels() {
-        // Insert configuration and label entities
         configurationDao.insertConfigurationEntities(
                 Collections.singletonList(configurationEntity1_v1));
-        configurationDao.insertLabelEntities(Collections.singletonList(labelEntity1_v1));
+        configurationDao.insertLabelEntities(
+                Collections.singletonList(configurationEntity1_v1_labelEntity1));
         long configRowId =
                 configurationDao
                         .getConfigurationEntities(ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_1)
                         .get(0)
                         .getConfigRowId();
 
-        // Delete configuration entities
         configurationDao.deleteConfigurationEntities(
                 ConfigurationType.TYPE_RB_ENROLLMENT, Set.of(VERSION_1));
 
-        // To verify that no configuration entities exist
         List<LabelEntity> labelEntities =
                 configurationDao.getLabelEntitiesByConfigRowId(configRowId);
         assertThat(labelEntities).isEmpty();
@@ -488,7 +492,6 @@ public class ConfigurationDaoTest {
 
     @Test
     public void testGetConfigurationEntitiesByAnyLabel() {
-        // Populate configuration and label entities with different versions
         configurationDao.insertConfigurationEntities(
                 Arrays.asList(
                         configurationEntity1_v1,
@@ -497,25 +500,23 @@ public class ConfigurationDaoTest {
                         configurationEntity2_v2));
         configurationDao.insertLabelEntities(
                 Arrays.asList(
-                        labelEntity1_v1,
-                        labelEntity2_v1,
-                        labelEntity1_v2,
-                        labelEntity2_v2,
+                        configurationEntity1_v1_labelEntity1,
+                        configurationEntity2_v1_labelEntity1,
+                        configurationEntity1_v2_labelEntity1,
+                        configurationEntity2_v2_labelEntity2,
                         LabelEntity.create(configurationEntity2_v2_row_id, "label3")));
 
         List<ConfigurationEntity> returnedList =
                 configurationDao.getConfigurationEntitiesByAnyLabel(
                         ConfigurationType.TYPE_RB_ENROLLMENT,
                         VERSION_2,
-                        Set.of("label1", "label3"));
+                        Set.of("c1_v2_label1", "label3"));
 
-        // Verify matching configuration entities with returned are from latest version
         assertThat(returnedList).containsExactly(configurationEntity1_v2, configurationEntity2_v2);
     }
 
     @Test
     public void testGetConfigurationEntitiesByAllLabels() {
-        // Populate configuration and label entities with different versions
         configurationDao.insertConfigurationEntities(
                 Arrays.asList(
                         configurationEntity1_v1,
@@ -524,19 +525,18 @@ public class ConfigurationDaoTest {
                         configurationEntity2_v2));
         configurationDao.insertLabelEntities(
                 Arrays.asList(
-                        labelEntity1_v1,
+                        configurationEntity1_v1_labelEntity1,
                         LabelEntity.create(configurationEntity1_v1_row_id, "label3"),
-                        labelEntity2_v1,
-                        labelEntity1_v2,
+                        configurationEntity2_v1_labelEntity1,
+                        configurationEntity1_v2_labelEntity1,
                         LabelEntity.create(configurationEntity1_v2_row_id, "label3"),
-                        labelEntity2_v2));
+                        configurationEntity2_v2_labelEntity2));
 
-        Set<String> labels = Set.of("label1", "label3");
+        Set<String> labels = Set.of("c1_v2_label1", "label3");
         List<ConfigurationEntity> returnedList =
                 configurationDao.getConfigurationEntitiesByAllLabels(
                         ConfigurationType.TYPE_RB_ENROLLMENT, VERSION_2, labels, labels.size());
 
-        // Verify matching configuration entities with returned are from latest version
         assertThat(returnedList).containsExactly(configurationEntity1_v2);
     }
 }
