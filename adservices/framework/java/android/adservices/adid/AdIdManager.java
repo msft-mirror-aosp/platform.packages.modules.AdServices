@@ -31,6 +31,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
 import android.annotation.SystemApi;
+import android.annotation.WorkerThread;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.Build;
@@ -243,6 +244,7 @@ public class AdIdManager {
     @FlaggedApi(Flags.FLAG_ADID_ENABLE_SYNCHRONOUS_AD_ID_API)
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @RequiresPermission(ACCESS_ADSERVICES_AD_ID)
+    @WorkerThread
     @Nullable
     public AdId getAdId() {
         IAdIdService service = null;
