@@ -31,7 +31,6 @@ import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.app.sdksandbox.testutils.SdkLifecycleHelper;
 import android.app.sdksandbox.testutils.WaitableCountDownLatch;
-import android.app.sdksandbox.testutils.testscenario.SdkSandboxFailedException;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -72,7 +71,7 @@ public class SdkSandboxScenarioRule implements TestRule {
     // enabled by default.
     private static final int ENABLE_ALWAYS = 0x1;
     private static final String ENABLE_LOCALHOST_COMMAND =
-            "cmd connectivity set-localhost-sandbox-enabled ";
+            "cmd connectivity set-allow-sandbox-localhost-traffic ";
     // Execute "Before" and "After" annotations around tests.
     public static final int ENABLE_LIFE_CYCLE_ANNOTATIONS = 0x2;
 
@@ -121,12 +120,6 @@ public class SdkSandboxScenarioRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                // Enable localhost comms for a sandbox if there is a specified client package to
-                // exempt
-                String exemptPackage = getLocalhostAllowedClientPackagename();
-                if (exemptPackage != null) {
-                    setLocalhostInSandboxEnabled(true, exemptPackage);
-                }
                 try (ActivityScenario scenario =
                         ActivityScenario.launch(SdkSandboxCtsActivity.class)) {
                     final Context context =
@@ -169,10 +162,6 @@ public class SdkSandboxScenarioRule implements TestRule {
                             throw new SdkSandboxFailedException(
                                     "Failed to unload SDK with exception: " + e.getMessage(), e);
                         }
-                        // Reset localhost restrictions for the sandbox of the client packagename
-                        if (exemptPackage != null) {
-                            setLocalhostInSandboxEnabled(false, exemptPackage);
-                        }
                     }
                 }
             }
@@ -202,6 +191,13 @@ public class SdkSandboxScenarioRule implements TestRule {
             assertThat(scenario.getState()).isEqualTo(Lifecycle.State.RESUMED);
             setView(scenario);
 
+            // Enable localhost comms for the sandbox if there is a specified client package to
+            // exempt. The exemption only works for a few seconds, so this is done before and after
+            // each method.
+            String exemptPackage = getLocalhostAllowedClientPackagename();
+            if (exemptPackage != null) {
+                setLocalhostInSandboxEnabled(true, exemptPackage);
+            }
             Throwable testFailure = runBeforeTestMethods();
 
             if (testFailure == null) {
@@ -211,6 +207,11 @@ public class SdkSandboxScenarioRule implements TestRule {
             // Even if "before methods" or tests fail, we are still expected to
             // run "after methods" for clean up.
             Throwable afterFailure = runAfterTestMethods();
+
+            // Reset localhost restrictions for the sandbox of the client packagename
+            if (exemptPackage != null) {
+                setLocalhostInSandboxEnabled(false, exemptPackage);
+            }
 
             mTestExecutor.cleanOnTestFinish();
 
@@ -222,7 +223,12 @@ public class SdkSandboxScenarioRule implements TestRule {
         }
     }
 
-    /* Override if test suite requires localhost communications for the test to run */
+    /*
+     * Override if tests require localhost communications for the test to run. This exemption allows
+     * the test to run for 30s, if the exemption times out, the device will crash and reboot. For
+     * more control over the exemption timeframe, the command can be called from the test method
+     * instead (cmd connectivity set-allow-sandbox-localhost-traffic <true/false> <pkg>).
+     */
     public String getLocalhostAllowedClientPackagename() {
         return null;
     }
