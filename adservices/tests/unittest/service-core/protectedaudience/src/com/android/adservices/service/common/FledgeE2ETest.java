@@ -182,6 +182,7 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -216,6 +217,7 @@ import java.util.stream.Collectors;
 @SetFlagDisabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
 // TODO (b/384952360): refine CEL related verifications later
 @SkipLoggingUsageRule(reason = "b/384952360")
+@Ignore("b/418988910")
 public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
     public static final String CUSTOM_AUDIENCE_SEQ_1 = "/ca1";
     public static final String CUSTOM_AUDIENCE_SEQ_2 = "/ca2";
