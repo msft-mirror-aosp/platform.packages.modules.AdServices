@@ -218,7 +218,7 @@
     <string name="settingsU_main_view_learn_more" msgid="1510918572255886819"><a href="https://support.google.com/android?p=ad_privacy">"Android પર જાહેરાત સંબંધિત પ્રાઇવસી"</a>" વિશે વધુ જાણો"</string>
     <string name="settingsU_main_view_fragment_learn_more" msgid="184774314084649596">"Android પર જાહેરાત સંબંધિત પ્રાઇવસી વિશે વધુ જાણો"</string>
     <string name="settingsUI_topics_subtitle" msgid="6972706530860751586">"ચાલુ / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> વિષયો"</string>
-    <string name="settingsUI_topics_subtitle_plural" msgid="7938363290536769313">"{count,plural, =1{ચાલુ / # વિષય}one{ચાલુ / # વિષય}other{ચાલુ / # વિષય}}"</string>
+    <string name="settingsUI_topics_subtitle_plural" msgid="7938363290536769313">"{count,plural, =1{ચાલુ છે / # વિષય}one{ચાલુ છે / # વિષય}other{ચાલુ છે / # વિષય}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="5488403228775310943">"ચાલુ / <xliff:g id="APPS_COUNT">%1$d</xliff:g> ઍપ"</string>
     <string name="settingsUI_apps_subtitle_plural" msgid="7184167843623106783">"{count,plural, =1{ચાલુ / # ઍપ}one{ચાલુ / # ઍપ}other{ચાલુ / # ઍપ}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="4526152882066971753">"ચાલુ છે"</string>
