@@ -4318,6 +4318,19 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST;
     }
 
+    /**
+     * Disable measurement deletion of package records and registrations to throw unaccounted
+     * exceptions by default.
+     */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_DELETION_THROW_UNACCOUNTED_EXCEPTION = false;
+
+    /**
+     * If enabled, measurement deletion jobs will throw unaccounted e.g. IllegalArgumentException.
+     */
+    default boolean getMeasurementEnableDeletionThrowUnaccountedException() {
+        return MEASUREMENT_ENABLE_DELETION_THROW_UNACCOUNTED_EXCEPTION;
+    }
+
     /** Disable measurement reporting jobs to throw unaccounted exceptions by default. */
     boolean MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION = false;
 

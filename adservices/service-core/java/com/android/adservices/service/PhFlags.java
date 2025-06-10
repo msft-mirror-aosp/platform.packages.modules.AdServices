@@ -4249,6 +4249,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableDeletionThrowUnaccountedException() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_DELETION_THROW_UNACCOUNTED_EXCEPTION,
+                MEASUREMENT_ENABLE_DELETION_THROW_UNACCOUNTED_EXCEPTION);
+    }
+
+    @Override
     public boolean getMeasurementEnableReportingJobsThrowUnaccountedException() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION,
