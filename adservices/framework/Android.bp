@@ -35,9 +35,11 @@ java_sdk_library {
     srcs: [":framework-adservices-sources"],
     libs: [
         "modules-utils-preconditions",
-        "framework-sdksandbox.impl",
         "androidx.annotation_annotation",
         "error_prone_annotations",
+    ],
+    impl_only_libs: [
+        "framework-sdksandbox.impl",
     ],
     static_libs: [
         "adservices_flags_lib",
