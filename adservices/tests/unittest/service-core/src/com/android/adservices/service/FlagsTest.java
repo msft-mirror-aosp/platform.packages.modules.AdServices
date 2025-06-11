@@ -108,6 +108,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_D
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DEBUG_JOIN_KEYS_OPEN_ACCESS;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DELETION_THROW_UNACCOUNTED_EXCEPTION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
@@ -494,6 +495,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementEnableItemsProcessedPerJobLogging()",
                 MEASUREMENT_ENABLE_ITEMS_PROCESSED_PER_JOB_LOGGING,
                 Flags::getMeasurementEnableItemsProcessedPerJobLogging);
+    }
+
+    @Test
+    public void testGetMeasurementEnableDeletionThrowUnaccountedException() {
+        testFlag(
+                "getMeasurementEnableDeletionThrowUnaccountedException()",
+                MEASUREMENT_ENABLE_DELETION_THROW_UNACCOUNTED_EXCEPTION,
+                Flags::getMeasurementEnableDeletionThrowUnaccountedException);
     }
 
     @Test

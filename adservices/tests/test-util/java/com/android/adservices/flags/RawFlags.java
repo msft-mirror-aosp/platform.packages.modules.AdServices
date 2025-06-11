@@ -2701,6 +2701,13 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
+    public final boolean getMeasurementEnableDeletionThrowUnaccountedException() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_ENABLE_DELETION_THROW_UNACCOUNTED_EXCEPTION,
+                MEASUREMENT_ENABLE_DELETION_THROW_UNACCOUNTED_EXCEPTION);
+    }
+
+    @Override
     public final boolean getMeasurementEnableReportingJobsThrowUnaccountedException() {
         return mBackend.getFlag(
                 KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION,

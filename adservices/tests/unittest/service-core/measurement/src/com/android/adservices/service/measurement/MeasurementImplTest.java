@@ -27,12 +27,15 @@ import static com.android.compatibility.common.util.VersionCodes.S_V2;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -466,6 +469,77 @@ public final class MeasurementImplTest extends AdServicesExtendedMockitoTestCase
         Mockito.verify(mockRollbackManager, Mockito.never()).recordAdServicesDeletionOccurred();
     }
 
+    @Test
+    public void testDeleteRegistrations_enableDeletionThrowFlag_throwIllegalArgumentException() {
+        doReturn(false).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
+        doReturn(true).when(mMockFlags).getMeasurementEnableDeletionThrowUnaccountedException();
+        mocker.mockGetFlags(mMockFlags);
+
+        AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
+        ExtendedMockito.doReturn(mockAdServicesManager)
+                .when(() -> AdServicesManager.getInstance(any()));
+        doThrow(new IllegalArgumentException("test")).when(mMeasurementDataDeleter).delete(any());
+
+        MeasurementImpl measurement =
+                new MeasurementImpl(
+                        DEFAULT_CONTEXT,
+                        mMockFlags,
+                        mDatastoreManager,
+                        mMeasurementDataDeleter,
+                        mContentResolver);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        measurement.deleteRegistrations(
+                                new DeletionParam.Builder(
+                                                Collections.emptyList(),
+                                                Collections.emptyList(),
+                                                Instant.ofEpochMilli(Long.MIN_VALUE),
+                                                Instant.ofEpochMilli(Long.MAX_VALUE),
+                                                DEFAULT_CONTEXT.getPackageName(),
+                                                SDK_PACKAGE_NAME)
+                                        .build()));
+        Mockito.verify(mockAdServicesManager, Mockito.never())
+                .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+    }
+
+    @Test
+    public void testDeleteRegistrations_disableDeletionThrowFlag_catchIllegalArgumentException() {
+        doReturn(false).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
+        doReturn(false).when(mMockFlags).getMeasurementEnableDeletionThrowUnaccountedException();
+        mocker.mockGetFlags(mMockFlags);
+
+        AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
+        ExtendedMockito.doReturn(mockAdServicesManager)
+                .when(() -> AdServicesManager.getInstance(any()));
+        doThrow(new IllegalArgumentException("test")).when(mMeasurementDataDeleter).delete(any());
+
+        MeasurementImpl measurement =
+                new MeasurementImpl(
+                        DEFAULT_CONTEXT,
+                        mMockFlags,
+                        mDatastoreManager,
+                        mMeasurementDataDeleter,
+                        mContentResolver);
+
+        try {
+            measurement.deleteRegistrations(
+                    new DeletionParam.Builder(
+                                    Collections.emptyList(),
+                                    Collections.emptyList(),
+                                    Instant.ofEpochMilli(Long.MIN_VALUE),
+                                    Instant.ofEpochMilli(Long.MAX_VALUE),
+                                    DEFAULT_CONTEXT.getPackageName(),
+                                    SDK_PACKAGE_NAME)
+                            .build());
+        } catch (IllegalArgumentException e) {
+            fail();
+        }
+        Mockito.verify(mockAdServicesManager, Mockito.never())
+                .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+    }
+
     private MeasurementRollbackCompatManager doDeleteRegistrationsCompat() {
         mocker.mockGetFlags(mMockFlags);
 
@@ -565,6 +639,64 @@ public final class MeasurementImplTest extends AdServicesExtendedMockitoTestCase
 
         doDeletePackageRecords();
 
+        Mockito.verify(mockAdServicesManager, Mockito.never())
+                .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+    }
+
+    @Test
+    public void testDeletePackageRecords_enableDeletionThrowFlag_throwIllegalArgumentException() {
+        doReturn(false).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
+        doReturn(true).when(mMockFlags).getMeasurementEnableDeletionThrowUnaccountedException();
+        mocker.mockGetFlags(mMockFlags);
+
+        AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
+        ExtendedMockito.doReturn(mockAdServicesManager)
+                .when(() -> AdServicesManager.getInstance(any()));
+        doThrow(new IllegalArgumentException("test"))
+                .when(mMeasurementDataDeleter)
+                .deleteAppUninstalledData(DEFAULT_URI, 0);
+
+        MeasurementImpl measurement =
+                new MeasurementImpl(
+                        DEFAULT_CONTEXT,
+                        mMockFlags,
+                        mDatastoreManager,
+                        mMeasurementDataDeleter,
+                        mContentResolver);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> measurement.deletePackageRecords(DEFAULT_URI, 0));
+        Mockito.verify(mockAdServicesManager, Mockito.never())
+                .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+    }
+
+    @Test
+    public void testDeletePackageRecords_disableDeletionThrowFlag_catchIllegalArgumentException() {
+        doReturn(false).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
+        doReturn(false).when(mMockFlags).getMeasurementEnableDeletionThrowUnaccountedException();
+        mocker.mockGetFlags(mMockFlags);
+
+        AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
+        ExtendedMockito.doReturn(mockAdServicesManager)
+                .when(() -> AdServicesManager.getInstance(any()));
+        doThrow(new IllegalArgumentException("test"))
+                .when(mMeasurementDataDeleter)
+                .deleteAppUninstalledData(DEFAULT_URI, 0);
+
+        MeasurementImpl measurement =
+                new MeasurementImpl(
+                        DEFAULT_CONTEXT,
+                        mMockFlags,
+                        mDatastoreManager,
+                        mMeasurementDataDeleter,
+                        mContentResolver);
+
+        try {
+            measurement.deletePackageRecords(DEFAULT_URI, 0);
+        } catch (IllegalArgumentException e) {
+            fail();
+        }
         Mockito.verify(mockAdServicesManager, Mockito.never())
                 .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
     }
