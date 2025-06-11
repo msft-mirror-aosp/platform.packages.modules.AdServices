@@ -69,7 +69,8 @@ public final class AdServicesApiShellCommandFactory implements ShellCommandFacto
                         new DevSessionCommand(devSessionSetter),
                         new SetUserChoicesCommand(),
                         new SetModuleStatesCommand(),
-                        new SetAdsPersonalizationStatusCommand());
+                        new SetAdsPersonalizationStatusCommand(),
+                        new GetAdIdCommand());
         mAllCommandsMap =
                 allCommands.stream()
                         .collect(
