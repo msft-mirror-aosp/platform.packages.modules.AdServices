@@ -23,8 +23,10 @@ import org.junit.Rule;
 /** Base class for stress scenarios. */
 public abstract class StressScenarioTestAction {
     // Common Options
-    private static final String ALLOCATE_AMOUNT = "allocate_amount";
-    private static final String ALLOCATE_PERCENTAGE = "allocate_percentage";
+    private static final String ALLOCATE_MEMORY_AMOUNT = "allocate_memory_amount";
+    private static final String ALLOCATE_MEMORY_PERCENTAGE = "allocate_memory_percentage";
+    private static final String ALLOCATE_DISK_AMOUNT = "allocate_disk_amount";
+    private static final String ALLOCATE_DISK_PERCENTAGE = "allocate_disk_percentage";
     private static final String CPU_THREADS_COUNT = "cpu_threads_count";
     private static final String CPU_INNER_LOOP_ITERATIONS = "cpu_inner_loop_iterations";
     private static final String CPU_THREAD_SLEEP_MS = "cpu_thread_sleep_ms";
@@ -32,12 +34,20 @@ public abstract class StressScenarioTestAction {
     protected static final String TAG = "StressScenarioTestAction";
 
     @Rule
-    public final IntegerOption mAllocateAmountOption =
-            new IntegerOption(ALLOCATE_AMOUNT).setRequired(false).setDefault(-1);
+    public final IntegerOption mAllocateMemoryAmountOption =
+            new IntegerOption(ALLOCATE_MEMORY_AMOUNT).setRequired(false).setDefault(-1);
 
     @Rule
-    public final IntegerOption mAllocatePercentageOption =
-            new IntegerOption(ALLOCATE_PERCENTAGE).setRequired(false).setDefault(-1);
+    public final IntegerOption mAllocateMemoryPercentageOption =
+            new IntegerOption(ALLOCATE_MEMORY_PERCENTAGE).setRequired(false).setDefault(-1);
+
+    @Rule
+    public final IntegerOption mAllocateDiskAmountOption =
+            new IntegerOption(ALLOCATE_DISK_AMOUNT).setRequired(false).setDefault(-1);
+
+    @Rule
+    public final IntegerOption mAllocateDiskPercentageOption =
+            new IntegerOption(ALLOCATE_DISK_PERCENTAGE).setRequired(false).setDefault(-1);
 
     @Rule
     public final IntegerOption mCpuThreadsCountOption =

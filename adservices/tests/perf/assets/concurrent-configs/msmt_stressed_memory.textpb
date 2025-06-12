@@ -233,7 +233,7 @@ scenarios [
         methodName: "allocateMemory"
         extras [
           {
-            key: "allocate_amount"
+            key: "allocate_memory_amount"
             value: "2048"
           }
         ]
@@ -463,7 +463,7 @@ scenarios [
         methodName: "allocateMemory"
         extras [
           {
-            key: "allocate_percentage"
+            key: "allocate_memory_percentage"
             value: "50"
           }
         ]
@@ -693,7 +693,7 @@ scenarios [
         methodName: "allocateMemory"
         extras [
           {
-            key: "allocate_percentage"
+            key: "allocate_memory_percentage"
             value: "90"
           }
         ]
@@ -923,7 +923,7 @@ scenarios [
         methodName: "allocateMemory"
         extras [
           {
-            key: "allocate_percentage"
+            key: "allocate_memory_percentage"
             value: "95"
           }
         ]
@@ -1047,7 +1047,7 @@ scenarios [
         methodName: "allocateMemory"
         extras [
           {
-            key: "allocate_percentage"
+            key: "allocate_memory_percentage"
             value: "95"
           }
         ]

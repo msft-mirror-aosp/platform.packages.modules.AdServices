@@ -10,7 +10,7 @@ scenarios [
         methodName: "utilizeDiskSpace"
         extras [
           {
-            key: "allocate_percentage"
+            key: "allocate_disk_percentage"
             value: "95"
           }
         ]
