@@ -26,8 +26,16 @@ import org.junit.runner.RunWith;
 
 @RunWith(Microbenchmark.class)
 public class OpenClientAppMicrobenchmark extends OpenClientApp {
+
     @Rule(order = 0)
     public RuleChain rules =
-            RuleChain.outerRule(new KillAppsRule(sClientAppPackageName))
+            RuleChain.outerRule(new KillAppsRule(concat(sClientAppPackageNames, sClientAppPackageName)))
         .around(new DropCachesRule());
+
+    private String[] concat(String[] arr, String... strings) {
+        String[] result = new String[arr.length + strings.length];
+        System.arraycopy(arr, 0, result, 0, arr.length); // copy original array
+        System.arraycopy(strings, 0, result, arr.length, strings.length); // copy other strings
+        return result;
+    }
 }
