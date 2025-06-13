@@ -26,7 +26,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JS_S
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD;
-import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__MDD_CONFIGS;
 import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT;
 import static com.android.adservices.service.FlagsConstants.KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_MANAGER_V2;
@@ -154,8 +153,6 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.common.ProtoParserUtil;
-import com.android.adservices.service.proto.config_delivery.MddConfigs;
 import com.android.adservices.shared.common.flags.Constants;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
@@ -5092,15 +5089,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT,
                 DEFAULT_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT);
-    }
-
-    @Override
-    public MddConfigs getConfigDeliveryMddConfigs() {
-        return ProtoParserUtil.fromBase64(
-                getDeviceConfigFlag(
-                        KEY_CONFIG_DELIVERY__MDD_CONFIGS,
-                        ProtoParserUtil.toBase64(DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS)),
-                MddConfigs.parser());
     }
 
     @Override

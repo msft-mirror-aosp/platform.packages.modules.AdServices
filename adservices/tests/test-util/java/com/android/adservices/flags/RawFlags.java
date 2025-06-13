@@ -25,8 +25,6 @@ import android.text.TextUtils;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.PhFlags;
-import com.android.adservices.service.common.ProtoParserUtil;
-import com.android.adservices.service.proto.config_delivery.MddConfigs;
 import com.android.adservices.shared.common.flags.Constants;
 import com.android.adservices.shared.flags.FlagsBackend;
 
@@ -3376,15 +3374,6 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
         return mBackend.getFlag(
                 KEY_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT,
                 DEFAULT_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT);
-    }
-
-    @Override
-    public MddConfigs getConfigDeliveryMddConfigs() {
-        return ProtoParserUtil.fromBase64(
-                mBackend.getFlag(
-                        KEY_CONFIG_DELIVERY__MDD_CONFIGS,
-                        ProtoParserUtil.toBase64(DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS)),
-                MddConfigs.parser());
     }
 
     @Override

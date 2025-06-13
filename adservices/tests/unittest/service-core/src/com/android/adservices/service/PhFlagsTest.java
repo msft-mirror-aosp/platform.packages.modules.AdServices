@@ -66,7 +66,6 @@ import static com.android.adservices.service.Flags.DEFAULT_BACKGROUND_JOB_SAMPLI
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD;
-import static com.android.adservices.service.Flags.DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS;
 import static com.android.adservices.service.Flags.DEFAULT_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
@@ -653,7 +652,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_COBALT__IGNORED_
 import static com.android.adservices.service.FlagsConstants.KEY_COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD;
-import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__MDD_CONFIGS;
 import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_RESET_TOKEN;
@@ -6309,14 +6307,6 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD,
                 DEFAULT_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD,
                 Flags::getConfigDeliveryEnableEnrollmentConfigV3DataDownload);
-    }
-
-    @Test
-    public void testGetConfigDeliveryMddConfigs() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_CONFIG_DELIVERY__MDD_CONFIGS,
-                DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS,
-                Flags::getConfigDeliveryMddConfigs);
     }
 
     @Test
