@@ -35,23 +35,45 @@ public class OpenClientApp {
     private static UiDevice sUiDevice =
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
+    private static final int WAIT_TIME_BEFORE_NEXT_APP_MS = 1000;
     private static final int WAIT_TIME_BEFORE_END_TEST_MS = 3000;
+    // TODO(b/400648964): Remove the client-app-package-name key once
+    // the client-app-package-names key is used in all the tests.
     private static final String CLIENT_APP_PACKAGE_NAME_KEY = "client-app-package-name";
+    private static final String CLIENT_APP_PACKAGE_NAMES_KEY = "client-app-package-names";
 
     private static final Bundle sArgsBundle = InstrumentationRegistry.getArguments();
 
     protected static String sClientAppPackageName =
-        sArgsBundle.getString(CLIENT_APP_PACKAGE_NAME_KEY);
+        sArgsBundle.getString(CLIENT_APP_PACKAGE_NAME_KEY, "");
+    protected static String[] sClientAppPackageNames =
+        sArgsBundle.getString(CLIENT_APP_PACKAGE_NAMES_KEY, "").split(",");
 
     @Test
     public void testOpenClientWithNSdks() throws Exception {
-        sUiDevice.executeShellCommand("am start -n " + sClientAppPackageName + "/.MainActivity");
+        if (!sClientAppPackageName.isEmpty()) {
+            sUiDevice.executeShellCommand(
+                    "am start -n " + sClientAppPackageName + "/.MainActivity");
+        }
+
+        for (String clientAppPackageName : sClientAppPackageNames) {
+            sUiDevice.executeShellCommand("am start -n " + clientAppPackageName + ".MainActivity");
+            // Allow metrics to stabilize after opening the app.
+            Thread.sleep(WAIT_TIME_BEFORE_NEXT_APP_MS);
+        }
+
         // Allow metrics to stabilize after CUJ completion.
         Thread.sleep(WAIT_TIME_BEFORE_END_TEST_MS);
     }
 
     @AfterClass
     public static void closeApp() throws IOException {
-        sUiDevice.executeShellCommand("am force-stop " + sClientAppPackageName);
+        if (!sClientAppPackageName.isEmpty()) {
+            sUiDevice.executeShellCommand("am force-stop " + sClientAppPackageName);
+        }
+
+        for (String clientAppPackageName : sClientAppPackageNames) {
+            sUiDevice.executeShellCommand("am force-stop " + clientAppPackageName);
+        }
     }
 }
