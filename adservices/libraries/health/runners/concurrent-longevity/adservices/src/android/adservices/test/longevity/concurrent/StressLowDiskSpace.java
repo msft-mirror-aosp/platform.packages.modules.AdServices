@@ -68,10 +68,10 @@ public final class StressLowDiskSpace extends StressScenarioTestAction {
             Log.e(TAG, "No free space available.");
             throw new IOException("No free space available.");
         } else {
-            if (mAllocateAmountOption.get() != -1) {
-                mSpaceToFill = mAllocateAmountOption.get();
-            } else if (mAllocatePercentageOption.get() != -1) {
-                mSpaceToFill = mInitialFreeSpace / 100 * mAllocatePercentageOption.get();
+            if (mAllocateDiskAmountOption.get() != -1) {
+                mSpaceToFill = mAllocateDiskAmountOption.get();
+            } else if (mAllocateDiskPercentageOption.get() != -1) {
+                mSpaceToFill = mInitialFreeSpace / 100 * mAllocateDiskPercentageOption.get();
             } else {
                 mSpaceToFill = mInitialFreeSpace / 100 * DEFAULT_ALLOCATE_PERCENTAGE;
             }
