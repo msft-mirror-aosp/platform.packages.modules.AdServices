@@ -753,10 +753,31 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
 
     @Test
     @MockStatic(ArgonConfigurationManager.class)
-    public void testOnStartJob_withUseConfigsManagerToQueryEnrollmentDisabled() {
+    public void testOnStartJob_withUseConfigsManagerToQueryEnrollmentDisabled() throws Exception {
         doReturn(false).when(mMockFlags).getConfigDeliveryUseArgonConfigManagerToQueryEnrollment();
+        TopicsWorker topicsWorker =
+                new TopicsWorker(
+                        mMockEpochManager,
+                        mMockCacheManager,
+                        mBlockedTopicsManager,
+                        mMockAppUpdateManager,
+                        TEST_FLAGS);
+        // Killswitch is off.
+        doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+        doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+        doReturn(false).when(mMockFlags).getProtectedSignalsCleanupEnabled();
+        doReturn(CURRENT_EPOCH_ID).when(mMockEpochManager).getCurrentEpochId();
+
+        // Mock static method AppUpdateWorker.getInstance, let it return the local
+        // appUpdateWorker in order to get a test instance.
+        doReturn(topicsWorker).when(TopicsWorker::getInstance);
+
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyMaintenanceJobService);
 
         mSpyMaintenanceJobService.onStartJob(mMockJobParameters);
+
+        callback.assertJobFinished();
 
         verify(
                 ArgonConfigurationManager::cleanupUnusedOlderConfigurations,
@@ -765,13 +786,35 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
 
     @Test
     @MockStatic(ArgonConfigurationManager.class)
-    public void testOnStartJob_withUseConfigsManagerToQueryEnrollmentEnabled() {
+    public void testOnStartJob_withUseConfigsManagerToQueryEnrollmentEnabled() throws Exception {
         doReturn(true).when(mMockFlags).getConfigDeliveryUseArgonConfigManagerToQueryEnrollment();
+        TopicsWorker topicsWorker =
+                new TopicsWorker(
+                        mMockEpochManager,
+                        mMockCacheManager,
+                        mBlockedTopicsManager,
+                        mMockAppUpdateManager,
+                        TEST_FLAGS);
+        // Killswitch is off.
+        doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+        doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+        doReturn(false).when(mMockFlags).getProtectedSignalsCleanupEnabled();
+        doReturn(CURRENT_EPOCH_ID).when(mMockEpochManager).getCurrentEpochId();
+
+        // Mock static method AppUpdateWorker.getInstance, let it return the local
+        // appUpdateWorker in order to get a test instance.
+        doReturn(topicsWorker).when(TopicsWorker::getInstance);
+
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyMaintenanceJobService);
 
         mSpyMaintenanceJobService.onStartJob(mMockJobParameters);
+
+        callback.assertJobFinished();
 
         verify(
                 ArgonConfigurationManager::cleanupUnusedOlderConfigurations,
                 timeout(BACKGROUND_THREAD_TIMEOUT_MS));
     }
 }
+
