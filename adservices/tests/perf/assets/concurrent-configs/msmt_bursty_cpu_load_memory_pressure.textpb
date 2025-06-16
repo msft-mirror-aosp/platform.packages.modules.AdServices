@@ -1,4 +1,5 @@
-# Measurement Concurrent Low Disk Space Profile for Load Testing.
+# Bursty CPU Load with Memory Pressure
+# Expectations: CUJs may experience temporary delays during CPU bursts. System behavior should be observed during and after memory pressure phases.
 # Index based example schedule
 schedule: INDEXED
 scenarios [
@@ -6,16 +7,17 @@ scenarios [
     index: 0
     journeys [
       {
-        journey: "android.adservices.test.longevity.concurrent.StressLowDiskSpace"
-        methodName: "utilizeDiskSpace"
+        journey: "android.adservices.test.longevity.concurrent.StressMemoryUtilization"
+        methodName: "allocateMemory"
         extras [
           {
-            key: "allocate_disk_percentage"
-            value: "95"
+            key: "allocate_memory_percentage"
+            value: "99"
           }
         ]
       }
     ]
+    after_test: STAY_IN_APP
   },
   {
     index: 1
@@ -127,6 +129,25 @@ scenarios [
             value: "sdk3"
           }
         ]
+      },
+      {
+        journey: "android.adservices.test.longevity.concurrent.StressCpuUtilization"
+        methodName: "startCpuStress"
+        # Simulates bursty CPU load with "calm" periods
+        extras [
+          {
+            key: "cpu_threads_count"
+            value: "20"
+          },
+          {
+            key: "cpu_inner_loop_iterations"
+            value: "1000000"
+          },
+          {
+            key: "cpu_thread_sleep_ms"
+            value: "1000"
+          }
+        ]
       }
     ]
     after_test: STAY_IN_APP
@@ -217,6 +238,25 @@ scenarios [
               value: "true"
             }
           ]
+        },
+        {
+          journey: "android.adservices.test.longevity.concurrent.StressCpuUtilization"
+          methodName: "startCpuStress"
+          # Simulates bursty CPU load with "calm" periods
+          extras [
+            {
+              key: "cpu_threads_count"
+              value: "20"
+            },
+            {
+              key: "cpu_inner_loop_iterations"
+              value: "1000000"
+            },
+            {
+              key: "cpu_thread_sleep_ms"
+              value: "1000"
+            }
+          ]
         }
       ]
       after_test: STAY_IN_APP
@@ -225,10 +265,11 @@ scenarios [
     index: 3
     journeys [
       {
-        journey: "android.adservices.test.longevity.concurrent.StressLowDiskSpace"
-        methodName: "releaseUtilizedDiskSpace"
+        journey: "android.adservices.test.longevity.concurrent.StressMemoryUtilization"
+        methodName: "releaseMemory"
       }
     ]
+    after_test: STAY_IN_APP
   }
 ]
-repetitions: 1
+repetitions: 10

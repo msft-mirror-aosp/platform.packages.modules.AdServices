@@ -1,4 +1,5 @@
-# Measurement Concurrent Low Disk Space Profile for Load Testing.
+# Moderate Background Activity with Low Battery
+# Expectations: CUJs should run, but with potentially increased latency. Battery drain will likely be noticeable. Devices may throttle performance.
 # Index based example schedule
 schedule: INDEXED
 scenarios [
@@ -6,16 +7,17 @@ scenarios [
     index: 0
     journeys [
       {
-        journey: "android.adservices.test.longevity.concurrent.StressLowDiskSpace"
-        methodName: "utilizeDiskSpace"
+        journey: "android.adservices.test.longevity.concurrent.StressMemoryUtilization"
+        methodName: "allocateMemory"
         extras [
           {
-            key: "allocate_disk_percentage"
-            value: "95"
+            key: "allocate_memory_percentage"
+            value: "70"
           }
         ]
       }
     ]
+    after_test: STAY_IN_APP
   },
   {
     index: 1
@@ -127,6 +129,29 @@ scenarios [
             value: "sdk3"
           }
         ]
+      },
+      {
+        journey: "android.adservices.test.longevity.concurrent.StressBatterySaverMode"
+        methodName: "startBatterySaverMode"
+      },
+      {
+        journey: "android.adservices.test.longevity.concurrent.StressCpuUtilization"
+        methodName: "startCpuStress"
+        # Sustained Moderate CPU Load
+        extras [
+          {
+            key: "cpu_threads_count"
+            value: "20"
+          },
+          {
+            key: "cpu_inner_loop_iterations"
+            value: "500"
+          },
+          {
+            key: "cpu_thread_sleep_ms"
+            value: "500"
+          }
+        ]
       }
     ]
     after_test: STAY_IN_APP
@@ -217,6 +242,29 @@ scenarios [
               value: "true"
             }
           ]
+        },
+        {
+          journey: "android.adservices.test.longevity.concurrent.StressBatterySaverMode"
+          methodName: "startBatterySaverMode"
+        },
+        {
+          journey: "android.adservices.test.longevity.concurrent.StressCpuUtilization"
+          methodName: "startCpuStress"
+          # Sustained Moderate CPU Load
+          extras [
+            {
+              key: "cpu_threads_count"
+              value: "20"
+            },
+            {
+              key: "cpu_inner_loop_iterations"
+              value: "500"
+            },
+            {
+              key: "cpu_thread_sleep_ms"
+              value: "500"
+            }
+          ]
         }
       ]
       after_test: STAY_IN_APP
@@ -225,10 +273,11 @@ scenarios [
     index: 3
     journeys [
       {
-        journey: "android.adservices.test.longevity.concurrent.StressLowDiskSpace"
-        methodName: "releaseUtilizedDiskSpace"
+        journey: "android.adservices.test.longevity.concurrent.StressMemoryUtilization"
+        methodName: "releaseMemory"
       }
     ]
+    after_test: STAY_IN_APP
   }
 ]
-repetitions: 1
+repetitions: 10

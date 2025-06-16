@@ -49,9 +49,9 @@ public final class StressMemoryUtilization extends StressScenarioTestAction {
 
         Context context = ApplicationProvider.getApplicationContext();
 
-        if (mAllocateAmountOption.get() != -1) {
+        if (mAllocateMemoryAmountOption.get() != -1) {
             allocateByAmount();
-        } else if (mAllocatePercentageOption.get() != -1) {
+        } else if (mAllocateMemoryPercentageOption.get() != -1) {
             allocateByPercentage();
         } else {
             allocateByDefaultCycles();
@@ -73,11 +73,11 @@ public final class StressMemoryUtilization extends StressScenarioTestAction {
     }
 
     private void allocateByAmount() {
-        long targetBytesToAllocate = (long) mAllocateAmountOption.get() * BYTES_IN_MEGABYTE;
+        long targetBytesToAllocate = (long) mAllocateMemoryAmountOption.get() * BYTES_IN_MEGABYTE;
         Log.i(
                 TAG,
                 "Starting memory stress test. Allocating based on amount: "
-                        + mAllocateAmountOption.get()
+                        + mAllocateMemoryAmountOption.get()
                         + " MB ("
                         + targetBytesToAllocate
                         + " bytes)");
@@ -94,11 +94,12 @@ public final class StressMemoryUtilization extends StressScenarioTestAction {
         long maxMemory = runtime.maxMemory();
         long usedMemory = runtime.totalMemory() - runtime.freeMemory();
         long freeHeap = maxMemory - usedMemory;
-        long targetBytesToAllocate = (long) (freeHeap / 100 * mAllocatePercentageOption.get());
+        long targetBytesToAllocate =
+                (long) (freeHeap / 100 * mAllocateMemoryPercentageOption.get());
         Log.i(
                 TAG,
                 "Starting memory stress test. Allocating based on percentage: "
-                        + mAllocatePercentageOption.get()
+                        + mAllocateMemoryPercentageOption.get()
                         + "%. Free memory: "
                         + freeHeap
                         + " MB, target to allocate: "
