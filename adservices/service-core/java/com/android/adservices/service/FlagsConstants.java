@@ -1217,7 +1217,6 @@ public final class FlagsConstants {
             "ConfigDelivery__use_argon_config_manager_to_query_enrollment";
     public static final String KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD =
             "ConfigDelivery__enable_enrollment_config_v3_data_download";
-    public static final String KEY_CONFIG_DELIVERY__MDD_CONFIGS = "ConfigDelivery__mdd_configs";
 
     // New Feature Flags
     public static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED =
