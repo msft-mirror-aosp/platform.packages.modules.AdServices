@@ -1,0 +1,275 @@
+# Bursty CPU Load with Memory Pressure
+# Expectations: CUJs may experience temporary delays during CPU bursts. System behavior should be observed during and after memory pressure phases.
+# Index based example schedule
+schedule: INDEXED
+scenarios [
+  {
+    index: 0
+    journeys [
+      {
+        journey: "android.adservices.test.longevity.concurrent.StressMemoryUtilization"
+        methodName: "allocateMemory"
+        extras [
+          {
+            key: "allocate_memory_percentage"
+            value: "99"
+          }
+        ]
+      }
+    ]
+    after_test: STAY_IN_APP
+  },
+  {
+    index: 1
+    journeys [
+      {
+        journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource"
+        methodName: "repeatedlyRegisterSourceView"
+        extras [
+          {
+            key: "repeat_count"
+            value: "25"
+          },
+          {
+            key: "ms_delay_pre"
+            value: "500"
+          },
+          {
+            key: "sdk_name"
+            value: "sdk3"
+          }
+        ]
+      },
+      {
+        journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource"
+        methodName: "repeatedlyRegisterSourceView"
+        extras [
+          {
+            key: "repeat_count"
+            value: "25"
+          },
+          {
+            key: "ms_delay_pre"
+            value: "500"
+          },
+          {
+            key: "sdk_name"
+            value: "sdk3"
+          }
+        ]
+      },
+      {
+        journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource"
+        methodName: "repeatedlyRegisterSourceView"
+        extras [
+          {
+            key: "repeat_count"
+            value: "25"
+          },
+          {
+            key: "ms_delay_pre"
+            value: "500"
+          },
+          {
+            key: "sdk_name"
+            value: "sdk3"
+          }
+        ]
+      },
+      {
+        journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource"
+        methodName: "repeatedlyRegisterSourceView"
+        extras [
+          {
+            key: "repeat_count"
+            value: "25"
+          },
+          {
+            key: "ms_delay_pre"
+            value: "500"
+          },
+          {
+            key: "sdk_name"
+            value: "sdk3"
+          }
+        ]
+      },
+      {
+        journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource"
+        methodName: "repeatedlyRegisterSourceView"
+        extras [
+          {
+            key: "repeat_count"
+            value: "25"
+          },
+          {
+            key: "ms_delay_pre"
+            value: "500"
+          },
+          {
+            key: "sdk_name"
+            value: "sdk3"
+          }
+        ]
+      },
+      {
+        journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource"
+        methodName: "repeatedlyRegisterSourceView"
+        extras [
+          {
+            key: "repeat_count"
+            value: "25"
+          },
+          {
+            key: "ms_delay_pre"
+            value: "500"
+          },
+          {
+            key: "sdk_name"
+            value: "sdk3"
+          }
+        ]
+      },
+      {
+        journey: "android.adservices.test.longevity.concurrent.StressCpuUtilization"
+        methodName: "startCpuStress"
+        # Simulates bursty CPU load with "calm" periods
+        extras [
+          {
+            key: "cpu_threads_count"
+            value: "20"
+          },
+          {
+            key: "cpu_inner_loop_iterations"
+            value: "1000000"
+          },
+          {
+            key: "cpu_thread_sleep_ms"
+            value: "1000"
+          }
+        ]
+      }
+    ]
+    after_test: STAY_IN_APP
+  },
+  {
+      index: 2
+      journeys [
+        {
+          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+          methodName: "repeatedlyRegisterTrigger"
+          extras [
+            {
+              key: "sdk_name"
+              value: "sdk4"
+            },
+            {
+              key: "disable_enrollments_check"
+              value: "true"
+            }
+          ]
+            },
+        {
+          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+          methodName: "repeatedlyRegisterTrigger"
+          extras [
+            {
+              key: "sdk_name"
+              value: "sdk4"
+            },
+            {
+              key: "disable_enrollments_check"
+              value: "true"
+            }
+          ]
+        },
+        {
+          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+          methodName: "repeatedlyRegisterTrigger"
+          extras [
+            {
+              key: "sdk_name"
+              value: "sdk4"
+            },
+            {
+              key: "disable_enrollments_check"
+              value: "true"
+            }
+          ]
+        },
+        {
+          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+          methodName: "repeatedlyRegisterTrigger"
+          extras [
+            {
+              key: "sdk_name"
+              value: "sdk4"
+            },
+            {
+              key: "disable_enrollments_check"
+              value: "true"
+            }
+          ]
+        },
+        {
+          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+          methodName: "repeatedlyRegisterTrigger"
+          extras [
+            {
+              key: "sdk_name"
+              value: "sdk4"
+            },
+            {
+              key: "disable_enrollments_check"
+              value: "true"
+            }
+          ]
+        },
+        {
+          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+          methodName: "repeatedlyRegisterTrigger"
+          extras [
+            {
+              key: "sdk_name"
+              value: "sdk4"
+            },
+            {
+              key: "disable_enrollments_check"
+              value: "true"
+            }
+          ]
+        },
+        {
+          journey: "android.adservices.test.longevity.concurrent.StressCpuUtilization"
+          methodName: "startCpuStress"
+          # Simulates bursty CPU load with "calm" periods
+          extras [
+            {
+              key: "cpu_threads_count"
+              value: "20"
+            },
+            {
+              key: "cpu_inner_loop_iterations"
+              value: "1000000"
+            },
+            {
+              key: "cpu_thread_sleep_ms"
+              value: "1000"
+            }
+          ]
+        }
+      ]
+      after_test: STAY_IN_APP
+  },
+  {
+    index: 3
+    journeys [
+      {
+        journey: "android.adservices.test.longevity.concurrent.StressMemoryUtilization"
+        methodName: "releaseMemory"
+      }
+    ]
+    after_test: STAY_IN_APP
+  }
+]
+repetitions: 10
