@@ -21,7 +21,7 @@
         android:key="topics_ga_introduction"
         android:title="@string/settingsUI_topics_view_ga_subtitle" />
 
-    <SwitchPreferenceCompat
+    <com.android.settingslib.widget.MainSwitchPreference
         android:key="topics_switch_bar"
         android:title="@string/settingsUI_topics_switch_title" />
     <!-- no topics section -->

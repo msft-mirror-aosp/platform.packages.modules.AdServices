@@ -20,8 +20,9 @@
     android:gravity="left">
     <Button
         android:id="@+id/option_button"
+        style="@style/MainStyle.SettingsControlButtonFragment"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
-        android:background="@drawable/ic_button" />
+        android:background="@drawable/ic_button_fragment" />
 </RelativeLayout>

@@ -29,6 +29,13 @@
         <item name="android:fontFamily">@*android:string/config_bodyFontFamilyMedium</item>
     </style>
 
+    <style name="MainStyle.SettingsControlButtonFragment" parent="MainStyle.SettingsControlButton">
+        <item name="android:textColor">@color/adservices_colorOnPrimaryContainer</item>
+        <item name="android:textFontWeight">500</item>
+        <item name="android:fontFamily">google-sans-flex</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
     <style name="MainStyle.PrimaryButton">
         <item name="android:theme">@style/RoundedCornerThemeOverlay</item>
         <item name="android:textSize">16sp</item>
