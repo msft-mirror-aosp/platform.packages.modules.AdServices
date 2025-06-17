@@ -29,6 +29,7 @@ import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 
+import androidx.test.filters.FlakyTest;
 import com.android.adservices.common.AdServicesSupportHelper;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
@@ -80,6 +81,7 @@ public final class TopicsConnectionTest extends CtsAdServicesTopicsConnectionTes
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
     }
 
+    @FlakyTest(bugId = 422699447)
     @Test
     public void testEnableGlobalKillSwitch() throws Exception {
         // First enable the Global Kill Switch and then connect to the TopicsService.
