@@ -77,7 +77,7 @@ import java.util.concurrent.Executor;
 /** Mobile Data Download Factory. */
 @RequiresApi(Build.VERSION_CODES.S)
 public class MobileDataDownloadFactory {
-    private static MobileDataDownload sSingletonMdd;
+    private static volatile MobileDataDownload sSingletonMdd;
     private static SynchronousFileStorage sSynchronousFileStorage;
 
     private static final String MDD_METADATA_SHARED_PREFERENCES = "mdd_metadata_store";
@@ -93,6 +93,10 @@ public class MobileDataDownloadFactory {
 
     /** Returns a singleton of MobileDataDownload for the whole PPAPI app. */
     public static MobileDataDownload getMdd(Flags flags) {
+        MobileDataDownload singleReadResult = sSingletonMdd;
+        if (singleReadResult != null) {
+            return singleReadResult;
+        }
         synchronized (MobileDataDownloadFactory.class) {
             if (sSingletonMdd == null) {
                 // TODO(b/236761740): This only adds the core MDD code. We still need other
