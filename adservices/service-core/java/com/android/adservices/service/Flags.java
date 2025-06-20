@@ -30,6 +30,7 @@ import androidx.annotation.Nullable;
 import com.android.adservices.cobalt.AppNameApiErrorLogger;
 import com.android.adservices.cobalt.CobaltConstants;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.proto.config_delivery.MddConfigs;
 import com.android.adservices.shared.common.flags.ConfigFlag;
 import com.android.adservices.shared.common.flags.FeatureFlag;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
@@ -6192,6 +6193,31 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD;
     }
 
+    /**
+     * Config flag to provide latest mdd manifest urls and group names for argon config delivery
+     * system.
+     *
+     * <p>All files within the mdd file group provided in this flag will be downloaded.
+     */
+    @ConfigFlag
+    MddConfigs DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS =
+            MddConfigs.newBuilder()
+                    .addMddConfigs(
+                            MddConfigs.MddConfig.newBuilder()
+                                    .setManifestId("enrollment")
+                                    .setManifestUrl(
+                                            "https://www.gstatic.com/mdi-serving"
+                                                + "/rubidium-adservices-enrollment"
+                                                + "/10327/f6ad222f19ab7b49b5d06fc717e2273e1625fc74")
+                                    .build())
+                    .build();
+
+    /**
+     * @return latest mdd configurations for Argon Config Delivery (ACD)
+     */
+    default MddConfigs getConfigDeliveryMddConfigs() {
+        return DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS;
+    }
 
     /**
      * Flag to use Argon Configuration Manager to query enrollment data.
