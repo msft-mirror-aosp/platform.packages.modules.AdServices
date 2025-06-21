@@ -56,6 +56,7 @@ import com.android.adservices.service.shell.adselection.GetAdSelectionDataComman
 import com.android.adservices.service.shell.adselection.ViewAuctionResultCommand;
 import com.android.adservices.service.shell.adservicesapi.DevSessionCommand;
 import com.android.adservices.service.shell.adservicesapi.EnableAdServicesCommand;
+import com.android.adservices.service.shell.adservicesapi.GetAdIdCommand;
 import com.android.adservices.service.shell.adservicesapi.ResetConsentCommand;
 import com.android.adservices.service.shell.adservicesapi.SetAdsPersonalizationStatusCommand;
 import com.android.adservices.service.shell.adservicesapi.SetModuleStatesCommand;
@@ -302,6 +303,7 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                                 DevSessionCommand.HELP,
                                 SetModuleStatesCommand.HELP,
                                 SetUserChoicesCommand.HELP,
+                                GetAdIdCommand.HELP_GET_ADID,
                                 SetAdsPersonalizationStatusCommand.HELP));
     }
 

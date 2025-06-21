@@ -73,11 +73,14 @@ public final class AdPackageDenyResolver {
     private static final String PACKAGE_DENY_DATA_STORE =
             FileCompatUtils.getAdservicesFilename("package_deny_data_store");
     private final boolean mEnablePackageDeny;
-    @Nullable private final MobileDataDownload mMobileDataDownload;
-    @Nullable private final SynchronousFileStorage mFileStorage;
+    @Nullable private MobileDataDownload mMobileDataDownload;
+    @Nullable private SynchronousFileStorage mFileStorage;
 
     @Nullable
     private final GuavaDataStore<PackageToApiDenyGroupsCacheMap> mPackageDenyCacheDataStore;
+
+    // Lock for lazy initialization of MDD components
+    private final Object mMddInitializationLock = new Object();
 
     // Lazy initialization holder class idiom for static fields as described in Effective Java Item
     // 83 - this is needed because otherwise the singleton would be initialized in unit tests, even
@@ -91,15 +94,11 @@ public final class AdPackageDenyResolver {
     }
 
     private AdPackageDenyResolver(
-            @Nullable MobileDataDownload mobileDataDownload,
-            @Nullable SynchronousFileStorage synchronousFileStorage,
             @Nullable GuavaDataStore<PackageToApiDenyGroupsCacheMap> packageDenyCacheDataStore,
             boolean enablePackageDeny) {
         LogUtil.d("initializing AdPackageDenyResolver instance");
-        this.mMobileDataDownload = mobileDataDownload;
-        this.mFileStorage = synchronousFileStorage;
         this.mPackageDenyCacheDataStore = packageDenyCacheDataStore;
-        mEnablePackageDeny = enablePackageDeny;
+        this.mEnablePackageDeny = enablePackageDeny;
     }
 
     /**
@@ -108,10 +107,10 @@ public final class AdPackageDenyResolver {
      * <p>This method uses the `enablePackageDenyMdd` flag from {@link FlagsFactory} to determine
      * how the `AdPackageDenyResolver` should be initialized.
      *
-     * <p>If the flag is enabled: - Obtains an MDD instance from {@link MobileDataDownloadFactory}.
-     * - Retrieves a file storage instance from {@link MobileDataDownloadFactory}. - Uses a
-     * `PackageToApiDenyGroupsCacheMapDataStore` (obtained via
-     * `getPackageToApiDenyGroupsCacheMapDataStore()`). - Sets enablement flag to `true`.
+     * <p>If the flag is enabled: - Uses a `PackageToApiDenyGroupsCacheMapDataStore` (obtained via
+     * `getPackageToApiDenyGroupsCacheMapDataStore()`). - Sets enablement flag to `true`. -
+     * `MobileDataDownload` and `SynchronousFileStorage` instances are not created here; they will
+     * be lazily initialized when {@link #loadDenyDataFromMdd()} is called.
      *
      * <p>If the flag is disabled: - It creates an instance with all dependencies set to `null` and
      * the enablement flag set to `false`.
@@ -124,15 +123,13 @@ public final class AdPackageDenyResolver {
             Flags flags = FlagsFactory.getFlags();
             if (flags.getEnablePackageDenyService()) {
                 return new AdPackageDenyResolver(
-                        MobileDataDownloadFactory.getMdd(flags),
-                        MobileDataDownloadFactory.getFileStorage(),
                         getPackageToApiDenyGroupsCacheMapDataStore(),
                         true);
             }
         } catch (Exception e) {
             LogUtil.e("Error initializing AdPackageDenyResolver %s", e.getMessage());
         }
-        return new AdPackageDenyResolver(null, null, null, false);
+        return new AdPackageDenyResolver(null, false);
     }
 
     @VisibleForTesting
@@ -141,8 +138,12 @@ public final class AdPackageDenyResolver {
             @NonNull SynchronousFileStorage synchronousFileStorage,
             @NonNull GuavaDataStore<PackageToApiDenyGroupsCacheMap> packageDataStore,
             boolean enablePackageDeny) {
-        return new AdPackageDenyResolver(
-                mobileDataDownload, synchronousFileStorage, packageDataStore, enablePackageDeny);
+        AdPackageDenyResolver instance =
+                new AdPackageDenyResolver(packageDataStore, enablePackageDeny);
+        // Manually set the MDD components for testing purposes
+        instance.mMobileDataDownload = mobileDataDownload;
+        instance.mFileStorage = synchronousFileStorage;
+        return instance;
     }
 
     private static GuavaDataStore<PackageToApiDenyGroupsCacheMap>
@@ -207,6 +208,14 @@ public final class AdPackageDenyResolver {
                 || (callerAppName == null && callerSdkName == null)) {
             return Futures.immediateFuture(false);
         }
+        // mPackageDenyCacheDataStore can be null if AdPackageDenyResolver was initialized with
+        // mEnablePackageDeny = false due to an error in newInstance(), but then mEnablePackageDeny
+        // was somehow (e.g. in tests) set to true.
+        if (mPackageDenyCacheDataStore == null) {
+            LogUtil.e("mPackageDenyCacheDataStore is null in shouldDenyPackage");
+            PackageDenyMddProcessStatus.logError(PackageDenyMddProcessStatus.FAILED_READING_CACHE);
+            return Futures.immediateFuture(false);
+        }
         return Futures.transform(
                 mPackageDenyCacheDataStore.getDataAsync(),
                 packageToApiDenyGroupsCacheMap ->
@@ -239,17 +248,18 @@ public final class AdPackageDenyResolver {
      * <p>This method orchestrates the retrieval and processing of package deny data from MDD. It
      * performs the following steps asynchronously: 1. **Checks Feature Flag:** Verifies if the
      * package deny feature is enabled (`mEnablePackageDeny`). If disabled, it returns a {@link
-     * PackageDenyMddProcessStatus#DISABLED} status. 2. **Fetches MDD File Group:** Initiates a
-     * request to MDD to fetch the file group associated with the package deny data (using
-     * `mMobileDataDownload::getFileGroup`). 3. **Extracts MDD File:** Obtains the actual file from
-     * the fetched file group (using `this::getMddFile`). 4. **Parses the File:** Parses the content
-     * of the MDD file, converting it into a usable data structure (using `this::parseFile`). 5.
-     * **Filters Data:** Filters the parsed data to retain only information relevant to installed
-     * packages (using `this::filterMddDataToInstalledPackages`). 6. **Updates Cache:**
-     * Asynchronously updates the package deny cache data store (`mPackageDenyCacheDataStore`) with
-     * the processed data. 7. **Handles Errors:** Includes error handling for `PackageDenyException`
-     * and general `Exception` to log issues and return appropriate {@link
-     * PackageDenyMddProcessStatus} values.
+     * PackageDenyMddProcessStatus#DISABLED} status. 2. **Lazy Initialization**: Initializes {@code
+     * mMobileDataDownload} and {@code mFileStorage} if they are currently null. 3. **Fetches MDD
+     * File Group:** Initiates a request to MDD to fetch the file group associated with the package
+     * deny data (using `mMobileDataDownload::getFileGroup`). 4. **Extracts MDD File:** Obtains the
+     * actual file from the fetched file group (using `this::getMddFile`). 5. **Parses the File:**
+     * Parses the content of the MDD file, converting it into a usable data structure (using
+     * `this::parseFile`). 6. **Filters Data:** Filters the parsed data to retain only information
+     * relevant to installed packages (using `this::filterMddDataToInstalledPackages`). 7. **Updates
+     * Cache:** Asynchronously updates the package deny cache data store
+     * (`mPackageDenyCacheDataStore`) with the processed data. 8. **Handles Errors:** Includes error
+     * handling for `PackageDenyException` and general `Exception` to log issues and return
+     * appropriate {@link PackageDenyMddProcessStatus} values.
      *
      * @return A {@link ListenableFuture} representing the eventual result of the MDD data loading
      *     and processing operation. The future yields a {@link PackageDenyMddProcessStatus}
@@ -262,11 +272,52 @@ public final class AdPackageDenyResolver {
             PackageDenyMddProcessStatus.logError(PackageDenyMddProcessStatus.DISABLED);
             return Futures.immediateFuture(PackageDenyMddProcessStatus.DISABLED);
         }
+
+        // Lazy initialization for MDD components
+        // This block might throw an exception, which will be caught by the FluentFuture's
+        // .catching(Exception.class, ...) handler below.
+        if (this.mMobileDataDownload == null || this.mFileStorage == null) {
+            synchronized (mMddInitializationLock) {
+                // Double-check after acquiring the lock
+                if (this.mMobileDataDownload == null || this.mFileStorage == null) {
+                    LogUtil.d("Lazily initializing MDD components.");
+                    Flags flags = FlagsFactory.getFlags();
+                    if (this.mMobileDataDownload == null) {
+                        this.mMobileDataDownload = MobileDataDownloadFactory.getMdd(flags);
+                    }
+                    if (this.mFileStorage == null) {
+                        this.mFileStorage = MobileDataDownloadFactory.getFileStorage();
+                    }
+
+                    if (this.mMobileDataDownload == null || this.mFileStorage == null) {
+                        LogUtil.e(
+                                "Lazy initialization resulted in null MDD components. MDD: %s,"
+                                        + " FileStorage: %s",
+                                this.mMobileDataDownload, this.mFileStorage);
+                        // This exception will be caught by the FluentFuture's .catching block
+                        throw new IllegalStateException(
+                                "Failed to lazily initialize MobileDataDownload or FileStorage:"
+                                        + " one or both are null after factory calls.");
+                    }
+                    LogUtil.d("MDD components lazily initialized.");
+                }
+            }
+        }
+
+        // mPackageDenyCacheDataStore can be null if AdPackageDenyResolver was initialized with
+        // mEnablePackageDeny = false due to an error in newInstance(), but then mEnablePackageDeny
+        // was somehow (e.g. in tests) set to true.
+        if (mPackageDenyCacheDataStore == null) {
+            LogUtil.e("mPackageDenyCacheDataStore is null in loadDenyDataFromMdd");
+            PackageDenyMddProcessStatus.logError(PackageDenyMddProcessStatus.FAILED_UPDATING_CACHE);
+            return Futures.immediateFuture(PackageDenyMddProcessStatus.FAILED_UPDATING_CACHE);
+        }
+
         return FluentFuture.from(
                         Futures.immediateFuture(
                                 GetFileGroupRequest.newBuilder().setGroupName(GROUP_NAME).build()))
                 .transformAsync(
-                        mMobileDataDownload::getFileGroup,
+                        mMobileDataDownload::getFileGroup, // mMobileDataDownload must be non-null
                         AdServicesExecutors.getLightWeightExecutor())
                 .transform(this::getMddFile, AdServicesExecutors.getLightWeightExecutor())
                 .transform(this::parseFile, AdServicesExecutors.getBackgroundExecutor())
@@ -315,6 +366,15 @@ public final class AdPackageDenyResolver {
     }
 
     private PackageToApiDenyGroupsMap parseFile(ClientConfigProto.ClientFile clientFile) {
+        if (mFileStorage == null) {
+            // This should ideally not be reached if loadDenyDataFromMdd initializes it.
+            LogUtil.e(
+                    "mFileStorage is null in parseFile. This indicates an issue with"
+                            + " initialization logic.");
+            throw new PackageDenyException(
+                    PackageDenyMddProcessStatus.FAILURE,
+                    new IllegalStateException("mFileStorage not initialized"));
+        }
         try {
             return PackageToApiDenyGroupsMap.parseFrom(
                     mFileStorage.open(
