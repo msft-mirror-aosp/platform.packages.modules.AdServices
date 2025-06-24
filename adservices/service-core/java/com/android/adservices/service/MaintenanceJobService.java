@@ -90,7 +90,9 @@ public final class MaintenanceJobService extends JobService {
 
         if (flags.getTopicsKillSwitch()
                 && flags.getFledgeSelectAdsKillSwitch()
-                && (!flags.getProtectedSignalsCleanupEnabled() || flags.getGlobalKillSwitch())) {
+                && ((!flags.getProtectedSignalsCleanupEnabled()
+                                && !flags.getConfigDeliveryUseArgonConfigManagerToQueryEnrollment())
+                        || flags.getGlobalKillSwitch())) {
             LogUtil.e(
                     "All maintenance jobs are disabled, skipping and cancelling"
                             + " MaintenanceJobService");

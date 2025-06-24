@@ -581,6 +581,7 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
         doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
         doReturn(false).when(mMockFlags).getProtectedSignalsCleanupEnabled();
+        doReturn(false).when(mMockFlags).getConfigDeliveryUseArgonConfigManagerToQueryEnrollment();
 
         JobServiceCallback callback =
                 new JobServiceCallback().expectJobFinished(mSpyMaintenanceJobService);
@@ -753,6 +754,35 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
 
     @Test
     @MockStatic(ArgonConfigurationManager.class)
+    public void testOnStartJob_killSwitchesOn_argonCleanupOn() throws InterruptedException {
+        // Killswitches on for Topics, Fledge, and Protected Signals.
+        doReturn(true).when(mMockFlags).getTopicsKillSwitch();
+        doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+        doReturn(false).when(mMockFlags).getProtectedSignalsCleanupEnabled();
+        // But Argon cleanup is on.
+        doReturn(true).when(mMockFlags).getConfigDeliveryUseArgonConfigManagerToQueryEnrollment();
+        mSpyMaintenanceJobService.injectFledgeMaintenanceTasksWorker(
+                mFledgeMaintenanceTasksWorkerMock);
+        mSpyMaintenanceJobService.injectSignalsMaintenanceTasksWorker(
+                mSignalsMaintenanceTasksWorkerMock);
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyMaintenanceJobService);
+
+        boolean jobWillBeRescheduled = mSpyMaintenanceJobService.onStartJob(mMockJobParameters);
+
+        // The job should start and not be cancelled.
+        assertThat(jobWillBeRescheduled).isTrue();
+        callback.assertJobFinished();
+        // Verify that other jobs are not done
+        verify(TopicsWorker::getInstance, never());
+        verify(mFledgeMaintenanceTasksWorkerMock, never()).clearExpiredAdSelectionData();
+        verify(mSignalsMaintenanceTasksWorkerMock, never()).clearInvalidProtectedSignalsData();
+        // Verify Argon cleanup is done.
+        verify(ArgonConfigurationManager::cleanupUnusedOlderConfigurations);
+    }
+
+    @Test
+    @MockStatic(ArgonConfigurationManager.class)
     public void testOnStartJob_withUseConfigsManagerToQueryEnrollmentDisabled() throws Exception {
         doReturn(false).when(mMockFlags).getConfigDeliveryUseArgonConfigManagerToQueryEnrollment();
         TopicsWorker topicsWorker =
@@ -767,21 +797,16 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
         doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
         doReturn(false).when(mMockFlags).getProtectedSignalsCleanupEnabled();
         doReturn(CURRENT_EPOCH_ID).when(mMockEpochManager).getCurrentEpochId();
-
         // Mock static method AppUpdateWorker.getInstance, let it return the local
         // appUpdateWorker in order to get a test instance.
         doReturn(topicsWorker).when(TopicsWorker::getInstance);
-
         JobServiceCallback callback =
                 new JobServiceCallback().expectJobFinished(mSpyMaintenanceJobService);
 
         mSpyMaintenanceJobService.onStartJob(mMockJobParameters);
 
         callback.assertJobFinished();
-
-        verify(
-                ArgonConfigurationManager::cleanupUnusedOlderConfigurations,
-                timeout(BACKGROUND_THREAD_TIMEOUT_MS).times(0));
+        verify(ArgonConfigurationManager::cleanupUnusedOlderConfigurations, never());
     }
 
     @Test
@@ -800,21 +825,16 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
         doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
         doReturn(false).when(mMockFlags).getProtectedSignalsCleanupEnabled();
         doReturn(CURRENT_EPOCH_ID).when(mMockEpochManager).getCurrentEpochId();
-
         // Mock static method AppUpdateWorker.getInstance, let it return the local
         // appUpdateWorker in order to get a test instance.
         doReturn(topicsWorker).when(TopicsWorker::getInstance);
-
         JobServiceCallback callback =
                 new JobServiceCallback().expectJobFinished(mSpyMaintenanceJobService);
 
         mSpyMaintenanceJobService.onStartJob(mMockJobParameters);
 
         callback.assertJobFinished();
-
-        verify(
-                ArgonConfigurationManager::cleanupUnusedOlderConfigurations,
-                timeout(BACKGROUND_THREAD_TIMEOUT_MS));
+        verify(ArgonConfigurationManager::cleanupUnusedOlderConfigurations);
     }
 }
 
