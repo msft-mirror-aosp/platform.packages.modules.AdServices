@@ -84,6 +84,7 @@ import java.util.concurrent.Future;
 @SpyStatic(MddJobService.class)
 @SpyStatic(MobileDataDownloadFactory.class)
 @SpyStatic(AdPackageDenyResolver.class)
+@SpyStatic(ArgonConfigDeliveryDataDownloadManager.class)
 public final class MddJobTest extends AdServicesJobTestCase {
     private static final com.google.android.libraries.mobiledatadownload.Flags sMddFlags =
             new com.google.android.libraries.mobiledatadownload.Flags() {};
@@ -98,8 +99,10 @@ public final class MddJobTest extends AdServicesJobTestCase {
     @Mock private ExecutionRuntimeParameters mMockParams;
     @Mock private JobScheduler mMockJobScheduler;
     @Mock private MddFlags mMockMddFlags;
-
     @Mock private AdPackageDenyResolver mMockAdPackageDenyResolver;
+
+    @Mock
+    private ArgonConfigDeliveryDataDownloadManager mMockArgonConfigDeliveryDataDownloadManager;
 
     @Before
     public void setup() {
@@ -115,6 +118,8 @@ public final class MddJobTest extends AdServicesJobTestCase {
         doReturn(mMockEncryptionDataDownloadManager)
                 .when(EncryptionDataDownloadManager::getInstance);
         doReturn(mMockAdPackageDenyResolver).when(AdPackageDenyResolver::getInstance);
+        doReturn(mMockArgonConfigDeliveryDataDownloadManager)
+                .when(ArgonConfigDeliveryDataDownloadManager::getInstance);
         // Assign a MDD task tag for general cases.
         PersistableBundle bundle = new PersistableBundle();
         bundle.putString(KEY_MDD_TASK_TAG, WIFI_CHARGING_PERIODIC_TASK);
@@ -262,15 +267,34 @@ public final class MddJobTest extends AdServicesJobTestCase {
         expect.that(mMddJob.getJobPolicyString(/* jobId= */ 0)).isNull();
     }
 
-    private void mockMddFlags() {
-        doReturn(mMockMddFlags).when(MddFlags::getInstance);
-        when(mMockMddFlags.maintenanceGcmTaskPeriod())
-                .thenReturn(sMddFlags.maintenanceGcmTaskPeriod());
-        when(mMockMddFlags.chargingGcmTaskPeriod()).thenReturn(sMddFlags.chargingGcmTaskPeriod());
-        when(mMockMddFlags.cellularChargingGcmTaskPeriod())
-                .thenReturn(sMddFlags.cellularChargingGcmTaskPeriod());
-        when(mMockMddFlags.wifiChargingGcmTaskPeriod())
-                .thenReturn(sMddFlags.wifiChargingGcmTaskPeriod());
+    @Test
+    public void testGetExecutionFuture_argonConfigDeliveryEnabled() throws Exception {
+        FutureSyncCallback<Void> mddHandleTaskCallBack = mockMddHandleTask();
+        FutureSyncCallback<Void> enrollmentCallBack = mockEnrollmentReadFromMdd();
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
+
+        ListenableFuture<ExecutionResult> executionFuture =
+                mMddJob.getExecutionFuture(mContext, mMockParams);
+
+        assertThat(executionFuture.get()).isEqualTo(SUCCESS);
+        mddHandleTaskCallBack.assertResultReceived();
+        enrollmentCallBack.assertResultReceived();
+        verify(mMockArgonConfigDeliveryDataDownloadManager).syncArgonConfigurations();
+    }
+
+    @Test
+    public void testGetExecutionFuture_argonConfigDeliveryDisabled() throws Exception {
+        FutureSyncCallback<Void> mddHandleTaskCallBack = mockMddHandleTask();
+        FutureSyncCallback<Void> enrollmentCallBack = mockEnrollmentReadFromMdd();
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(false);
+
+        ListenableFuture<ExecutionResult> executionFuture =
+                mMddJob.getExecutionFuture(mContext, mMockParams);
+
+        assertThat(executionFuture.get()).isEqualTo(SUCCESS);
+        mddHandleTaskCallBack.assertResultReceived();
+        enrollmentCallBack.assertResultReceived();
+        verify(mMockArgonConfigDeliveryDataDownloadManager, never()).syncArgonConfigurations();
     }
 
     @Test
@@ -291,6 +315,17 @@ public final class MddJobTest extends AdServicesJobTestCase {
         verify(logger)
                 .recordOnSchedulingLegacy(
                         MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId(), resultCode);
+    }
+
+    private void mockMddFlags() {
+        doReturn(mMockMddFlags).when(MddFlags::getInstance);
+        when(mMockMddFlags.maintenanceGcmTaskPeriod())
+                .thenReturn(sMddFlags.maintenanceGcmTaskPeriod());
+        when(mMockMddFlags.chargingGcmTaskPeriod()).thenReturn(sMddFlags.chargingGcmTaskPeriod());
+        when(mMockMddFlags.cellularChargingGcmTaskPeriod())
+                .thenReturn(sMddFlags.cellularChargingGcmTaskPeriod());
+        when(mMockMddFlags.wifiChargingGcmTaskPeriod())
+                .thenReturn(sMddFlags.wifiChargingGcmTaskPeriod());
     }
 
     private FutureSyncCallback<Void> mockMddHandleTask() {

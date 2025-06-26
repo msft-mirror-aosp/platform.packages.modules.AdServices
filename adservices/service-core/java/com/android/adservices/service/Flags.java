@@ -6205,6 +6205,7 @@ public interface Flags extends ModuleSharedFlags {
                     .addMddConfigs(
                             MddConfigs.MddConfig.newBuilder()
                                     .setManifestId("enrollment")
+                                    .addFileGroupNames("rubidium_adservices_enrollment")
                                     .setManifestUrl(
                                             "https://www.gstatic.com/mdi-serving"
                                                 + "/rubidium-adservices-enrollment"

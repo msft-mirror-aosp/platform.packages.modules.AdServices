@@ -179,7 +179,11 @@ public class MddJobService extends JobService {
                                                         AdPackageDenyResolver.getInstance()
                                                                 .loadDenyDataFromMdd();
                                     }
-
+                                    if (FlagsFactory.getFlags()
+                                            .getConfigDeliveryEnableEnrollmentConfigV3DataDownload()) {
+                                        ArgonConfigDeliveryDataDownloadManager.getInstance()
+                                                .syncArgonConfigurations();
+                                    }
                                     // Logging has to happen before jobFinished() is called. Due to
                                     // JobScheduler infra, the JobService instance will end its
                                     // lifecycle (call onDestroy()) once jobFinished() is invoked.
