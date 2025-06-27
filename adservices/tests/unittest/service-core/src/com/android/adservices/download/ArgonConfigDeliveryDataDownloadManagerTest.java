@@ -46,6 +46,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -53,6 +54,7 @@ import org.mockito.Mock;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.util.concurrent.CancellationException;
 
 @SpyStatic(FlagsFactory.class)
@@ -81,6 +83,14 @@ public final class ArgonConfigDeliveryDataDownloadManagerTest
                                         .build())
                         .build();
         when(mMockFlags.getConfigDeliveryMddConfigs()).thenReturn(mddConfigs);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        // Reset singleton instance between tests to avoid test pollution.
+        Field instance = ArgonConfigDeliveryDataDownloadManager.class.getDeclaredField("sInstance");
+        instance.setAccessible(true);
+        instance.set(null, null);
     }
 
     @Test
