@@ -67,7 +67,7 @@ import static com.android.adservices.service.Flags.DEFAULT_BACKGROUND_JOB_SAMPLI
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DATA_DOWNLOAD;
-import static com.android.adservices.service.Flags.DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS;
+import static com.android.adservices.service.Flags.LazyProtoHolder.DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS;
 import static com.android.adservices.service.Flags.DEFAULT_CONFIG_DELIVERY__USE_ARGON_CONFIG_MANAGER_TO_QUERY_ENROLLMENT;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
@@ -6330,7 +6330,8 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
         MddConfigs actualConfigs = mPhFlags.getConfigDeliveryMddConfigs();
 
-        assertThat(actualConfigs).isEqualTo(DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS);
+        assertThat(actualConfigs)
+                .isEqualTo(Flags.LazyProtoHolder.DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS);
     }
 
     @Test
@@ -6357,7 +6358,8 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
         MddConfigs actualConfigs = mPhFlags.getConfigDeliveryMddConfigs();
 
-        assertThat(actualConfigs).isEqualTo(DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS);
+        assertThat(actualConfigs)
+                .isEqualTo(Flags.LazyProtoHolder.DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS);
     }
 
     @Test
