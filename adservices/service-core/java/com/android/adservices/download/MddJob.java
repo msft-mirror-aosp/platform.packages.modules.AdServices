@@ -31,7 +31,7 @@ import static com.android.adservices.spe.AdServicesJobInfo.MDD_WIFI_CHARGING_PER
 import android.annotation.Nullable;
 import android.app.job.JobScheduler;
 import android.content.Context;
-import android.os.Build;
+import android.os.Build.VERSION_CODES;
 import android.os.PersistableBundle;
 
 import androidx.annotation.RequiresApi;
@@ -59,7 +59,7 @@ import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 
 // TODO(b/331291972): Refactor this class.
-@RequiresApi(Build.VERSION_CODES.S)
+@RequiresApi(VERSION_CODES.S)
 public final class MddJob implements JobWorker {
     /**
      * Tag for daily mdd maintenance task, that *should* be run once and only once every 24 hours.
@@ -154,6 +154,11 @@ public final class MddJob implements JobWorker {
                                         unusedFuturePackageDenyMddProcessStatus =
                                                 AdPackageDenyResolver.getInstance()
                                                         .loadDenyDataFromMdd();
+                            }
+                            if (FlagsFactory.getFlags()
+                                    .getConfigDeliveryEnableEnrollmentConfigV3DataDownload()) {
+                                ArgonConfigDeliveryDataDownloadManager.getInstance()
+                                        .syncArgonConfigurations();
                             }
                             return SUCCESS;
                         },

@@ -20,7 +20,7 @@ import static com.android.adservices.service.topics.classifier.ModelManager.BUND
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
+import android.os.Build.VERSION_CODES;
 import android.os.SystemClock;
 
 import androidx.annotation.RequiresApi;
@@ -31,6 +31,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.proto.config_delivery.MddConfigs;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
@@ -43,6 +44,7 @@ import com.google.android.downloader.DownloadConstraints;
 import com.google.android.downloader.Downloader;
 import com.google.android.downloader.PlatformUrlEngine;
 import com.google.android.downloader.UrlEngine;
+import com.google.android.libraries.mobiledatadownload.FileGroupPopulator;
 import com.google.android.libraries.mobiledatadownload.Logger;
 import com.google.android.libraries.mobiledatadownload.MobileDataDownload;
 import com.google.android.libraries.mobiledatadownload.MobileDataDownloadBuilder;
@@ -75,7 +77,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 
 /** Mobile Data Download Factory. */
-@RequiresApi(Build.VERSION_CODES.S)
+@RequiresApi(VERSION_CODES.S)
 public class MobileDataDownloadFactory {
     private static volatile MobileDataDownload sSingletonMdd;
     private static SynchronousFileStorage sSynchronousFileStorage;
@@ -157,6 +159,12 @@ public class MobileDataDownloadFactory {
                     mobileDataDownloadBuilder.addFileGroupPopulator(
                             getMeasurementManifestPopulator(
                                     flags, fileStorage, fileDownloader, /* getProto= */ true));
+                }
+
+                if (FlagsFactory.getFlags()
+                        .getConfigDeliveryEnableEnrollmentConfigV3DataDownload()) {
+                    mobileDataDownloadBuilder.addFileGroupPopulators(
+                            getArgonManifestPopulators(flags, fileStorage, fileDownloader));
                 }
 
                 sSingletonMdd = mobileDataDownloadBuilder.build();
@@ -314,8 +322,8 @@ public class MobileDataDownloadFactory {
                 .setManifestConfigParser(manifestConfigFileParser)
                 .setMetadataStore(
                         SharedPreferencesManifestFileMetadata.createFromContext(
-                                context, /*InstanceId*/
-                                Optional.absent(),
+                                context,
+                                /* instanceIdOptional= */ Optional.absent(),
                                 AdServicesExecutors.getBackgroundExecutor()))
                 // TODO(b/239265537): Enable Dedup using Etag.
                 .setDedupDownloadWithEtag(false)
@@ -366,8 +374,8 @@ public class MobileDataDownloadFactory {
                 .setManifestConfigParser(manifestConfigFileParser)
                 .setMetadataStore(
                         SharedPreferencesManifestFileMetadata.createFromContext(
-                                context, /*InstanceId*/
-                                Optional.absent(),
+                                context,
+                                /* instanceIdOptional= */ Optional.absent(),
                                 AdServicesExecutors.getBackgroundExecutor()))
                 // TODO(b/239265537): Enable dedup using etag.
                 .setDedupDownloadWithEtag(false)
@@ -392,6 +400,69 @@ public class MobileDataDownloadFactory {
         }
 
         return instance.getConsent().isGiven();
+    }
+
+    @VisibleForTesting
+    static ImmutableList<FileGroupPopulator> getArgonManifestPopulators(
+            Flags flags, SynchronousFileStorage fileStorage, FileDownloader fileDownloader) {
+        MddConfigs argonMddConfigs = flags.getConfigDeliveryMddConfigs();
+        Context context = ApplicationContextSingleton.get();
+        List<FileGroupPopulator> fileGroupPopulators = new ArrayList<>();
+        for (MddConfigs.MddConfig mddConfig :
+                argonMddConfigs.getMddConfigsList()) {
+            String manifestUrl = mddConfig.getManifestUrl();
+            String manifestId = mddConfig.getManifestId();
+            if (manifestUrl.isEmpty() || manifestId.isEmpty()) {
+                LogUtil.d(
+                        "Skipped creation of a file group populator for an argon config due to"
+                                + " empty url or manifest id");
+                continue;
+            }
+            ManifestConfigFileParser manifestConfigFileParser =
+                    new ManifestConfigFileParser(
+                            fileStorage, AdServicesExecutors.getBackgroundExecutor());
+            ManifestFileFlag manifestFileFlag =
+                    ManifestFileFlag.newBuilder()
+                            .setManifestId(
+                                    ArgonConfigDeliveryDataDownloadManager
+                                            .generateArgonConfigManifestId(manifestId))
+                            .setManifestFileUrl(manifestUrl)
+                            .build();
+            fileGroupPopulators.add(
+                    ManifestFileGroupPopulator.builder()
+                            .setContext(context)
+                            .setEnabledSupplier(
+                                    () -> {
+                                        if (mddConfig.getIsDownloadPreConsent()) {
+                                            return true;
+                                        } else if (flags.getGaUxFeatureEnabled()) {
+                                            return isAnyConsentGiven(flags);
+                                        } else {
+                                            return ConsentManager.getInstance()
+                                                    .getConsent()
+                                                    .isGiven();
+                                        }
+                                    })
+                            .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
+                            .setFileDownloader(() -> fileDownloader)
+                            .setFileStorage(fileStorage)
+                            .setManifestFileFlagSupplier(() -> manifestFileFlag)
+                            .setManifestConfigParser(manifestConfigFileParser)
+                            .setMetadataStore(
+                                    SharedPreferencesManifestFileMetadata.createFromContext(
+                                            context,
+                                            /* instanceIdOptional= */ Optional.absent(),
+                                            AdServicesExecutors.getBackgroundExecutor()))
+                            // TODO(b/239265537): Enable dedup using etag.
+                            .setDedupDownloadWithEtag(false)
+                            // TODO(b/243829623): use proper Logger.
+                            .setLogger(
+                                    (event, eventCode) -> {
+                                        // A no-op logger.
+                                    })
+                            .build());
+        }
+        return ImmutableList.copyOf(fileGroupPopulators);
     }
 
     @VisibleForTesting
@@ -436,8 +507,8 @@ public class MobileDataDownloadFactory {
                 .setManifestConfigParser(manifestConfigFileParser)
                 .setMetadataStore(
                         SharedPreferencesManifestFileMetadata.createFromContext(
-                                context, /*InstanceId*/
-                                Optional.absent(),
+                                context,
+                                /* instanceIdOptional= */ Optional.absent(),
                                 AdServicesExecutors.getBackgroundExecutor()))
                 // TODO(b/239265537): Enable dedup using etag.
                 .setDedupDownloadWithEtag(false)
@@ -489,8 +560,8 @@ public class MobileDataDownloadFactory {
                 .setManifestConfigParser(manifestConfigFileParser)
                 .setMetadataStore(
                         SharedPreferencesManifestFileMetadata.createFromContext(
-                                context, /*InstanceId*/
-                                Optional.absent(),
+                                context,
+                                /* instanceIdOptional= */ Optional.absent(),
                                 AdServicesExecutors.getBackgroundExecutor()))
                 // TODO(b/239265537): Enable dedup using etag.
                 .setDedupDownloadWithEtag(false)
@@ -539,8 +610,8 @@ public class MobileDataDownloadFactory {
                 .setManifestConfigParser(manifestConfigFileParser)
                 .setMetadataStore(
                         SharedPreferencesManifestFileMetadata.createFromContext(
-                                context, /*InstanceId*/
-                                Optional.absent(),
+                                context,
+                                /* instanceIdOptional= */ Optional.absent(),
                                 AdServicesExecutors.getBackgroundExecutor()))
                 // TODO(b/239265537): Enable dedup using etag.
                 .setDedupDownloadWithEtag(false)
@@ -588,8 +659,8 @@ public class MobileDataDownloadFactory {
                 .setManifestConfigParser(manifestConfigFileParser)
                 .setMetadataStore(
                         SharedPreferencesManifestFileMetadata.createFromContext(
-                                context, /*InstanceId*/
-                                Optional.absent(),
+                                context,
+                                /* instanceIdOptional= */ Optional.absent(),
                                 AdServicesExecutors.getBackgroundExecutor()))
                 // TODO(b/239265537): Enable dedup using etag.
                 .setDedupDownloadWithEtag(false)
