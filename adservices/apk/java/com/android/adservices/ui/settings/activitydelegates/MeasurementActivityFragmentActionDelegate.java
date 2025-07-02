@@ -26,7 +26,6 @@ import android.widget.Toast;
 import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 import androidx.preference.Preference;
-import androidx.preference.SwitchPreferenceCompat;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
@@ -37,6 +36,7 @@ import com.android.adservices.ui.settings.expressivefragments.MeasurementActivit
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel.MeasurementViewModelUiEvent;
 import com.android.settingslib.widget.FooterPreference;
+import com.android.settingslib.widget.MainSwitchPreference;
 
 import java.util.Objects;
 
@@ -101,12 +101,12 @@ public class MeasurementActivityFragmentActionDelegate extends BaseActionDelegat
     }
 
     private void configureMeasurementConsentSwitch() {
-        SwitchPreferenceCompat measurementSwitchToggle =
+        MainSwitchPreference measurementSwitchToggle =
                 Objects.requireNonNull(mFragment.findPreference(MEASUREMENT_SWITCH_BAR));
         measurementSwitchToggle.setOnPreferenceChangeListener(
                 (preference, intendedDebugLoggingValue) -> {
                     mMeasurementViewModel.consentSwitchPreferenceClickHandler(
-                            (SwitchPreferenceCompat) measurementSwitchToggle);
+                            (MainSwitchPreference) measurementSwitchToggle);
                     return true;
                 });
         mMeasurementViewModel

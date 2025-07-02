@@ -20,7 +20,7 @@
     <com.android.settingslib.widget.TopIntroPreference
         android:key="apps_ga_introduction"
         android:title="@string/settingsUI_apps_view_ga_subtitle" />
-    <SwitchPreferenceCompat
+    <com.android.settingslib.widget.MainSwitchPreference
         android:key="apps_switch_bar"
         android:title="@string/settingsUI_apps_switch_title" />
     <!-- no topics section -->
@@ -28,7 +28,7 @@
         android:key="no_apps_message" >
         <com.android.settingslib.widget.IntroPreference
             android:key="no_apps_state"
-            android:icon="@drawable/ic_placeholder_icon_for_empty_apps_list"
+            android:icon="@drawable/ic_placeholder_icon_for_empty_apps_list_fragment"
             android:summary="@string/settingsUI_apps_view_fragment_no_apps_ga_text" />
         <com.android.settingslib.widget.ButtonPreference
             android:key="blocked_apps_when_empty_state_button"

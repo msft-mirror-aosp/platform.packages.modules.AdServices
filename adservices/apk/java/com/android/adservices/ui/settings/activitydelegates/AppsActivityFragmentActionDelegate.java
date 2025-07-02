@@ -45,7 +45,6 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
-import androidx.preference.SwitchPreferenceCompat;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
@@ -61,6 +60,7 @@ import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 import com.android.settingslib.widget.ButtonPreference;
 import com.android.settingslib.widget.FooterPreference;
 import com.android.settingslib.widget.IntroPreference;
+import com.android.settingslib.widget.MainSwitchPreference;
 import com.android.settingslib.widget.TopIntroPreference;
 
 import com.google.common.collect.ImmutableList;
@@ -93,12 +93,12 @@ public class AppsActivityFragmentActionDelegate extends BaseActionDelegate {
         // set title
         mActivity.setTitle(R.string.settingsUI_apps_ga_title);
         // consent switch
-        SwitchPreferenceCompat appsSwitchToggle =
+        MainSwitchPreference appsSwitchToggle =
                 Objects.requireNonNull(mFragment.findPreference(APPS_SWITCH_BAR));
         appsSwitchToggle.setOnPreferenceChangeListener(
                 (preference, intendedDebugLoggingValue) -> {
                     mAppsViewModel.consentSwitchPreferenceClickHandler(
-                            (SwitchPreferenceCompat) appsSwitchToggle);
+                            (MainSwitchPreference) appsSwitchToggle);
                     return true;
                 });
         mAppsViewModel.getAppsConsent().observe(mFragment, appsSwitchToggle::setChecked);
