@@ -5105,14 +5105,11 @@ public final class PhFlags implements Flags {
 
     @Override
     public MddConfigs getConfigDeliveryMddConfigs() {
-        MddConfigs mddConfigs =
-                ProtoParserUtil.fromBase64(
-                        getDeviceConfigFlag(KEY_CONFIG_DELIVERY__MDD_CONFIGS, null),
-                        MddConfigs.parser());
-        if (mddConfigs == null) {
-            return DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS;
-        }
-        return mddConfigs;
+        return Optional.ofNullable(
+                        ProtoParserUtil.fromBase64(
+                                getDeviceConfigFlag(KEY_CONFIG_DELIVERY__MDD_CONFIGS, null),
+                                MddConfigs.parser()))
+                .orElse(Flags.LazyProtoHolder.DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS);
     }
 
     @Override

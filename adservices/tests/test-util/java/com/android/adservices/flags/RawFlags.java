@@ -3387,14 +3387,11 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
 
     @Override
     public MddConfigs getConfigDeliveryMddConfigs() {
-        MddConfigs mddConfigs =
-                ProtoParserUtil.fromBase64(
-                        mBackend.getFlag(KEY_CONFIG_DELIVERY__MDD_CONFIGS, null),
-                        MddConfigs.parser());
-        if (mddConfigs == null) {
-            return DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS;
-        }
-        return mddConfigs;
+        return Optional.ofNullable(
+                        ProtoParserUtil.fromBase64(
+                                mBackend.getFlag(KEY_CONFIG_DELIVERY__MDD_CONFIGS, null),
+                                MddConfigs.parser()))
+                .orElse(Flags.LazyProtoHolder.DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS);
     }
 
     @Override
