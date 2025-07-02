@@ -6194,30 +6194,11 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Config flag to provide latest mdd manifest urls and group names for argon config delivery
-     * system.
-     *
-     * <p>All files within the mdd file group provided in this flag will be downloaded.
-     */
-    @ConfigFlag
-    MddConfigs DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS =
-            MddConfigs.newBuilder()
-                    .addMddConfigs(
-                            MddConfigs.MddConfig.newBuilder()
-                                    .setManifestId("enrollment")
-                                    .addFileGroupNames("rubidium_adservices_enrollment")
-                                    .setManifestUrl(
-                                            "https://www.gstatic.com/mdi-serving"
-                                                + "/rubidium-adservices-enrollment"
-                                                + "/10327/f6ad222f19ab7b49b5d06fc717e2273e1625fc74")
-                                    .build())
-                    .build();
-
-    /**
-     * @return latest mdd configurations for Argon Config Delivery (ACD)
+     * @return latest mdd configurations for Argon Config Delivery (ACD).
+     *     <p>This returns a lazily initialized default value if no override is present.
      */
     default MddConfigs getConfigDeliveryMddConfigs() {
-        return DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS;
+        return LazyProtoHolder.DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS;
     }
 
     /**
@@ -6453,6 +6434,33 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether synchronous AdId API is enabled. */
     default boolean getAdidEnableSynchronousAdIdApi() {
         return DEFAULT_ADID__ENABLE_SYNCHRONOUS_AD_ID_API;
+    }
+
+    /**
+     * This uses the initialization-on-demand holder idiom for lazy initialization. This is a
+     * thread-safe way to initialize proto objects only when they're first needed, which avoids
+     * allocating large objects and increasing PSS memory until they're actually used.
+     */
+    class LazyProtoHolder {
+        /**
+         * Config flag to provide latest mdd manifest urls and group names for argon config delivery
+         * system.
+         *
+         * <p>All files within the mdd file group provided in this flag will be downloaded.
+         */
+        @ConfigFlag
+        public static final MddConfigs DEFAULT_CONFIG_DELIVERY__MDD_CONFIGS =
+                MddConfigs.newBuilder()
+                        .addMddConfigs(
+                                MddConfigs.MddConfig.newBuilder()
+                                        .setManifestId("enrollment")
+                                        .addFileGroupNames("rubidium_adservices_enrollment")
+                                        .setManifestUrl(
+                                                "https://www.gstatic.com/mdi-serving"
+                                                    + "/rubidium-adservices-enrollment/10327"
+                                                    + "/f6ad222f19ab7b49b5d06fc717e2273e1625fc74")
+                                        .build())
+                        .build();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

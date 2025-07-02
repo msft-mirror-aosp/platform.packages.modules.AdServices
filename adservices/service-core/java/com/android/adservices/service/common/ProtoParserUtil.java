@@ -49,7 +49,7 @@ public class ProtoParserUtil {
                 return null;
             }
             return parser.parseFrom(decode);
-        } catch (InvalidProtocolBufferException e) {
+        } catch (Exception e) {
             LogUtil.e(e, "Error while parsing Base64 string");
             return null;
         }
