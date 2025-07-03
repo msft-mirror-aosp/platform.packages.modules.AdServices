@@ -14,4 +14,6 @@
     <color name="adservices_accent_primary_variant">@color/settingslib_accent_primary_variant
     </color>
     <color name="adservices_colorAccentPrimary">@color/settingslib_colorAccentPrimary</color>
+    <color name="adservices_colorOutlineVariant">@color/settingslib_materialColorOutlineVariant</color>
+    <color name="adservices_colorOnPrimaryContainer">@color/settingslib_materialColorOnPrimaryContainer</color>
 </resources>

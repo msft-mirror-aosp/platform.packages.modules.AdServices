@@ -38,7 +38,6 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
-import androidx.preference.SwitchPreferenceCompat;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
@@ -55,6 +54,7 @@ import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 import com.android.settingslib.widget.ButtonPreference;
 import com.android.settingslib.widget.FooterPreference;
 import com.android.settingslib.widget.IntroPreference;
+import com.android.settingslib.widget.MainSwitchPreference;
 
 import com.google.common.collect.ImmutableList;
 
@@ -81,12 +81,12 @@ public class TopicsActivityFragmentActionDelegate extends BaseActionDelegate {
         // set title
         mActivity.setTitle(R.string.settingsUI_topics_ga_title);
         // consent switch
-        SwitchPreferenceCompat topicsSwitchToggle =
+        MainSwitchPreference topicsSwitchToggle =
                 Objects.requireNonNull(mFragment.findPreference(TOPICS_SWITCH_BAR));
         topicsSwitchToggle.setOnPreferenceChangeListener(
                 (preference, intendedDebugLoggingValue) -> {
                     mTopicsViewModel.consentSwitchPreferenceClickHandler(
-                            (SwitchPreferenceCompat) topicsSwitchToggle);
+                            (MainSwitchPreference) topicsSwitchToggle);
                     return true;
                 });
         mTopicsViewModel.getTopicsConsent().observe(mFragment, topicsSwitchToggle::setChecked);

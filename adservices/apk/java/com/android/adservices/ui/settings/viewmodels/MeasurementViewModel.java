@@ -23,7 +23,6 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.preference.SwitchPreferenceCompat;
 
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -32,6 +31,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.settingslib.widget.MainSwitchBar;
+import com.android.settingslib.widget.MainSwitchPreference;
 
 /**
  * View model for the Measurement view of the AdServices Settings App. This view model is
@@ -139,7 +139,7 @@ public class MeasurementViewModel extends AndroidViewModel {
      * Triggers opt out process for Privacy Sandbox. Also reverts the switch state, since
      * confirmation dialog will handle switch change.
      */
-    public void consentSwitchPreferenceClickHandler(SwitchPreferenceCompat measurementSwitchBar) {
+    public void consentSwitchPreferenceClickHandler(MainSwitchPreference measurementSwitchBar) {
         if (measurementSwitchBar.isChecked()) {
             measurementSwitchBar.setChecked(false);
             mEventTrigger.postValue(MeasurementViewModelUiEvent.SWITCH_OFF_MEASUREMENT);

@@ -24,7 +24,6 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.preference.SwitchPreferenceCompat;
 
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
@@ -34,6 +33,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.settingslib.widget.MainSwitchBar;
+import com.android.settingslib.widget.MainSwitchPreference;
 
 import com.google.common.collect.ImmutableList;
 
@@ -222,7 +222,7 @@ public class TopicsViewModel extends AndroidViewModel {
      * Triggers opt out process for Privacy Sandbox. Also reverts the switch state, since
      * confirmation dialog will handle switch change.
      */
-    public void consentSwitchPreferenceClickHandler(SwitchPreferenceCompat topicsSwitchBar) {
+    public void consentSwitchPreferenceClickHandler(MainSwitchPreference topicsSwitchBar) {
         if (topicsSwitchBar.isChecked()) {
             topicsSwitchBar.setChecked(false);
             mEventTrigger.postValue(new Pair<>(TopicsViewModelUiEvent.SWITCH_OFF_TOPICS, null));
