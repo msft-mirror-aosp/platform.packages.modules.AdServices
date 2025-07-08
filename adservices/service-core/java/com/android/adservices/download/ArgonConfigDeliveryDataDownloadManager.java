@@ -44,13 +44,15 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @RequiresApi(VERSION_CODES.S)
 public final class ArgonConfigDeliveryDataDownloadManager {
 
     static final String ARGON_CONFIG_MANIFEST_ID_PREFIX = "ArgonConfigManifest_";
-    private static final LoggerFactory.Logger LOGGER = LoggerFactory.getLogger();
     private static final Object SINGLETON_LOCK = new Object();
+    private static final long GET_FILE_GROUP_TIMEOUT_MINS = 10;
     private final MobileDataDownload mMobileDataDownload;
     private final SynchronousFileStorage mFileStorage;
 
@@ -88,55 +90,61 @@ public final class ArgonConfigDeliveryDataDownloadManager {
      * <p>This method is blocking and should only be called on a background thread.
      */
     public void syncArgonConfigurations() {
-        LOGGER.v("Attempting to retrieve and persist argon configurations from MDD");
-        List<VersionedConfiguration> configurations = getArgonConfigurations();
-        if (configurations.isEmpty()) {
-            LOGGER.d("No files available for argon configurations");
-            return;
-        }
-
-        for (VersionedConfiguration configuration : configurations) {
-            ArgonConfigurationManager.insertConfigurationsIfNotExist(configuration);
-        }
-    }
-
-    private List<VersionedConfiguration> getArgonConfigurations() {
-        List<VersionedConfiguration> configurations = new ArrayList<>();
+        LogUtil.d("Attempting to retrieve and persist argon configurations from MDD");
         for (MddConfig mddConfig :
                 FlagsFactory.getFlags().getConfigDeliveryMddConfigs().getMddConfigsList()) {
             for (String groupName : mddConfig.getFileGroupNamesList()) {
-                GetFileGroupRequest getFileGroupRequest =
-                        GetFileGroupRequest.newBuilder().setGroupName(groupName).build();
-                try {
-                    ListenableFuture<ClientFileGroup> fileGroupFuture =
-                            mMobileDataDownload.getFileGroup(getFileGroupRequest);
-                    ClientFileGroup fileGroup = fileGroupFuture.get();
-                    if (fileGroup == null) {
-                        LogUtil.d(
-                                "Unable to retrieve client file group for argon configuration"
-                                        + "mdd file group: %s",
-                                groupName);
-                        continue;
-                    }
-                    for (ClientFile file : fileGroup.getFileList()) {
-                        InputStream inputStream =
-                                mFileStorage.open(
-                                        Uri.parse(file.getFileUri()), ReadStreamOpener.create());
-                        configurations.add(VersionedConfiguration.parseFrom(inputStream));
-                        LogUtil.d(
-                                "Successfully retrieved argon configuration for MDD file group: %s",
-                                groupName);
-                    }
-                } catch (ExecutionException | InterruptedException | IOException e) {
-                    LogUtil.e(
-                            e,
-                            "Exception thrown while attempting to retrieve argon configuration for"
-                                    + " file group %s",
-                            groupName);
-                }
+                processFileGroup(groupName);
             }
         }
-        return configurations;
+    }
+
+    private void processFileGroup(String groupName) {
+        GetFileGroupRequest getFileGroupRequest =
+                GetFileGroupRequest.newBuilder().setGroupName(groupName).build();
+        try {
+            ListenableFuture<ClientFileGroup> fileGroupFuture =
+                    mMobileDataDownload.getFileGroup(getFileGroupRequest);
+            ClientFileGroup fileGroup =
+                    fileGroupFuture.get(GET_FILE_GROUP_TIMEOUT_MINS, TimeUnit.MINUTES);
+            if (fileGroup == null) {
+                LogUtil.d(
+                        "Unable to retrieve client file group for argon configuration mdd file"
+                                + " group: %s",
+                        groupName);
+                return;
+            }
+            for (ClientFile file : fileGroup.getFileList()) {
+                parseAndPersistFile(file, groupName);
+            }
+        } catch (InterruptedException e) {
+            LogUtil.e(
+                    e,
+                    "Interrupted while retrieving argon configuration for file group %s",
+                    groupName);
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            LogUtil.e(e, "Failed to retrieve argon configuration for file group %s", groupName);
+        }
+    }
+
+    private void parseAndPersistFile(ClientFile file, String groupName) {
+        try (InputStream inputStream =
+                mFileStorage.open(Uri.parse(file.getFileUri()), ReadStreamOpener.create())) {
+            VersionedConfiguration configuration = VersionedConfiguration.parseFrom(inputStream);
+            ArgonConfigurationManager.insertConfigurationsIfNotExist(configuration);
+            LogUtil.d(
+                    "Successfully retrieved and persisted argon configuration for MDD file"
+                            + " group: %s",
+                    groupName);
+        } catch (Exception e) {
+            LogUtil.e(
+                    e,
+                    "Failed to read or persist argon configuration for file group %s and file"
+                            + " uri %s",
+                    groupName,
+                    file.getFileUri());
+        }
     }
 
     /**

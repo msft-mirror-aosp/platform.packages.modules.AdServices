@@ -18,17 +18,19 @@ package com.android.adservices.download;
 
 import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
-
+import com.android.adservices.data.configdelivery.ArgonConfigurationManager;
+import com.android.adservices.service.Flags;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.configdelivery.ArgonConfigurationManager;
@@ -42,6 +44,8 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.android.libraries.mobiledatadownload.MobileDataDownload;
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
+import com.google.common.util.concurrent.AbstractFuture;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
@@ -55,6 +59,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.CancellationException;
 
 @SpyStatic(FlagsFactory.class)
@@ -66,8 +71,19 @@ public final class ArgonConfigDeliveryDataDownloadManagerTest
     private static final String TEST_CONFIG_FILE_PATH = "argon_config.binarypb";
     private ArgonConfigDeliveryDataDownloadManager mArgonConfigDeliveryDataDownloadManager;
     @Mock private SynchronousFileStorage mMockFileStorage;
-    @Mock
-    private MobileDataDownload mMockMdd;
+    @Mock private MobileDataDownload mMockMdd;
+
+    private static class InterruptedListenableFuture<V> extends AbstractFuture<V> {
+        @Override
+        public V get(long timeout, TimeUnit unit) throws InterruptedException {
+            throw new InterruptedException();
+        }
+
+        @Override
+        public V get() throws InterruptedException {
+            throw new InterruptedException();
+        }
+    }
 
     @Before
     public void setup() {
@@ -120,9 +136,9 @@ public final class ArgonConfigDeliveryDataDownloadManagerTest
         InputStream inputStream =
                 new ByteArrayInputStream(VersionedConfiguration.getDefaultInstance().toByteArray());
         when(mMockFileStorage.open(any(), any())).thenReturn(inputStream);
-
         mArgonConfigDeliveryDataDownloadManager =
                 ArgonConfigDeliveryDataDownloadManager.getInstance();
+
         mArgonConfigDeliveryDataDownloadManager.syncArgonConfigurations();
 
         verify(() -> ArgonConfigurationManager.insertConfigurationsIfNotExist(any()));
@@ -131,9 +147,9 @@ public final class ArgonConfigDeliveryDataDownloadManagerTest
     @Test
     public void testSyncArgonConfigurations_noFileGroup() {
         when(mMockMdd.getFileGroup(any())).thenReturn(Futures.immediateFuture(null));
-
         mArgonConfigDeliveryDataDownloadManager =
                 ArgonConfigDeliveryDataDownloadManager.getInstance();
+
         mArgonConfigDeliveryDataDownloadManager.syncArgonConfigurations();
 
         verify(() -> ArgonConfigurationManager.insertConfigurationsIfNotExist(any()), never());
@@ -143,9 +159,9 @@ public final class ArgonConfigDeliveryDataDownloadManagerTest
     public void testSyncArgonConfigurations_emptyFileList() {
         when(mMockMdd.getFileGroup(any()))
                 .thenReturn(Futures.immediateFuture(ClientFileGroup.newBuilder().build()));
-
         mArgonConfigDeliveryDataDownloadManager =
                 ArgonConfigDeliveryDataDownloadManager.getInstance();
+
         mArgonConfigDeliveryDataDownloadManager.syncArgonConfigurations();
 
         verify(() -> ArgonConfigurationManager.insertConfigurationsIfNotExist(any()), never());
@@ -164,9 +180,9 @@ public final class ArgonConfigDeliveryDataDownloadManagerTest
                                                         .build())
                                         .build()));
         when(mMockFileStorage.open(any(), any())).thenThrow(new IOException());
-
         mArgonConfigDeliveryDataDownloadManager =
                 ArgonConfigDeliveryDataDownloadManager.getInstance();
+
         mArgonConfigDeliveryDataDownloadManager.syncArgonConfigurations();
 
         verify(() -> ArgonConfigurationManager.insertConfigurationsIfNotExist(any()), never());
@@ -176,12 +192,52 @@ public final class ArgonConfigDeliveryDataDownloadManagerTest
     public void testSyncArgonConfigurations_fileGroupFutureException() {
         when(mMockMdd.getFileGroup(any()))
                 .thenReturn(Futures.immediateFailedFuture(new CancellationException()));
-
         mArgonConfigDeliveryDataDownloadManager =
                 ArgonConfigDeliveryDataDownloadManager.getInstance();
+
         mArgonConfigDeliveryDataDownloadManager.syncArgonConfigurations();
 
         verify(() -> ArgonConfigurationManager.insertConfigurationsIfNotExist(any()), never());
+    }
+
+    @Test
+    public void testSyncArgonConfigurations_interruptedException_restoresThreadState()
+            throws Exception {
+        when(mMockMdd.getFileGroup(any())).thenReturn(new InterruptedListenableFuture<>());
+        mArgonConfigDeliveryDataDownloadManager =
+                ArgonConfigDeliveryDataDownloadManager.getInstance();
+
+        mArgonConfigDeliveryDataDownloadManager.syncArgonConfigurations();
+
+        assertThat(Thread.currentThread().isInterrupted()).isTrue();
+
+        // Cleanup interrupted status for subsequent tests
+        Thread.interrupted();
+    }
+
+    @Test
+    public void testSyncArgonConfigurations_insertConfigurationsException() throws Exception {
+        when(mMockMdd.getFileGroup(any()))
+                .thenReturn(
+                        Futures.immediateFuture(
+                                ClientFileGroup.newBuilder()
+                                        .addFile(
+                                                ClientFile.newBuilder()
+                                                        .setFileId(TEST_CONFIG_FILE_PATH)
+                                                        .setFileUri(TEST_CONFIG_FILE_PATH)
+                                                        .build())
+                                        .build()));
+        InputStream inputStream =
+                new ByteArrayInputStream(VersionedConfiguration.getDefaultInstance().toByteArray());
+        when(mMockFileStorage.open(any(), any())).thenReturn(inputStream);
+        doThrow(new RuntimeException("DB error"))
+                .when(() -> ArgonConfigurationManager.insertConfigurationsIfNotExist(any()));
+        mArgonConfigDeliveryDataDownloadManager =
+                ArgonConfigDeliveryDataDownloadManager.getInstance();
+
+        mArgonConfigDeliveryDataDownloadManager.syncArgonConfigurations();
+
+        verify(() -> ArgonConfigurationManager.insertConfigurationsIfNotExist(any()));
     }
 
     @Test
