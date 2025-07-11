@@ -22,6 +22,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
 import android.os.LimitExceededException;
+import android.platform.test.annotations.RequiresFlagsEnabled;
 import android.util.Log;
 
 import androidx.test.filters.FlakyTest;
@@ -29,6 +30,7 @@ import androidx.test.filters.FlakyTest;
 import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.annotations.RequiresAndroidServiceAvailable;
+import com.android.adservices.flags.Flags;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
@@ -166,6 +168,7 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
     }
 
     @Test
+    @RequiresFlagsEnabled(Flags.FLAG_ADID_ENABLE_SYNCHRONOUS_AD_ID_API)
     public void testAdIdManager_getAdId() throws Exception {
         AdIdManager adIdManager = AdIdManager.get(sContext);
         AdId adId = adIdManager.getAdId();
@@ -174,6 +177,7 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
     }
 
     @Test
+    @RequiresFlagsEnabled(Flags.FLAG_ADID_ENABLE_SYNCHRONOUS_AD_ID_API)
     public void testAdIdManager_recreateAdIdInfo() throws Exception {
         AdIdManager adIdManager = AdIdManager.get(sContext);
         AdId result = adIdManager.recreateAdId();

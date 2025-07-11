@@ -38,10 +38,12 @@ import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
 import android.adservices.common.UpdateAdServicesModuleStatesParams;
 import android.adservices.common.UpdateAdServicesUserChoicesParams;
+import android.platform.test.annotations.RequiresFlagsEnabled;
 import android.util.SparseIntArray;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
+import com.android.adservices.flags.Flags;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 
@@ -222,6 +224,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     @Test
     @SuppressWarnings("VisibleForTests")
     // TODO(b/343741206): Remove suppress warning once the lint is fixed.
+    @RequiresFlagsEnabled(Flags.FLAG_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS)
     public void testSetAdsPersonalizationStatus() {
         OutcomeReceiverForTests<Boolean> receiver = new OutcomeReceiverForTests<>();
 
