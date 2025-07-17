@@ -28,7 +28,9 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import android.adservices.common.AdServicesCommonManager;
 import android.os.Build;
 import android.os.OutcomeReceiver;
+import android.platform.test.annotations.RequiresFlagsEnabled;
 
+import com.android.adservices.flags.Flags;
 import com.android.adservices.service.shell.ShellCommandTestCase;
 import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.modules.utils.testing.ExtendedMockitoRule;
@@ -39,6 +41,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 @ExtendedMockitoRule.SpyStatic(AdServicesCommonManager.class)
+@RequiresFlagsEnabled(Flags.FLAG_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS)
 public final class SetAdsPersonalizationStatusCommandTest
         extends ShellCommandTestCase<SetAdsPersonalizationStatusCommand> {
 
