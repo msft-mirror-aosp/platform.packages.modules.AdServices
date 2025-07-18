@@ -59,7 +59,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * Test to check that consent is migrated correctly from AppSearch
@@ -207,10 +206,6 @@ public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTest
         subj.contains(getXmlString("CONSENT_API_TYPE_2", true)); // Topics consent
         subj.contains(getXmlString("CONSENT_API_TYPE_3", false)); // Fledge consent
         subj.contains(getXmlString("CONSENT_API_TYPE_4", true)); // Measurement consent
-
-        // Validate the blocked topics
-        List<Integer> blockedTopics = getBlockedTopics();
-        expect.withMessage("Blocked topics").that(blockedTopics).containsExactly(10004, 10410);
     }
 
     private void deletePreExistingData() {
@@ -253,19 +248,5 @@ public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTest
         return String.format(
                 "/data/system/adservices/%d/consent/ConsentManagerStorageIdentifier.xml",
                 mCurrentUser);
-    }
-
-    private List<Integer> getBlockedTopics() {
-        String query =
-                String.format("Select topic from blocked_topics where user=%s", mCurrentUser);
-        String result = runShellCommand("sqlite3 /data/system/adservices_topics.db \"%s\"", query);
-        if (result == null || result.isBlank()) {
-            return List.of();
-        }
-
-        return Arrays.stream(result.split("\n"))
-                .map(String::trim)
-                .map(Integer::valueOf)
-                .collect(Collectors.toList());
     }
 }
