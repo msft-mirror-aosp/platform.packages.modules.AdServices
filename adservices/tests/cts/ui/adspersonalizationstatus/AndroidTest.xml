@@ -17,7 +17,7 @@
 <configuration description="Config for Ads Personalization Status tests">
     <option name="test-suite-tag" value="cts" />
     <option name="test-tag" value="AdsPersonalizationStatusTest" />
-    <option name="config-descriptor:metadata" key="component" value="framework"/>
+    <option name="config-descriptor:metadata" key="component" value="adservices"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app" />
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
     <!-- Module cannot run in secondary user because this set up state should only
