@@ -152,6 +152,9 @@ public class MobileDataDownloadFactory {
                                 .addFileGroupPopulator(
                                         getDenyPackageManifestPopulator(
                                                 flags, fileStorage, fileDownloader))
+                                .addFileGroupPopulators(
+                                        getArgonManifestPopulators(
+                                                flags, fileStorage, fileDownloader))
                                 .setLoggerOptional(getMddLogger(flags))
                                 .setFlagsOptional(Optional.of(MddFlags.getInstance()));
 
@@ -159,12 +162,6 @@ public class MobileDataDownloadFactory {
                     mobileDataDownloadBuilder.addFileGroupPopulator(
                             getMeasurementManifestPopulator(
                                     flags, fileStorage, fileDownloader, /* getProto= */ true));
-                }
-
-                if (FlagsFactory.getFlags()
-                        .getConfigDeliveryEnableEnrollmentConfigV3DataDownload()) {
-                    mobileDataDownloadBuilder.addFileGroupPopulators(
-                            getArgonManifestPopulators(flags, fileStorage, fileDownloader));
                 }
 
                 sSingletonMdd = mobileDataDownloadBuilder.build();
@@ -433,6 +430,10 @@ public class MobileDataDownloadFactory {
                             .setContext(context)
                             .setEnabledSupplier(
                                     () -> {
+                                        if (!FlagsFactory.getFlags()
+                                                .getConfigDeliveryEnableEnrollmentConfigV3DataDownload()) {
+                                            return false;
+                                        }
                                         if (mddConfig.getIsDownloadPreConsent()) {
                                             return true;
                                         } else if (flags.getGaUxFeatureEnabled()) {

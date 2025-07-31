@@ -59,7 +59,6 @@ public class EnrollmentUtil {
      * ArgonConfigurationManager}. Otherwise, get the MDD build ID from shared preferences.
      */
     public int getBuildId() {
-        // DIDN'T FIX CustomAudienceManagerTest
         if (FlagsFactory.getFlags().getConfigDeliveryUseArgonConfigManagerToQueryEnrollment()
                 && FlagsFactory.getFlags()
                         .getConfigDeliveryEnableEnrollmentConfigV3DataDownload()) {
