@@ -137,6 +137,7 @@ import static com.android.adservices.shared.testing.AndroidSdk.SC_V2;
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.service.proto.config_delivery.MddConfigs;
 import com.android.adservices.shared.common.flags.ConfigFlag;
 import com.android.adservices.shared.common.flags.FeatureFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
@@ -1519,6 +1520,32 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getUiEnableSetAdsPersonalizationStatus",
                 DEFAULT_UI_ENABLE_SET_ADS_PERSONALIZATION_STATUS,
                 Flags::getUiEnableSetAdsPersonalizationStatus);
+    }
+
+    @Test
+    public void testGetConfigDeliveryMddConfigs() {
+        // Verifies the default values for MDD configurations used by Argon Config Delivery.
+        // Checks that the MddConfigs object is constructed correctly,
+        // including the 'isDownloadPreConsent' flag.
+        MddConfigs mddConfigs = mFlags.getConfigDeliveryMddConfigs();
+
+        // Assert the object is not null and has the expected number of configs
+        expect.that(mddConfigs).isNotNull();
+        expect.that(mddConfigs.getMddConfigsCount()).isEqualTo(1);
+
+        // Get the specific config
+        MddConfigs.MddConfig config = mddConfigs.getMddConfigs(0);
+
+        // Assert the values of the config object
+        expect.that(config.getManifestId()).isEqualTo("enrollment");
+        expect.that(config.getFileGroupNamesList())
+                .containsExactly("rubidium_adservices_enrollment");
+        expect.that(config.getIsDownloadPreConsent()).isFalse();
+        expect.that(config.getManifestUrl())
+                .isEqualTo(
+                        "https://www.gstatic.com/mdi-serving"
+                                + "/rubidium-adservices-enrollment/10327"
+                                + "/f6ad222f19ab7b49b5d06fc717e2273e1625fc74");
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
