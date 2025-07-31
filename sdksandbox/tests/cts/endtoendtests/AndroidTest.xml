@@ -69,7 +69,8 @@
         <option name="teardown-command" value="cmd power set-face-down-detector true" />
 
         <!-- Unlock the screen before starting our test, otherwise launch activity fails -->
-        <option name="run-command" value="input keyevent 82" />
+        <option name="run-command" value="input keyevent MENU" />
+        <option name="run-command" value="input keyevent HOME" />
 
         <!-- Disable DeviceConfig syncing throughout the test duration -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
