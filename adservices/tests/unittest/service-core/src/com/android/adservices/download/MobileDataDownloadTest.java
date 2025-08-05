@@ -797,6 +797,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     public void testArgonConfigDataDownload_preConsentAllowed() throws Exception {
         when(mMockFlags.getConfigDeliveryMddConfigs()).thenReturn(argonMddConfigs);
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
         createMddForArgonConfig();
 
         ClientFileGroup clientFileGroup =
@@ -818,6 +819,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     public void testArgonConfigDataDownload_consentGiven() throws Exception {
         when(mMockFlags.getConfigDeliveryMddConfigs()).thenReturn(argonMddConfigs);
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
+        when(mMockFlags.getConfigDeliveryEnableEnrollmentConfigV3DataDownload()).thenReturn(true);
         when(mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS))
                 .thenReturn(AdServicesApiConsent.GIVEN);
         createMddForArgonConfig();
