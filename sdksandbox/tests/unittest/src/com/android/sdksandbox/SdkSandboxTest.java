@@ -50,9 +50,9 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
-import dalvik.system.PathClassLoader;
-
 import com.google.common.truth.Expect;
+
+import dalvik.system.PathClassLoader;
 
 import org.junit.After;
 import org.junit.Before;
@@ -166,7 +166,6 @@ public class SdkSandboxTest extends DeviceSupportedBaseTest {
                         .spyStatic(Process.class)
                         .startMocking();
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandbox());
-        ExtendedMockito.doReturn(Process.FIRST_SDK_SANDBOX_UID).when(() -> Process.myUid());
 
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mContext = Mockito.spy(context);
