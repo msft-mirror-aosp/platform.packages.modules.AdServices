@@ -18,6 +18,8 @@ package com.android.adservices.service.measurement.reporting;
 
 import static com.android.adservices.service.measurement.util.JobLockHolder.Type.AGGREGATE_REPORTING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_BACKGROUND_JOB_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB;
 
 import android.app.job.JobInfo;
@@ -32,6 +34,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -42,6 +45,9 @@ import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.concurrent.Future;
@@ -57,7 +63,7 @@ public final class ImmediateAggregateReportingJobService extends JobService {
     private static final ListeningExecutorService sBlockingExecutor =
             AdServicesExecutors.getBlockingExecutor();
 
-    private Future mExecutorFuture;
+    private ListenableFuture<Void> mExecutorFuture;
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -84,20 +90,61 @@ public final class ImmediateAggregateReportingJobService extends JobService {
         }
 
         LoggerFactory.getMeasurementLogger().d(this.getClass().getSimpleName() + ".onStartJob");
-        mExecutorFuture =
-                sBlockingExecutor.submit(
-                        () -> {
-                            processPendingReports();
+        mExecutorFuture = Futures.submit(this::processPendingReports, sBlockingExecutor);
 
-                            AdServicesJobServiceLogger.getInstance()
-                                    .recordJobFinished(
-                                            MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID,
-                                            /* isSuccessful= */ true,
-                                            /* shouldRetry= */ false);
+        Futures.addCallback(
+                mExecutorFuture,
+                new FutureCallback<>() {
+                    @Override
+                    public void onSuccess(Void result) {
+                        onSuccessCallback(params);
+                    }
 
-                            jobFinished(params, /* wantsReschedule= */ false);
-                        });
+                    @Override
+                    public void onFailure(Throwable t) {
+                        onFailureCallback(t, params);
+                    }
+                },
+                sBlockingExecutor);
         return true;
+    }
+
+    private void onSuccessCallback(JobParameters params) {
+        AdServicesJobServiceLogger.getInstance()
+                .recordJobFinished(
+                        MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID,
+                        /* isSuccessful= */ true,
+                        /* shouldRetry= */ false);
+
+        jobFinished(params, /* wantsReschedule= */ false);
+    }
+
+    private void onFailureCallback(Throwable t, JobParameters params) {
+        // Futures doesn't distinguish between cancellation vs. failure, so the same callback is
+        // used for both cases. onStopJob calls cancel on the future. Metrics are logged in
+        // onStopJob, so we return early here to avoid double counting. jobFinished does not need to
+        // be called if onStopJob is called.
+        if (mExecutorFuture.isCancelled()) {
+            return;
+        }
+
+        LoggerFactory.getMeasurementLogger()
+                .e(
+                        t,
+                        "ImmediateAggregateReportingJobService: exception during onStartJob"
+                                + " background work");
+        ErrorLogUtil.e(
+                t,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_BACKGROUND_JOB_FAILURE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+        boolean shouldRetry = false;
+        AdServicesJobServiceLogger.getInstance()
+                .recordJobFinished(
+                        MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID,
+                        /* isSuccessful= */ false,
+                        shouldRetry);
+
+        jobFinished(params, shouldRetry);
     }
 
     @VisibleForTesting

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_BACKGROUND_JOB_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB;
 
 import static org.junit.Assert.assertFalse;
@@ -27,6 +29,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -39,6 +42,8 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
@@ -69,6 +74,7 @@ import java.util.Optional;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
+@SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)
 public final class ImmediateAggregateReportingJobServiceTest
         extends MeasurementJobServiceTestCase<ImmediateAggregateReportingJobService> {
     private static final int MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID =
@@ -156,6 +162,34 @@ public final class ImmediateAggregateReportingJobServiceTest
                     // Verify logging has not happened even though logging is enabled because this
                     // field is not logged
                     verifyLoggingNotHappened(mSpyLogger);
+                });
+    }
+
+    @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = IllegalStateException.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_BACKGROUND_JOB_FAILURE)
+    public void onStartJob_killSwitchOff_throwsException_jobFinishedCalled() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+                    JobServiceLoggingCallback onStartJobCallback =
+                            syncPersistJobExecutionData(mSpyLogger);
+                    JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+
+                    doThrow(IllegalStateException.class)
+                            .when(mMockDatastoreManager)
+                            .runInTransactionWithResult(any());
+                    JobServiceCallback callback =
+                            new JobServiceCallback().expectJobFinished(mSpyService);
+
+                    // Execute
+                    mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    callback.assertJobFinished();
+
+                    verify(mSpyService, times(1)).jobFinished(any(), eq(false));
+                    verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
                 });
     }
 
