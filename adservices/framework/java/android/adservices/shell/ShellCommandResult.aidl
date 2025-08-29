@@ -16,5 +16,5 @@
  */
 package android.adservices.shell;
 
-/** {@hide} */
+/** @hide */
 parcelable ShellCommandResult;

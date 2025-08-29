@@ -21,6 +21,6 @@ package android.adservices.adselection;
  * A ReportImpressionInput is a Parcelable object that contains an adSelectionId, an
  * AdSelectionConfig, and a callerPackageName.
  *
- * {@hide}
+ * @hide
  */
 parcelable ReportImpressionInput;

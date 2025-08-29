@@ -21,6 +21,6 @@ package android.adservices.adselection;
  * A GetAdSelectionDataInput is a Parcelable object that contains an AdSelectionDataRequest and a
  * callerPackageName.
  *
- * {@hide}
+ * @hide
  */
 parcelable GetAdSelectionDataInput;

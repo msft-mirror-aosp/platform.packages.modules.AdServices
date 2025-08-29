@@ -25,7 +25,7 @@ import android.adservices.adid.RecreateAdIdResult;
 /**
  * AdId Service.
  *
- * {@hide}
+ * @hide
  */
 interface IAdIdService {
     /**

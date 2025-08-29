@@ -21,6 +21,6 @@ package android.adservices.adselection;
  * An AdSelectionResponse is a Parcelable object that is returned upon success of {@link
  * runAdAuction}' by {@link AdSelectionManager}.
  *
- * {@hide}
+ * @hide
  */
 parcelable AdSelectionResponse;

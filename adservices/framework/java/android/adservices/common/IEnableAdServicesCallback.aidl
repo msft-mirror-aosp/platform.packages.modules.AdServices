@@ -20,7 +20,7 @@ import android.adservices.common.EnableAdServicesResponse;
 
 /**
  * Callback used by the enableAdServices API.
- * {@hide}
+ * @hide
  */
 oneway interface IEnableAdServicesCallback {
     void onResult(in EnableAdServicesResponse responseParcel);

@@ -28,7 +28,7 @@ import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 
 /**
  * Measurement service.
- * {@hide}
+ * @hide
  */
 interface IMeasurementService {
     void register(in RegistrationRequest params, in CallerMetadata callerMetadata,

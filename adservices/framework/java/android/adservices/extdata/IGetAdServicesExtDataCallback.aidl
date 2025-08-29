@@ -19,7 +19,7 @@ import android.adservices.extdata.GetAdServicesExtDataResult;
 
 /**
  * Callback from get ext int data request from provider.
- * {@hide}
+ * @hide
  */
 oneway interface IGetAdServicesExtDataCallback {
     void onResult(in GetAdServicesExtDataResult responseParcel);

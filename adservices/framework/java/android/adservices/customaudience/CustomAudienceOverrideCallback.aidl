@@ -23,7 +23,7 @@ import android.adservices.common.FledgeErrorResponse;
  * which contain a function to be called upon success that accepts a void argument, as well
  * as a function to be called upon failure that accepts an FledgeErrorResponse argument.
  *
- * {@hide}
+ * @hide
  */
 oneway interface CustomAudienceOverrideCallback {
     void onSuccess();

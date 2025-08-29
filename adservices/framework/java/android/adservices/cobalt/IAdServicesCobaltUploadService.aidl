@@ -21,7 +21,7 @@ import android.adservices.cobalt.EncryptedCobaltEnvelopeParams;
 /**
  * Service to upload AdServices' Cobalt data.
  *
- * {@hide}
+ * @hide
  */
 oneway interface IAdServicesCobaltUploadService {
     /**

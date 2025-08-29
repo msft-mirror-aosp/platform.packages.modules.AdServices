@@ -24,7 +24,7 @@ import android.adservices.common.FledgeErrorResponse;
  * and an onFailure function. The success function accepts a {@link AdSelectionData}, while the
  * failure function accepts an {@link FledgeErrorResponse}
  *
- * {@hide}
+ * @hide
  */
 oneway interface GetAdSelectionDataCallback {
     void onSuccess(in GetAdSelectionDataResponse outcomeParcel);

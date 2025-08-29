@@ -20,7 +20,7 @@ package android.adservices.common;
 import android.adservices.common.AdServicesModuleStatesResponse;
 /**
  * Callback used by the GetAdServicesModuleStates API.
- * {@hide}
+ * @hide
  */
 oneway interface IGetAdServicesModuleStatesCallback {
     void onSuccess(in AdServicesModuleStatesResponse response);

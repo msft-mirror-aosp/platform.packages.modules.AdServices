@@ -21,6 +21,6 @@ package android.adservices.common;
  * A CallerMetadata is a Parcelable object that contain metadata about the IPC call. It could
  * contain timestamps for latency computation for example.
  *
- * {@hide}
+ * @hide
  */
 parcelable CallerMetadata;

@@ -20,7 +20,7 @@ package android.adservices.common;
 import android.adservices.common.AdServicesUserChoicesResponse;
 /**
  * Callback used by the GetAdServicesUserChoices API.
- * {@hide}
+ * @hide
  */
 oneway interface IGetAdServicesUserChoicesCallback {
     void onSuccess(in AdServicesUserChoicesResponse response);

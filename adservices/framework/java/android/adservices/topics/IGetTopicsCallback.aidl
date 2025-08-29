@@ -20,7 +20,7 @@ import android.adservices.topics.GetTopicsResult;
 
 /**
  * Callback from a get Topics request.
- * {@hide}
+ * @hide
  */
 oneway interface IGetTopicsCallback {
     void onResult(in GetTopicsResult responseParcel);

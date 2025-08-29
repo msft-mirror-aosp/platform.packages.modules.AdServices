@@ -22,7 +22,7 @@ import android.adservices.extdata.IGetAdServicesExtDataCallback;
 /**
  * AdServices Ext Data Storage Service.
  *
- * {@hide}
+ * @hide
  */
 oneway interface IAdServicesExtDataStorageService {
       void getAdServicesExtData(in IGetAdServicesExtDataCallback callback);
