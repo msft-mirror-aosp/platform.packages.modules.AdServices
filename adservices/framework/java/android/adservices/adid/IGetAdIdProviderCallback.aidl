@@ -20,7 +20,7 @@ import android.adservices.adid.GetAdIdResult;
 
 /**
  * Callback from  get adid request from provider.
- * {@hide}
+ * @hide
  */
 oneway interface IGetAdIdProviderCallback {
     void onResult(in GetAdIdResult responseParcel);

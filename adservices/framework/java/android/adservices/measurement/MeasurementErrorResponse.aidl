@@ -21,6 +21,6 @@ package android.adservices.measurement;
  * An MeasurementErrorResponse is a Parcelable object that contains a status code and a nullable
  * error message.
  *
- * {@hide}
+ * @hide
  */
 parcelable MeasurementErrorResponse;

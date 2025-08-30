@@ -25,7 +25,7 @@ import android.adservices.common.FledgeErrorResponse;
  * PersistAdSelectionResultResponse}, while the failure function accepts an {@link
  * FledgeErrorResponse}
  *
- * {@hide}
+ * @hide
  */
 oneway interface PersistAdSelectionResultCallback {
     void onSuccess(in PersistAdSelectionResultResponse outcomeParcel);

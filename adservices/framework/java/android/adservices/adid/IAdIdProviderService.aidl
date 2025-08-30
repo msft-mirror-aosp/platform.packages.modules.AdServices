@@ -21,7 +21,7 @@ import android.adservices.adid.IGetAdIdProviderCallback;
 /**
  * AdId Provider Service.
  *
- * {@hide}
+ * @hide
  */
 interface IAdIdProviderService {
     /**

@@ -18,6 +18,6 @@ package android.adservices.common;
 
 /**
  * GetAdServicesCommonStatesParams parcel.
- * {@hide}
+ * @hide
  */
 parcelable GetAdServicesCommonStatesParams;

@@ -19,7 +19,7 @@ package android.adservices.common;
 
 /**
  * Callback used by the RequestAdServicesModuleUserChoices API.
- * {@hide}
+ * @hide
  */
 oneway interface IRequestAdServicesModuleUserChoicesCallback {
     void onSuccess();

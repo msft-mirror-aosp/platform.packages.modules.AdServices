@@ -21,6 +21,6 @@ package android.adservices.common;
  * An FledgeErrorResponse is a Parcelable object that contains a status code and a nullable error
  * message.
  *
- * {@hide}
+ * @hide
  */
 parcelable FledgeErrorResponse;

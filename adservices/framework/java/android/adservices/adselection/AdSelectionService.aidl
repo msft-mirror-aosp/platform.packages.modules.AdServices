@@ -141,7 +141,7 @@ interface AdSelectionService {
      *
      * Otherwise, this call fails to send the response to the callback and throws a RemoteException.
      *
-     * {@hide}
+     * @hide
      */
     void selectAdsFromOutcomes(in AdSelectionFromOutcomesInput inputParams,
             in CallerMetadata callerMetadata, in AdSelectionCallback callback);
@@ -166,7 +166,7 @@ interface AdSelectionService {
      * the seller and/or buyer reporting URIs might be retried but we won't
      * guarantee the completion.
      *
-     * {@hide}
+     * @hide
      */
     void reportImpression(in ReportImpressionInput request, in ReportImpressionCallback callback);
 

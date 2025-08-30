@@ -18,7 +18,7 @@ package android.adservices.measurement;
 
 /**
  * Callback from a getMeasurementApiStatus request.
- * {@hide}
+ * @hide
  */
 oneway interface IMeasurementApiStatusCallback {
     void onResult(int result);

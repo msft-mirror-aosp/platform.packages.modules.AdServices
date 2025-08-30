@@ -20,6 +20,6 @@ package android.adservices.adselection;
  * This interface defines the results of a call made to selectAdOutcomes API.
  * A AdSelectionOutcome is a Parcelable object that contains an AdSelectionId and a RenderUri.
  *
- * {@hide}
+ * @hide
  */
 parcelable AdSelectionOutcome;

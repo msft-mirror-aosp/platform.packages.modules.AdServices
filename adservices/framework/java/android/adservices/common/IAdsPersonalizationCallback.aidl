@@ -19,7 +19,7 @@ package android.adservices.common;
 /**
  * Callback from an setNoAdsPersoanlization request.
  *
- * {@hide}
+ * @hide
  */
 oneway interface IAdsPersonalizationCallback {
     void onResult(String message);

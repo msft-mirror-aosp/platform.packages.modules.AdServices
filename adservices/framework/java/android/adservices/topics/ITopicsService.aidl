@@ -23,7 +23,7 @@ import android.adservices.topics.IGetTopicsCallback;
 /**
  * Topics Service.
  *
- * {@hide}
+ * @hide
  */
 interface ITopicsService {
     /**
