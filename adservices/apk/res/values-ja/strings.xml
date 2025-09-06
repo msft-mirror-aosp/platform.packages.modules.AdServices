@@ -239,7 +239,7 @@
     <string name="notificationUI_u18_notification_title" msgid="3039567502781358382">"広告プライバシーの新しい機能がリリースされました"</string>
     <string name="notificationUI_u18_notification_content" msgid="782224580271117368">"広告の効果を測定するため、限定的な情報のみがアプリ間で共有されます"</string>
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"このたび、「広告の測定」という広告プライバシーの新しい機能をリリースします。Android では、アプリによる広告の効果測定に役立てるため、広告が表示されたタイミングなどの限定的な情報のみをアプリ間で共有するようになります。"</string>
-    <string name="notificationUI_u18_body3" msgid="4149294335097045465">"広告プライバシー設定で変更できます。"</string>
+    <string name="notificationUI_u18_body3" msgid="4149294335097045465">"広告プライバシー設定はご自身で変更できます。"</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"ユーザーが使用しているアプリから Android に対して広告の効果を測定するための情報が要求されると、Android は限定的な種類のデータの収集のみをアプリに許可します。"</string>
     <string name="settingsUI_main_u18_view_fragment_footer" msgid="7651031920045695046"><b>"広告の測定"</b>\n"ユーザーが使用しているアプリから Android に対して広告の効果を測定するための情報が要求されると、Android は限定的な種類のデータの収集のみをアプリに許可します。"</string>
     <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"広告のプライバシーの新機能"</string>
