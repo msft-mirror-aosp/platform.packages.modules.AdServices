@@ -22,10 +22,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.flags.Flags;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.SdkLifecycleHelper;
 import android.content.Context;
 import android.os.Bundle;
+import android.platform.test.annotations.RequiresFlagsDisabled;
 import android.platform.test.flag.junit.CheckFlagsRule;
 import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 
@@ -44,6 +46,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
+@RequiresFlagsDisabled(Flags.FLAG_SDK_SANDBOX_NO_OP_IMPL)
 public class SdkSandboxCapabilitiesTest extends SandboxKillerBeforeTest {
     private static final String SDK_NAME_1 = "com.android.ctssdkprovider";
 

@@ -20,12 +20,16 @@ import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.flags.Flags;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Bundle;
+import android.platform.test.annotations.RequiresFlagsDisabled;
+import android.platform.test.flag.junit.CheckFlagsRule;
+import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -43,6 +47,7 @@ import org.junit.runners.JUnit4;
 import java.util.List;
 
 @RunWith(JUnit4.class)
+@RequiresFlagsDisabled(Flags.FLAG_SDK_SANDBOX_NO_OP_IMPL)
 public class CtsSmallModuleTests extends SandboxKillerBeforeTest {
     private static final String SDK_NAME = "com.android.emptysdkprovider";
 
@@ -52,6 +57,9 @@ public class CtsSmallModuleTests extends SandboxKillerBeforeTest {
 
     @Rule(order = 1)
     public final Expect mExpect = Expect.create();
+
+    @Rule
+    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     private SdkSandboxManager mSdkSandboxManager;
     private Context mContext = InstrumentationRegistry.getInstrumentation().getContext();

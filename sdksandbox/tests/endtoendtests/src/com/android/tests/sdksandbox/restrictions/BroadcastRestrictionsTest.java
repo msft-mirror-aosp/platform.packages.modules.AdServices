@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 import android.Manifest;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.flags.Flags;
 import android.app.sdksandbox.testutils.ConfigListener;
 import android.app.sdksandbox.testutils.DeviceConfigUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
@@ -33,6 +34,9 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.platform.test.annotations.RequiresFlagsDisabled;
+import android.platform.test.flag.junit.CheckFlagsRule;
+import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 import android.provider.DeviceConfig;
 import android.util.ArrayMap;
 import android.util.ArraySet;
@@ -57,6 +61,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @RunWith(JUnit4.class)
+@RequiresFlagsDisabled(Flags.FLAG_SDK_SANDBOX_NO_OP_IMPL)
 public class BroadcastRestrictionsTest extends DeviceSupportedBaseTest {
     private SdkSandboxManager mSdkSandboxManager;
     private static final String PROPERTY_ENFORCE_RESTRICTIONS = "sdksandbox_enforce_restrictions";
@@ -99,6 +104,9 @@ public class BroadcastRestrictionsTest extends DeviceSupportedBaseTest {
 
     @Rule(order = 0)
     public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
+
+    @Rule
+    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     @Before
     public void setup() throws Exception {
@@ -349,7 +357,6 @@ public class BroadcastRestrictionsTest extends DeviceSupportedBaseTest {
         mRestrictionsSdkApi.registerBroadcastReceiver(
                 new ArrayList<>(
                         Arrays.asList(
-                                Intent.ACTION_SHOW_FOREGROUND_SERVICE_MANAGER,
                                 Intent.ACTION_BOOT_COMPLETED,
                                 Intent.ACTION_SCREEN_ON,
                                 Intent.ACTION_SCREEN_OFF)));

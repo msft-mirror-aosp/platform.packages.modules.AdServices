@@ -112,6 +112,10 @@ android_test {
         "SdkSandboxUnitTestsDefault",
         "framework-sdksandbox-jarjar-defaults",
     ],
+    static_libs: [
+        "sdk_sandbox_app_flags_lib",
+        "flag-junit",
+    ],
     manifest: "SdkSandboxFrameworkManifest.xml",
     test_config: "SdkSandboxFrameworkTest.xml",
     data: [

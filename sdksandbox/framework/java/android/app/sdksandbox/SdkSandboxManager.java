@@ -34,6 +34,7 @@ import android.annotation.SystemApi;
 import android.annotation.SystemService;
 import android.annotation.TestApi;
 import android.app.Activity;
+import android.app.sdksandbox.flags.Flags;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityHandler;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
@@ -45,6 +46,7 @@ import android.os.IBinder;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.util.ArrayMap;
 import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 
@@ -307,6 +309,9 @@ public final class SdkSandboxManager {
 
     private final SharedPreferencesSyncManager mSyncManager;
 
+    private final ArrayMap<String, AppOwnedSdkSandboxInterface> mAppOwnedSdkSandboxInterfaces =
+            new ArrayMap<>();
+
     /** @hide */
     public SdkSandboxManager(@NonNull Context context, @NonNull ISdkSandboxManager binder) {
         mContext = Objects.requireNonNull(context, "context should not be null");
@@ -319,6 +324,9 @@ public final class SdkSandboxManager {
     /** Returns the current state of the availability of the SDK sandbox feature. */
     @SdkSandboxState
     public static int getSdkSandboxState() {
+        if (Flags.sdkSandboxNoOpImpl()) {
+            return SDK_SANDBOX_STATE_DISABLED;
+        }
         return SDK_SANDBOX_STATE_ENABLED_PROCESS_ISOLATION;
     }
 
@@ -329,6 +337,9 @@ public final class SdkSandboxManager {
      */
     @TestApi
     public boolean isSdkSandboxServiceRunning() {
+        if (Flags.sdkSandboxNoOpImpl()) {
+            return false;
+        }
         try {
             return mService.isSdkSandboxServiceRunning(mContext.getPackageName());
         } catch (RemoteException e) {
@@ -344,6 +355,9 @@ public final class SdkSandboxManager {
     @TestApi
     @RequiresPermission("com.android.app.sdksandbox.permission.STOP_SDK_SANDBOX")
     public void stopSdkSandbox() {
+        if (Flags.sdkSandboxNoOpImpl()) {
+            return;
+        }
         try {
             mService.stopSdkSandbox(mContext.getPackageName());
         } catch (RemoteException e) {
@@ -364,6 +378,9 @@ public final class SdkSandboxManager {
     public void addSdkSandboxProcessDeathCallback(
             @NonNull @CallbackExecutor Executor callbackExecutor,
             @NonNull SdkSandboxProcessDeathCallback callback) {
+        if (Flags.sdkSandboxNoOpImpl()) {
+            return;
+        }
         Objects.requireNonNull(callbackExecutor, "callbackExecutor should not be null");
         Objects.requireNonNull(callback, "callback should not be null");
 
@@ -395,6 +412,9 @@ public final class SdkSandboxManager {
      */
     public void removeSdkSandboxProcessDeathCallback(
             @NonNull SdkSandboxProcessDeathCallback callback) {
+        if (Flags.sdkSandboxNoOpImpl()) {
+            return;
+        }
         Objects.requireNonNull(callback, "callback should not be null");
         synchronized (mLifecycleCallbacks) {
             for (int i = mLifecycleCallbacks.size() - 1; i >= 0; i--) {
@@ -431,6 +451,16 @@ public final class SdkSandboxManager {
      */
     public void registerAppOwnedSdkSandboxInterface(
             @NonNull AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface) {
+        if (Flags.sdkSandboxNoOpImpl()) {
+            String appOwnedSdkSandboxInterfaceName = appOwnedSdkSandboxInterface.getName();
+            if (mAppOwnedSdkSandboxInterfaces.containsKey(appOwnedSdkSandboxInterfaceName)) {
+                throw new IllegalStateException(
+                        "Already registered interface of name " + appOwnedSdkSandboxInterfaceName);
+            }
+            mAppOwnedSdkSandboxInterfaces.put(
+                    appOwnedSdkSandboxInterfaceName, appOwnedSdkSandboxInterface);
+            return;
+        }
         SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(
                         SandboxLatencyInfo.METHOD_REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE);
@@ -449,6 +479,10 @@ public final class SdkSandboxManager {
      * @param name the name under which AppOwnedSdkSandboxInterface was registered.
      */
     public void unregisterAppOwnedSdkSandboxInterface(@NonNull String name) {
+        if (Flags.sdkSandboxNoOpImpl()) {
+            mAppOwnedSdkSandboxInterfaces.remove(name);
+            return;
+        }
         SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(
                         SandboxLatencyInfo.METHOD_UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE);
@@ -468,6 +502,9 @@ public final class SdkSandboxManager {
      *     AppOwnedSdkSandboxInterface}
      */
     public @NonNull List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces() {
+        if (Flags.sdkSandboxNoOpImpl()) {
+            return new ArrayList<>(mAppOwnedSdkSandboxInterfaces.values());
+        }
         SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(
                         SandboxLatencyInfo.METHOD_GET_APP_OWNED_SDK_SANDBOX_INTERFACES);
@@ -513,6 +550,17 @@ public final class SdkSandboxManager {
         Objects.requireNonNull(params, "params should not be null");
         Objects.requireNonNull(executor, "executor should not be null");
         Objects.requireNonNull(receiver, "receiver should not be null");
+
+        if (Flags.sdkSandboxNoOpImpl()) {
+            executor.execute(
+                    () ->
+                            receiver.onError(
+                                    new LoadSdkException(
+                                            LOAD_SDK_SDK_SANDBOX_DISABLED,
+                                            "SDK sandbox is disabled")));
+            return;
+        }
+
         final LoadSdkReceiverProxy callbackProxy =
                 new LoadSdkReceiverProxy(executor, receiver, mService);
 
@@ -546,6 +594,10 @@ public final class SdkSandboxManager {
      * @return List of {@link SandboxedSdk} containing all currently loaded SDKs.
      */
     public @NonNull List<SandboxedSdk> getSandboxedSdks() {
+        if (Flags.sdkSandboxNoOpImpl()) {
+            return new ArrayList<>();
+        }
+
         SandboxLatencyInfo sandboxLatencyInfo =
                 new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_GET_SANDBOXED_SDKS);
         sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.elapsedRealtime());
@@ -569,6 +621,9 @@ public final class SdkSandboxManager {
      * @param sdkName name of the SDK to be unloaded.
      */
     public void unloadSdk(@NonNull String sdkName) {
+        if (Flags.sdkSandboxNoOpImpl()) {
+            return;
+        }
         Objects.requireNonNull(sdkName, "sdkName should not be null");
         try {
             SandboxLatencyInfo sandboxLatencyInfo =
@@ -624,6 +679,15 @@ public final class SdkSandboxManager {
         Objects.requireNonNull(params, "params should not be null");
         Objects.requireNonNull(callbackExecutor, "callbackExecutor should not be null");
         Objects.requireNonNull(receiver, "receiver should not be null");
+        if (Flags.sdkSandboxNoOpImpl()) {
+            callbackExecutor.execute(
+                    () ->
+                            receiver.onError(
+                                    new RequestSurfacePackageException(
+                                            REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED,
+                                            "SDK is not loaded")));
+            return;
+        }
         try {
             int width = params.getInt(EXTRA_WIDTH_IN_PIXELS, -1); // -1 means invalid width
             if (width <= 0) {
@@ -707,6 +771,10 @@ public final class SdkSandboxManager {
             @NonNull Activity fromActivity, @NonNull IBinder sdkActivityToken) {
         if (!SdkLevel.isAtLeastU()) {
             throw new UnsupportedOperationException();
+        }
+
+        if (Flags.sdkSandboxNoOpImpl()) {
+            return;
         }
 
         long timeEventStarted = mTimeProvider.elapsedRealtime();

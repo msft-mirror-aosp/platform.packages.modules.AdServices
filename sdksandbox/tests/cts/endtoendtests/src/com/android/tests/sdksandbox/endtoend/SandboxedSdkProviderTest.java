@@ -22,8 +22,10 @@ import static org.junit.Assert.assertThrows;
 
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
+import android.app.sdksandbox.flags.Flags;
 import android.content.Context;
 import android.os.Bundle;
+import android.platform.test.annotations.RequiresFlagsDisabled;
 import android.view.View;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -37,6 +39,7 @@ import org.junit.runners.JUnit4;
 
 /** Tests SandboxedSdkProvider. */
 @RunWith(JUnit4.class)
+@RequiresFlagsDisabled(Flags.FLAG_SDK_SANDBOX_NO_OP_IMPL)
 public class SandboxedSdkProviderTest extends SandboxKillerBeforeTest {
 
     private SandboxedSdkProvider mSdk;

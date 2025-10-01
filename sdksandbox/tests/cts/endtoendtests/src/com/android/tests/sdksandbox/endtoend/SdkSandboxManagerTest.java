@@ -44,6 +44,7 @@ import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.flags.Flags;
 import android.app.sdksandbox.testutils.ConfigListener;
 import android.app.sdksandbox.testutils.DeviceConfigUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
@@ -60,6 +61,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.platform.test.annotations.RequiresFlagsDisabled;
 import android.platform.test.flag.junit.CheckFlagsRule;
 import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 import android.provider.DeviceConfig;
@@ -95,6 +97,7 @@ import java.util.Random;
 
 /** End-to-end tests of {@link SdkSandboxManager} APIs. */
 @RunWith(JUnit4.class)
+@RequiresFlagsDisabled(Flags.FLAG_SDK_SANDBOX_NO_OP_IMPL)
 public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
 
     private static final String TAG = SdkSandboxManagerTest.class.getSimpleName();

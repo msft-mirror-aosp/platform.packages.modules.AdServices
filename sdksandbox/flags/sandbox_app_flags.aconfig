@@ -1,0 +1,9 @@
+package: "android.app.sdksandbox.flags"
+container: "com.android.adservices"
+
+flag {
+    name: "sdk_sandbox_no_op_impl"
+    namespace: "sdk_sandbox"
+    description: "Enables no-op implementation of SDK sandbox APIs"
+    bug: "444627795"
+}
