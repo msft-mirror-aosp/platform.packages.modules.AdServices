@@ -37,13 +37,6 @@ flag {
 }
 
 flag {
-    name: "first_and_last_sdk_sandbox_uid_public"
-    namespace: "sdk_sandbox"
-    description: "Make Process#FIRST_SDK_SANDBOX_UID and Process#LAST_SDK_SANDBOX_UID public"
-    bug: "314270319"
-}
-
-flag {
     name: "sdk_sandbox_instrumentation_info"
     namespace: "sdk_sandbox"
     bug: "315018061"
