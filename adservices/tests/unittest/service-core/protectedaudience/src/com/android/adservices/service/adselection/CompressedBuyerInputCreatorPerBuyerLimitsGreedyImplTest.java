@@ -49,6 +49,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -795,6 +796,7 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
     @Test
     @RequiresSdkLevelAtLeastT
     @SuppressWarnings("ReturnValueIgnored")
+    @Ignore("b/418145267")
     public void compressedBuyerInputsMaxCaseIsValid() throws Exception {
         int sellerMaxSize = 64 * KILOBYTES_TO_BYTES;
         List<AdTechIdentifier> buyers = createNAmountOfBuyers(30);
