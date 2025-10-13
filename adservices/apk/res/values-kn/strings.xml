@@ -19,11 +19,11 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="permlab_accessAdServicesTopics" msgid="2910134708310472202">"AdServices Topics API ಅನ್ನು ಪ್ರವೇಶಿಸಿ"</string>
-    <string name="permdesc_accessAdServicesTopics" msgid="677405540408619629">"AdServices Topics API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
+    <string name="permdesc_accessAdServicesTopics" msgid="677405540408619629">"AdServices Topics API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್ ಮಾಡಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_accessAdServicesAttribution" msgid="5214710861314870958">"AdServices Attribution APIs ಅನ್ನು ಪ್ರವೇಶಿಸಿ"</string>
-    <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"AdServices Attribution APIs ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
+    <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"AdServices Attribution APIs ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್ ಮಾಡಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"AdServices Custom Audience API ಅನ್ನು ಪ್ರವೇಶಿಸಿ"</string>
-    <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"AdServices Custom Audiences API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
+    <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"AdServices Custom Audiences API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್ ಮಾಡಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"AdServices Ad Selection API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್‌ ಮಾಡಿ"</string>
     <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"AdServices Ad Selection API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್‌ ಮಾಡಲು ಆ್ಯಪ್‌ ಅನ್ನು ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"AdServices Protected Signals API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್‌ ಮಾಡಿ"</string>
@@ -31,21 +31,21 @@
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"AdId API ನ ಆ್ಯಕ್ಸೆಸ್"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"AdId API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್ ಮಾಡಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"AdServices Consent API ನ ಆ್ಯಕ್ಸೆಸ್"</string>
-    <string name="permdesc_accessAdServicesConsent" msgid="7750277247326139879">"AdServices Consent API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
+    <string name="permdesc_accessAdServicesConsent" msgid="7750277247326139879">"AdServices Consent API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್ ಮಾಡಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_adServicesAccessAdId" msgid="8185488502054653570">"Ad ID API ಅನ್ನು ಪ್ರವೇಶಿಸಿ"</string>
-    <string name="permdesc_adServicesAccessAdId" msgid="3263859073222697355">"Ad ID API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
+    <string name="permdesc_adServicesAccessAdId" msgid="3263859073222697355">"Ad ID API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್ ಮಾಡಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="760080027378720165">"AdServices Cobalt Upload API ಗೆ ಆ್ಯಕ್ಸೆಸ್"</string>
     <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="8157387772737666525">"AdServices Cobalt Upload API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್ ಮಾಡಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="2156563601489696838">"App Set ID API ಅನ್ನು ಪ್ರವೇಶಿಸಿ"</string>
-    <string name="permdesc_adServicesAccessAppSetId" msgid="7941260931851597525">"App Set ID API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
+    <string name="permdesc_adServicesAccessAppSetId" msgid="7941260931851597525">"App Set ID API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್ ಮಾಡಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="6435435615365433957">"Consent Service API ಗೆ ಆ್ಯಕ್ಸೆಸ್"</string>
-    <string name="permdesc_adServicesAccessConsentService" msgid="4730521463856902020">"Consent Service API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
+    <string name="permdesc_adServicesAccessConsentService" msgid="4730521463856902020">"Consent Service API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್ ಮಾಡಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_modifyAdServicesState" msgid="6800932419950823272">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿಯ ಮಾರ್ಪಾಡು API ಗೆ ಆ್ಯಕ್ಸೆಸ್"</string>
-    <string name="permdesc_modifyAdServicesState" msgid="8592251425800551473">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿಯ ಮಾರ್ಪಾಡು API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಅಪ್ಲಿಕೇಶನ್ ಅನ್ನು ಅನುಮತಿಸುತ್ತದೆ."</string>
+    <string name="permdesc_modifyAdServicesState" msgid="8592251425800551473">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿಯ ಮಾರ್ಪಾಡು API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್ ಮಾಡಲು ಅಪ್ಲಿಕೇಶನ್ ಅನ್ನು ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_accessAdServicesState" msgid="4684852254587849110">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿ API ಗೆ ಆ್ಯಕ್ಸೆಸ್"</string>
-    <string name="permdesc_accessAdServicesState" msgid="4712113759240300316">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿ API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಅಪ್ಲಿಕೇಶನ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
+    <string name="permdesc_accessAdServicesState" msgid="4712113759240300316">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿ API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್ ಮಾಡಲು ಅಪ್ಲಿಕೇಶನ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_accessAdServicesManager" msgid="7261917723342459824">"AdServicesManager ನ API ಗಳಿಗೆ ಆ್ಯಕ್ಸೆಸ್"</string>
-    <string name="permdesc_accessAdServicesManager" msgid="259777314231794821">"AdServicesManager ನ API ಗಳನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್ ಒಂದನ್ನು ಅನುಮತಿಸುತ್ತದೆ."</string>
+    <string name="permdesc_accessAdServicesManager" msgid="259777314231794821">"AdServicesManager ನ API ಗಳನ್ನು ಆ್ಯಕ್ಸೆಸ್ ಮಾಡಲು ಆ್ಯಪ್ ಒಂದನ್ನು ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_updateAdservicesAdId" msgid="4050027862847854236">"AdService ನ ಅಪ್‌ಡೇಟ್‌ AdId API ಗೆ ಇರುವ ಆ್ಯಕ್ಸೆಸ್."</string>
     <string name="permdesc_updateAdservicesAdId" msgid="2305983556095516823">"AdService ನ ಅಪ್‌ಡೇಟ್‌ AdId API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್ ಮಾಡಲು ಆ್ಯಪ್ ಅನ್ನು ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="app_label" msgid="2639006978056689153">"ಆ್ಯಡ್ ಗೌಪ್ಯತೆ"</string>
