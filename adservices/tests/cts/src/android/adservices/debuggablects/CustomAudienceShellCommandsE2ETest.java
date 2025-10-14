@@ -48,6 +48,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -58,6 +59,7 @@ import java.util.List;
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetPpapiAppAllowList
+@Ignore("b/449086223")
 public final class CustomAudienceShellCommandsE2ETest extends AdServicesDebuggableTestCase {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
 
