@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 import android.Manifest;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.flags.Flags;
 import android.app.sdksandbox.testutils.ConfigListener;
 import android.app.sdksandbox.testutils.DeviceConfigUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
@@ -31,6 +32,9 @@ import android.app.sdksandbox.testutils.ProtoUtil;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.platform.test.annotations.RequiresFlagsDisabled;
+import android.platform.test.flag.junit.CheckFlagsRule;
+import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 import android.provider.DeviceConfig;
 import android.util.ArrayMap;
 import android.util.ArraySet;
@@ -56,6 +60,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @RunWith(JUnit4.class)
+@RequiresFlagsDisabled(Flags.FLAG_SDK_SANDBOX_NO_OP_IMPL)
 public class ContentProviderRestrictionsTest extends DeviceSupportedBaseTest {
     private SdkSandboxManager mSdkSandboxManager;
 
@@ -89,6 +94,9 @@ public class ContentProviderRestrictionsTest extends DeviceSupportedBaseTest {
 
     @Rule(order = 0)
     public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
+
+    @Rule
+    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     private String mEnforceRestrictions;
     private String mInitialContentProviderAllowlistValue;

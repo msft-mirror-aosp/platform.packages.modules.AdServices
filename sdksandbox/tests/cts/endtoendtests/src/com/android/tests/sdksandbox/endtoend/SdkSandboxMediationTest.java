@@ -23,12 +23,16 @@ import static org.junit.Assert.assertThrows;
 import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.flags.Flags;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.platform.test.annotations.RequiresFlagsDisabled;
+import android.platform.test.flag.junit.CheckFlagsRule;
+import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
@@ -52,6 +56,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @RunWith(JUnit4.class)
+@RequiresFlagsDisabled(Flags.FLAG_SDK_SANDBOX_NO_OP_IMPL)
 public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
 
     private static final String MEDIATOR_SDK_NAME =
@@ -69,6 +74,9 @@ public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
 
     @Rule(order = 1)
     public final Expect mExpect = Expect.create();
+
+    @Rule
+    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;

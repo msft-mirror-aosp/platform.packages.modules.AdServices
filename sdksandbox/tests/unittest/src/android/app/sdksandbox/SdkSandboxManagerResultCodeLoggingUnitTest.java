@@ -31,15 +31,20 @@ import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_A
 
 import static org.junit.Assert.assertEquals;
 
+import android.app.sdksandbox.flags.Flags;
 import android.app.sdksandbox.testutils.FakeOutcomeReceiver;
 import android.content.Context;
 import android.os.Bundle;
+import android.platform.test.annotations.RequiresFlagsDisabled;
+import android.platform.test.flag.junit.CheckFlagsRule;
+import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -51,7 +56,12 @@ import java.util.Collection;
 
 /** Tests for the result code logging logic in {@link SdkSandboxManager}. */
 @RunWith(Parameterized.class)
+@RequiresFlagsDisabled(Flags.FLAG_SDK_SANDBOX_NO_OP_IMPL)
 public class SdkSandboxManagerResultCodeLoggingUnitTest extends DeviceSupportedBaseTest {
+
+    @Rule
+    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
+
     @SdkSandboxManager.LoadSdkErrorCode
     @Parameterized.Parameter(0)
     public int mLoadSdkErrorCode;

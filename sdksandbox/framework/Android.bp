@@ -51,6 +51,7 @@ java_defaults {
     static_libs: [
         "modules-utils-build",
         "sdk_sandbox_flags_lib",
+        "sdk_sandbox_app_flags_lib",
     ],
     libs: [
         "androidx.annotation_annotation",
