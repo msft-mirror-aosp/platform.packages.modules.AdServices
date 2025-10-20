@@ -48,3 +48,28 @@ java_aconfig_library {
         "com.android.adservices",
     ],
 }
+
+aconfig_declarations {
+    name: "sdk_sandbox_app_flags",
+    package: "android.app.sdksandbox.flags",
+    container: "com.android.adservices",
+    exportable: true,
+    srcs: ["sandbox_app_flags.aconfig"],
+    visibility: [
+        "//frameworks/base/api",
+    ],
+}
+
+java_aconfig_library {
+    name: "sdk_sandbox_app_flags_lib",
+    aconfig_declarations: "sdk_sandbox_app_flags",
+    defaults: ["framework-minus-apex-aconfig-java-defaults"],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+    ],
+    min_sdk_version: "33",
+    apex_available: [
+        "com.android.adservices",
+    ],
+    host_supported: true,
+}

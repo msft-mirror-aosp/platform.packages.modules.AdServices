@@ -19,7 +19,7 @@ package android.adservices.common;
 
 /**
  * Callback used by the RequestAdServicesModuleOverrides API.
- * {@hide}
+ * @hide
  */
 oneway interface IRequestAdServicesModuleOverridesCallback {
     void onSuccess();

@@ -34,6 +34,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import android.app.Activity;
+import android.app.sdksandbox.flags.Flags;
 import android.app.sdksandbox.testutils.FakeOutcomeReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -43,6 +44,9 @@ import android.os.IBinder;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.platform.test.annotations.RequiresFlagsDisabled;
+import android.platform.test.flag.junit.CheckFlagsRule;
+import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 
@@ -54,6 +58,7 @@ import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -65,6 +70,7 @@ import java.util.List;
 
 /** Tests {@link SdkSandboxManager} APIs. */
 @RunWith(JUnit4.class)
+@RequiresFlagsDisabled(Flags.FLAG_SDK_SANDBOX_NO_OP_IMPL)
 public class SdkSandboxManagerUnitTest extends DeviceSupportedBaseTest {
 
     private SdkSandboxManager mSdkSandboxManager;
@@ -75,6 +81,9 @@ public class SdkSandboxManagerUnitTest extends DeviceSupportedBaseTest {
     private static final String ERROR_MSG = "Error";
     private static final long TIME_SYSTEM_SERVER_CALLED_APP = 1;
     private static final String SDK_SANDBOX_MANAGER_TAG = "SdkSandboxManager";
+
+    @Rule
+    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     @Before
     public void setup() {

@@ -23,7 +23,7 @@ import android.adservices.common.CallerMetadata;
 /**
  * AppSetId Service.
  *
- * {@hide}
+ * @hide
  */
 interface IAppSetIdService {
     /**

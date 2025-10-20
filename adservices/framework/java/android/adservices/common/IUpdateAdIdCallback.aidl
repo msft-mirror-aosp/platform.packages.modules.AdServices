@@ -19,7 +19,7 @@ package android.adservices.common;
 /**
  * Callback from an update AdId request.
  *
- * {@hide}
+ * @hide
  */
 oneway interface IUpdateAdIdCallback {
     void onResult(String message);

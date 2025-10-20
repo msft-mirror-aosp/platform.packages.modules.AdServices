@@ -38,7 +38,7 @@ import android.net.Uri;
 
 /**
  * Common AdServices service.
- * {@hide}
+ * @hide
  */
 interface IAdServicesCommonService {
 

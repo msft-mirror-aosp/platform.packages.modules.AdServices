@@ -20,7 +20,7 @@ import android.adservices.appsetid.GetAppSetIdResult;
 
 /**
  * Callback from  get appsetid request.
- * {@hide}
+ * @hide
  */
 oneway interface IGetAppSetIdCallback {
     void onResult(in GetAppSetIdResult responseParcel);

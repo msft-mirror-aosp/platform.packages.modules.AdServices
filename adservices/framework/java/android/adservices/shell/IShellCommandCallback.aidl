@@ -20,7 +20,7 @@ import android.adservices.shell.ShellCommandResult;
 
 /**
  * Callback from the runShellCommand request.
- * {@hide}
+ * @hide
  */
 oneway interface IShellCommandCallback {
     void onResult(in ShellCommandResult result);

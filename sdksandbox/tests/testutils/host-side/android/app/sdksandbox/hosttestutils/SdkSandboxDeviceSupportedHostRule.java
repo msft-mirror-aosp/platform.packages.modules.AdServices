@@ -46,7 +46,8 @@ public final class SdkSandboxDeviceSupportedHostRule extends AbstractSdkSandboxD
                 && !isTv()
                 && !isAutomotive()
                 && !isGoDevice()
-                && deviceSdkLevel.isDeviceAtLeastU();
+                && deviceSdkLevel.isDeviceAtLeastU()
+                && !isSandboxNoOpImplEnabled();
     }
 
     private boolean isWatch() throws DeviceNotAvailableException {
@@ -78,5 +79,14 @@ public final class SdkSandboxDeviceSupportedHostRule extends AbstractSdkSandboxD
                 && !isWatch()
                 && !isAutomotive()
                 && !isTv();
+    }
+
+    private boolean isSandboxNoOpImplEnabled() throws Exception {
+        String flag =
+                mTest.getDevice()
+                        .executeShellCommand(
+                                "aflags list | grep"
+                                        + " android.app.sdksandbox.flags.sdk_sandbox_no_op_impl");
+        return flag.contains("enabled");
     }
 }

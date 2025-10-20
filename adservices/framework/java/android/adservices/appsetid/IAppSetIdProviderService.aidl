@@ -21,7 +21,7 @@ import android.adservices.appsetid.IGetAppSetIdProviderCallback;
 /**
  * AppSetId Provider Service.
  *
- * {@hide}
+ * @hide
  */
 interface IAppSetIdProviderService {
     /**

@@ -32,6 +32,7 @@ android_test {
         "CtsSdkProviderApi",
         "CtsMediationTestSdkApi",
         "sdk_sandbox_flags_lib",
+        "sdk_sandbox_app_flags_lib",
         "android.content.pm.flags-aconfig-java",
         "flag-junit",
     ],
@@ -68,6 +69,8 @@ android_test {
         "androidx.test.runner",
         "truth",
         "SdkSandboxTestUtils",
+        "sdk_sandbox_app_flags_lib",
+        "flag-junit",
     ],
     libs: [
         "android.test.base.stubs.system",

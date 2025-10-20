@@ -18,7 +18,7 @@ package android.adservices.measurement;
 
 /**
  * Measurement service.
- * {@hide}
+ * @hide
  */
 interface Measurement {
     // TODO: Define Measurement API.

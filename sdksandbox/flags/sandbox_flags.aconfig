@@ -37,13 +37,6 @@ flag {
 }
 
 flag {
-    name: "first_and_last_sdk_sandbox_uid_public"
-    namespace: "sdk_sandbox"
-    description: "Make Process#FIRST_SDK_SANDBOX_UID and Process#LAST_SDK_SANDBOX_UID public"
-    bug: "314270319"
-}
-
-flag {
     name: "sdk_sandbox_instrumentation_info"
     namespace: "sdk_sandbox"
     bug: "315018061"
@@ -57,26 +50,4 @@ flag {
     description: "Get the app uid for the input sdk sandbox uid"
     bug: "314270319"
     is_exported: true
-}
-
-flag {
-    name: "get_effective_target_sdk_version_api"
-    namespace: "sdk_sandbox"
-    description: "Get the the effective target Sdk version for the sdk sandbox process"
-    bug: "271547387"
-}
-
-flag {
-    name: "sdk_sandbox_dex_verifier"
-    namespace: "sdk_sandbox"
-    description: "Enables the static dex verifier for the SDK sandbox to run on new SDKs"
-    bug: "231441674"
-}
-
-flag {
-    name: "sdk_sandbox_verify_sdk_dex_files"
-    namespace: "adservices_aconfig"
-    description: "Enables the static dex verifier for the SDK sandbox to run on new SDKs"
-    bug: "231441674"
-    is_fixed_read_only: true
 }

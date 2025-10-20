@@ -21,6 +21,6 @@ package android.adservices.adselection;
  * A PersistAdSelectionDataInput is a Parcelable object that contains a PersistAdSelectionResultRequest
  * and a callerPackageName.
  *
- * {@hide}
+ * @hide
  */
 parcelable PersistAdSelectionResultInput;

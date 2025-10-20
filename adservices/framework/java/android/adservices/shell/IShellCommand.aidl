@@ -23,7 +23,7 @@ import android.os.ParcelFileDescriptor;
 /**
  * Shell Service.
  *
- * {@hide}
+ * @hide
  */
 oneway interface IShellCommand {
     /**

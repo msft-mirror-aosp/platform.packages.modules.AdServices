@@ -16,6 +16,8 @@
 
 package com.android.tests.sdksandbox.endtoend;
 
+import static android.app.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_NO_OP_IMPL;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertNotNull;
@@ -27,6 +29,7 @@ import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.platform.test.annotations.RequiresFlagsDisabled;
 import android.platform.test.annotations.RequiresFlagsEnabled;
 import android.platform.test.flag.junit.CheckFlagsRule;
 import android.platform.test.flag.junit.DeviceFlagsValueProvider;
@@ -50,6 +53,7 @@ import org.junit.runners.JUnit4;
 
 /** End-to-end tests of {@link SdkSandboxController} APIs. */
 @RunWith(JUnit4.class)
+@RequiresFlagsDisabled(FLAG_SDK_SANDBOX_NO_OP_IMPL)
 public class SdkSandboxControllerTest extends SandboxKillerBeforeTest {
     @Rule(order = 0)
     public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();

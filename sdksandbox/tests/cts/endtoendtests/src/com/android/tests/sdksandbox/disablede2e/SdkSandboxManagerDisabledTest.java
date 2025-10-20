@@ -24,11 +24,13 @@ import static org.junit.Assert.assertThrows;
 
 import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.flags.Flags;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.SystemProperties;
+import android.platform.test.annotations.RequiresFlagsDisabled;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
@@ -42,6 +44,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
+@RequiresFlagsDisabled(Flags.FLAG_SDK_SANDBOX_NO_OP_IMPL)
 public class SdkSandboxManagerDisabledTest {
 
     @Rule(order = 0)

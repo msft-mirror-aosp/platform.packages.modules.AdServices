@@ -173,7 +173,7 @@
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="6386103688779633888">"ブロック中のアプリはありません"</string>
     <string name="settingsUI_no_blocked_apps_ga_text" msgid="5715916198159277202">"ブロック中のアプリはありません"</string>
     <string name="settingsUI_measurement_switch_title" msgid="2111625410373329760">"広告の測定を許可"</string>
-    <string name="settingsUI_measurement_view_intro_text" msgid="2780083472100004780">"アプリと広告主は、広告効果の測定に役立つ情報を Android からリクエストする場合があります。\n\n広告の測定データはデバイスから定期的に削除されます。"</string>
+    <string name="settingsUI_measurement_view_intro_text" msgid="2780083472100004780">"アプリと広告主は、広告効果の測定に役立つ情報を Android にリクエストする場合があります。\n\n広告の測定データはデバイスから定期的に削除されます。"</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="518549441454274773">"測定データをリセット"</string>
     <string name="settingsUI_measurement_view_footer_text" msgid="823743750634137761">"Android は、アプリ間で共有される情報を限定することで、ユーザーのプライバシーを保護します。レポートは個人情報を保護するため遅れて送信されます。\n\nブラウザにも同様の設定がある場合があります。Android とブラウザの両方で広告の測定が ON の場合、広告主はユーザーが使用しているアプリとアクセスしているサイトの間で広告の効果を測定できることがあります。閲覧履歴は非公開で、デバイスから外部に送信されることはありません。\n\nAndroid がユーザーデータを保護する仕組みについては、"<a href="https://policies.google.com/privacy">"プライバシー ポリシー"</a>"をご覧ください。"</string>
     <string name="settingsUI_measurement_are_reset" msgid="3109724238284555411">"広告の測定データがリセットされました"</string>
@@ -235,11 +235,11 @@
     <string name="settingsUI_apps_view_ga_subtitle" msgid="4376440601964010807">"ユーザーが使用するアプリがユーザーの好みを特定して、別のアプリで広告を提案する場合があります。\n\n広告の提案を行わないようアプリをブロックできます。また Android では、アプリによるおすすめのデータを定期的に自動で削除しています。\n\nこの機能を ON にすることもできますが、この機能が全面的に利用可能になって各種アプリで使用されるようになるまでは、アプリの一覧は表示されません。"</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="3403673196085504304">"ブロックしたアプリ"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="8096477193202146197">"アプリから提案されたデータをリセット"</string>
-    <string name="settingsUI_apps_view_footer" msgid="5502656868680626279">"一般に、ご利用のアプリはユーザーの利便性をパーソナライズするためにユーザーが関心 / 興味を持っている内容を記録します。また、アプリはユーザーのトピックに関する情報も Android で保存できます。\n\nたとえば、マラソンのトレーニングについてアプリを使用した場合、そのアプリは、ユーザーはランニング シューズに関心がある、と判断することがあります。その後に使用した別のアプリには、最初のアプリから提案されたランニング シューズの広告が表示される可能性があります。\n\nAndroid は、アプリから提案されたデータを定期的に自動削除します。再び使用したアプリはリストに再表示される可能性があります。また、アプリがユーザーに適した広告を提案しないようブロックすることもできます。\n\nアプリにパーソナライズド広告が表示されるかどうかは、この設定のほか、広告トピックの設定、広告 ID の設定、使用しているアプリが広告をパーソナライズするかどうかによって決まります。"</string>
+    <string name="settingsUI_apps_view_footer" msgid="5502656868680626279">"一般に、アプリはパーソナライズ目的でユーザーの興味 / 関心を記録します。また、アプリは広告トピックに関する情報も Android 上に保存できます。\n\nたとえば、マラソンのトレーニングについてアプリを使用した場合、そのアプリは「ユーザーがランニング シューズに関心がある」と判断することがあります。その後に使用した別のアプリには、最初のアプリから提案されたランニング シューズの広告が表示される可能性があります。\n\nAndroid は、アプリから提案されたデータを定期的に自動削除します。再び使用したアプリはリストに再表示される可能性があります。また、アプリがユーザーに適した広告を提案しないようブロックすることもできます。\n\nアプリにパーソナライズド広告が表示されるかどうかは、この設定のほか、広告トピックの設定、広告 ID の設定、使用しているアプリが広告をパーソナライズするかどうかによって決まります。"</string>
     <string name="notificationUI_u18_notification_title" msgid="3039567502781358382">"広告プライバシーの新しい機能がリリースされました"</string>
     <string name="notificationUI_u18_notification_content" msgid="782224580271117368">"広告の効果を測定するため、限定的な情報のみがアプリ間で共有されます"</string>
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"このたび、「広告の測定」という広告プライバシーの新しい機能をリリースします。Android では、アプリによる広告の効果測定に役立てるため、広告が表示されたタイミングなどの限定的な情報のみをアプリ間で共有するようになります。"</string>
-    <string name="notificationUI_u18_body3" msgid="4149294335097045465">"広告プライバシー設定で変更できます。"</string>
+    <string name="notificationUI_u18_body3" msgid="4149294335097045465">"広告プライバシー設定はご自身で変更できます。"</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"ユーザーが使用しているアプリから Android に対して広告の効果を測定するための情報が要求されると、Android は限定的な種類のデータの収集のみをアプリに許可します。"</string>
     <string name="settingsUI_main_u18_view_fragment_footer" msgid="7651031920045695046"><b>"広告の測定"</b>\n"ユーザーが使用しているアプリから Android に対して広告の効果を測定するための情報が要求されると、Android は限定的な種類のデータの収集のみをアプリに許可します。"</string>
     <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"広告のプライバシーの新機能"</string>

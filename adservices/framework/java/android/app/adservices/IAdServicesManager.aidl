@@ -22,7 +22,7 @@ import android.app.adservices.topics.TopicParcel;
 /**
   * AdServices Manager Service
   *
-  * {@hide}
+  * @hide
   */
 interface IAdServicesManager {
     /**

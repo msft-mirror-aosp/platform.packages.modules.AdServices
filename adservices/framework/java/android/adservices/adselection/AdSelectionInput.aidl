@@ -21,6 +21,6 @@ package android.adservices.adselection;
  * A AdSelectionInput is a Parcelable object that contains an AdSelectionConfig and a
  * callerPackageName.
  *
- * {@hide}
+ * @hide
  */
 parcelable AdSelectionInput;

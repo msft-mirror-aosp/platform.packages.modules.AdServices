@@ -20,7 +20,7 @@ import android.adservices.common.AdServicesCommonStatesResponse;
 
 /**
  * Callback from a get Status request.
- * {@hide}
+ * @hide
  */
 oneway interface IAdServicesCommonStatesCallback {
     void onResult(in AdServicesCommonStatesResponse responseParcel);
