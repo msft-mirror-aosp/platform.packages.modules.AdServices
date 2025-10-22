@@ -52,6 +52,7 @@ import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
+import android.app.sdksandbox.flags.Flags;
 import android.app.sdksandbox.sandboxactivity.SdkSandboxActivityAuthority;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.BroadcastReceiver;
@@ -2526,8 +2527,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public boolean canSendBroadcast(@NonNull Intent intent) {
-            return StringHelper.doesInputMatchAnyWildcardPattern(
-                    mTestSendBroadcastAllowlist, intent.getAction());
+            return Flags.sdkSandboxNoOpImpl()
+                    || StringHelper.doesInputMatchAnyWildcardPattern(
+                            mTestSendBroadcastAllowlist, intent.getAction());
         }
 
         @Override
@@ -2571,7 +2573,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public boolean canAccessContentProviderFromSdkSandbox(@NonNull ProviderInfo providerInfo) {
-            if (!Process.isSdkSandboxUid(Binder.getCallingUid())) {
+            if (!Process.isSdkSandboxUid(Binder.getCallingUid()) || Flags.sdkSandboxNoOpImpl()) {
                 return true;
             }
 
@@ -2599,6 +2601,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 @NonNull Intent intent, int clientAppUid, @NonNull String clientAppPackageName) {
             long timeEventStarted = mInjector.elapsedRealtime();
             try {
+                if (Flags.sdkSandboxNoOpImpl()) {
+                    throw new SecurityException(
+                            "There is no sandbox process running for the caller uid"
+                                    + ": "
+                                    + clientAppUid
+                                    + ".");
+                }
                 if (Process.isSdkSandboxUid(clientAppUid)) {
                     throw new SecurityException(
                             "Sandbox process is not allowed to start sandbox activities.");
@@ -2677,7 +2686,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public boolean canRegisterBroadcastReceiver(
                 @NonNull IntentFilter intentFilter, int flags, boolean onlyProtectedBroadcasts) {
-            if (!Process.isSdkSandboxUid(Binder.getCallingUid())) {
+            if (!Process.isSdkSandboxUid(Binder.getCallingUid()) || Flags.sdkSandboxNoOpImpl()) {
                 return true;
             }
 
