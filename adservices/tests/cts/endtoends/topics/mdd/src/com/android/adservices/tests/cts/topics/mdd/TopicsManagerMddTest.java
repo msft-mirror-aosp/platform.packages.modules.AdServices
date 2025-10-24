@@ -26,6 +26,7 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
+import android.os.Process;
 
 import com.android.adservices.common.AdServicesSupportHelper;
 import com.android.adservices.common.AdservicesTestHelper;
@@ -170,11 +171,10 @@ public final class TopicsManagerMddTest extends CtsAdServicesMddTestCase {
     private void triggerAndWaitForMddToFinishDownload() throws InterruptedException {
         // Forces JobScheduler to run Mdd.
         runShellCommand(
-                "cmd jobscheduler run -f"
-                        + " "
-                        + mAdServicesPackageName
-                        + " "
-                        + MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID);
+                "cmd jobscheduler run --user %d -f %s %d",
+                Process.myUserHandle().getIdentifier(),
+                mAdServicesPackageName,
+                MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID);
 
         // Wait for TEST_MDD_DOWNLOAD_WAIT_TIME_MS seconds for the assets to be downloaded.
         Thread.sleep(TEST_MDD_DOWNLOAD_WAIT_TIME_MS);
@@ -182,6 +182,8 @@ public final class TopicsManagerMddTest extends CtsAdServicesMddTestCase {
 
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() {
-        runShellCommand("cmd jobscheduler run -f %s %d", mAdServicesPackageName, EPOCH_JOB_ID);
+        runShellCommand(
+                "cmd jobscheduler run --user %d -f %s %d",
+                Process.myUserHandle().getIdentifier(), mAdServicesPackageName, EPOCH_JOB_ID);
     }
 }
