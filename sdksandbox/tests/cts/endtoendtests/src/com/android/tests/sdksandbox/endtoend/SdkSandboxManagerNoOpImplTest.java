@@ -23,6 +23,7 @@ import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.flags.Flags;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.os.Binder;
 import android.os.Bundle;
@@ -44,7 +45,10 @@ import java.util.List;
 @RequiresFlagsEnabled(Flags.FLAG_SDK_SANDBOX_NO_OP_IMPL)
 public class SdkSandboxManagerNoOpImplTest {
 
-    @Rule
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+
+    @Rule(order = 1)
     public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     private SdkSandboxManager mSdkSandboxManager;
