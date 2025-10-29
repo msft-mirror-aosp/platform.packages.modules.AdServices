@@ -62,7 +62,7 @@
     <string name="notificationUI_right_control_button_text_eu" msgid="515640904971092242">"روشن کردن"</string>
     <string name="notificationUI_more_button_text" msgid="5675315920171576420">"بیشتر"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="404510501246686605">"از مشارکت شما سپاس‌گزاریم"</string>
-    <string name="notificationUI_confirmation_accept_subtitle" msgid="7583794584528601080">"شما عضوی از نسخه بتای حریم خصوصی آگهی‌های Android هستید. «جعبه امن حریم خصوصی» برای دستگاه شما روشن شده است.\n\nهرزمان بخواهید می‌توانید در تنظیمات حریم خصوصی اطلاعات بیشتری کسب کنید یا نسخه بتا را خاموش کنید."</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="7583794584528601080">"شما عضوی از نسخه بتای حریم خصوصی آگهی‌های Android هستید. «جعبه امن حریم خصوصی» برای دستگاه شما روشن شده است.\n\nهر زمان‌که بخواهید می‌توانید در تنظیمات حریم خصوصی اطلاعات بیشتری کسب کنید یا نسخه بتا را خاموش کنید."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"انتخاب کرده‌اید که شرکت نکنید"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"از پاسختان سپاس‌گزاریم. «جعبه امن حریم خصوصی» برای دستگاه خاموش شده است.\n\nاگر نظرتان تغییر کرد یا خواستید اطلاعات بیشتری کسب کنید، به تنظیمات حریم خصوصی بروید."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"تنظیمات حریم خصوصی"</string>
