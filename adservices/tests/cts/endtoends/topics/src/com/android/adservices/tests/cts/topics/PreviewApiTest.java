@@ -26,6 +26,7 @@ import android.adservices.topics.EncryptedTopic;
 import android.adservices.topics.GetTopicsRequest;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
+import android.os.Process;
 
 import androidx.test.filters.FlakyTest;
 
@@ -167,6 +168,7 @@ public final class PreviewApiTest extends CtsTopicsEndToEndTestCase {
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
-                "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
+                "cmd jobscheduler run --user %d -f %s %d",
+                Process.myUserHandle().getIdentifier(), ADSERVICES_PACKAGE_NAME, EPOCH_JOB_ID);
     }
 }

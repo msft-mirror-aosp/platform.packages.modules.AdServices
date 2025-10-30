@@ -30,6 +30,7 @@ import android.adservices.topics.GetTopicsRequest;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.adservices.topics.TopicsManager;
+import android.os.Process;
 
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.FlagsConstants;
@@ -550,6 +551,7 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
-                "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
+                "cmd jobscheduler run --user %d -f %s %d",
+                Process.myUserHandle().getIdentifier(), ADSERVICES_PACKAGE_NAME, EPOCH_JOB_ID);
     }
 }
