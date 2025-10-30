@@ -180,7 +180,7 @@
     <string name="settingsUI_dialog_negative_text" msgid="2991743327829379614">"ரத்துசெய்"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="7364417538227823889">"தனியுரிமை சாண்ட்பாக்ஸை முடக்கவா?"</string>
     <string name="settingsUI_dialog_opt_out_message" msgid="277021855863398163">"உங்கள் மனதை மாற்றிக்கொண்டாலோ Androidன் விளம்பரத் தனியுரிமை பீட்டா பற்றி மேலும் அறிய விரும்பினாலோ தனியுரிமை அமைப்புகளுக்குச் செல்லவும்"</string>
-    <string name="settingsUI_dialog_opt_out_positive_text" msgid="8325131452422895574">"முடக்கு"</string>
+    <string name="settingsUI_dialog_opt_out_positive_text" msgid="8325131452422895574">"ஆஃப் செய்"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="2250176723499905800">"<xliff:g id="TOPIC">%1$s</xliff:g> ஐத் தடுக்கவா?"</string>
     <string name="settingsUI_dialog_block_topic_message" msgid="1400336281231183620">"இந்தத் தலைப்பு தடுக்கப்பட்டு, நீங்கள் அதைத் திரும்பச் சேர்க்கும் வரை உங்கள் பட்டியலில் அது மீண்டும் சேர்க்கப்படாது. எனினும், தொடர்புடைய சில விளம்பரங்களை நீங்கள் தொடர்ந்து பார்க்கக்கூடும்."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2296205088661063414">"தடு"</string>
