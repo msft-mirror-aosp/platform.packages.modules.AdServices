@@ -189,13 +189,13 @@ public class SerialDexLoader {
         private String mDexEntry;
 
         /** The table of classes referenced by the DEX file. */
-        private ArrayList<String> mReferencedClasses = new ArrayList<>(DEX_MAX_METHOD_COUNT);
+        private ArrayList<String> mReferencedClasses = new ArrayList<>();
 
         /** The table of methods referenced by the DEX file. */
-        private ArrayList<String> mReferencedMethods = new ArrayList<>(DEX_MAX_METHOD_COUNT);
+        private ArrayList<String> mReferencedMethods = new ArrayList<>();
 
         /** Maps referenced methods to their declaring class in the referenced classes table. */
-        private ArrayList<Integer> mClassIndex = new ArrayList<>(DEX_MAX_METHOD_COUNT);
+        private ArrayList<Integer> mClassIndex = new ArrayList<>();
 
         /**
          * Adds a new method to the referencedMethods table and its containing class to the
