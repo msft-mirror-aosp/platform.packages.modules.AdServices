@@ -28,8 +28,10 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
+import android.os.Process;
 
 import androidx.test.filters.FlakyTest;
+
 import com.android.adservices.common.AdServicesSupportHelper;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
@@ -161,6 +163,7 @@ public final class TopicsConnectionTest extends CtsAdServicesTopicsConnectionTes
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
-                "cmd jobscheduler run -f %s %d", mAdServicesPackageName, EPOCH_JOB_ID);
+                "cmd jobscheduler run --user %d -f %s %d",
+                Process.myUserHandle().getIdentifier(), mAdServicesPackageName, EPOCH_JOB_ID);
     }
 }

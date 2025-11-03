@@ -16,6 +16,8 @@
 
 package com.android.server.sdksandbox;
 
+import static android.app.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_NO_OP_IMPL;
+
 import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
 
@@ -35,6 +37,7 @@ import android.content.IntentFilter;
 import android.content.pm.ProviderInfo;
 import android.os.Build;
 import android.os.Process;
+import android.platform.test.annotations.RequiresFlagsDisabled;
 import android.platform.test.annotations.RequiresFlagsEnabled;
 import android.platform.test.flag.junit.CheckFlagsRule;
 import android.platform.test.flag.junit.DeviceFlagsValueProvider;
@@ -69,6 +72,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+@RequiresFlagsDisabled(FLAG_SDK_SANDBOX_NO_OP_IMPL)
 public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
     private static final String INTENT_ACTION = "action.test";
     private static final String PACKAGE_NAME = "packageName.test";

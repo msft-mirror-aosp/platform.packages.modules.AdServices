@@ -21,6 +21,7 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 import static android.app.sdksandbox.ISharedPreferencesSyncCallback.PREFERENCES_SYNC_INTERNAL_ERROR;
 import static android.app.sdksandbox.SdkSandboxManager.ACTION_START_SANDBOXED_ACTIVITY;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
+import static android.app.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_NO_OP_IMPL;
 
 import static com.android.server.sdksandbox.SdkSandboxServiceProvider.SANDBOX_INSTR_PROCESS_NAME_SUFFIX;
 import static com.android.server.sdksandbox.testutils.FakeSdkSandboxProvider.FAKE_DUMP_OUTPUT;
@@ -67,6 +68,10 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.UserHandle;
+import android.platform.test.annotations.RequiresFlagsDisabled;
+import android.platform.test.annotations.RequiresFlagsEnabled;
+import android.platform.test.flag.junit.CheckFlagsRule;
+import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -88,6 +93,7 @@ import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
@@ -151,6 +157,9 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
     private CallingInfo mCallingInfo;
     private DeviceConfigUtil mDeviceConfigUtil;
     private SdkSandboxRestrictionManager mSdkSandboxRestrictionManager;
+
+    @Rule
+    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     @Before
     public void setup() {
@@ -949,6 +958,7 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
+    @RequiresFlagsDisabled(FLAG_SDK_SANDBOX_NO_OP_IMPL)
     public void testEnforceAllowedToHostSandboxedActivityFailIfCalledFromSandboxUid()
             throws RemoteException {
         loadSdk(SDK_NAME);
@@ -968,6 +978,7 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
+    @RequiresFlagsDisabled(FLAG_SDK_SANDBOX_NO_OP_IMPL)
     public void testEnforceAllowedToHostSandboxedActivityFailForNullIntents() {
         SecurityException exception =
                 assertThrows(
@@ -980,6 +991,7 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
+    @RequiresFlagsDisabled(FLAG_SDK_SANDBOX_NO_OP_IMPL)
     public void testEnforceAllowedToHostSandboxedActivityFailForNullActions() {
         SecurityException exception =
                 assertThrows(
@@ -996,6 +1008,7 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
+    @RequiresFlagsDisabled(FLAG_SDK_SANDBOX_NO_OP_IMPL)
     public void testEnforceAllowedToHostSandboxedActivityFailForWrongAction() {
         SecurityException exception =
                 assertThrows(
@@ -1014,6 +1027,7 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
+    @RequiresFlagsDisabled(FLAG_SDK_SANDBOX_NO_OP_IMPL)
     public void testEnforceAllowedToHostSandboxedActivityFailForNullPackage() {
         Intent intent = new Intent().setAction(ACTION_START_SANDBOXED_ACTIVITY);
         SecurityException exception =
@@ -1029,6 +1043,7 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
+    @RequiresFlagsDisabled(FLAG_SDK_SANDBOX_NO_OP_IMPL)
     public void testEnforceAllowedToHostSandboxedActivityFailForIntentsTargetingOtherPackages() {
         Intent intent =
                 new Intent()
@@ -1047,6 +1062,7 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
+    @RequiresFlagsDisabled(FLAG_SDK_SANDBOX_NO_OP_IMPL)
     public void testEnforceAllowedToHostSandboxedActivityFailForIntentsWithWrongComponent()
             throws Exception {
         loadSdk(SDK_NAME);
@@ -1069,6 +1085,7 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
+    @RequiresFlagsDisabled(FLAG_SDK_SANDBOX_NO_OP_IMPL)
     public void testEnforceAllowedToHostSandboxedActivityFailIfNoSandboxProcees() {
         Intent intent = new Intent().setAction(ACTION_START_SANDBOXED_ACTIVITY);
         intent.setPackage(getSandboxPackageName());
@@ -1086,6 +1103,7 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
+    @RequiresFlagsDisabled(FLAG_SDK_SANDBOX_NO_OP_IMPL)
     public void testEnforceAllowedToHostSandboxedActivityFailIfIntentHasNoExtras()
             throws RemoteException {
         loadSdk(SDK_NAME);
@@ -1109,6 +1127,7 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
+    @RequiresFlagsDisabled(FLAG_SDK_SANDBOX_NO_OP_IMPL)
     public void testEnforceAllowedToHostSandboxedActivityFailIfIntentHasNoHandlerExtra()
             throws RemoteException {
         loadSdk(SDK_NAME);
@@ -1133,6 +1152,7 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
+    @RequiresFlagsDisabled(FLAG_SDK_SANDBOX_NO_OP_IMPL)
     public void testEnforceAllowedToHostSandboxedActivityFailIfIntentHasWrongTypeOfHandlerExtra()
             throws RemoteException {
         loadSdk(SDK_NAME);
@@ -1159,6 +1179,7 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
+    @RequiresFlagsDisabled(FLAG_SDK_SANDBOX_NO_OP_IMPL)
     public void testEnforceAllowedToHostSandboxedActivitySuccessWithoutComponent()
             throws Exception {
         loadSdk(SDK_NAME);
@@ -1173,6 +1194,32 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
+    @RequiresFlagsEnabled(FLAG_SDK_SANDBOX_NO_OP_IMPL)
+    public void testEnforceAllowedToHostSandboxedActivitySuccessWithoutComponent_flagEnabled()
+            throws Exception {
+        loadSdk(SDK_NAME);
+
+        Intent intent = new Intent().setAction(ACTION_START_SANDBOXED_ACTIVITY);
+        intent.setPackage(getSandboxPackageName());
+        Bundle params = new Bundle();
+        params.putBinder(mService.getSandboxedActivityHandlerKey(), new Binder());
+        intent.putExtras(params);
+
+        SecurityException exception =
+                assertThrows(
+                        SecurityException.class,
+                        () -> {
+                            sSdkSandboxManagerLocal.enforceAllowedToHostSandboxedActivity(
+                                    intent, mClientAppUid, TEST_PACKAGE);
+                        });
+
+        assertEquals(
+                "There is no sandbox process running for the caller uid: " + mClientAppUid + ".",
+                exception.getMessage());
+    }
+
+    @Test
+    @RequiresFlagsDisabled(FLAG_SDK_SANDBOX_NO_OP_IMPL)
     public void testEnforceAllowedToHostSandboxedActivitySuccessWithComponentReferToSandboxPackage()
             throws Exception {
         loadSdk(SDK_NAME);
