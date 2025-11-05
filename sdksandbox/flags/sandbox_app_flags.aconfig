@@ -7,3 +7,10 @@ flag {
     description: "Enables no-op implementation of SDK sandbox APIs"
     bug: "444627795"
 }
+
+flag {
+    name: "sdk_sandbox_api_deprecation"
+    namespace: "sdk_sandbox"
+    description: "Enables deprecation of SDK sandbox APIs"
+    bug: "444627795"
+}

@@ -15,6 +15,9 @@
  */
 package android.app.sdksandbox.sandboxactivity;
 
+import static android.app.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_API_DEPRECATION;
+
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.SystemApi;
@@ -30,7 +33,10 @@ import androidx.annotation.RequiresApi;
  * Provides information required for building the sandbox activities.
  *
  * @hide
+ * @deprecated The SDK sandbox is no longer supported.
  */
+@Deprecated
+@FlaggedApi(FLAG_SDK_SANDBOX_API_DEPRECATION)
 @SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
 public abstract class SdkSandboxActivityAuthority {
     private static class InstanceHolder {

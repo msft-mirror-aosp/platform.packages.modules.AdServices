@@ -16,6 +16,9 @@
 
 package android.app.sdksandbox;
 
+import static android.app.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_API_DEPRECATION;
+
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
@@ -31,7 +34,11 @@ import java.util.Objects;
  *
  * <p>SDK has to implement this abstract class to generate an entry point for SDK sandbox to be able
  * to call it through.
+ *
+ * @deprecated The SDK sandbox is no longer supported.
  */
+@Deprecated
+@FlaggedApi(FLAG_SDK_SANDBOX_API_DEPRECATION)
 public abstract class SandboxedSdkProvider {
     private Context mContext;
     private SdkSandboxController mSdkSandboxController;

@@ -16,6 +16,9 @@
 
 package android.app.sdksandbox.sdkprovider;
 
+import static android.app.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_API_DEPRECATION;
+
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.app.Activity;
 import android.os.Build;
@@ -38,7 +41,11 @@ import androidx.annotation.RequiresApi;
  * SdkSandboxActivityHandler#onActivityCreated(Activity)} which happens when the caller app calls
  * {@link android.app.sdksandbox.SdkSandboxManager#startSdkSandboxActivity(Activity, IBinder)} using
  * the same {@link IBinder} identifier for the registered {@link SdkSandboxActivityHandler}.
+ *
+ * @deprecated The SDK sandbox is no longer supported.
  */
+@Deprecated
+@FlaggedApi(FLAG_SDK_SANDBOX_API_DEPRECATION)
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 public interface SdkSandboxActivityHandler {
     /**

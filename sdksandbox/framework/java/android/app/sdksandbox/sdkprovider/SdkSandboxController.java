@@ -16,6 +16,7 @@
 package android.app.sdksandbox.sdkprovider;
 
 import static android.app.sdksandbox.SdkSandboxManager.getResultCodeForLoadSdkException;
+import static android.app.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_API_DEPRECATION;
 import static android.app.sdksandbox.sdkprovider.SdkSandboxController.SDK_SANDBOX_CONTROLLER_SERVICE;
 
 import android.annotation.CallbackExecutor;
@@ -46,7 +47,6 @@ import android.util.Log;
 import androidx.annotation.RequiresApi;
 
 import com.android.modules.utils.build.SdkLevel;
-import com.android.sdksandbox.flags.Flags;
 
 import java.util.List;
 import java.util.Objects;
@@ -62,7 +62,11 @@ import java.util.concurrent.Executor;
  * <p>An instance of {@link SdkSandboxController} can be obtained using {@link
  * Context#getSystemService} and {@link SdkSandboxController class}. The {@link Context} can in turn
  * be obtained using {@link android.app.sdksandbox.SandboxedSdkProvider#getContext()}.
+ *
+ * @deprecated The SDK sandbox is no longer supported.
  */
+@Deprecated
+@FlaggedApi(FLAG_SDK_SANDBOX_API_DEPRECATION)
 @SystemService(SDK_SANDBOX_CONTROLLER_SERVICE)
 public class SdkSandboxController {
     public static final String SDK_SANDBOX_CONTROLLER_SERVICE = "sdk_sandbox_controller_service";
@@ -304,7 +308,6 @@ public class SdkSandboxController {
      * @throws UnsupportedOperationException if the controller is obtained from an unexpected
      *     context. Use {@link SandboxedSdkProvider#getContext()} for the right context.
      */
-    @FlaggedApi(Flags.FLAG_SANDBOX_CLIENT_IMPORTANCE_LISTENER)
     public void registerSdkSandboxClientImportanceListener(
             @NonNull @CallbackExecutor Executor executor,
             @NonNull SdkSandboxClientImportanceListener listener) {
@@ -326,7 +329,6 @@ public class SdkSandboxController {
      * @throws UnsupportedOperationException if the controller is obtained from an unexpected
      *     context. Use {@link SandboxedSdkProvider#getContext()} for the right context.
      */
-    @FlaggedApi(Flags.FLAG_SANDBOX_CLIENT_IMPORTANCE_LISTENER)
     public void unregisterSdkSandboxClientImportanceListener(
             @NonNull SdkSandboxClientImportanceListener listener) {
         Objects.requireNonNull(listener, "listener should not be null");

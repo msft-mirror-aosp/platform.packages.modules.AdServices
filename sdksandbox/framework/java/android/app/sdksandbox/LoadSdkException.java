@@ -16,13 +16,22 @@
 
 package android.app.sdksandbox;
 
+import static android.app.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_API_DEPRECATION;
+
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-/** Exception thrown by {@link SdkSandboxManager#loadSdk} */
+/**
+ * Exception thrown by {@link SdkSandboxManager#loadSdk}
+ *
+ * @deprecated The SDK sandbox is no longer supported.
+ */
+@Deprecated
+@FlaggedApi(FLAG_SDK_SANDBOX_API_DEPRECATION)
 public final class LoadSdkException extends Exception implements Parcelable {
 
     @SdkSandboxManager.LoadSdkErrorCode private final int mLoadSdkErrorCode;
