@@ -55,7 +55,7 @@
     <string name="notificationUI_header_title_eu" msgid="9044572957854364091">"Android жарнамасындағы құпиялық (бета нұсқасы)"</string>
     <string name="notificationUI_container1_title_eu" msgid="1373016756109206670">"Жаңалықтар"</string>
     <string name="notificationUI_container1_body_text_eu" msgid="6852401002023449018">"Privacy Sandbox-тағы жаңа құпиялық функциялары сізге қолданбалардың сәйкес жарнамаларды көрсетуіне мүмкіндік береді. Алайда басқа әзірлеушілердің веб-сайттары мен қолданбаларында жасаған әрекеттеріңіз туралы деректер алу мүмкіндігін шектейді."</string>
-    <string name="notificationUI_container1_control_text_eu" msgid="3328459492928352390">"Бұл қалай жұмыс істейді?"</string>
+    <string name="notificationUI_container1_control_text_eu" msgid="3328459492928352390">"Бұл қалай орындалады?"</string>
     <string name="notificationUI_container2_title_eu" msgid="3473572343314878715">"Қатысу жолы"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5566431917133361267">"Бета нұсқасын қосқан кезде, қолданбалар жарнама көрсетудің осындай жаңа әрі жеке жолдарын сынай алады. Бета нұсқасын кез келген уақытта құпиялық параметрлерінен өшіруге болады."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="6497599738735989119">"Жоқ, рақмет"</string>
