@@ -16,6 +16,9 @@
 
 package android.app.sdksandbox;
 
+import static android.app.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_API_DEPRECATION;
+
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.os.IBinder;
 import android.os.Parcel;
@@ -37,7 +40,11 @@ import android.os.Parcelable;
  * <p>Once SDK has the AppOwnedSdkSandboxInterface it wants to communicate with, it will have to
  * cast the binder object from {@link #getInterface} to the prearranged interface before initiating
  * the communication.
+ *
+ * @deprecated The SDK sandbox is no longer supported.
  */
+@Deprecated
+@FlaggedApi(FLAG_SDK_SANDBOX_API_DEPRECATION)
 public final class AppOwnedSdkSandboxInterface implements Parcelable {
 
     private String mName;

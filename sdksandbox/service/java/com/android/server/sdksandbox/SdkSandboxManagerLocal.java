@@ -16,6 +16,8 @@
 
 package com.android.server.sdksandbox;
 
+import static android.app.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_API_DEPRECATION;
+
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.SdkConstant;
@@ -37,7 +39,10 @@ import com.android.tools.r8.keepanno.annotations.MemberAccessFlags;
  * Exposes APIs to {@code system_server} components outside of the module boundaries.
  *
  * @hide
+ * @deprecated The SDK sandbox is no longer supported.
  */
+@Deprecated
+@FlaggedApi(FLAG_SDK_SANDBOX_API_DEPRECATION)
 @SystemApi(client = SystemApi.Client.SYSTEM_SERVER)
 public interface SdkSandboxManagerLocal {
 

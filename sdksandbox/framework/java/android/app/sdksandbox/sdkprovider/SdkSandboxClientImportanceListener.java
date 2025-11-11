@@ -16,9 +16,9 @@
 
 package android.app.sdksandbox.sdkprovider;
 
-import android.annotation.FlaggedApi;
+import static android.app.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_API_DEPRECATION;
 
-import com.android.sdksandbox.flags.Flags;
+import android.annotation.FlaggedApi;
 
 import java.util.concurrent.Executor;
 
@@ -30,8 +30,11 @@ import java.util.concurrent.Executor;
  * implementation of this interface by calling {@link
  * SdkSandboxController#registerSdkSandboxClientImportanceListener(Executor,
  * SdkSandboxClientImportanceListener)}.
+ *
+ * @deprecated The SDK sandbox is no longer supported.
  */
-@FlaggedApi(Flags.FLAG_SANDBOX_CLIENT_IMPORTANCE_LISTENER)
+@Deprecated
+@FlaggedApi(FLAG_SDK_SANDBOX_API_DEPRECATION)
 public interface SdkSandboxClientImportanceListener {
     /**
      * Invoked every time the client transitions from a value <= {@link
@@ -42,6 +45,5 @@ public interface SdkSandboxClientImportanceListener {
      *     android.app.ActivityManager.RunningAppProcessInfo#IMPORTANCE_FOREGROUND} or lower and
      *     false when it is the other way round.
      */
-    @FlaggedApi(Flags.FLAG_SANDBOX_CLIENT_IMPORTANCE_LISTENER)
     void onForegroundImportanceChanged(boolean isForeground);
 }

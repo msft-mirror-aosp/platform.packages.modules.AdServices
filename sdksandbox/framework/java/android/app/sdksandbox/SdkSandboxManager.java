@@ -26,6 +26,7 @@ import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_UNSPECIFIED;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
 import android.annotation.CallbackExecutor;
+import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
@@ -76,7 +77,10 @@ import java.util.concurrent.Executor;
  * @see android.content.pm.SharedLibraryInfo#TYPE_SDK_PACKAGE
  * @see <a href="https://developer.android.com/design-for-safety/ads/sdk-runtime">SDK Runtime design
  *     proposal</a>
+ * @deprecated The SDK sandbox is no longer supported.
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_SDK_SANDBOX_API_DEPRECATION)
 @SystemService(SDK_SANDBOX_SERVICE)
 public final class SdkSandboxManager {
 
