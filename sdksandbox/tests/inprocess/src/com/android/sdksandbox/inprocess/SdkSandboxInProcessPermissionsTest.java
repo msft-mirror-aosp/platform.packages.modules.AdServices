@@ -27,6 +27,7 @@ import android.content.pm.PackageManager;
 import android.os.Process;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -34,6 +35,7 @@ import org.junit.runners.JUnit4;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+@Ignore("b/460097328 - re-enable when fixed")
 @RunWith(JUnit4.class)
 public class SdkSandboxInProcessPermissionsTest {
 

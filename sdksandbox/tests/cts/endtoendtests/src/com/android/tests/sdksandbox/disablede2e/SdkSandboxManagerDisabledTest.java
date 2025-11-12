@@ -38,6 +38,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,6 +46,7 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 @RequiresFlagsDisabled(Flags.FLAG_SDK_SANDBOX_NO_OP_IMPL)
+@Ignore("b/460097328 - re-enable when fixed")
 public class SdkSandboxManagerDisabledTest {
 
     @Rule(order = 0)

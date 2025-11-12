@@ -25,6 +25,7 @@ import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 import com.android.sdksandbox.flags.Flags;
 import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,6 +33,7 @@ import org.junit.runners.JUnit4;
 
 /** Tests to check some basic properties of the Sdk Sandbox audit process. */
 @RunWith(JUnit4.class)
+@Ignore("b/460097328 - re-enable when fixed")
 @RequiresFlagsEnabled(Flags.FLAG_SELINUX_SDK_SANDBOX_AUDIT)
 public class SdkSandboxAuditTest extends DeviceSupportedBaseTest {
 

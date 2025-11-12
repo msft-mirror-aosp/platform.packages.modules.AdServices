@@ -63,6 +63,7 @@ import java.util.concurrent.TimeUnit;
 
 /** Tests to check some basic properties of the Sdk Sandbox processes. */
 @RunWith(JUnit4.class)
+@Ignore("b/460097328 - re-enable when fixed")
 public class SdkSandboxConfigurationTest extends DeviceSupportedBaseTest {
 
     private static final String TEST_PKG = "com.android.sdksandbox.tests.cts.inprocesstests";

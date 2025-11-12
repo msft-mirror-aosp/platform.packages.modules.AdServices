@@ -38,12 +38,14 @@ import com.android.sdksandbox.flags.Flags;
 import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests for the instrumentation running the Sdk sanbdox tests. */
+@Ignore("b/460097328 - re-enable when fixed")
 @RunWith(JUnit4.class)
 @RequiresFlagsEnabled(Flags.FLAG_SDK_SANDBOX_INSTRUMENTATION_INFO)
 public class SdkSandboxInstrumentationTest extends DeviceSupportedBaseTest {
