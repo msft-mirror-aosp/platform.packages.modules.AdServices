@@ -102,18 +102,6 @@
       "name": "CtsAdServicesMddTests"
     },
     {
-      "name": "CtsSandboxedAdIdManagerTests"
-    },
-    {
-      "name": "CtsSandboxedTopicsManagerTests"
-    },
-    {
-      "name": "CtsSandboxedMeasurementManagerTests"
-    },
-    {
-      "name": "CtsSandboxedFledgeManagerTests"
-    },
-    {
       "name": "CtsAdIdEndToEndTest"
     },
     {
@@ -519,22 +507,6 @@
       "name": "CtsAdExtServicesMddTests[com.google.android.extservices.apex]"
     },
     {
-      // Install com.google.android.adservices.apex and run CtsSandboxedAdIdManagerTests.
-      "name": "CtsSandboxedAdIdManagerTests[com.google.android.adservices.apex]"
-    },
-    {
-      // Install com.google.android.adservices.apex and run CtsSandboxedTopicsManagerTests.
-      "name": "CtsSandboxedTopicsManagerTests[com.google.android.adservices.apex]"
-    },
-    {
-      // Install com.google.android.adservices.apex and run CtsSandboxedMeasurementManagerTests.
-      "name": "CtsSandboxedMeasurementManagerTests[com.google.android.adservices.apex]"
-    },
-    {
-      // Install com.google.android.adservices.apex and run SandboxedFledgeManagerTests.
-      "name": "CtsSandboxedFledgeManagerTests[com.google.android.adservices.apex]"
-    },
-    {
       // Install com.google.android.adservices.apex and run CtsAdIdEndToEndTest.
       "name": "CtsAdIdEndToEndTest[com.google.android.adservices.apex]"
     },
@@ -758,18 +730,6 @@
     },
     {
       "name": "CtsAdServicesMddTests"
-    },
-    {
-      "name": "CtsSandboxedAdIdManagerTests"
-    },
-    {
-      "name": "CtsSandboxedTopicsManagerTests"
-    },
-    {
-      "name": "CtsSandboxedMeasurementManagerTests"
-    },
-    {
-      "name": "CtsSandboxedFledgeManagerTests"
     },
     {
       "name": "CtsAdIdEndToEndTest"
