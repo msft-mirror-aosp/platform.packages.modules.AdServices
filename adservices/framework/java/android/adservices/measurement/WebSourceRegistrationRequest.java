@@ -16,6 +16,7 @@
 
 package android.adservices.measurement;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
@@ -24,11 +25,25 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.view.InputEvent;
 
+import com.android.adservices.flags.Flags;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/** Class to hold input to measurement source registration calls from web context. */
+/**
+ * Class to hold input to measurement source registration calls from web context.
+ *
+ * @deprecated The Rubidium (Rb) Measurement APIs, including those in
+ *     android.adservices.measurement, are being deprecated. There are no direct replacement APIs
+ *     for the Measurement APIs. Developers currently using these APIs should cease integration, as
+ *     calls to these APIs will be rejected in upcoming Android releases as part of a soft removal
+ *     process. Please refer to the official Privacy Sandbox developer documentation and
+ *     announcements for more details on this deprecation and the future roadmap of Privacy Sandbox
+ *     on Android: https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+ */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class WebSourceRegistrationRequest implements Parcelable {
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static final int WEB_SOURCE_PARAMS_MAX_COUNT = 80;
@@ -225,7 +240,13 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         }
     }
 
-    /** Builder for {@link WebSourceRegistrationRequest}. */
+    /**
+     * Builder for {@link WebSourceRegistrationRequest}.
+     *
+     * @deprecated See {@link WebSourceRegistrationRequest} for the deprecation details.
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         /** Registration info to fetch sources. */
         @NonNull private final List<WebSourceParams> mWebSourceParams;

@@ -1,8 +1,8 @@
 // Signature format: 2.0
 package android.adservices {
 
-  public class AdServicesState {
-    method public static boolean isAdServicesStateEnabled();
+  @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_deprecated") public class AdServicesState {
+    method @Deprecated public static boolean isAdServicesStateEnabled();
   }
 
 }
@@ -631,133 +631,133 @@ package android.adservices.customaudience {
 
 package android.adservices.exceptions {
 
-  public class AdServicesException extends java.lang.Exception {
-    ctor public AdServicesException(@Nullable String, @Nullable Throwable);
-    ctor public AdServicesException(@Nullable String);
+  @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_deprecated") public class AdServicesException extends java.lang.Exception {
+    ctor @Deprecated public AdServicesException(@Nullable String, @Nullable Throwable);
+    ctor @Deprecated public AdServicesException(@Nullable String);
   }
 
 }
 
 package android.adservices.measurement {
 
-  public class DeletionRequest {
-    method public int getDeletionMode();
-    method @NonNull public java.util.List<android.net.Uri> getDomainUris();
-    method @NonNull public java.time.Instant getEnd();
-    method public int getMatchBehavior();
-    method @NonNull public java.util.List<android.net.Uri> getOriginUris();
-    method @NonNull public java.time.Instant getStart();
-    field public static final int DELETION_MODE_ALL = 0; // 0x0
-    field public static final int DELETION_MODE_EXCLUDE_INTERNAL_DATA = 1; // 0x1
-    field public static final int MATCH_BEHAVIOR_DELETE = 0; // 0x0
-    field public static final int MATCH_BEHAVIOR_PRESERVE = 1; // 0x1
+  @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_deprecated") public class DeletionRequest {
+    method @Deprecated public int getDeletionMode();
+    method @Deprecated @NonNull public java.util.List<android.net.Uri> getDomainUris();
+    method @Deprecated @NonNull public java.time.Instant getEnd();
+    method @Deprecated public int getMatchBehavior();
+    method @Deprecated @NonNull public java.util.List<android.net.Uri> getOriginUris();
+    method @Deprecated @NonNull public java.time.Instant getStart();
+    field @Deprecated public static final int DELETION_MODE_ALL = 0; // 0x0
+    field @Deprecated public static final int DELETION_MODE_EXCLUDE_INTERNAL_DATA = 1; // 0x1
+    field @Deprecated public static final int MATCH_BEHAVIOR_DELETE = 0; // 0x0
+    field @Deprecated public static final int MATCH_BEHAVIOR_PRESERVE = 1; // 0x1
   }
 
-  public static final class DeletionRequest.Builder {
-    ctor public DeletionRequest.Builder();
-    method @NonNull public android.adservices.measurement.DeletionRequest build();
-    method @NonNull public android.adservices.measurement.DeletionRequest.Builder setDeletionMode(int);
-    method @NonNull public android.adservices.measurement.DeletionRequest.Builder setDomainUris(@Nullable java.util.List<android.net.Uri>);
-    method @NonNull public android.adservices.measurement.DeletionRequest.Builder setEnd(@NonNull java.time.Instant);
-    method @NonNull public android.adservices.measurement.DeletionRequest.Builder setMatchBehavior(int);
-    method @NonNull public android.adservices.measurement.DeletionRequest.Builder setOriginUris(@Nullable java.util.List<android.net.Uri>);
-    method @NonNull public android.adservices.measurement.DeletionRequest.Builder setStart(@NonNull java.time.Instant);
+  @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_deprecated") public static final class DeletionRequest.Builder {
+    ctor @Deprecated public DeletionRequest.Builder();
+    method @Deprecated @NonNull public android.adservices.measurement.DeletionRequest build();
+    method @Deprecated @NonNull public android.adservices.measurement.DeletionRequest.Builder setDeletionMode(int);
+    method @Deprecated @NonNull public android.adservices.measurement.DeletionRequest.Builder setDomainUris(@Nullable java.util.List<android.net.Uri>);
+    method @Deprecated @NonNull public android.adservices.measurement.DeletionRequest.Builder setEnd(@NonNull java.time.Instant);
+    method @Deprecated @NonNull public android.adservices.measurement.DeletionRequest.Builder setMatchBehavior(int);
+    method @Deprecated @NonNull public android.adservices.measurement.DeletionRequest.Builder setOriginUris(@Nullable java.util.List<android.net.Uri>);
+    method @Deprecated @NonNull public android.adservices.measurement.DeletionRequest.Builder setStart(@NonNull java.time.Instant);
   }
 
-  public class MeasurementManager {
-    method public void deleteRegistrations(@NonNull android.adservices.measurement.DeletionRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
-    method @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_outcomereceiver_r_api_deprecated") public void deleteRegistrations(@NonNull android.adservices.measurement.DeletionRequest, @NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
-    method @NonNull public static android.adservices.measurement.MeasurementManager get(@NonNull android.content.Context);
-    method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void getMeasurementApiStatus(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Integer,java.lang.Exception>);
-    method @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_outcomereceiver_r_api_deprecated") @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void getMeasurementApiStatus(@NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<java.lang.Integer,java.lang.Exception>);
-    method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerSource(@NonNull android.net.Uri, @Nullable android.view.InputEvent, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
-    method @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_outcomereceiver_r_api_deprecated") @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerSource(@NonNull android.net.Uri, @Nullable android.view.InputEvent, @Nullable java.util.concurrent.Executor, @Nullable android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
-    method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerSource(@NonNull android.adservices.measurement.SourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
-    method @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_outcomereceiver_r_api_deprecated") @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerSource(@NonNull android.adservices.measurement.SourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
-    method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerTrigger(@NonNull android.net.Uri, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
-    method @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_outcomereceiver_r_api_deprecated") @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerTrigger(@NonNull android.net.Uri, @Nullable java.util.concurrent.Executor, @Nullable android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
-    method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerWebSource(@NonNull android.adservices.measurement.WebSourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
-    method @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_outcomereceiver_r_api_deprecated") @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerWebSource(@NonNull android.adservices.measurement.WebSourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
-    method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerWebTrigger(@NonNull android.adservices.measurement.WebTriggerRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
-    method @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_outcomereceiver_r_api_deprecated") @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerWebTrigger(@NonNull android.adservices.measurement.WebTriggerRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
-    field public static final int MEASUREMENT_API_STATE_DISABLED = 0; // 0x0
-    field public static final int MEASUREMENT_API_STATE_ENABLED = 1; // 0x1
+  @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_deprecated") public class MeasurementManager {
+    method @Deprecated public void deleteRegistrations(@NonNull android.adservices.measurement.DeletionRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @Deprecated public void deleteRegistrations(@NonNull android.adservices.measurement.DeletionRequest, @NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @Deprecated @NonNull public static android.adservices.measurement.MeasurementManager get(@NonNull android.content.Context);
+    method @Deprecated @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void getMeasurementApiStatus(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Integer,java.lang.Exception>);
+    method @Deprecated @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void getMeasurementApiStatus(@NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<java.lang.Integer,java.lang.Exception>);
+    method @Deprecated @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerSource(@NonNull android.net.Uri, @Nullable android.view.InputEvent, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @Deprecated @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerSource(@NonNull android.net.Uri, @Nullable android.view.InputEvent, @Nullable java.util.concurrent.Executor, @Nullable android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @Deprecated @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerSource(@NonNull android.adservices.measurement.SourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @Deprecated @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerSource(@NonNull android.adservices.measurement.SourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @Deprecated @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerTrigger(@NonNull android.net.Uri, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @Deprecated @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerTrigger(@NonNull android.net.Uri, @Nullable java.util.concurrent.Executor, @Nullable android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @Deprecated @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerWebSource(@NonNull android.adservices.measurement.WebSourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @Deprecated @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerWebSource(@NonNull android.adservices.measurement.WebSourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @Deprecated @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerWebTrigger(@NonNull android.adservices.measurement.WebTriggerRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @Deprecated @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerWebTrigger(@NonNull android.adservices.measurement.WebTriggerRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    field @Deprecated public static final int MEASUREMENT_API_STATE_DISABLED = 0; // 0x0
+    field @Deprecated public static final int MEASUREMENT_API_STATE_ENABLED = 1; // 0x1
   }
 
-  public final class SourceRegistrationRequest implements android.os.Parcelable {
-    method public int describeContents();
-    method @Nullable public android.view.InputEvent getInputEvent();
-    method @NonNull public java.util.List<android.net.Uri> getRegistrationUris();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.measurement.SourceRegistrationRequest> CREATOR;
+  @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_deprecated") public final class SourceRegistrationRequest implements android.os.Parcelable {
+    method @Deprecated public int describeContents();
+    method @Deprecated @Nullable public android.view.InputEvent getInputEvent();
+    method @Deprecated @NonNull public java.util.List<android.net.Uri> getRegistrationUris();
+    method @Deprecated public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @Deprecated @NonNull public static final android.os.Parcelable.Creator<android.adservices.measurement.SourceRegistrationRequest> CREATOR;
   }
 
-  public static final class SourceRegistrationRequest.Builder {
-    ctor public SourceRegistrationRequest.Builder(@NonNull java.util.List<android.net.Uri>);
-    method @NonNull public android.adservices.measurement.SourceRegistrationRequest build();
-    method @NonNull public android.adservices.measurement.SourceRegistrationRequest.Builder setInputEvent(@Nullable android.view.InputEvent);
+  @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_deprecated") public static final class SourceRegistrationRequest.Builder {
+    ctor @Deprecated public SourceRegistrationRequest.Builder(@NonNull java.util.List<android.net.Uri>);
+    method @Deprecated @NonNull public android.adservices.measurement.SourceRegistrationRequest build();
+    method @Deprecated @NonNull public android.adservices.measurement.SourceRegistrationRequest.Builder setInputEvent(@Nullable android.view.InputEvent);
   }
 
-  public final class WebSourceParams implements android.os.Parcelable {
-    method public int describeContents();
-    method @NonNull public android.net.Uri getRegistrationUri();
-    method public boolean isDebugKeyAllowed();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.measurement.WebSourceParams> CREATOR;
+  @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_deprecated") public final class WebSourceParams implements android.os.Parcelable {
+    method @Deprecated public int describeContents();
+    method @Deprecated @NonNull public android.net.Uri getRegistrationUri();
+    method @Deprecated public boolean isDebugKeyAllowed();
+    method @Deprecated public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @Deprecated @NonNull public static final android.os.Parcelable.Creator<android.adservices.measurement.WebSourceParams> CREATOR;
   }
 
-  public static final class WebSourceParams.Builder {
-    ctor public WebSourceParams.Builder(@NonNull android.net.Uri);
-    method @NonNull public android.adservices.measurement.WebSourceParams build();
-    method @NonNull public android.adservices.measurement.WebSourceParams.Builder setDebugKeyAllowed(boolean);
+  @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_deprecated") public static final class WebSourceParams.Builder {
+    ctor @Deprecated public WebSourceParams.Builder(@NonNull android.net.Uri);
+    method @Deprecated @NonNull public android.adservices.measurement.WebSourceParams build();
+    method @Deprecated @NonNull public android.adservices.measurement.WebSourceParams.Builder setDebugKeyAllowed(boolean);
   }
 
-  public final class WebSourceRegistrationRequest implements android.os.Parcelable {
-    method public int describeContents();
-    method @Nullable public android.net.Uri getAppDestination();
-    method @Nullable public android.view.InputEvent getInputEvent();
-    method @NonNull public java.util.List<android.adservices.measurement.WebSourceParams> getSourceParams();
-    method @NonNull public android.net.Uri getTopOriginUri();
-    method @Nullable public android.net.Uri getVerifiedDestination();
-    method @Nullable public android.net.Uri getWebDestination();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.measurement.WebSourceRegistrationRequest> CREATOR;
+  @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_deprecated") public final class WebSourceRegistrationRequest implements android.os.Parcelable {
+    method @Deprecated public int describeContents();
+    method @Deprecated @Nullable public android.net.Uri getAppDestination();
+    method @Deprecated @Nullable public android.view.InputEvent getInputEvent();
+    method @Deprecated @NonNull public java.util.List<android.adservices.measurement.WebSourceParams> getSourceParams();
+    method @Deprecated @NonNull public android.net.Uri getTopOriginUri();
+    method @Deprecated @Nullable public android.net.Uri getVerifiedDestination();
+    method @Deprecated @Nullable public android.net.Uri getWebDestination();
+    method @Deprecated public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @Deprecated @NonNull public static final android.os.Parcelable.Creator<android.adservices.measurement.WebSourceRegistrationRequest> CREATOR;
   }
 
-  public static final class WebSourceRegistrationRequest.Builder {
-    ctor public WebSourceRegistrationRequest.Builder(@NonNull java.util.List<android.adservices.measurement.WebSourceParams>, @NonNull android.net.Uri);
-    method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest build();
-    method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setAppDestination(@Nullable android.net.Uri);
-    method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setInputEvent(@Nullable android.view.InputEvent);
-    method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setVerifiedDestination(@Nullable android.net.Uri);
-    method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setWebDestination(@Nullable android.net.Uri);
+  @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_deprecated") public static final class WebSourceRegistrationRequest.Builder {
+    ctor @Deprecated public WebSourceRegistrationRequest.Builder(@NonNull java.util.List<android.adservices.measurement.WebSourceParams>, @NonNull android.net.Uri);
+    method @Deprecated @NonNull public android.adservices.measurement.WebSourceRegistrationRequest build();
+    method @Deprecated @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setAppDestination(@Nullable android.net.Uri);
+    method @Deprecated @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setInputEvent(@Nullable android.view.InputEvent);
+    method @Deprecated @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setVerifiedDestination(@Nullable android.net.Uri);
+    method @Deprecated @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setWebDestination(@Nullable android.net.Uri);
   }
 
-  public final class WebTriggerParams implements android.os.Parcelable {
-    method public int describeContents();
-    method @NonNull public android.net.Uri getRegistrationUri();
-    method public boolean isDebugKeyAllowed();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.measurement.WebTriggerParams> CREATOR;
+  @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_deprecated") public final class WebTriggerParams implements android.os.Parcelable {
+    method @Deprecated public int describeContents();
+    method @Deprecated @NonNull public android.net.Uri getRegistrationUri();
+    method @Deprecated public boolean isDebugKeyAllowed();
+    method @Deprecated public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @Deprecated @NonNull public static final android.os.Parcelable.Creator<android.adservices.measurement.WebTriggerParams> CREATOR;
   }
 
-  public static final class WebTriggerParams.Builder {
-    ctor public WebTriggerParams.Builder(@NonNull android.net.Uri);
-    method @NonNull public android.adservices.measurement.WebTriggerParams build();
-    method @NonNull public android.adservices.measurement.WebTriggerParams.Builder setDebugKeyAllowed(boolean);
+  @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_deprecated") public static final class WebTriggerParams.Builder {
+    ctor @Deprecated public WebTriggerParams.Builder(@NonNull android.net.Uri);
+    method @Deprecated @NonNull public android.adservices.measurement.WebTriggerParams build();
+    method @Deprecated @NonNull public android.adservices.measurement.WebTriggerParams.Builder setDebugKeyAllowed(boolean);
   }
 
-  public final class WebTriggerRegistrationRequest implements android.os.Parcelable {
-    method public int describeContents();
-    method @NonNull public android.net.Uri getDestination();
-    method @NonNull public java.util.List<android.adservices.measurement.WebTriggerParams> getTriggerParams();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.measurement.WebTriggerRegistrationRequest> CREATOR;
+  @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_deprecated") public final class WebTriggerRegistrationRequest implements android.os.Parcelable {
+    method @Deprecated public int describeContents();
+    method @Deprecated @NonNull public android.net.Uri getDestination();
+    method @Deprecated @NonNull public java.util.List<android.adservices.measurement.WebTriggerParams> getTriggerParams();
+    method @Deprecated public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @Deprecated @NonNull public static final android.os.Parcelable.Creator<android.adservices.measurement.WebTriggerRegistrationRequest> CREATOR;
   }
 
-  public static final class WebTriggerRegistrationRequest.Builder {
-    ctor public WebTriggerRegistrationRequest.Builder(@NonNull java.util.List<android.adservices.measurement.WebTriggerParams>, @NonNull android.net.Uri);
-    method @NonNull public android.adservices.measurement.WebTriggerRegistrationRequest build();
+  @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_deprecated") public static final class WebTriggerRegistrationRequest.Builder {
+    ctor @Deprecated public WebTriggerRegistrationRequest.Builder(@NonNull java.util.List<android.adservices.measurement.WebTriggerParams>, @NonNull android.net.Uri);
+    method @Deprecated @NonNull public android.adservices.measurement.WebTriggerRegistrationRequest build();
   }
 
 }

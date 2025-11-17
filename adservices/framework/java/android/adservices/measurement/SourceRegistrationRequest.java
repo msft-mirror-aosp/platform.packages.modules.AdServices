@@ -16,6 +16,7 @@
 
 package android.adservices.measurement;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
@@ -25,6 +26,7 @@ import android.os.Parcelable;
 import android.view.InputEvent;
 
 import com.android.adservices.AdServicesParcelableUtil;
+import com.android.adservices.flags.Flags;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +34,17 @@ import java.util.Objects;
 
 /**
  * Class to hold input to measurement source registration calls.
+ *
+ * @deprecated The Rubidium (Rb) Measurement APIs, including those in
+ *     android.adservices.measurement, are being deprecated. There are no direct replacement APIs
+ *     for the Measurement APIs. Developers currently using these APIs should cease integration, as
+ *     calls to these APIs will be rejected in upcoming Android releases as part of a soft removal
+ *     process. Please refer to the official Privacy Sandbox developer documentation and
+ *     announcements for more details on this deprecation and the future roadmap of Privacy Sandbox
+ *     on Android: https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class SourceRegistrationRequest implements Parcelable {
     private static final int REGISTRATION_URIS_MAX_COUNT = 20;
     /** Registration URIs to fetch sources. */
@@ -107,7 +119,13 @@ public final class SourceRegistrationRequest implements Parcelable {
                 out, mInputEvent, (target, event) -> event.writeToParcel(target, flags));
     }
 
-    /** Builder for {@link SourceRegistrationRequest}. */
+    /**
+     * Builder for {@link SourceRegistrationRequest}.
+     *
+     * @deprecated See {@link SourceRegistrationRequest} for the deprecation details.
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         /** Registration {@link Uri}s to fetch sources. */
         @NonNull private final List<Uri> mRegistrationUris;

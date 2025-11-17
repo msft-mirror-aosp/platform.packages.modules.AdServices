@@ -16,10 +16,13 @@
 
 package android.adservices.measurement;
 
+import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
+
+import com.android.adservices.flags.Flags;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -28,7 +31,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/** Deletion Request. */
+/**
+ * Deletion Request.
+ *
+ * @deprecated The Rubidium (Rb) Measurement APIs, including those in
+ *     android.adservices.measurement, are being deprecated. There are no direct replacement APIs
+ *     for the Measurement APIs. Developers currently using these APIs should cease integration, as
+ *     calls to these APIs will be rejected in upcoming Android releases as part of a soft removal
+ *     process. Please refer to the official Privacy Sandbox developer documentation and
+ *     announcements for more details on this deprecation and the future roadmap of Privacy Sandbox
+ *     on Android: https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+ */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public class DeletionRequest {
 
     /**
@@ -117,7 +132,13 @@ public class DeletionRequest {
         return mEnd;
     }
 
-    /** Builder for {@link DeletionRequest} objects. */
+    /**
+     * Builder for {@link DeletionRequest} objects.
+     *
+     * @deprecated See {@link DeletionRequest} for the deprecation details.
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         private Instant mStart = Instant.MIN;
         private Instant mEnd = Instant.MAX;
