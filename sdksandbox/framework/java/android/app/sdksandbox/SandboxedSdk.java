@@ -16,7 +16,9 @@
 
 package android.app.sdksandbox;
 
+import static android.app.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_API_DEPRECATION;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.pm.SharedLibraryInfo;
@@ -37,7 +39,11 @@ import java.util.Objects;
  * references to it when {@link SandboxedSdkProvider#beforeUnloadSdk()} is called. Additionally, the
  * SDK should fail calls made to the {@code IBinder} returned from {@link #getInterface()} after
  * {@link SandboxedSdkProvider#beforeUnloadSdk()} has been called.
+ *
+ * @deprecated The SDK sandbox is no longer supported.
  */
+@Deprecated
+@FlaggedApi(FLAG_SDK_SANDBOX_API_DEPRECATION)
 public final class SandboxedSdk implements Parcelable {
     public static final @NonNull Creator<SandboxedSdk> CREATOR =
             new Creator<SandboxedSdk>() {

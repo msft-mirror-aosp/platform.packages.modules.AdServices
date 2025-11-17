@@ -17,8 +17,10 @@
 package android.app.sdksandbox;
 
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
+import static android.app.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_API_DEPRECATION;
 import static android.app.sdksandbox.sdkprovider.SdkSandboxController.SDK_SANDBOX_CONTROLLER_SERVICE;
 
+import android.annotation.FlaggedApi;
 import android.annotation.SystemApi;
 import android.app.SystemServiceRegistry;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
@@ -28,7 +30,10 @@ import android.content.Context;
  * Class holding initialization code for all Sandbox Runtime system services.
  *
  * @hide
+ * @deprecated The SDK sandbox is no longer supported.
  */
+@Deprecated
+@FlaggedApi(FLAG_SDK_SANDBOX_API_DEPRECATION)
 @SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
 public class SdkSandboxManagerFrameworkInitializer {
     private SdkSandboxManagerFrameworkInitializer() {

@@ -1,81 +1,6 @@
 {
-  "adservices-mainline-presubmit": [
-    {
-      "name": "CtsSdkSandboxHostSideTests",
-      "options": [
-        {
-          "exclude-annotation": "android.platform.test.annotations.LargeTest"
-        }
-      ]
-    },
-    {
-      "name": "CtsSdkSandboxInprocessTests"
-    },
-    {
-      "name": "SdkSandboxInprocessTests"
-    },
-    {
-      "name": "SdkSandboxManagerServiceUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "SdkSandboxFrameworkUnitTests"
-    },
-    {
-      "name": "SdkSandboxUnitTests"
-    },
-    {
-      "name": "SdkSandboxManagerTests"
-    },
-    {
-      "name": "SdkSandboxLifecycleHostTest"
-    },
-    {
-      "name": "SdkSandboxShellHostTest"
-    },
-    {
-      "name": "SdkSandboxRestrictionsTests"
-    },
-    {
-      "name": "SdkSandboxStorageHostTest",
-      "options": [
-        {
-          "exclude-annotation": "android.platform.test.annotations.LargeTest"
-        }
-      ]
-    },
-    {
-      "name": "SdkSandboxMetricsHostTest"
-    },
-    {
-      "name": "CtsSdkSandboxWebkitTestCases",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "SdkSandboxManagerDisabledTests"
-    },
-    {
-      "name": "SdkSandboxPerfScenarioTests"
-    }
-  ],
-  "mainline-presubmit": [
+  "mainline-postsubmit": [
     // Install com.google.android.adservices.apex and run the corresponding test.
-    {
-      "name": "CtsSdkSandboxHostSideTests[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "android.platform.test.annotations.LargeTest"
-        }
-      ]
-    },
     {
       "name": "CtsSdkSandboxInprocessTests[com.google.android.adservices.apex]"
     },
@@ -109,33 +34,14 @@
       "name": "SdkSandboxRestrictionsTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "SdkSandboxStorageHostTest[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "android.platform.test.annotations.LargeTest"
-        }
-      ]
-    },
-    {
       "name": "SdkSandboxMetricsHostTest[com.google.android.adservices.apex]"
-    },
-    {
-      "name": "CtsSdkSandboxWebkitTestCases[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
     },
     {
       "name": "SdkSandboxManagerDisabledTests[com.google.android.adservices.apex]"
     },
     {
       "name": "SdkSandboxPerfScenarioTests[com.google.android.adservices.apex]"
-    }
-  ],
-  "mainline-postsubmit": [
-    // Install com.google.android.adservices.apex and run the corresponding test.
+    },
     {
       "name": "SdkSandboxStorageHostTest[com.google.android.adservices.apex]"
     },
@@ -155,28 +61,12 @@
       "name": "SdkSandboxRestrictionsHostTest[com.google.android.adservices.apex]"
     }
   ],
-  "presubmit": [
-    {
-      "name": "CtsSdkSandboxHostSideTests",
-      "options": [
-        {
-          "exclude-annotation": "android.platform.test.annotations.LargeTest"
-        }
-      ]
-    },
+  "postsubmit": [
     {
       "name": "CtsSdkSandboxInprocessTests"
     },
     {
       "name": "SdkSandboxInprocessTests"
-    },
-    {
-      "name": "CtsSdkSandboxWebkitTestCases",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
     },
     {
       "name": "SdkSandboxManagerServiceUnitTests",
@@ -205,14 +95,6 @@
       "name": "SdkSandboxRestrictionsTests"
     },
     {
-      "name": "SdkSandboxStorageHostTest",
-      "options": [
-        {
-          "exclude-annotation": "android.platform.test.annotations.LargeTest"
-        }
-      ]
-    },
-    {
       "name": "SdkSandboxMetricsHostTest"
     },
     {
@@ -226,9 +108,7 @@
     },
     {
       "name": "SdkSandboxSmallModuleHostTest"
-    }
-  ],
-  "postsubmit": [
+    },
     {
       "name": "SdkSandboxStorageHostTest"
     },

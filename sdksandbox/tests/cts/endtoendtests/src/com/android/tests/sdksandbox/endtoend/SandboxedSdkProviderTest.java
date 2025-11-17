@@ -26,6 +26,8 @@ import android.app.sdksandbox.flags.Flags;
 import android.content.Context;
 import android.os.Bundle;
 import android.platform.test.annotations.RequiresFlagsDisabled;
+import android.platform.test.flag.junit.CheckFlagsRule;
+import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 import android.view.View;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -33,6 +35,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.server.sdksandbox.SandboxKillerBeforeTest;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -41,6 +44,9 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 @RequiresFlagsDisabled(Flags.FLAG_SDK_SANDBOX_NO_OP_IMPL)
 public class SandboxedSdkProviderTest extends SandboxKillerBeforeTest {
+
+    @Rule
+    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     private SandboxedSdkProvider mSdk;
 

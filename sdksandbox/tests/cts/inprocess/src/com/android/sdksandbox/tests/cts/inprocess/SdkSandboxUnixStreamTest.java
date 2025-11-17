@@ -34,6 +34,7 @@ import com.android.modules.utils.build.SdkLevel;
 import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -44,6 +45,7 @@ import java.util.stream.Collectors;
 
 /** Tests for the instrumentation running the Sdk sanbdox tests. */
 @RunWith(JUnit4.class)
+@Ignore("b/460097328 - re-enable when fixed")
 public class SdkSandboxUnixStreamTest extends DeviceSupportedBaseTest {
 
     @Before

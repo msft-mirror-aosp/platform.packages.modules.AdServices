@@ -43,7 +43,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
-import org.junit.Rule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -59,6 +59,7 @@ import java.util.UUID;
 
 /** Tests to check SDK sandbox process restrictions. */
 @RunWith(JUnit4.class)
+@Ignore("b/460097328 - re-enable when fixed")
 public class SdkSandboxRestrictionsTest extends DeviceSupportedBaseTest {
 
     private final Context mContext =

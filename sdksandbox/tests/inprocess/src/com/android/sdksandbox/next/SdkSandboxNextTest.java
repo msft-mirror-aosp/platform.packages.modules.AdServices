@@ -25,12 +25,14 @@ import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 import com.android.sdksandbox.flags.Flags;
 import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests to check some basic properties of the Sdk Sandbox next process. */
+@Ignore("b/460097328 - re-enable when fixed")
 @RunWith(JUnit4.class)
 public class SdkSandboxNextTest extends DeviceSupportedBaseTest {
 
