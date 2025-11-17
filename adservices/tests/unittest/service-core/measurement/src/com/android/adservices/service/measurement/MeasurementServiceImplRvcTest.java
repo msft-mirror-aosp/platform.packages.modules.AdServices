@@ -51,12 +51,6 @@ import android.os.SystemClock;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.service.common.AdPackageDenyResolver;
-import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.Throttler;
-import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
@@ -79,12 +73,7 @@ public final class MeasurementServiceImplRvcTest extends AdServicesExtendedMocki
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final Uri WEB_DESTINATION = WebUtil.validUri("https://web-destination-uri.test");
     @Mock private AdServicesLogger mMockAdServicesLogger;
-    @Mock private AppImportanceFilter mMockAppImportanceFilter;
-    @Mock private ConsentManager mMockConsentManager;
     @Mock private MeasurementImpl mMockMeasurementImpl;
-    @Mock private Throttler mMockThrottler;
-    @Mock private DevContextFilter mDevContextFilter;
-    @Mock private AdPackageDenyResolver mAdPackageDenyResolver;
 
     private MeasurementServiceImpl mMeasurementServiceImpl;
 
@@ -243,19 +232,7 @@ public final class MeasurementServiceImplRvcTest extends AdServicesExtendedMocki
     }
 
     private MeasurementServiceImpl createServiceWithMocks() {
-        return new MeasurementServiceImpl(
-                mMockMeasurementImpl,
-                mMockContext,
-                Clock.getInstance(),
-                mMockConsentManager,
-                mMockThrottler,
-                new CachedFlags(mMockFlags),
-                mFakeDebugFlags,
-                mMockAdServicesLogger,
-                mMockAppImportanceFilter,
-                mDevContextFilter,
-                mAdPackageDenyResolver,
-                AdServicesExecutors.getBackgroundExecutor());
+        return new MeasurementServiceImpl(Clock.getInstance(), mMockAdServicesLogger);
     }
 
     private static final class SyncMeasurementCallback

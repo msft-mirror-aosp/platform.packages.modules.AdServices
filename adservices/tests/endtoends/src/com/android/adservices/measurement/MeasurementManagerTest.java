@@ -329,7 +329,7 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
 
         mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
         int response = future.get();
-        assertThat(response).isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
+        assertThat(response).isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_DISABLED);
     }
 
     @Test
@@ -353,7 +353,7 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
 
         mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
         int response = future.get();
-        assertThat(response).isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
+        assertThat(response).isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_DISABLED);
     }
 
     @Test

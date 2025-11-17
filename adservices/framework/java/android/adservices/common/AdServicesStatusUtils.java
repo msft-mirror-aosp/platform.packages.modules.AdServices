@@ -383,6 +383,12 @@ public final class AdServicesStatusUtils {
     public static final String CALLER_NOT_ALLOWED_DENY_LIST_ERROR_MESSAGE =
             "Caller is not authorized to call this API as caller is in deny list.";
 
+    /**
+     * The error message to be returned along with {@link IllegalStateException} when the AdServices
+     * API is disabled.
+     */
+    public static final String ADSERVICES_DISABLED_ERROR_MESSAGE = "AdServices API is disabled.";
+
     /** Returns true for a successful status. */
     public static boolean isSuccess(@StatusCode int statusCode) {
         return statusCode == STATUS_SUCCESS;
@@ -450,6 +456,8 @@ public final class AdServicesStatusUtils {
                 return new IllegalStateException(DEV_SESSION_FAILURE_MESSAGE);
             case STATUS_CALLER_NOT_ALLOWED_DENY_LIST:
                 return new SecurityException(CALLER_NOT_ALLOWED_DENY_LIST_ERROR_MESSAGE);
+            case STATUS_ADSERVICES_DISABLED:
+                return new IllegalStateException(ADSERVICES_DISABLED_ERROR_MESSAGE);
             default:
                 return new IllegalStateException();
         }
