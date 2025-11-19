@@ -77,6 +77,7 @@ android_library {
     ],
     lint: {
         extra_check_modules: ["AdServicesProdLintChecker"],
+        baseline_filename: "lint-baseline-AdServicesLib.xml",
     },
 }
 
@@ -91,6 +92,9 @@ android_library {
     static_libs: ["AdServicesLib"],
     manifest: "AdExtServicesManifest.xml",
     apex_available: ["com.android.extservices"],
+    lint: {
+        baseline_filename: "lint-baseline-AdServices-core.xml",
+    },
 }
 
 android_app {

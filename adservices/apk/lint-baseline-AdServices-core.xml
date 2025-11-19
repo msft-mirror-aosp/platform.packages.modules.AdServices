@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues
+    type="baseline"
+    client=""
+    dependencies="true"
+    name=""
+    variant=""
+    version="">
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;activity android:name=&quot;com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity&quot; android:exported=&quot;true&quot; android:enabled=&quot;false&quot; android:theme=&quot;@style/Theme.SubSettingsBase&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="101"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.ui.settings.activities.TopicsActivity&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;activity android:name=&quot;com.android.adservices.ui.settings.activities.TopicsActivity&quot; android:exported=&quot;true&quot; android:enabled=&quot;false&quot; android:theme=&quot;@style/Theme.SubSettingsBase&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="109"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.ui.settings.activities.BlockedTopicsActivity&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;activity android:name=&quot;com.android.adservices.ui.settings.activities.BlockedTopicsActivity&quot; android:exported=&quot;true&quot; android:enabled=&quot;false&quot; android:theme=&quot;@style/Theme.SubSettingsBase&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="117"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.ui.settings.activities.AppsActivity&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;activity android:name=&quot;com.android.adservices.ui.settings.activities.AppsActivity&quot; android:exported=&quot;true&quot; android:enabled=&quot;false&quot; android:theme=&quot;@style/Theme.SubSettingsBase&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="125"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.ui.settings.activities.BlockedAppsActivity&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;activity android:name=&quot;com.android.adservices.ui.settings.activities.BlockedAppsActivity&quot; android:exported=&quot;true&quot; android:enabled=&quot;false&quot; android:theme=&quot;@style/Theme.SubSettingsBase&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="133"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.ui.settings.activities.MeasurementActivity&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;activity android:name=&quot;com.android.adservices.ui.settings.activities.MeasurementActivity&quot; android:exported=&quot;true&quot; android:enabled=&quot;false&quot; android:theme=&quot;@style/Theme.SubSettingsBase&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="141"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.ui.notifications.ConsentNotificationActivity&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;activity android:name=&quot;com.android.adservices.ui.notifications.ConsentNotificationActivity&quot; android:exported=&quot;true&quot; android:enabled=&quot;false&quot; android:theme=&quot;@style/AdServices.NotificationTheme&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="149"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.shell.ShellCommandActivity&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;activity android:name=&quot;com.android.adservices.shell.ShellCommandActivity&quot; android:exported=&quot;true&quot; android:theme=&quot;@style/Theme.SubSettingsBase&quot; android:permission=&quot;android.permission.DUMP&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="158"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.adselection.AdSelectionService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.adselection.AdSelectionService&quot; android:enabled=&quot;@bool/isAtLeastS&quot; android:exported=&quot;true&quot; android:visibleToInstantApps=&quot;false&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="165"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.customaudience.CustomAudienceService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.customaudience.CustomAudienceService&quot; android:enabled=&quot;@bool/isAtLeastS&quot; android:exported=&quot;true&quot; android:visibleToInstantApps=&quot;false&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="171"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.topics.TopicsService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.topics.TopicsService&quot; android:enabled=&quot;@bool/isAtLeastS&quot; android:exported=&quot;true&quot; android:visibleToInstantApps=&quot;false&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="183"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.measurement.MeasurementService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.measurement.MeasurementService&quot; android:exported=&quot;true&quot; android:visibleToInstantApps=&quot;false&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="201"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.common.AdServicesCommonService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.common.AdServicesCommonService&quot; android:exported=&quot;true&quot; android:visibleToInstantApps=&quot;false&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="207"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.spe.AdServicesJobService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.spe.AdServicesJobService&quot; android:permission=&quot;android.permission.BIND_JOB_SERVICE&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="214"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.service.MaintenanceJobService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.service.MaintenanceJobService&quot; android:permission=&quot;android.permission.BIND_JOB_SERVICE&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="218"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.service.topics.EpochJobService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.service.topics.EpochJobService&quot; android:permission=&quot;android.permission.BIND_JOB_SERVICE&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="222"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.download.MddJobService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.download.MddJobService&quot; android:permission=&quot;android.permission.BIND_JOB_SERVICE&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="226"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.service.common.ConsentNotificationJobService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.service.common.ConsentNotificationJobService&quot; android:permission=&quot;android.permission.BIND_JOB_SERVICE&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="234"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.service.measurement.DeleteUninstalledJobService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.service.measurement.DeleteUninstalledJobService&quot; android:permission=&quot;android.permission.BIND_JOB_SERVICE&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="281"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.service.customaudience.BackgroundFetchJobService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.service.customaudience.BackgroundFetchJobService&quot; android:permission=&quot;android.permission.BIND_JOB_SERVICE&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="285"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateJobService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateJobService&quot; android:permission=&quot;android.permission.BIND_JOB_SERVICE&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="289"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.service.adselection.debug.DebugReportSenderJobService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.service.adselection.debug.DebugReportSenderJobService&quot; android:permission=&quot;android.permission.BIND_JOB_SERVICE&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="293"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.service.signals.PeriodicEncodingJobService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.service.signals.PeriodicEncodingJobService&quot; android:permission=&quot;android.permission.BIND_JOB_SERVICE&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="297"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.service.kanon.KAnonSignJoinBackgroundJobService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.service.kanon.KAnonSignJoinBackgroundJobService&quot; android:permission=&quot;android.permission.BIND_JOB_SERVICE&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="301"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.service.adselection.encryption.BackgroundKeyFetchJobService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.service.adselection.encryption.BackgroundKeyFetchJobService&quot; android:permission=&quot;android.permission.BIND_JOB_SERVICE&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="305"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService&quot; android:permission=&quot;android.permission.BIND_JOB_SERVICE&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="312"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.cobalt.CobaltJobService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.cobalt.CobaltJobService&quot; android:permission=&quot;android.permission.BIND_JOB_SERVICE&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="324"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.service.common.AdPackageDenyPreProcessJobService&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;service android:name=&quot;com.android.adservices.service.common.AdPackageDenyPreProcessJobService&quot; android:permission=&quot;android.permission.BIND_JOB_SERVICE&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="328"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.service.common.PackageChangedReceiver&gt;` requires API level 31 (current min is 30)"
+        errorLine1="        &lt;receiver android:name=&quot;com.android.adservices.service.common.PackageChangedReceiver&quot; android:enabled=&quot;false&quot; android:exported=&quot;true&quot; android:process=&quot;.adservices&quot;&gt;"
+        errorLine2="        ^">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/apk/AdServices-core/android_common_apex31/manifest_fixer/AndroidManifest.xml"
+            line="345"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.ui.notifications.ConsentNotificationFragment&gt;` requires API level 31 (current min is 30)"
+        errorLine1="    &lt;androidx.fragment.app.FragmentContainerView"
+        errorLine2="    ^">
+        <location
+            file="packages/modules/AdServices/adservices/apk/res/layout/consent_notification_activity.xml"
+            line="21"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.ui.ganotifications.ConsentNotificationGaFragment&gt;` requires API level 31 (current min is 30)"
+        errorLine1="    &lt;androidx.fragment.app.FragmentContainerView"
+        errorLine2="    ^">
+        <location
+            file="packages/modules/AdServices/adservices/apk/res/layout/consent_notification_ga_activity.xml"
+            line="21"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.ui.ganotifications.ConsentNotificationGaV2Screen1Fragment&gt;` requires API level 31 (current min is 30)"
+        errorLine1="    &lt;androidx.fragment.app.FragmentContainerView"
+        errorLine2="    ^">
+        <location
+            file="packages/modules/AdServices/adservices/apk/res/layout/consent_notification_ga_v2_activity.xml"
+            line="21"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.ui.ganotifications.ConsentNotificationPasFragment&gt;` requires API level 31 (current min is 30)"
+        errorLine1="    &lt;androidx.fragment.app.FragmentContainerView"
+        errorLine2="    ^">
+        <location
+            file="packages/modules/AdServices/adservices/apk/res/layout/consent_notification_pas_activity.xml"
+            line="21"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="`&lt;com.android.adservices.ui.u18notifications.ConsentNotificationU18Fragment&gt;` requires API level 31 (current min is 30)"
+        errorLine1="    &lt;androidx.fragment.app.FragmentContainerView"
+        errorLine2="    ^">
+        <location
+            file="packages/modules/AdServices/adservices/apk/res/layout/consent_notification_u18_activity.xml"
+            line="21"
+            column="5"/>
+    </issue>
+
+</issues>
