@@ -17,12 +17,14 @@
 package android.adservices.adselection;
 
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 import java.util.Set;
@@ -30,8 +32,13 @@ import java.util.Set;
 /**
  * Represent input params to the setAppInstallAdvertisers API.
  *
- * @hide
+ * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection, are
+ *     being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class SetAppInstallAdvertisersInput implements Parcelable {
     @NonNull private final Set<AdTechIdentifier> mAdvertisers;
     @NonNull private final String mCallerPackageName;
@@ -101,8 +108,13 @@ public final class SetAppInstallAdvertisersInput implements Parcelable {
     /**
      * Builder for {@link SetAppInstallAdvertisersInput} objects.
      *
-     * @hide
+     * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+     *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop
+     *     using them, as calls will be rejected in future Android releases. Please refer to
+     *     official Privacy Sandbox documentation for deprecation and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
      */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         @Nullable private Set<AdTechIdentifier> mAdvertisers;
         @Nullable private String mCallerPackageName;

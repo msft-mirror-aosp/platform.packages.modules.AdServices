@@ -16,11 +16,14 @@
 
 package android.adservices.customaudience;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.android.adservices.flags.Flags;
 
 import java.util.List;
 import java.util.Objects;
@@ -29,7 +32,15 @@ import java.util.Objects;
  * Represents data used during the ad selection process to fetch buyer bidding signals from a
  * trusted key/value server. The fetched data is used during the ad selection process and consumed
  * by buyer JavaScript logic running in an isolated execution environment.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+ *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+ *     replacement. Developers should stop using them, as calls will be rejected in future Android
+ *     releases. Please refer to official Privacy Sandbox documentation for deprecation and roadmap
+ *     details: https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class TrustedBiddingData implements Parcelable {
     @NonNull private final Uri mTrustedBiddingUri;
     @NonNull
@@ -110,7 +121,18 @@ public final class TrustedBiddingData implements Parcelable {
         return Objects.hash(mTrustedBiddingUri, mTrustedBiddingKeys);
     }
 
-    /** Builder for {@link TrustedBiddingData} objects. */
+    /**
+     * Builder for {@link TrustedBiddingData} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+     *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+     *     replacement. Developers should stop using them, as calls will be rejected in future
+     *     Android releases. Please refer to official Privacy Sandbox documentation for deprecation
+     *     and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         @Nullable private Uri mTrustedBiddingUri;
         @Nullable private List<String> mTrustedBiddingKeys;

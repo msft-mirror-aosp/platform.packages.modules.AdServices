@@ -16,10 +16,12 @@
 
 package android.adservices.common;
 
+import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.os.LimitExceededException;
 
+import com.android.adservices.flags.Flags;
 import com.android.adservices.shared.common.exception.ProviderServiceInternalException;
 import com.android.adservices.shared.common.exception.ProviderServiceTaskCancelledException;
 import com.android.adservices.shared.common.exception.ServiceUnavailableException;
@@ -35,8 +37,13 @@ import java.util.concurrent.TimeoutException;
  *
  * <p>Those status codes are internal only.
  *
- * @hide
+ * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.common, are being
+ *     deprecated. Relevance APIs have no direct replacement. Developers should stop using them, as
+ *     calls will be rejected in future Android releases. Please refer to official Privacy Sandbox
+ *     documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class AdServicesStatusUtils {
 
     /**

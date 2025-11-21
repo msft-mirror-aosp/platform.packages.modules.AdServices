@@ -38,8 +38,15 @@ import java.util.Objects;
  * <p>Detailed steps on decryption can be found on <a
  * href="https://developer.android.com/design-for-safety/privacy-sandbox/guides/topics">Developer
  * Guide</a>.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.topics, are
+ *     being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
-@FlaggedApi(Flags.FLAG_TOPICS_ENCRYPTION_ENABLED)
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class EncryptedTopic {
     @NonNull private final byte[] mEncryptedTopic;
     @NonNull private final String mKeyIdentifier;

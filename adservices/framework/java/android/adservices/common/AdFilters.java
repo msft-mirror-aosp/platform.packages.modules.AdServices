@@ -36,7 +36,15 @@ import java.util.Objects;
  * <p>If any of the filters in an {@link AdFilters} instance are not satisfied, the associated ad
  * will not be eligible for ad selection. Filters are optional ad parameters and are not required as
  * part of {@link AdData}.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.common, are
+ *     being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class AdFilters implements Parcelable {
     /** @hide */
     public static final String FREQUENCY_CAP_FIELD_NAME = "frequency_cap";
@@ -97,7 +105,6 @@ public final class AdFilters implements Parcelable {
      *
      * <p>If {@code null}, there are no app install filters which apply to the ad.
      */
-    @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
     @Nullable
     public AppInstallFilters getAppInstallFilters() {
         return mAppInstallFilters;
@@ -202,7 +209,17 @@ public final class AdFilters implements Parcelable {
                 + '}';
     }
 
-    /** Builder for creating {@link AdFilters} objects. */
+    /**
+     * Builder for creating {@link AdFilters} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.common,
+     *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop
+     *     using them, as calls will be rejected in future Android releases. Please refer to
+     *     official Privacy Sandbox documentation for deprecation and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         @Nullable private FrequencyCapFilters mFrequencyCapFilters;
         @Nullable private AppInstallFilters mAppInstallFilters;
@@ -227,7 +244,6 @@ public final class AdFilters implements Parcelable {
          * <p>If set to {@code null} or not set, no app install filters will be associated with the
          * ad.
          */
-        @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
         @NonNull
         public Builder setAppInstallFilters(@Nullable AppInstallFilters appInstallFilters) {
             mAppInstallFilters = appInstallFilters;

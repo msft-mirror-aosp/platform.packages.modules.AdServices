@@ -16,10 +16,13 @@
 
 package android.adservices.customaudience;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.android.adservices.flags.Flags;
 
 import java.time.Duration;
 import java.util.List;
@@ -31,8 +34,13 @@ import java.util.Objects;
  * <p>Refer to {@link ScheduleCustomAudienceUpdateRequest} for more information about the
  * parameters.
  *
- * @hide
+ * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.customaudience, are
+ *     being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class ScheduleCustomAudienceUpdateInput implements Parcelable {
     @NonNull private final Uri mUpdateUri;
     @NonNull private final String mCallerPackageName;
@@ -172,8 +180,18 @@ public final class ScheduleCustomAudienceUpdateInput implements Parcelable {
                 + '}';
     }
 
-
-    /** Builder for {@link ScheduleCustomAudienceUpdateInput} objects. */
+    /**
+     * Builder for {@link ScheduleCustomAudienceUpdateInput} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+     *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+     *     replacement. Developers should stop using them, as calls will be rejected in future
+     *     Android releases. Please refer to official Privacy Sandbox documentation for deprecation
+     *     and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         @NonNull private Uri mUpdateUri;
         @NonNull private Duration mMinDelay;

@@ -17,13 +17,21 @@
 package android.adservices.common;
 
 import android.adservices.exceptions.AdServicesException;
+import android.annotation.FlaggedApi;
 import android.os.Build;
+
+import com.android.adservices.flags.Flags;
 
 /**
  * Utility class to check if the version is RVC, and invoke callback onError method
  *
- * @hide
+ * @hide he Rubidium (Rb) Relevance APIs, including those in android.adservices.common, are being
+ *     deprecated. Relevance APIs have no direct replacement. Developers should stop using them, as
+ *     calls will be rejected in future Android releases. Please refer to official Privacy Sandbox
+ *     documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class AndroidRCommonUtil {
 
     // Intended to be a utility class that should not be instantiated.

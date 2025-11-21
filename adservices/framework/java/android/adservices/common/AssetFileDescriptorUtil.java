@@ -16,11 +16,13 @@
 
 package android.adservices.common;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.content.res.AssetFileDescriptor;
 import android.os.ParcelFileDescriptor;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.flags.Flags;
 
 import java.io.DataInputStream;
 import java.io.FileOutputStream;
@@ -32,8 +34,13 @@ import java.util.concurrent.ExecutorService;
  * Utility class used to set up the read and write pipes for the usage of reading pointers from
  * shared memory.
  *
- * @hide
+ * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.common, are being
+ *     deprecated. Relevance APIs have no direct replacement. Developers should stop using them, as
+ *     calls will be rejected in future Android releases. Please refer to official Privacy Sandbox
+ *     documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public class AssetFileDescriptorUtil {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 

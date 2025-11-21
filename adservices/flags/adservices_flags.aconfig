@@ -17,6 +17,15 @@ flag {
 }
 
 flag {
+    name: "adservices_deprecated"
+    namespace: "adservices_aconfig"
+    bug: "463382540"
+    description: "Enable deprecation of AdServices APIs."
+    is_exported: true
+    is_fixed_read_only: true
+}
+
+flag {
     name: "adservices_enable_consent_data_migration_api"
     namespace: "adservices_aconfig"
     bug: "404905080"

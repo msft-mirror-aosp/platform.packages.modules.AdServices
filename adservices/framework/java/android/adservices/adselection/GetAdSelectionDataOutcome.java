@@ -30,7 +30,17 @@ import com.android.internal.util.Preconditions;
 import java.util.Arrays;
 import java.util.Objects;
 
-/** Represents ad selection data collected from device for ad selection. */
+/**
+ * Represents ad selection data collected from device for ad selection.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+ *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+ */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class GetAdSelectionDataOutcome {
     private final long mAdSelectionId;
     @Nullable private final byte[] mAdSelectionData;
@@ -50,7 +60,6 @@ public final class GetAdSelectionDataOutcome {
     }
 
     /** Returns the id that uniquely identifies this GetAdSelectionData payload. */
-    @FlaggedApi(Flags.FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED)
     public long getAdSelectionDataId() {
         return mAdSelectionId;
     }

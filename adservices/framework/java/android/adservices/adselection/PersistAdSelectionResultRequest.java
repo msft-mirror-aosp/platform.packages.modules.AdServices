@@ -25,6 +25,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.OutcomeReceiver;
 
+import com.android.adservices.flags.Flags;
 import com.android.internal.util.Preconditions;
 
 import java.util.Arrays;
@@ -36,7 +37,15 @@ import java.util.concurrent.Executor;
  *
  * <p>Instances of this class are created by SDKs to be provided as arguments to the {@link
  * AdSelectionManager#persistAdSelectionResult} methods in {@link AdSelectionManager}.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+ *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class PersistAdSelectionResultRequest {
     private final long mAdSelectionId;
     @Nullable private final AdTechIdentifier mSeller;
@@ -65,8 +74,6 @@ public final class PersistAdSelectionResultRequest {
      * AdSelectionManager#getAdSelectionData(GetAdSelectionDataRequest, Executor, OutcomeReceiver)}
      * payload that generated this result.
      */
-    @FlaggedApi(
-            "com.android.adservices.flags.fledge_auction_server_get_ad_selection_data_id_enabled")
     public long getAdSelectionDataId() {
         return mAdSelectionId;
     }
@@ -91,7 +98,18 @@ public final class PersistAdSelectionResultRequest {
         }
     }
 
-    /** Builder for {@link PersistAdSelectionResultRequest} objects. */
+    /**
+     * Builder for {@link PersistAdSelectionResultRequest} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+     *     android.adservices.adselection, are being deprecated. Relevance APIs have no direct
+     *     replacement. Developers should stop using them, as calls will be rejected in future
+     *     Android releases. Please refer to official Privacy Sandbox documentation for deprecation
+     *     and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         private long mAdSelectionId;
         @Nullable private AdTechIdentifier mSeller;
@@ -112,8 +130,6 @@ public final class PersistAdSelectionResultRequest {
 
         /** Sets the ad selection data id {@link Long}. */
         @NonNull
-        @FlaggedApi(
-                "com.android.adservices.flags.fledge_auction_server_get_ad_selection_data_id_enabled")
         public PersistAdSelectionResultRequest.Builder setAdSelectionDataId(
                 long adSelectionDataId) {
             this.mAdSelectionId = adSelectionDataId;

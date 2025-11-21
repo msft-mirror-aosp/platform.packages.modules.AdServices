@@ -16,18 +16,26 @@
 
 package android.adservices.common;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 
 /**
  * Result from the isAdServicesEnabled API.
  *
- * @hide
+ * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.common, are being
+ *     deprecated. Relevance APIs have no direct replacement. Developers should stop using them, as
+ *     calls will be rejected in future Android releases. Please refer to official Privacy Sandbox
+ *     documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class IsAdServicesEnabledResult implements Parcelable {
     @Nullable private final String mErrorMessage;
     private final boolean mAdServicesEnabled;
@@ -114,8 +122,13 @@ public final class IsAdServicesEnabledResult implements Parcelable {
     /**
      * Builder for {@link IsAdServicesEnabledResult} objects.
      *
-     * @hide
+     * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.common, are
+     *     being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+     *     them, as calls will be rejected in future Android releases. Please refer to official
+     *     Privacy Sandbox documentation for deprecation and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
      */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         @Nullable private String mErrorMessage;
         private boolean mAdServicesEnabled;

@@ -16,9 +16,6 @@
 
 package android.adservices.customaudience;
 
-import static com.android.adservices.flags.Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
-import static com.android.adservices.flags.Flags.FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
-
 import android.adservices.adselection.GetAdSelectionDataRequest;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
@@ -34,6 +31,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
+import com.android.adservices.flags.Flags;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -48,7 +46,15 @@ import java.util.concurrent.Executor;
  * <p>A custom audience is an abstract grouping of users with similar demonstrated interests. This
  * class is a collection of some data stored on a device that is necessary to serve advertisements
  * targeting a single custom audience.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+ *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+ *     replacement. Developers should stop using them, as calls will be rejected in future Android
+ *     releases. Please refer to official Privacy Sandbox documentation for deprecation and roadmap
+ *     details: https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class CustomAudience implements Parcelable {
     /** @hide */
     public static final int FLAG_AUCTION_SERVER_REQUEST_DEFAULT = 0;
@@ -60,8 +66,6 @@ public final class CustomAudience implements Parcelable {
      * This auction server request flag indicates to the service that ads for this {@link
      * CustomAudience} can be omitted in the server auction payload.
      */
-    @FlaggedApi(
-            "com.android.adservices.flags.fledge_custom_audience_auction_server_request_flags_enabled")
     public static final int FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS = 1 << 0;
 
     @NonNull private final AdTechIdentifier mBuyer;
@@ -359,7 +363,6 @@ public final class CustomAudience implements Parcelable {
      * @return a {@link List} of {@link ComponentAdData} objects representing component ads
      *     currently served by the custom audience
      */
-    @FlaggedApi(FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
     @NonNull
     public List<ComponentAdData> getComponentAds() {
         return mComponentAds;
@@ -374,8 +377,6 @@ public final class CustomAudience implements Parcelable {
      * <p>To create this bitfield, place an {@code |} bitwise operator between each {@link
      * AuctionServerRequestFlag} to be enabled.
      */
-    @FlaggedApi(
-            "com.android.adservices.flags.fledge_custom_audience_auction_server_request_flags_enabled")
     @AuctionServerRequestFlag
     public int getAuctionServerRequestFlags() {
         return mAuctionServerRequestFlags;
@@ -392,7 +393,6 @@ public final class CustomAudience implements Parcelable {
      *
      * <p>The default value if this field is not set is 0.0.
      */
-    @FlaggedApi(FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
     public double getPriority() {
         return mPriority;
     }
@@ -438,7 +438,18 @@ public final class CustomAudience implements Parcelable {
                 mPriority);
     }
 
-    /** Builder for {@link CustomAudience} objects. */
+    /**
+     * Builder for {@link CustomAudience} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+     *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+     *     replacement. Developers should stop using them, as calls will be rejected in future
+     *     Android releases. Please refer to official Privacy Sandbox documentation for deprecation
+     *     and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         @Nullable private AdTechIdentifier mBuyer;
         @Nullable private String mName;
@@ -574,7 +585,6 @@ public final class CustomAudience implements Parcelable {
          *
          * <p>See {@link #getComponentAds()} for more information.
          */
-        @FlaggedApi(FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
         @NonNull
         public CustomAudience.Builder setComponentAds(@NonNull List<ComponentAdData> componentAds) {
             mComponentAds =
@@ -587,8 +597,6 @@ public final class CustomAudience implements Parcelable {
          *
          * <p>See {@link #getAuctionServerRequestFlags()} for more information.
          */
-        @FlaggedApi(
-                "com.android.adservices.flags.fledge_custom_audience_auction_server_request_flags_enabled")
         @NonNull
         public CustomAudience.Builder setAuctionServerRequestFlags(
                 @AuctionServerRequestFlag int auctionServerRequestFlags) {
@@ -601,7 +609,6 @@ public final class CustomAudience implements Parcelable {
          *
          * <p>See {@link #getPriority()} for further details.
          */
-        @FlaggedApi(FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
         @NonNull
         public CustomAudience.Builder setPriority(double priority) {
             mPriority = priority;

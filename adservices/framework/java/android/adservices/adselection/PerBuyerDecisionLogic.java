@@ -39,8 +39,15 @@ import java.util.Objects;
  * <p>This JS code may be extended to updating bid values for contextual ads in the future.
  *
  * <p>See {@link CustomAudience#getBiddingLogicUri()}.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+ *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
-@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class PerBuyerDecisionLogic implements Parcelable {
 
     @NonNull

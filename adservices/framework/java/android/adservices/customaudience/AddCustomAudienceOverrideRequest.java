@@ -36,7 +36,15 @@ import java.util.concurrent.Executor;
  * <p>It contains fields {@code buyer} and {@code name} which will serve as the identifier for the
  * override fields, {@code biddingLogicJs} and {@code trustedBiddingSignals}, which are used during
  * ad selection instead of querying external servers.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+ *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+ *     replacement. Developers should stop using them, as calls will be rejected in future Android
+ *     releases. Please refer to official Privacy Sandbox documentation for deprecation and roadmap
+ *     details: https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public class AddCustomAudienceOverrideRequest {
     @NonNull private final AdTechIdentifier mBuyer;
     @NonNull private final String mName;
@@ -88,7 +96,6 @@ public class AddCustomAudienceOverrideRequest {
      *
      * <p>Default to be {@code 0L}, which will fall back to use default version(V1 or V2).
      */
-    @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
     public long getBiddingLogicJsVersion() {
         return mBiddingLogicJsVersion;
     }
@@ -99,7 +106,18 @@ public class AddCustomAudienceOverrideRequest {
         return mTrustedBiddingSignals;
     }
 
-    /** Builder for {@link AddCustomAudienceOverrideRequest} objects. */
+    /**
+     * Builder for {@link AddCustomAudienceOverrideRequest} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+     *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+     *     replacement. Developers should stop using them, as calls will be rejected in future
+     *     Android releases. Please refer to official Privacy Sandbox documentation for deprecation
+     *     and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         @Nullable private AdTechIdentifier mBuyer;
         @Nullable private String mName;
@@ -152,7 +170,6 @@ public class AddCustomAudienceOverrideRequest {
          *
          * <p>Default to be {@code 0L}, which will fall back to use default version(V1 or V2).
          */
-        @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
         @NonNull
         public AddCustomAudienceOverrideRequest.Builder setBiddingLogicJsVersion(
                 long biddingLogicJsVersion) {

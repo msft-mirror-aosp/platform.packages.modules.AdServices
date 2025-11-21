@@ -16,8 +16,6 @@
 
 package android.adservices.adselection;
 
-import static com.android.adservices.flags.Flags.FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
-
 import android.annotation.FlaggedApi;
 import android.annotation.IntRange;
 import android.annotation.NonNull;
@@ -26,6 +24,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
+import com.android.adservices.flags.Flags;
 import com.android.internal.util.Preconditions;
 
 import java.util.ArrayList;
@@ -39,8 +38,15 @@ import java.util.concurrent.Executor;
  * This object will be part of the {@link GetAdSelectionDataRequest} and will be constructed and
  * used by the SDK to influence the size of the response of {@link
  * AdSelectionManager#getAdSelectionData(GetAdSelectionDataRequest, Executor, OutcomeReceiver)}
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+ *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
-@FlaggedApi(FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class SellerConfiguration implements Parcelable {
     private final int mMaximumPayloadSizeBytes;
     private final Set<PerBuyerConfiguration> mPerBuyerConfigurations;
@@ -137,7 +143,18 @@ public final class SellerConfiguration implements Parcelable {
         return mPerBuyerConfigurations;
     }
 
-    /** Builder for {@link SellerConfiguration} objects. */
+    /**
+     * Builder for {@link SellerConfiguration} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+     *     android.adservices.adselection, are being deprecated. Relevance APIs have no direct
+     *     replacement. Developers should stop using them, as calls will be rejected in future
+     *     Android releases. Please refer to official Privacy Sandbox documentation for deprecation
+     *     and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         private int mMaximumPayloadSizeBytes;
         @NonNull private Set<PerBuyerConfiguration> mPerBuyerConfigurations = new HashSet<>();

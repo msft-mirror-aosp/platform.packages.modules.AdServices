@@ -17,9 +17,12 @@
 package android.adservices.customaudience;
 
 import android.adservices.common.AdSelectionSignals;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
+
+import com.android.adservices.flags.Flags;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -34,7 +37,15 @@ import java.util.Objects;
  * be used by the caller to inform the choice of the custom audience the user should be added to.
  * Any field set by the caller cannot be overridden by the custom audience fetched from the {@code
  * fetchUri}. For more information about each field refer to {@link CustomAudience}.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+ *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+ *     replacement. Developers should stop using them, as calls will be rejected in future Android
+ *     releases. Please refer to official Privacy Sandbox documentation for deprecation and roadmap
+ *     details: https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class FetchAndJoinCustomAudienceRequest {
     @NonNull private final Uri mFetchUri;
     @Nullable private final String mName;
@@ -146,7 +157,18 @@ public final class FetchAndJoinCustomAudienceRequest {
                 + '}';
     }
 
-    /** Builder for {@link FetchAndJoinCustomAudienceRequest} objects. */
+    /**
+     * Builder for {@link FetchAndJoinCustomAudienceRequest} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+     *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+     *     replacement. Developers should stop using them, as calls will be rejected in future
+     *     Android releases. Please refer to official Privacy Sandbox documentation for deprecation
+     *     and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         @NonNull private Uri mFetchUri;
         @Nullable private String mName;

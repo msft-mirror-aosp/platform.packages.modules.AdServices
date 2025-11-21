@@ -39,7 +39,15 @@ import java.util.Objects;
  * <p>Instances of this class are created by SDKs to be provided as arguments to the {@link
  * AdSelectionManager#selectAds} and {@link AdSelectionManager#reportImpression} methods in {@link
  * AdSelectionManager}.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+ *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 // TODO(b/233280314): investigate on adSelectionConfig optimization by merging mCustomAudienceBuyers
 //  and mPerBuyerSignals.
 public final class AdSelectionConfig implements Parcelable {
@@ -246,7 +254,6 @@ public final class AdSelectionConfig implements Parcelable {
      * @return a Map of buyers and corresponding Contextual Ads, these ads are expected to be
      *     pre-downloaded from the contextual path and injected into Ad Selection.
      */
-    @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
     @NonNull
     public Map<AdTechIdentifier, SignedContextualAds> getPerBuyerSignedContextualAds() {
         return new HashMap<>(mBuyerSignedContextualAds);
@@ -261,7 +268,18 @@ public final class AdSelectionConfig implements Parcelable {
         return mTrustedScoringSignalsUri;
     }
 
-    /** Builder for {@link AdSelectionConfig} object. */
+    /**
+     * Builder for {@link AdSelectionConfig} object.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+     *     android.adservices.adselection, are being deprecated. Relevance APIs have no direct
+     *     replacement. Developers should stop using them, as calls will be rejected in future
+     *     Android releases. Please refer to official Privacy Sandbox documentation for deprecation
+     *     and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         private AdTechIdentifier mSeller;
         private Uri mDecisionLogicUri;
@@ -392,7 +410,6 @@ public final class AdSelectionConfig implements Parcelable {
          *
          * <p>See {@link #getPerBuyerSignedContextualAds()} for more details.
          */
-        @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
         @NonNull
         public AdSelectionConfig.Builder setPerBuyerSignedContextualAds(
                 @NonNull Map<AdTechIdentifier, SignedContextualAds> buyerSignedContextualAds) {

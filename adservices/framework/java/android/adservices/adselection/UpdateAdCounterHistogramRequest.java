@@ -22,9 +22,11 @@ import static android.adservices.common.FrequencyCapFilters.AD_EVENT_TYPE_WIN;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
 
+import com.android.adservices.flags.Flags;
 import com.android.internal.util.Preconditions;
 
 import java.util.Objects;
@@ -36,7 +38,15 @@ import java.util.concurrent.Executor;
  * <p>The ad counter histograms, which are historical logs of events which are associated with an ad
  * counter key and an ad event type, are used to inform frequency cap filtering when using the
  * Protected Audience APIs.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+ *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public class UpdateAdCounterHistogramRequest {
     /** @hide */
     public static final String UNSET_AD_EVENT_TYPE_MESSAGE = "Ad event type must be set";
@@ -139,7 +149,18 @@ public class UpdateAdCounterHistogramRequest {
                 + '}';
     }
 
-    /** Builder for {@link UpdateAdCounterHistogramRequest} objects. */
+    /**
+     * Builder for {@link UpdateAdCounterHistogramRequest} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+     *     android.adservices.adselection, are being deprecated. Relevance APIs have no direct
+     *     replacement. Developers should stop using them, as calls will be rejected in future
+     *     Android releases. Please refer to official Privacy Sandbox documentation for deprecation
+     *     and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         private long mAdSelectionId;
         @FrequencyCapFilters.AdEventType private int mAdEventType;

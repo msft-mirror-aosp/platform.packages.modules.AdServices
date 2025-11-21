@@ -22,6 +22,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.annotation.TestApi;
@@ -38,6 +39,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.flags.Flags;
 import com.android.adservices.shared.common.exception.ServiceUnavailableException;
 
 import java.util.ArrayList;
@@ -51,7 +53,15 @@ import java.util.concurrent.Executor;
  *
  * <p>The instance of the {@link TopicsManager} can be obtained using {@link
  * Context#getSystemService} and {@link TopicsManager} class.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.topics, are
+ *     being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 @RequiresApi(Build.VERSION_CODES.S)
 public final class TopicsManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();

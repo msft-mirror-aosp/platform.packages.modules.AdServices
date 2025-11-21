@@ -16,7 +16,10 @@
 
 package android.adservices.common;
 
+import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
+
+import com.android.adservices.flags.Flags;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -26,8 +29,13 @@ import java.lang.annotation.RetentionPolicy;
  *
  * <p>Those status codes are internal only.
  *
- * @hide
+ * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.common, are being
+ *     deprecated. Relevance APIs have no direct replacement. Developers should stop using them, as
+ *     calls will be rejected in future Android releases. Please refer to official Privacy Sandbox
+ *     documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public class ConsentStatus {
     public static final int UNKNOWN = 0;
     public static final int UNSET = 1;

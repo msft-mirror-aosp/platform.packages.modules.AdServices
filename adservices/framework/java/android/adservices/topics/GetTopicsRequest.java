@@ -18,9 +18,22 @@ package android.adservices.topics;
 import static android.adservices.topics.TopicsManager.EMPTY_SDK;
 import static android.adservices.topics.TopicsManager.RECORD_OBSERVATION_DEFAULT;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 
-/** Get Topics Request. */
+import com.android.adservices.flags.Flags;
+
+/**
+ * Get Topics Request.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.topics, are
+ *     being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+ */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class GetTopicsRequest {
 
     /** Name of Ads SDK that is involved in this request. */
@@ -45,7 +58,17 @@ public final class GetTopicsRequest {
         return mRecordObservation;
     }
 
-    /** Builder for {@link GetTopicsRequest} objects. */
+    /**
+     * Builder for {@link GetTopicsRequest} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.topics,
+     *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop
+     *     using them, as calls will be rejected in future Android releases. Please refer to
+     *     official Privacy Sandbox documentation for deprecation and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         private String mAdsSdkName = EMPTY_SDK;
         private boolean mRecordObservation = RECORD_OBSERVATION_DEFAULT;

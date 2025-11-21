@@ -30,9 +30,13 @@ import java.lang.annotation.RetentionPolicy;
  * <p>This class is used to identify the adservices feature that we want to turn on/off or set user
  * consent.
  *
- * @hide
+ * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.common, are being
+ *     deprecated. Relevance APIs have no direct replacement. Developers should stop using them, as
+ *     calls will be rejected in future Android releases. Please refer to official Privacy Sandbox
+ *     documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
-@FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class Module {
 
     /** Measurement module. */

@@ -16,13 +16,13 @@
 
 package android.adservices.common;
 
-import static com.android.adservices.flags.Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
-
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 
@@ -30,8 +30,15 @@ import java.util.Objects;
  * Represents data specific to a component ad that is necessary for ad selection and rendering. This
  * is to support use case for ads composed of multiple pieces, such as an ad displaying multiple
  * products at once.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.common, are
+ *     being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
-@FlaggedApi(FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class ComponentAdData implements Parcelable {
     private final Uri mRenderUri;
     private final String mAdRenderId;

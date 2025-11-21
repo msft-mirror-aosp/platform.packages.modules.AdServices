@@ -25,8 +25,17 @@ import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 
-/** Generic Decision logic that could be provided by the buyer or seller. */
-@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+/**
+ * Generic Decision logic that could be provided by the buyer or seller.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+ *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+ */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class DecisionLogic implements Parcelable {
 
     @NonNull private String mDecisionLogic;
