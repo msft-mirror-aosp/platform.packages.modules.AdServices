@@ -20,11 +20,13 @@ import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTI
 import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID_MESSAGE;
 
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.android.adservices.flags.Flags;
 import com.android.internal.util.Preconditions;
 
 import java.util.ArrayList;
@@ -34,8 +36,13 @@ import java.util.Objects;
 /**
  * Represents the response from persistAdSelectionResult.
  *
- * @hide
+ * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection, are
+ *     being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class PersistAdSelectionResultResponse implements Parcelable {
     private final long mAdSelectionId;
     private final Uri mAdRenderUri;
@@ -137,8 +144,13 @@ public final class PersistAdSelectionResultResponse implements Parcelable {
     /**
      * Builder for {@link PersistAdSelectionResultResponse} objects.
      *
-     * @hide
+     * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+     *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop
+     *     using them, as calls will be rejected in future Android releases. Please refer to
+     *     official Privacy Sandbox documentation for deprecation and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
      */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         private long mAdSelectionId;
         private Uri mAdRenderUri;

@@ -19,9 +19,11 @@ package android.adservices.adselection;
 import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID;
 import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID_MESSAGE;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
 
+import com.android.adservices.flags.Flags;
 import com.android.internal.util.Preconditions;
 
 import java.util.Objects;
@@ -29,7 +31,15 @@ import java.util.concurrent.Executor;
 
 /**
  * Represent input parameters to the reportImpression API.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+ *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public class ReportImpressionRequest {
     private final long mAdSelectionId;
     @NonNull private final AdSelectionConfig mAdSelectionConfig;

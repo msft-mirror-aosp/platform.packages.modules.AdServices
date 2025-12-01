@@ -42,8 +42,17 @@ import com.android.adservices.flags.Flags;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
-/** ProtectedSignalsManager provides APIs for apps and ad-SDKs to manage their protected signals. */
-@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED)
+/**
+ * ProtectedSignalsManager provides APIs for apps and ad-SDKs to manage their protected signals.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.signals, are
+ *     being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+ */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 @RequiresApi(Build.VERSION_CODES.S)
 public class ProtectedSignalsManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();

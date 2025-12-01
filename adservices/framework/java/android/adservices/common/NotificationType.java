@@ -31,9 +31,13 @@ import java.lang.annotation.RetentionPolicy;
  * <p>Can be {@link #NOTIFICATION_NONE}, {@link #NOTIFICATION_ONGOING}, or {@link
  * #NOTIFICATION_REGULAR}
  *
- * @hide
+ * @hide he Rubidium (Rb) Relevance APIs, including those in android.adservices.common, are being
+ *     deprecated. Relevance APIs have no direct replacement. Developers should stop using them, as
+ *     calls will be rejected in future Android releases. Please refer to official Privacy Sandbox
+ *     documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
-@FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class NotificationType {
     /** Don't show any notification during the enrollment. */
     public static final int NOTIFICATION_NONE = AdServicesCommonManager.NOTIFICATION_NONE;

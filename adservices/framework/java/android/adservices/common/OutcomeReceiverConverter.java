@@ -16,16 +16,24 @@
 
 package android.adservices.common;
 
+import android.annotation.FlaggedApi;
 import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.flags.Flags;
+
 /**
  * Utility class to convert between {@link OutcomeReceiver} and {@link AdServicesOutcomeReceiver}.
  *
- * @hide
+ * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.common, are being
+ *     deprecated. Relevance APIs have no direct replacement. Developers should stop using them, as
+ *     calls will be rejected in future Android releases. Please refer to official Privacy Sandbox
+ *     documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 @RequiresApi(Build.VERSION_CODES.S)
 public final class OutcomeReceiverConverter {
     private OutcomeReceiverConverter() {

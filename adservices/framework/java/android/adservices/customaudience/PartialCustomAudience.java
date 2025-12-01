@@ -16,8 +16,6 @@
 
 package android.adservices.customaudience;
 
-import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
-
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
@@ -26,6 +24,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
+import com.android.adservices.flags.Flags;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -41,8 +40,15 @@ import java.util.Objects;
  * <p>Other nullable fields will not be overridden if left null
  *
  * <p>For more information about each field refer to {@link CustomAudience}.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+ *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+ *     replacement. Developers should stop using them, as calls will be rejected in future Android
+ *     releases. Please refer to official Privacy Sandbox documentation for deprecation and roadmap
+ *     details: https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
-@FlaggedApi(FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class PartialCustomAudience implements Parcelable {
     @NonNull private final String mName;
     @Nullable private final Instant mActivationTime;
@@ -200,7 +206,18 @@ public final class PartialCustomAudience implements Parcelable {
                 (targetParcel, sourceSignals) -> sourceSignals.writeToParcel(targetParcel, flags));
     }
 
-    /** Builder for {@link PartialCustomAudience} objects. */
+    /**
+     * Builder for {@link PartialCustomAudience} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+     *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+     *     replacement. Developers should stop using them, as calls will be rejected in future
+     *     Android releases. Please refer to official Privacy Sandbox documentation for deprecation
+     *     and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         @NonNull private String mName;
         @Nullable private Instant mActivationTime;

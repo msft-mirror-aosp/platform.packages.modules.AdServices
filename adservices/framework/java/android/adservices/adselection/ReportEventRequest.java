@@ -35,7 +35,15 @@ import java.util.Objects;
 
 /**
  * Request object wrapping the required arguments needed to report an ad event.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+ *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public class ReportEventRequest {
     /** This is used to represent seller as the destination for report event API */
     public static final int FLAG_REPORTING_DESTINATION_SELLER = 1 << 0;
@@ -44,7 +52,6 @@ public class ReportEventRequest {
     public static final int FLAG_REPORTING_DESTINATION_BUYER = 1 << 1;
 
     /** This is used to component seller as the destination for report event API */
-    @FlaggedApi(Flags.FLAG_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER)
     public static final int FLAG_REPORTING_DESTINATION_COMPONENT_SELLER = 1 << 2;
 
     private static final int UNSET_REPORTING_DESTINATIONS = 0;
@@ -180,7 +187,18 @@ public class ReportEventRequest {
                                 | FLAG_REPORTING_DESTINATION_COMPONENT_SELLER);
     }
 
-    /** Builder for {@link ReportEventRequest} objects. */
+    /**
+     * Builder for {@link ReportEventRequest} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+     *     android.adservices.adselection, are being deprecated. Relevance APIs have no direct
+     *     replacement. Developers should stop using them, as calls will be rejected in future
+     *     Android releases. Please refer to official Privacy Sandbox documentation for deprecation
+     *     and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
 
         private long mAdSelectionId;

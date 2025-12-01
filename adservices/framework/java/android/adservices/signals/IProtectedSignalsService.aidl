@@ -23,6 +23,13 @@ import android.adservices.signals.UpdateSignalsCallback;
  * Protected signals service.
  *
  * @hide
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.signals, are
+ *             being deprecated.
+ *             Relevance APIs have no direct replacement. Developers should stop using
+ *             them, as calls will be rejected in future Android releases.
+ *             Please refer to official Privacy Sandbox documentation for deprecation and
+ *             roadmap details:
+ *             https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
 interface IProtectedSignalsService {
     void updateSignals(in UpdateSignalsInput input,

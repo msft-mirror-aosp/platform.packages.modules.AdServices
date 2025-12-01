@@ -16,7 +16,6 @@
 
 package android.adservices.adselection;
 
-import static com.android.adservices.flags.Flags.FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
 
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.FlaggedApi;
@@ -31,7 +30,15 @@ import com.android.adservices.flags.Flags;
  *
  * <p>Instances of this class are created by SDKs to be provided as arguments to the {@link
  * AdSelectionManager#getAdSelectionData} methods in {@link AdSelectionManager}.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+ *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class GetAdSelectionDataRequest {
     @Nullable private final AdTechIdentifier mSeller;
 
@@ -62,7 +69,6 @@ public final class GetAdSelectionDataRequest {
      *     origin
      */
     @Nullable
-    @FlaggedApi(Flags.FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED)
     public Uri getCoordinatorOriginUri() {
         return mCoordinatorOriginUri;
     }
@@ -73,7 +79,6 @@ public final class GetAdSelectionDataRequest {
      *
      * <p>If this is {@code null}, the service will send all data available.
      */
-    @FlaggedApi(FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
     @Nullable
     public SellerConfiguration getSellerConfiguration() {
         return mSellerConfiguration;
@@ -81,7 +86,16 @@ public final class GetAdSelectionDataRequest {
 
     /**
      * Builder for {@link GetAdSelectionDataRequest} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+     *     android.adservices.adselection, are being deprecated. Relevance APIs have no direct
+     *     replacement. Developers should stop using them, as calls will be rejected in future
+     *     Android releases. Please refer to official Privacy Sandbox documentation for deprecation
+     *     and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
      */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         @Nullable private AdTechIdentifier mSeller;
 
@@ -109,7 +123,6 @@ public final class GetAdSelectionDataRequest {
          * {@link AdSelectionManager#getAdSelectionData} will throw an IllegalArgumentException
          */
         @NonNull
-        @FlaggedApi(Flags.FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED)
         public GetAdSelectionDataRequest.Builder setCoordinatorOriginUri(
                 @Nullable Uri coordinatorOriginUri) {
             this.mCoordinatorOriginUri = coordinatorOriginUri;
@@ -129,7 +142,6 @@ public final class GetAdSelectionDataRequest {
          * Sets the {@link SellerConfiguration}. See {@link #getSellerConfiguration()} for more
          * details.
          */
-        @FlaggedApi(FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
         @NonNull
         public GetAdSelectionDataRequest.Builder setSellerConfiguration(
                 @Nullable SellerConfiguration sellerConfiguration) {

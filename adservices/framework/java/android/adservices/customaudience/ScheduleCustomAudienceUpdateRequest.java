@@ -16,14 +16,12 @@
 
 package android.adservices.customaudience;
 
-import static com.android.adservices.flags.Flags.FLAG_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_DEFAULT_PARTIAL_CUSTOM_AUDIENCES_CONSTRUCTOR;
-import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
-
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.net.Uri;
 
+import com.android.adservices.flags.Flags;
 import com.android.internal.util.Preconditions;
 
 import java.time.Duration;
@@ -38,8 +36,15 @@ import java.util.concurrent.Executor;
  *
  * <p>The on-device caller can specify information in a series of {@link PartialCustomAudience}
  * objects that will be sent to the buyer ad tech's server after a designated minimum delay.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+ *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+ *     replacement. Developers should stop using them, as calls will be rejected in future Android
+ *     releases. Please refer to official Privacy Sandbox documentation for deprecation and roadmap
+ *     details: https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
-@FlaggedApi(FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class ScheduleCustomAudienceUpdateRequest {
     @NonNull private final Uri mUpdateUri;
     @NonNull private final Duration mMinDelay;
@@ -137,8 +142,18 @@ public final class ScheduleCustomAudienceUpdateRequest {
                 + '}';
     }
 
-    /** Builder for {@link ScheduleCustomAudienceUpdateRequest} objects. */
-    @FlaggedApi(FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
+    /**
+     * Builder for {@link ScheduleCustomAudienceUpdateRequest} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+     *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+     *     replacement. Developers should stop using them, as calls will be rejected in future
+     *     Android releases. Please refer to official Privacy Sandbox documentation for deprecation
+     *     and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         @NonNull private Uri mUpdateUri;
         @NonNull private Duration mMinDelay;
@@ -173,8 +188,6 @@ public final class ScheduleCustomAudienceUpdateRequest {
          *     buyer's custom audiences will be fetched
          * @param minDelay Minimum {@link Duration} for which the update should be deferred
          */
-        @FlaggedApi(
-                FLAG_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_DEFAULT_PARTIAL_CUSTOM_AUDIENCES_CONSTRUCTOR)
         public Builder(@NonNull Uri updateUri, @NonNull Duration minDelay) {
             setRequiredFields(updateUri, minDelay);
         }

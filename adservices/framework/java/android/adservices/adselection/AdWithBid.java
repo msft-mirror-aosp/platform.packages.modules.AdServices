@@ -34,8 +34,15 @@ import java.util.Objects;
  * selection. The currency unit for the bid is expected to be the same requested by the seller when
  * initiating the selection process and not specified in this class. The seller can provide the
  * currency via AdSelectionSignals. The currency is opaque to FLEDGE.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+ *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
-@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class AdWithBid implements Parcelable {
     @NonNull
     private final AdData mAdData;

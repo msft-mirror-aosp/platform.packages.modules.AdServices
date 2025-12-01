@@ -31,10 +31,14 @@ import com.android.adservices.flags.Flags;
  *
  * @param <R> The type of the result that's being sent.
  * @param <E> The type of the {@link Throwable} that contains more information about the error.
- * @deprecated use {@link android.os.OutcomeReceiver} instead. Android R is no longer supported.
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.common, are
+ *     being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
 @Deprecated
-@FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public interface AdServicesOutcomeReceiver<R, E extends Throwable> {
     /**
      * Called when the asynchronous operation succeeds and delivers a result value.

@@ -16,15 +16,23 @@
 
 package android.adservices.common;
 
+import android.annotation.FlaggedApi;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.Build;
 
+import com.android.adservices.flags.Flags;
+
 /**
  * Class containing some utility functions used by other methods within AdServices.
  *
- * @hide
+ * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.common, are being
+ *     deprecated. Relevance APIs have no direct replacement. Developers should stop using them, as
+ *     calls will be rejected in future Android releases. Please refer to official Privacy Sandbox
+ *     documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class SandboxedSdkContextUtils {
     private SandboxedSdkContextUtils() {
         // Intended to be a utility class that should not be instantiated.

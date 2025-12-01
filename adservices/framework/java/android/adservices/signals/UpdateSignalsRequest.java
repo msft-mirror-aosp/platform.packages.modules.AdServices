@@ -29,8 +29,15 @@ import java.util.Objects;
  *
  * <p>{@code updateUri} is the only parameter. It represents the URI that the service will reach out
  * to retrieve the signals updates.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.signals, are
+ *     being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
-@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED)
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class UpdateSignalsRequest {
     @NonNull private final Uri mUpdateUri;
 
@@ -75,7 +82,17 @@ public final class UpdateSignalsRequest {
         return "UpdateSignalsRequest{" + "updateUri=" + mUpdateUri + '}';
     }
 
-    /** Builder for {@link UpdateSignalsRequest} objects. */
+    /**
+     * Builder for {@link UpdateSignalsRequest} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.signals,
+     *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop
+     *     using them, as calls will be rejected in future Android releases. Please refer to
+     *     official Privacy Sandbox documentation for deprecation and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         @NonNull private Uri mUpdateUri;
 

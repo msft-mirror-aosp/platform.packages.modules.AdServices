@@ -16,6 +16,7 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.flags.Flags.FLAG_ADID_ENABLE_SYNCHRONOUS_AD_ID_API;
+import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_DEPRECATED;
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_ENABLE_CONSENT_DATA_MIGRATION_API;
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API;
@@ -78,7 +79,8 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                     FLAG_ENABLE_ADSERVICES_API_ENABLED,
                     FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE,
                     FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED,
-                    FLAG_ADID_ENABLE_SYNCHRONOUS_AD_ID_API);
+                    FLAG_ADID_ENABLE_SYNCHRONOUS_AD_ID_API,
+                    FLAG_ADSERVICES_DEPRECATED);
 
     /**
      * List used by {@link #testAllAconfigFlagsAreMapped()}, it contains the name of flags that are

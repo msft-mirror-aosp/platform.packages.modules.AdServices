@@ -17,12 +17,25 @@
 package android.adservices.customaudience;
 
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 
+import com.android.adservices.flags.Flags;
+
 import java.util.Objects;
 
-/** The request object is used to leave a custom audience. */
+/**
+ * The request object is used to leave a custom audience.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+ *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+ *     replacement. Developers should stop using them, as calls will be rejected in future Android
+ *     releases. Please refer to official Privacy Sandbox documentation for deprecation and roadmap
+ *     details: https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+ */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class LeaveCustomAudienceRequest {
     @NonNull private final AdTechIdentifier mBuyer;
     @NonNull private final String mName;
@@ -73,7 +86,18 @@ public final class LeaveCustomAudienceRequest {
         return Objects.hash(mBuyer, mName);
     }
 
-    /** Builder for {@link LeaveCustomAudienceRequest} objects. */
+    /**
+     * Builder for {@link LeaveCustomAudienceRequest} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+     *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+     *     replacement. Developers should stop using them, as calls will be rejected in future
+     *     Android releases. Please refer to official Privacy Sandbox documentation for deprecation
+     *     and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         @Nullable private AdTechIdentifier mBuyer;
         @Nullable private String mName;

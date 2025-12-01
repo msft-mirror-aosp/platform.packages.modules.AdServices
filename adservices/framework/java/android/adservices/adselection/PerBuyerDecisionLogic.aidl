@@ -18,5 +18,11 @@ package android.adservices.adselection;
 
 /**
  * Decision logic provided by the buyer, to be used in the override for contextual flow
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+ *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
 parcelable PerBuyerDecisionLogic;

@@ -25,30 +25,88 @@ import com.android.adservices.flags.Flags;
 public class AdServicesPermissions {
     private AdServicesPermissions() {}
 
-    /** This permission needs to be declared by the caller of Topics APIs. */
+    /**
+     * This permission needs to be declared by the caller of Topics APIs.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.common,
+     *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop
+     *     using them, as calls will be rejected in future Android releases. Please refer to
+     *     official Privacy Sandbox documentation for deprecation and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final String ACCESS_ADSERVICES_TOPICS =
             "android.permission.ACCESS_ADSERVICES_TOPICS";
 
-    /** This permission needs to be declared by the caller of Attribution APIs. */
+    /**
+     * This permission needs to be declared by the caller of Attribution APIs.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.common,
+     *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop
+     *     using them, as calls will be rejected in future Android releases. Please refer to
+     *     official Privacy Sandbox documentation for deprecation and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final String ACCESS_ADSERVICES_ATTRIBUTION =
             "android.permission.ACCESS_ADSERVICES_ATTRIBUTION";
 
-    /** This permission needs to be declared by the caller of Custom Audiences APIs. */
+    /**
+     * This permission needs to be declared by the caller of Custom Audiences APIs.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.common,
+     *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop
+     *     using them, as calls will be rejected in future Android releases. Please refer to
+     *     official Privacy Sandbox documentation for deprecation and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final String ACCESS_ADSERVICES_CUSTOM_AUDIENCE =
             "android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE";
 
-    /** This permission needs to be declared by the caller of Protected Signals APIs. */
-    @FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED)
+    /**
+     * This permission needs to be declared by the caller of Protected Signals APIs.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.common,
+     *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop
+     *     using them, as calls will be rejected in future Android releases. Please refer to
+     *     official Privacy Sandbox documentation for deprecation and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final String ACCESS_ADSERVICES_PROTECTED_SIGNALS =
             "android.permission.ACCESS_ADSERVICES_PROTECTED_SIGNALS";
 
-    /** This permission needs to be declared by the caller of Protected Signals APIs. */
+    /**
+     * This permission needs to be declared by the caller of Protected Signals APIs.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.common,
+     *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop
+     *     using them, as calls will be rejected in future Android releases. Please refer to
+     *     official Privacy Sandbox documentation for deprecation and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     @SuppressWarnings("FlaggedApi") // aconfig not available on this branch
-    @FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED)
     public static final String ACCESS_ADSERVICES_AD_SELECTION =
             "android.permission.ACCESS_ADSERVICES_AD_SELECTION";
 
-    /** This permission needs to be declared by the caller of Advertising ID APIs. */
+    /**
+     * This permission needs to be declared by the caller of Advertising ID APIs.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.common,
+     *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop
+     *     using them, as calls will be rejected in future Android releases. Please refer to
+     *     official Privacy Sandbox documentation for deprecation and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final String ACCESS_ADSERVICES_AD_ID =
             "android.permission.ACCESS_ADSERVICES_AD_ID";
 
@@ -113,8 +171,13 @@ public class AdServicesPermissions {
     /**
      * The permission needed to call AdServicesManager APIs
      *
-     * @hide
+     * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.common, are
+     *     being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+     *     them, as calls will be rejected in future Android releases. Please refer to official
+     *     Privacy Sandbox documentation for deprecation and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
      */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final String ACCESS_ADSERVICES_MANAGER =
             "android.permission.ACCESS_ADSERVICES_MANAGER";
 

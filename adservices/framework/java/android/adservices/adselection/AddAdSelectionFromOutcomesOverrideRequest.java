@@ -17,7 +17,10 @@
 package android.adservices.adselection;
 
 import android.adservices.common.AdSelectionSignals;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
+
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 
@@ -30,7 +33,14 @@ import java.util.Objects;
  * the specific override, a {@code String} selectionLogicJs and {@code String} selectionSignals
  * field representing the override value
  *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+ *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public class AddAdSelectionFromOutcomesOverrideRequest {
     @NonNull private final AdSelectionFromOutcomesConfig mAdSelectionFromOutcomesConfig;
 

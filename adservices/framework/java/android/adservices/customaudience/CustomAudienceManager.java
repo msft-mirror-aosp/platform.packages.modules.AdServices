@@ -18,8 +18,6 @@ package android.adservices.customaudience;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 
-import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
-
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
@@ -41,11 +39,22 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
-/** CustomAudienceManager provides APIs for app and ad-SDKs to join / leave custom audiences. */
+/**
+ * CustomAudienceManager provides APIs for app and ad-SDKs to join / leave custom audiences.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+ *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+ *     replacement. Developers should stop using them, as calls will be rejected in future Android
+ *     releases. Please refer to official Privacy Sandbox documentation for deprecation and roadmap
+ *     details: https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+ */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 @RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -488,7 +497,6 @@ public class CustomAudienceManager {
      * <p>This call fails with {@link IllegalStateException} if the provided {@code
      * shouldReplacePendingUpdates} is false, and there exists a pending update in the queue.
      */
-    @FlaggedApi(FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void scheduleCustomAudienceUpdate(
             @NonNull ScheduleCustomAudienceUpdateRequest request,

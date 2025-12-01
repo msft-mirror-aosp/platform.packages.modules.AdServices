@@ -24,7 +24,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/** Represent the result from the getTopics API. */
+/**
+ * Represent the result from the getTopics API.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.topics, are
+ *     being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+ */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class GetTopicsResponse {
     /** List of Topic objects returned by getTopics API. */
     private final List<Topic> mTopics;
@@ -45,7 +55,6 @@ public final class GetTopicsResponse {
 
     /** Returns a {@link List} of {@link EncryptedTopic} objects returned by getTopics API. */
     @NonNull
-    @FlaggedApi(Flags.FLAG_TOPICS_ENCRYPTION_ENABLED)
     public List<EncryptedTopic> getEncryptedTopics() {
         return mEncryptedTopics;
     }
@@ -70,7 +79,15 @@ public final class GetTopicsResponse {
     /**
      * Builder for {@link GetTopicsResponse} objects. This class should be used in test
      * implementation as expected response from Topics API
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.topics,
+     *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop
+     *     using them, as calls will be rejected in future Android releases. Please refer to
+     *     official Privacy Sandbox documentation for deprecation and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
      */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         private List<Topic> mTopics = new ArrayList<>();
         private List<EncryptedTopic> mEncryptedTopics = new ArrayList<>();
@@ -81,7 +98,6 @@ public final class GetTopicsResponse {
          * @param topics The list of the returned Topics.
          * @deprecated This function is deprecated.
          */
-        @Deprecated
         public Builder(@NonNull List<Topic> topics) {
             mTopics = Objects.requireNonNull(topics);
         }
@@ -92,7 +108,6 @@ public final class GetTopicsResponse {
          * @param topics The list of the returned Topics.
          * @param encryptedTopics The list of encrypted Topics.
          */
-        @FlaggedApi(Flags.FLAG_TOPICS_ENCRYPTION_ENABLED)
         public Builder(@NonNull List<Topic> topics, @NonNull List<EncryptedTopic> encryptedTopics) {
             mTopics = Objects.requireNonNull(topics);
             mEncryptedTopics = Objects.requireNonNull(encryptedTopics);

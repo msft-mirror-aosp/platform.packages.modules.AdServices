@@ -17,6 +17,7 @@
 package android.adservices.adselection;
 
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
@@ -24,14 +25,20 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 
 /**
  * Represent input params to the GetAdSelectionData API.
  *
- * @hide
+ * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection, are
+ *     being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class GetAdSelectionDataInput implements Parcelable {
     @Nullable private final AdTechIdentifier mSeller;
     @NonNull private final String mCallerPackageName;
@@ -157,8 +164,13 @@ public final class GetAdSelectionDataInput implements Parcelable {
     /**
      * Builder for {@link GetAdSelectionDataInput} objects.
      *
-     * @hide
+     * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+     *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop
+     *     using them, as calls will be rejected in future Android releases. Please refer to
+     *     official Privacy Sandbox documentation for deprecation and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
      */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         @Nullable private AdTechIdentifier mSeller;
         @Nullable private String mCallerPackageName;

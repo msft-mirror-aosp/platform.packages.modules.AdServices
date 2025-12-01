@@ -24,5 +24,11 @@ package android.adservices.customaudience;
  * advertisements targeting a single custom audience.
  *
  * @hide
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.customaudience, are
+ *             being deprecated.
+ *             Relevance APIs have no direct replacement. Developers should stop using
+ *             them, as calls will be rejected in future Android releases.
+ *             Please refer to official Privacy Sandbox documentation for deprecation and
+ *             roadmap details: https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
 parcelable CustomAudience;

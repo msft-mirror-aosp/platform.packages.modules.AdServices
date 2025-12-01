@@ -20,10 +20,13 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import android.adservices.common.AdServicesResponse;
 import android.adservices.common.AdServicesStatusUtils;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.android.adservices.flags.Flags;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,8 +37,13 @@ import java.util.Objects;
 /**
  * Represent the result from the getTopics API.
  *
- * @hide
+ * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.topics, are being
+ *     deprecated. Relevance APIs have no direct replacement. Developers should stop using them, as
+ *     calls will be rejected in future Android releases. Please refer to official Privacy Sandbox
+ *     documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class GetTopicsResult extends AdServicesResponse {
     private final List<Long> mTaxonomyVersions;
     private final List<Long> mModelVersions;
@@ -355,8 +363,13 @@ public final class GetTopicsResult extends AdServicesResponse {
     /**
      * Builder for {@link GetTopicsResult} objects.
      *
-     * @hide
+     * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.topics, are
+     *     being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+     *     them, as calls will be rejected in future Android releases. Please refer to official
+     *     Privacy Sandbox documentation for deprecation and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
      */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         private @AdServicesStatusUtils.StatusCode int mResultCode;
         private String mErrorMessage;

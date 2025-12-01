@@ -17,9 +17,12 @@
 package android.adservices.customaudience;
 
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.OutcomeReceiver;
+
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -30,7 +33,15 @@ import java.util.concurrent.Executor;
  *
  * <p>It contains fields {@code buyer} and {@code name} which will serve as the identifier for the
  * overrides to be removed.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+ *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+ *     replacement. Developers should stop using them, as calls will be rejected in future Android
+ *     releases. Please refer to official Privacy Sandbox documentation for deprecation and roadmap
+ *     details: https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public class RemoveCustomAudienceOverrideRequest {
     @NonNull private final AdTechIdentifier mBuyer;
     @NonNull private final String mName;
@@ -54,7 +65,18 @@ public class RemoveCustomAudienceOverrideRequest {
         return mName;
     }
 
-    /** Builder for {@link RemoveCustomAudienceOverrideRequest} objects. */
+    /**
+     * Builder for {@link RemoveCustomAudienceOverrideRequest} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+     *     android.adservices.customaudience, are being deprecated. Relevance APIs have no direct
+     *     replacement. Developers should stop using them, as calls will be rejected in future
+     *     Android releases. Please refer to official Privacy Sandbox documentation for deprecation
+     *     and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         @Nullable private AdTechIdentifier mBuyer;
         @Nullable private String mName;

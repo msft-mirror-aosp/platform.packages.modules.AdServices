@@ -55,8 +55,15 @@ import java.util.Objects;
  *   <li>{@code Lists} keep the same order
  *   <li>{@code Strings} get encoded into byte[] using UTF-8 encoding
  * </ul>
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+ *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
-@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class SignedContextualAds implements Parcelable {
     private static final String BUYER_CANNOT_BE_NULL = "Buyer cannot be null.";
     private static final String DECISION_LOGIC_URI_CANNOT_BE_NULL =
@@ -184,7 +191,18 @@ public final class SignedContextualAds implements Parcelable {
                 + '}';
     }
 
-    /** Builder for {@link SignedContextualAds} object */
+    /**
+     * Builder for {@link SignedContextualAds} object
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+     *     android.adservices.adselection, are being deprecated. Relevance APIs have no direct
+     *     replacement. Developers should stop using them, as calls will be rejected in future
+     *     Android releases. Please refer to official Privacy Sandbox documentation for deprecation
+     *     and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         @Nullable private AdTechIdentifier mBuyer;
         @Nullable private Uri mDecisionLogicUri;

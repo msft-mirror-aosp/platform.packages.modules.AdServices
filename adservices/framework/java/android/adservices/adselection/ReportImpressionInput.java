@@ -19,11 +19,13 @@ package android.adservices.adselection;
 import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID;
 import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID_MESSAGE;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.android.adservices.flags.Flags;
 import com.android.internal.util.Preconditions;
 
 import java.util.Objects;
@@ -31,8 +33,13 @@ import java.util.Objects;
 /**
  * Represent input params to the reportImpression API.
  *
- * @hide
+ * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection, are
+ *     being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class ReportImpressionInput implements Parcelable {
     private final long mAdSelectionId;
     @NonNull private final AdSelectionConfig mAdSelectionConfig;
@@ -109,8 +116,13 @@ public final class ReportImpressionInput implements Parcelable {
     /**
      * Builder for {@link ReportImpressionInput} objects.
      *
-     * @hide
+     * @hide The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+     *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop
+     *     using them, as calls will be rejected in future Android releases. Please refer to
+     *     official Privacy Sandbox documentation for deprecation and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
      */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         private long mAdSelectionId = UNSET_AD_SELECTION_ID;
         @Nullable private AdSelectionConfig mAdSelectionConfig;

@@ -41,7 +41,15 @@ import java.util.concurrent.Executor;
  * AdSelectionOutcome#hasOutcome()} returns {@code false}, results from {@link AdSelectionOutcome
  * #getAdSelectionId()} and {@link AdSelectionOutcome#getRenderUri()} are invalid and shouldn't be
  * used.
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+ *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public class AdSelectionOutcome {
     /** Represents an AdSelectionOutcome with empty results. */
     @NonNull public static final AdSelectionOutcome NO_OUTCOME = new AdSelectionOutcome();
@@ -93,7 +101,6 @@ public class AdSelectionOutcome {
      * Returns the willing seller that won the auction.
      *
      */
-    @FlaggedApi(Flags.FLAG_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME)
     @NonNull
     public AdTechIdentifier getWinningSeller() {
         return mWinningSeller;
@@ -108,7 +115,6 @@ public class AdSelectionOutcome {
      * <p>This approach allows for flexible and dynamic ad creatives where different parts of the ad
      * can be loaded and rendered independently.
      */
-    @FlaggedApi(Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
     @NonNull
     public List<Uri> getComponentAdUris() {
         return mComponentAdUris;
@@ -141,7 +147,16 @@ public class AdSelectionOutcome {
 
     /**
      * Builder for {@link AdSelectionOutcome} objects.
+     *
+     * @deprecated The Rubidium (Rb) Relevance APIs, including those in
+     *     android.adservices.adselection, are being deprecated. Relevance APIs have no direct
+     *     replacement. Developers should stop using them, as calls will be rejected in future
+     *     Android releases. Please refer to official Privacy Sandbox documentation for deprecation
+     *     and roadmap details:
+     *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
      */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         private long mAdSelectionId = UNSET_AD_SELECTION_ID;
         @Nullable private Uri mRenderUri;
@@ -181,7 +196,6 @@ public class AdSelectionOutcome {
         /**
          * Sets the list of ad component renderUris.
          */
-        @FlaggedApi(Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
         @NonNull
         public AdSelectionOutcome.Builder setComponentAdUris(@NonNull List<Uri> componentAdUris) {
             mComponentAdUris =

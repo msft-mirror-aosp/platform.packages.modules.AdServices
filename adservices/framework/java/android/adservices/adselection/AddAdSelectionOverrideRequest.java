@@ -34,7 +34,15 @@ import java.util.concurrent.Executor;
  * <p>It contains, a {@link AdSelectionConfig} which will serve as the identifier for the specific
  * override, a {@code String} decisionLogicJs and {@code String} trustedScoringSignals field
  * representing the override value
+ *
+ * @deprecated The Rubidium (Rb) Relevance APIs, including those in android.adservices.adselection,
+ *     are being deprecated. Relevance APIs have no direct replacement. Developers should stop using
+ *     them, as calls will be rejected in future Android releases. Please refer to official Privacy
+ *     Sandbox documentation for deprecation and roadmap details:
+ *     https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
  */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public class AddAdSelectionOverrideRequest {
     @NonNull private final AdSelectionConfig mAdSelectionConfig;
 
@@ -55,7 +63,6 @@ public class AddAdSelectionOverrideRequest {
      * @param perBuyerDecisionLogic override for buyer's reporting logic for contextual ads. See
      *     {@link SignedContextualAds#getDecisionLogicUri()}
      */
-    @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
     public AddAdSelectionOverrideRequest(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJs,
@@ -124,7 +131,6 @@ public class AddAdSelectionOverrideRequest {
      * @return The override for the decision logic for each buyer that is used by contextual ads for
      *     reporting, which may be extended to updating bid values for contextual ads in the future
      */
-    @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
     @NonNull
     public PerBuyerDecisionLogic getPerBuyerDecisionLogic() {
         return mPerBuyerDecisionLogic;
