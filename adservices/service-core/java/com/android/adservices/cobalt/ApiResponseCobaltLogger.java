@@ -110,7 +110,6 @@ public final class ApiResponseCobaltLogger {
             }
         } catch (CobaltInitializationException | RuntimeException e) {
             LogUtil.e(e, "Cobalt logger initialization failed.");
-            // TODO(b/323253975): Add CEL.
         }
         return logger;
     }
