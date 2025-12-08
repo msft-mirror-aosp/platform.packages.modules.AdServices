@@ -217,7 +217,6 @@ class SandboxedSdkHolder {
             try {
                 Context displayContext = mContext.createDisplayContext(
                         mDisplayManager.getDisplay(displayId));
-                // TODO(b/209009304): Support other window contexts?
                 Context windowContext = displayContext.createWindowContext(
                         WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, null);
                 // Creating a SurfaceControlViewHost needs to done on the handler thread.
