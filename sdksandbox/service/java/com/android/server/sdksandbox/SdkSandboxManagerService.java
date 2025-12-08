@@ -2321,7 +2321,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private ArraySet<String> getContentProviderAllowlist(int sdkSandboxUid) {
         String curWebViewPackageName = WebViewUpdateService.getCurrentWebViewPackageName();
         ArraySet<String> contentProviderAuthoritiesAllowlist = new ArraySet<>();
-        // TODO(b/279557220): Make curWebViewPackageName a static variable once fixed.
         for (String webViewAuthority :
                 new String[] {
                     WEBVIEW_DEVELOPER_MODE_CONTENT_PROVIDER, WEBVIEW_SAFE_MODE_CONTENT_PROVIDER
