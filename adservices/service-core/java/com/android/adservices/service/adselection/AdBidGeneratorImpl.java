@@ -422,7 +422,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         mLightweightExecutorService)
                 .transform(
                         trustedBiddingSignals -> {
-                            // TODO(b/260011586): Optimize the logging of trustedBiddingSignals.
                             adBiddingPerCAExecutionLogger.endGetTrustedBiddingSignals(
                                     trustedBiddingSignals);
                             Tracing.endAsyncSection(
