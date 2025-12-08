@@ -44,7 +44,19 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
-/** MeasurementManager provides APIs to manage source and trigger registrations. */
+/**
+ * MeasurementManager provides APIs to manage source and trigger registrations.
+ *
+ * @deprecated The Rubidium (Rb) Measurement APIs, including those in
+ *     android.adservices.measurement, are being deprecated. There are no direct replacement APIs
+ *     for the Measurement APIs. Developers currently using these APIs should cease integration, as
+ *     calls to these APIs will be rejected in upcoming Android releases as part of a soft removal
+ *     process. Please refer to the official Privacy Sandbox developer documentation and
+ *     announcements for more details on this deprecation and the future roadmap of Privacy Sandbox
+ *     on Android: https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+ */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 @SuppressWarnings("NewApi")
 public class MeasurementManager {
     /** @hide */
@@ -157,12 +169,8 @@ public class MeasurementManager {
      *     event).
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
-     * @deprecated use {@link #registerSource(Uri, InputEvent, Executor, OutcomeReceiver)} instead.
-     *     Android R is no longer supported.
      */
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
-    @Deprecated
-    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
     public void registerSource(
             @NonNull Uri attributionSource,
             @Nullable InputEvent inputEvent,
@@ -207,12 +215,8 @@ public class MeasurementManager {
      * @param request app source registration request
      * @param executor used by callback to dispatch results
      * @param callback intended to notify asynchronously the API result
-     * @deprecated use {@link #registerSource(SourceRegistrationRequest, Executor, OutcomeReceiver)}
-     *     instead. Android R is no longer supported.
      */
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
-    @Deprecated
-    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
     public void registerSource(
             @NonNull SourceRegistrationRequest request,
             @Nullable @CallbackExecutor Executor executor,
@@ -264,12 +268,8 @@ public class MeasurementManager {
      * @param request source registration request
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
-     * @deprecated use {@link #registerWebSource(WebSourceRegistrationRequest, Executor,
-     *     OutcomeReceiver)} instead. Android R is no longer supported.
      */
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
-    @Deprecated
-    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
     public void registerWebSource(
             @NonNull WebSourceRegistrationRequest request,
             @Nullable Executor executor,
@@ -318,12 +318,8 @@ public class MeasurementManager {
      * @param request trigger registration request
      * @param executor used by callback to dispatch results
      * @param callback intended to notify asynchronously the API result
-     * @deprecated use {@link #registerWebTrigger(WebTriggerRegistrationRequest, Executor,
-     *     OutcomeReceiver)} instead. Anrdoid R is no longer supported.
      */
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
-    @Deprecated
-    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
     public void registerWebTrigger(
             @NonNull WebTriggerRegistrationRequest request,
             @Nullable Executor executor,
@@ -363,12 +359,8 @@ public class MeasurementManager {
      *     sources during the attribution process.
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
-     * @deprecated use {@link #registerTrigger(Uri, Executor, OutcomeReceiver)} instead. Android R
-     *     is no longer supported.
      */
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
-    @Deprecated
-    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
     public void registerTrigger(
             @NonNull Uri trigger,
             @Nullable @CallbackExecutor Executor executor,
@@ -414,11 +406,7 @@ public class MeasurementManager {
      * @param deletionRequest The request for deleting data.
      * @param executor The executor to run callback.
      * @param callback intended to notify asynchronously the API result.
-     * @deprecated use {@link #deleteRegistrations(DeletionRequest, Executor, OutcomeReceiver)}
-     *     instead. Android R is no longer supported.
      */
-    @Deprecated
-    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
     public void deleteRegistrations(
             @NonNull DeletionRequest deletionRequest,
             @NonNull @CallbackExecutor Executor executor,
@@ -456,12 +444,8 @@ public class MeasurementManager {
      *
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
-     * @deprecated use {@link #getMeasurementApiStatus(Executor, OutcomeReceiver)} instead. Android
-     *     R is no longer supported.
      */
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
-    @Deprecated
-    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
     public void getMeasurementApiStatus(
             @NonNull @CallbackExecutor Executor executor,
             @NonNull AdServicesOutcomeReceiver<Integer, Exception> callback) {

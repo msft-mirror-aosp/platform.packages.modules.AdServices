@@ -16,14 +16,29 @@
 
 package android.adservices.measurement;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.android.adservices.flags.Flags;
+
 import java.util.Objects;
 
-/** Class holding source registration parameters. */
+/**
+ * Class holding source registration parameters.
+ *
+ * @deprecated The Rubidium (Rb) Measurement APIs, including those in
+ *     android.adservices.measurement, are being deprecated. There are no direct replacement APIs
+ *     for the Measurement APIs. Developers currently using these APIs should cease integration, as
+ *     calls to these APIs will be rejected in upcoming Android releases as part of a soft removal
+ *     process. Please refer to the official Privacy Sandbox developer documentation and
+ *     announcements for more details on this deprecation and the future roadmap of Privacy Sandbox
+ *     on Android: https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+ */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class WebSourceParams implements Parcelable {
     /** Creator for Paracelable (via reflection). */
     @NonNull
@@ -101,7 +116,13 @@ public final class WebSourceParams implements Parcelable {
         out.writeBoolean(mDebugKeyAllowed);
     }
 
-    /** A builder for {@link WebSourceParams}. */
+    /**
+     * A builder for {@link WebSourceParams}.
+     *
+     * @deprecated See {@link WebSourceParams} for the deprecation details.
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         /**
          * URI that the Attribution Reporting API sends a request to in order to obtain source

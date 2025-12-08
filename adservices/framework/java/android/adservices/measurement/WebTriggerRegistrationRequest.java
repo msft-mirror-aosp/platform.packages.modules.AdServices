@@ -16,17 +16,32 @@
 
 package android.adservices.measurement;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.android.adservices.flags.Flags;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/** Class to hold input to measurement trigger registration calls from web context. */
+/**
+ * Class to hold input to measurement trigger registration calls from web context.
+ *
+ * @deprecated The Rubidium (Rb) Measurement APIs, including those in
+ *     android.adservices.measurement, are being deprecated. There are no direct replacement APIs
+ *     for the Measurement APIs. Developers currently using these APIs should cease integration, as
+ *     calls to these APIs will be rejected in upcoming Android releases as part of a soft removal
+ *     process. Please refer to the official Privacy Sandbox developer documentation and
+ *     announcements for more details on this deprecation and the future roadmap of Privacy Sandbox
+ *     on Android: https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/
+ */
+@Deprecated
+@FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
 public final class WebTriggerRegistrationRequest implements Parcelable {
     private static final int WEB_TRIGGER_PARAMS_MAX_COUNT = 80;
 
@@ -108,7 +123,13 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
         mDestination.writeToParcel(out, flags);
     }
 
-    /** Builder for {@link WebTriggerRegistrationRequest}. */
+    /**
+     * Builder for {@link WebTriggerRegistrationRequest}.
+     *
+     * @deprecated See {@link WebTriggerRegistrationRequest} for the deprecation details.
+     */
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_DEPRECATED)
     public static final class Builder {
         /**
          * Registration info to fetch triggers. Maximum 80 registrations allowed at once, to be in
