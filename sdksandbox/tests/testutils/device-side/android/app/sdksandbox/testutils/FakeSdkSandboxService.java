@@ -204,7 +204,6 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
         mUnloadSdkInSandboxCallback.onUnloadSdk(sandboxLatencyInfo);
     }
 
-    // TODO(b/242684679): Use iRequestSurfacePackageFromSdkCallback instead of fake callback
     public void sendSurfacePackageError(
             int errorCode, String errorMsg, FakeRequestSurfacePackageCallbackBinder callback)
             throws RemoteException {
