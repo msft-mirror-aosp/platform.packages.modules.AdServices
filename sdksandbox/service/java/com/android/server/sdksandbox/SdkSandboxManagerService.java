@@ -2360,7 +2360,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         if (broadcastReceiverAllowlist == null) {
             return null;
         }
-        // TODO(b/271547387): Filter out the allowlist based on targetSdkVersion.
         return broadcastReceiverAllowlist.get(
                 getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
     }
