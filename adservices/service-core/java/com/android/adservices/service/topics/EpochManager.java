@@ -348,7 +348,6 @@ public class EpochManager {
      * @param numberOfTopTopics number of regular topics in top topics
      * @return a {@code boolean} that indicates if the caller can learn the topic
      */
-    // TODO(b/236834213): Create a class for Top Topics
     public static boolean isTopicLearnableByCaller(
             @NonNull Topic topic,
             @NonNull String caller,
