@@ -18,7 +18,8 @@ package android.adservices.topics;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_TOPICS;
 import static android.adservices.common.AdServicesStatusUtils.SERVICE_UNAVAILABLE_ERROR_MESSAGE;
 
-import android.adservices.common.AdServicesStatusUtils;
+import static com.android.adservices.shared.common.exception.AdServicesDeprecationConstants.TOPICS_SERVICE_DEPRECATION_MESSAGE;
+
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
@@ -65,6 +66,7 @@ import java.util.concurrent.Executor;
 @RequiresApi(Build.VERSION_CODES.S)
 public final class TopicsManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
+
     /**
      * Constant that represents the service name for {@link TopicsManager} to be used in {@link
      * android.adservices.AdServicesFrameworkInitializer#registerServiceWrappers}
@@ -208,31 +210,24 @@ public final class TopicsManager {
                     new IGetTopicsCallback.Stub() {
                         @Override
                         public void onResult(GetTopicsResult resultParcel) {
-                            executor.execute(
-                                    () -> {
-                                        if (resultParcel.isSuccess()) {
-                                            callback.onResult(buildGetTopicsResponse(resultParcel));
-                                        } else {
-                                            // TODO: Errors should be returned in onFailure method.
-                                            callback.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            resultParcel));
-                                        }
-                                    });
+                            // Throws deprecation exception in any condition.
+                            executor.execute(() -> callback.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(int resultCode) {
-                            executor.execute(
-                                    () ->
-                                            callback.onError(
-                                                    AdServicesStatusUtils.asException(resultCode)));
+                            // Throws deprecation exception in any condition.
+                            executor.execute(() -> callback.onError(genDeprecatedException()));
                         }
                     });
         } catch (RemoteException e) {
             sLogger.e(e, "RemoteException");
             callback.onError(e);
         }
+    }
+
+    private IllegalStateException genDeprecatedException() {
+        return new IllegalStateException(TOPICS_SERVICE_DEPRECATION_MESSAGE);
     }
 
     private GetTopicsResponse buildGetTopicsResponse(GetTopicsResult resultParcel) {

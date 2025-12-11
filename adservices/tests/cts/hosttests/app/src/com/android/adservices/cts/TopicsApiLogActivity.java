@@ -15,6 +15,8 @@
  */
 package com.android.adservices.cts;
 
+import static com.android.adservices.shared.common.exception.AdServicesDeprecationConstants.TOPICS_SERVICE_DEPRECATION_MESSAGE;
+
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.os.Bundle;
@@ -52,6 +54,14 @@ public class TopicsApiLogActivity extends AppCompatActivity {
             Preconditions.checkState(
                     response.getTopics().isEmpty(), "Incorrect getTopicsResponse!");
         } catch (InterruptedException | ExecutionException e) {
+
+            // TopicsService APIs are deprecated.
+            Throwable cause = e.getCause();
+            if (cause != null
+                    && cause instanceof IllegalStateException
+                    && cause.getMessage().equals(TOPICS_SERVICE_DEPRECATION_MESSAGE)) {
+                return;
+            }
             throw new RuntimeException(e);
         }
     }
