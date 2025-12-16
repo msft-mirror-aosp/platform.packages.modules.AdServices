@@ -393,8 +393,6 @@ public class AdServicesHttpsClient {
 
         InputStream inputStream = null;
         try {
-            // TODO(b/237342352): Both connect and read timeouts are kludged in this method and if
-            //  necessary need to be separated
             for (Map.Entry<String, String> entry : request.getRequestProperties().entrySet()) {
                 urlConnection.setRequestProperty(entry.getKey(), entry.getValue());
             }
@@ -546,8 +544,6 @@ public class AdServicesHttpsClient {
         }
 
         try {
-            // TODO(b/237342352): Both connect and read timeouts are kludged in this method and if
-            //  necessary need to be separated
             closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
             int responseCode = urlConnection.getResponseCode();
             if (isSuccessfulResponse(responseCode)) {
@@ -612,8 +608,6 @@ public class AdServicesHttpsClient {
         }
 
         try {
-            // TODO(b/237342352): Both connect and read timeouts are kludged in this method and if
-            //  necessary need to be separated
             closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
 
             OutputStream os = urlConnection.getOutputStream();
@@ -726,8 +720,6 @@ public class AdServicesHttpsClient {
 
         InputStream inputStream = null;
         try {
-            // TODO(b/237342352): Both connect and read timeouts are kludged in this method and if
-            //  necessary need to be separated
             for (Map.Entry<String, String> entry : request.getRequestProperties().entrySet()) {
                 urlConnection.setRequestProperty(entry.getKey(), entry.getValue());
             }
