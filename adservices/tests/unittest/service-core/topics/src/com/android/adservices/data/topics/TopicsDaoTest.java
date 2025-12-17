@@ -1304,7 +1304,6 @@ public final class TopicsDaoTest extends AdServicesExtendedMockitoTestCase {
         assertThat(mTopicsDao.retrieveEpochOrigin()).isEqualTo(epochOrigin);
     }
 
-    // TODO(b/230669931): Add test to check SQLException when it's enabled in TopicsDao.
     @Test
     public void testPersistAndRetrieveEpochOrigin_multipleInsertion() {
         long epochOrigin1 = 1L;
