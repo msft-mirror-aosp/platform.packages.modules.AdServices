@@ -2513,7 +2513,6 @@ public final class PhFlags implements Flags {
                     .map(ImmutableList::copyOf)
                     .orElse(FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
         } catch (Exception e) {
-            // TODO(b/384578475): Add CEL here
             LogUtil.e("Malformed bucket list found in device config, setting to default.");
             return FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES;
         }
