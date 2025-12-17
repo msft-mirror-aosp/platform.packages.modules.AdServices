@@ -24,7 +24,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
-import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AssetFileDescriptorUtil;
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.FledgeErrorResponse;
@@ -51,6 +50,7 @@ import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
 import com.android.adservices.flags.Flags;
+import com.android.adservices.shared.common.exception.AdServicesDeprecationConstants;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.IOException;
@@ -254,34 +254,14 @@ public class AdSelectionManager {
                     new GetAdSelectionDataCallback.Stub() {
                         @Override
                         public void onSuccess(GetAdSelectionDataResponse resultParcel) {
-                            executor.execute(
-                                    () -> {
-                                        byte[] adSelectionData;
-                                        try {
-                                            adSelectionData = getAdSelectionData(resultParcel);
-                                        } catch (IOException e) {
-                                            receiver.onError(
-                                                    new IllegalStateException(
-                                                            "Unable to return the AdSelectionData",
-                                                            e));
-                                            return;
-                                        }
-                                        receiver.onResult(
-                                                new GetAdSelectionDataOutcome.Builder()
-                                                        .setAdSelectionId(
-                                                                resultParcel.getAdSelectionId())
-                                                        .setAdSelectionData(adSelectionData)
-                                                        .build());
-                                    });
+                            // AdSelectionService APIs are deprecated
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(
-                                                AdServicesStatusUtils.asException(failureParcel));
-                                    });
+                            // AdSelectionService APIs are deprecated
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -353,29 +333,14 @@ public class AdSelectionManager {
                     new PersistAdSelectionResultCallback.Stub() {
                         @Override
                         public void onSuccess(PersistAdSelectionResultResponse resultParcel) {
-                            executor.execute(
-                                    () ->
-                                            receiver.onResult(
-                                                    new AdSelectionOutcome.Builder()
-                                                            .setAdSelectionId(
-                                                                    resultParcel.getAdSelectionId())
-                                                            .setRenderUri(
-                                                                    resultParcel.getAdRenderUri())
-                                                            .setWinningSeller(
-                                                                    resultParcel.getWinningSeller())
-                                                            .setComponentAdUris(
-                                                                    resultParcel
-                                                                            .getComponentAdUris())
-                                                            .build()));
+                            // AdSelectionService APIs are deprecated
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(
-                                                AdServicesStatusUtils.asException(failureParcel));
-                                    });
+                            // AdSelectionService APIs are deprecated
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -462,26 +427,14 @@ public class AdSelectionManager {
                     new AdSelectionCallback.Stub() {
                         @Override
                         public void onSuccess(AdSelectionResponse resultParcel) {
-                            executor.execute(
-                                    () ->
-                                            receiver.onResult(
-                                                    new AdSelectionOutcome.Builder()
-                                                            .setAdSelectionId(
-                                                                    resultParcel.getAdSelectionId())
-                                                            .setRenderUri(
-                                                                    resultParcel.getRenderUri())
-                                                            .setWinningSeller(
-                                                                    resultParcel.getWinningSeller())
-                                                            .build()));
+                            // AdSelectionService APIs are deprecated
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(
-                                                AdServicesStatusUtils.asException(failureParcel));
-                                    });
+                            // AdSelectionService APIs are deprecated
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -574,31 +527,14 @@ public class AdSelectionManager {
                     new AdSelectionCallback.Stub() {
                         @Override
                         public void onSuccess(AdSelectionResponse resultParcel) {
-                            executor.execute(
-                                    () -> {
-                                        if (resultParcel == null) {
-                                            receiver.onResult(AdSelectionOutcome.NO_OUTCOME);
-                                        } else {
-                                            receiver.onResult(
-                                                    new AdSelectionOutcome.Builder()
-                                                            .setAdSelectionId(
-                                                                    resultParcel.getAdSelectionId())
-                                                            .setRenderUri(
-                                                                    resultParcel.getRenderUri())
-                                                            .setWinningSeller(
-                                                                    resultParcel.getWinningSeller())
-                                                            .build());
-                                        }
-                                    });
+                            // AdSelectionService APIs are deprecated
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(
-                                                AdServicesStatusUtils.asException(failureParcel));
-                                    });
+                            // AdSelectionService APIs are deprecated
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -714,16 +650,14 @@ public class AdSelectionManager {
                     new ReportImpressionCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            // AdSelectionService APIs are deprecated
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(
-                                                AdServicesStatusUtils.asException(failureParcel));
-                                    });
+                            // AdSelectionService APIs are deprecated
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -800,16 +734,14 @@ public class AdSelectionManager {
                     new ReportInteractionCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            // AdSelectionService APIs are deprecated
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(
-                                                AdServicesStatusUtils.asException(failureParcel));
-                                    });
+                            // AdSelectionService APIs are deprecated
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -871,16 +803,14 @@ public class AdSelectionManager {
                     new SetAppInstallAdvertisersCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            // AdSelectionService APIs are deprecated
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(
-                                                AdServicesStatusUtils.asException(failureParcel));
-                                    });
+                            // AdSelectionService APIs are deprecated
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -949,16 +879,16 @@ public class AdSelectionManager {
                     new UpdateAdCounterHistogramCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> outcomeReceiver.onResult(new Object()));
+                            // AdSelectionService APIs are deprecated
+                            executor.execute(
+                                    () -> outcomeReceiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
+                            // AdSelectionService APIs are deprecated
                             executor.execute(
-                                    () -> {
-                                        outcomeReceiver.onError(
-                                                AdServicesStatusUtils.asException(failureParcel));
-                                    });
+                                    () -> outcomeReceiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -969,6 +899,11 @@ public class AdSelectionManager {
             sLogger.e(e, "Remote exception encountered while updating ad counter histogram");
             outcomeReceiver.onError(new IllegalStateException("Failure of AdSelection service", e));
         }
+    }
+
+    private IllegalStateException genDeprecatedException() {
+        return new IllegalStateException(
+                AdServicesDeprecationConstants.AD_SELECTION_SERVICE_DEPRECATION_MESSAGE);
     }
 
     private String getCallerPackageName() {

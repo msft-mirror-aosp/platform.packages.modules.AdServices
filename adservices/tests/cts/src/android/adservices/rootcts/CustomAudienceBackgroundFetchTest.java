@@ -56,33 +56,6 @@ public final class CustomAudienceBackgroundFetchTest extends FledgeRootScenarioT
     }
 
     /**
-     * Test to ensure that trusted signals are updated (including ads list) during the daily update.
-     */
-    @Test
-    public void testAdSelection_withInvalidFields_backgroundJobUpdatesSuccessfully()
-            throws Exception {
-        ScenarioDispatcher dispatcher =
-                setupDispatcher(
-                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
-                                "scenarios/remarketing-cuj-020.json"));
-        AdSelectionConfig adSelectionConfig =
-                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
-
-        try {
-            joinCustomAudience(makeCustomAudience(CA_NAME).setAds(List.of()).build());
-            assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
-            mBackgroundJobHelper.runJobWithBroadcastIntent(
-                    FLEDGE_BACKGROUND_FETCH_JOB.getJobId(), ACTION_BACKGROUND_FETCH_JOB_FINISHED);
-            assertThat(doSelectAds(adSelectionConfig).hasOutcome()).isTrue();
-        } finally {
-            leaveCustomAudience(CA_NAME);
-        }
-
-        assertThat(dispatcher.getCalledPaths())
-                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
-    }
-
-    /**
      * Test to ensure that trusted signals are not updated during the daily update if the ads are
      * not syntactically valid.
      */

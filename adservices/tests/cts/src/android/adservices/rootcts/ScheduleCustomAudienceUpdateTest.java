@@ -20,18 +20,10 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOT
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
-import static com.android.adservices.spe.AdServicesJobInfo.SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB;
-
-import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
-import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.adselection.AdSelectionOutcome;
-import android.adservices.common.AdSelectionSignals;
-import android.adservices.customaudience.CustomAudience;
-import android.adservices.customaudience.PartialCustomAudience;
 import android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
@@ -120,56 +112,6 @@ public final class ScheduleCustomAudienceUpdateTest extends FledgeRootScenarioTe
                 .that(e)
                 .hasCauseThat()
                 .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    public void testScheduleCustomAudienceUpdate_DownloadedCaWinsAdSelection_success()
-            throws Exception {
-        ScenarioDispatcher dispatcher =
-                setupDispatcher(
-                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
-                                "scenarios/scheduleupdates/remarketing-cuj-scheduled-update.json"));
-        AdSelectionConfig adSelectionConfig =
-                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
-
-        // Set min allowed delay in past for easier testing
-        flags.setFlag(
-                KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
-                MIN_ALLOWED_DELAY_TEST_OVERRIDE);
-
-        Uri updateUri =
-                Uri.parse(
-                        dispatcher.getBaseAddressWithPrefix().toString()
-                                + Scenarios.UPDATE_CA_PATH);
-        CustomAudience customAudience = makeCustomAudience(CA_NAME).build();
-        PartialCustomAudience partialCustomAudience =
-                new PartialCustomAudience.Builder(CA_NAME)
-                        .setActivationTime(customAudience.getActivationTime())
-                        .setExpirationTime(customAudience.getExpirationTime())
-                        .setUserBiddingSignals(AdSelectionSignals.fromString("{\"a\":\"b\"}"))
-                        .build();
-        ScheduleCustomAudienceUpdateRequest request =
-                new ScheduleCustomAudienceUpdateRequest.Builder(
-                                updateUri,
-                                Duration.of(0, ChronoUnit.MINUTES),
-                                List.of(partialCustomAudience))
-                        .build();
-
-        try {
-            doScheduleCustomAudienceUpdate(request);
-            assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
-            mBackgroundJobHelper.runJobWithBroadcastIntent(
-                    SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB.getJobId(),
-                    ACTION_SCHEDULE_CA_COMPLETE_INTENT);
-            AdSelectionOutcome result = doSelectAds(adSelectionConfig);
-            assertThat(result.hasOutcome()).isTrue();
-            assertThat(result.getRenderUri()).isNotNull();
-        } finally {
-            leaveCustomAudience(CA_NAME);
-        }
-
-        assertThat(dispatcher.getCalledPaths())
-                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
     }
 
     @Test

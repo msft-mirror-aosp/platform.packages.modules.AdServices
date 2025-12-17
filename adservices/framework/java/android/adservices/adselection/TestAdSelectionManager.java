@@ -20,7 +20,6 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS;
 
-import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.CallbackExecutor;
 import android.annotation.FlaggedApi;
@@ -34,6 +33,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.flags.Flags;
+import com.android.adservices.shared.common.exception.AdServicesDeprecationConstants;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -103,16 +103,12 @@ public class TestAdSelectionManager {
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () ->
-                                            receiver.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            failureParcel)));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -159,16 +155,12 @@ public class TestAdSelectionManager {
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () ->
-                                            receiver.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            failureParcel)));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -210,16 +202,12 @@ public class TestAdSelectionManager {
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () ->
-                                            receiver.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            failureParcel)));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -269,16 +257,12 @@ public class TestAdSelectionManager {
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () ->
-                                            receiver.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            failureParcel)));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -325,16 +309,12 @@ public class TestAdSelectionManager {
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () ->
-                                            receiver.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            failureParcel)));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -376,16 +356,12 @@ public class TestAdSelectionManager {
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () ->
-                                            receiver.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            failureParcel)));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -441,16 +417,14 @@ public class TestAdSelectionManager {
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> outcomeReceiver.onResult(new Object()));
+                            executor.execute(
+                                    () -> outcomeReceiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
                             executor.execute(
-                                    () ->
-                                            outcomeReceiver.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            failureParcel)));
+                                    () -> outcomeReceiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -503,16 +477,14 @@ public class TestAdSelectionManager {
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> outcomeReceiver.onResult(new Object()));
+                            executor.execute(
+                                    () -> outcomeReceiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
                             executor.execute(
-                                    () ->
-                                            outcomeReceiver.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            failureParcel)));
+                                    () -> outcomeReceiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -558,16 +530,14 @@ public class TestAdSelectionManager {
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> outcomeReceiver.onResult(new Object()));
+                            executor.execute(
+                                    () -> outcomeReceiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
                             executor.execute(
-                                    () ->
-                                            outcomeReceiver.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            failureParcel)));
+                                    () -> outcomeReceiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -578,5 +548,10 @@ public class TestAdSelectionManager {
             sLogger.e(e, "Remote exception encountered while updating ad counter histogram");
             outcomeReceiver.onError(new IllegalStateException("Failure of AdSelection service", e));
         }
+    }
+
+    private IllegalStateException genDeprecatedException() {
+        return new IllegalStateException(
+                AdServicesDeprecationConstants.AD_SELECTION_SERVICE_DEPRECATION_MESSAGE);
     }
 }

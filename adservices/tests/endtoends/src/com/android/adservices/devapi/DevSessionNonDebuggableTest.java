@@ -247,15 +247,6 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
     }
 
     @Test
-    public void test_getAdSelectionData_throwsSecurityException() throws Exception {
-        startDevSessionWithoutAllowlist();
-
-        assertCallThrowsSecurityException(
-                mAdSelectionClient.getAdSelectionData(
-                        new GetAdSelectionDataRequest.Builder().setSeller(AD_TECH).build()));
-    }
-
-    @Test
     public void test_getAdSelectionData_allowListEnabled_doesNotThrowSecurityException()
             throws Exception {
         startDevSessionWithAllowlist();
@@ -263,17 +254,6 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
         assertCallSucceedsOrThrowsNonSecurityException(
                 mAdSelectionClient.getAdSelectionData(
                         new GetAdSelectionDataRequest.Builder().setSeller(AD_TECH).build()));
-    }
-
-    @Test
-    public void test_reportImpressionOnDeviceAuction_throwsSecurityException() throws Exception {
-        startDevSessionWithoutAllowlist();
-
-        assertCallThrowsSecurityException(
-                mAdSelectionClient.reportImpression(
-                        new ReportImpressionRequest(
-                                VALID_AD_SELECTION_ID,
-                                AdSelectionConfigFixture.anAdSelectionConfig())));
     }
 
     @Test
@@ -290,15 +270,6 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
     }
 
     @Test
-    public void test_reportImpressionServerAuction_throwsSecurityException() throws Exception {
-        startDevSessionWithoutAllowlist();
-
-        assertCallThrowsSecurityException(
-                mAdSelectionClient.reportImpression(
-                        new ReportImpressionRequest(VALID_AD_SELECTION_ID)));
-    }
-
-    @Test
     public void test_reportImpressionServerAuction_allowListEnabled_doesNotThrowSecurityException()
             throws Exception {
         startDevSessionWithAllowlist();
@@ -306,20 +277,6 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
         assertCallSucceedsOrThrowsNonSecurityException(
                 mAdSelectionClient.reportImpression(
                         new ReportImpressionRequest(VALID_AD_SELECTION_ID)));
-    }
-
-    @Test
-    public void test_reportEvent_throwsSecurityException() throws Exception {
-        startDevSessionWithoutAllowlist();
-
-        assertCallThrowsSecurityException(
-                mAdSelectionClient.reportEvent(
-                        new ReportEventRequest.Builder(
-                                        VALID_AD_SELECTION_ID,
-                                        "click",
-                                        "some data",
-                                        FLAG_REPORTING_DESTINATION_SELLER)
-                                .build()));
     }
 
     @Test

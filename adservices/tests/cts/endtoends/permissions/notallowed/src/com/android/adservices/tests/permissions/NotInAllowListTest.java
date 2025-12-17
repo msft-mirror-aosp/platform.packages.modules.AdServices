@@ -20,17 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.adselection.AdSelectionConfigFixture;
-import android.adservices.adselection.AdSelectionFromOutcomesConfig;
-import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
-import android.adservices.adselection.ReportEventRequest;
-import android.adservices.adselection.ReportImpressionRequest;
-import android.adservices.adselection.UpdateAdCounterHistogramRequest;
-import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.common.CommonFixture;
-import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 
@@ -126,105 +117,6 @@ public final class NotInAllowListTest
                                                 CommonFixture.VALID_BUYER_1,
                                                 "exampleCustomAudience")
                                         .get());
-        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_ALLOWED);
-    }
-
-    @Test
-    public void testNotInAllowList_selectAds_adSelectionConfig() {
-        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
-        AdSelectionClient mAdSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> mAdSelectionClient.selectAds(adSelectionConfig).get());
-        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_ALLOWED);
-    }
-
-    @Test
-    public void testNotInAllowList_selectAds_adSelectionFromOutcomesConfig() {
-        AdSelectionFromOutcomesConfig config =
-                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
-        AdSelectionClient mAdSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class, () -> mAdSelectionClient.selectAds(config).get());
-        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_ALLOWED);
-    }
-
-    @Test
-    public void testNotInAllowList_reportImpression() {
-        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
-        long adSelectionId = 1;
-        AdSelectionClient mAdSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-        ReportImpressionRequest request =
-                new ReportImpressionRequest(adSelectionId, adSelectionConfig);
-
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> mAdSelectionClient.reportImpression(request).get());
-        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_ALLOWED);
-    }
-
-    @Test
-    public void testNotInAllowList_reportEvent() {
-        long adSelectionId = 1;
-        String eventKey = "click";
-        String eventData = "{\"key\":\"value\"}";
-        AdSelectionClient mAdSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-        ReportEventRequest request =
-                new ReportEventRequest.Builder(
-                                adSelectionId,
-                                eventKey,
-                                eventData,
-                                ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER
-                                        | ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER)
-                        .build();
-
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> mAdSelectionClient.reportEvent(request).get());
-        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_ALLOWED);
-    }
-
-    @Test
-    public void testNotInAllowList_updateAdCounterHistogram() {
-        long adSelectionId = 1;
-        AdSelectionClient mAdSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-        UpdateAdCounterHistogramRequest request =
-                new UpdateAdCounterHistogramRequest.Builder(
-                                adSelectionId,
-                                FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
-                                CommonFixture.VALID_BUYER_1)
-                        .build();
-
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> mAdSelectionClient.updateAdCounterHistogram(request).get());
         assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_ALLOWED);
     }
 }
