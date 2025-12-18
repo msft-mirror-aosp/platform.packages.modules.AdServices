@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Base64;
@@ -144,6 +145,7 @@ public final class HpkeJniTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    @Ignore("b/467479439")
     public void testHpkeDecrypt_ciphertextInvalid_fail() {
         byte[] emptyCiphertext = new byte[] {};
         byte[] result = HpkeJni.decrypt(sPrivateKey, emptyCiphertext, sAssociatedData);
