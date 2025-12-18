@@ -13,4 +13,5 @@ flag {
     namespace: "sdk_sandbox"
     description: "Enables deprecation of SDK sandbox APIs"
     bug: "444627795"
+    is_exported: true
 }
