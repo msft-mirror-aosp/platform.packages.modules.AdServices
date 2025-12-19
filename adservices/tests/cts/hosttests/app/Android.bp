@@ -36,6 +36,7 @@ android_test_helper_app {
         "androidx.appsearch_appsearch-platform-storage",
         "androidx.concurrent_concurrent-futures",
         "com.google.android.material_material",
+        "adservices-shared-exceptions",
     ],
     // Tag this module as a cts test artifact
     test_suites: [

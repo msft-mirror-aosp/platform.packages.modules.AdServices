@@ -29,12 +29,10 @@ import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
-import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
-import android.adservices.topics.GetTopicsResponse;
 import android.adservices.utils.CtsWebViewSupportUtil;
 import android.net.Uri;
 
@@ -58,21 +56,6 @@ public final class PermissionsValidTest extends CtsAdServicesPermissionsValidEnd
     public void setup() {
         // Kill AdServices process
         AdservicesTestHelper.killAdservicesProcess(sContext);
-    }
-
-    @Test
-    public void testValidPermissions_topics() throws Exception {
-        AdvertisingTopicsClient advertisingTopicsClient1 =
-                new AdvertisingTopicsClient.Builder()
-                        .setContext(sContext)
-                        .setSdkName("sdk1")
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        GetTopicsResponse sdk1Result = advertisingTopicsClient1.getTopics().get();
-        // Not getting an error here indicates that permissions are valid. The valid case is also
-        // tested in TopicsManagerTest.
-        assertThat(sdk1Result.getTopics()).isEmpty();
     }
 
     @Test

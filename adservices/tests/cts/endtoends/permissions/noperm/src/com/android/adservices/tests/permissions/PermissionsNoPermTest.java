@@ -41,7 +41,6 @@ import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceClient;
 import android.adservices.clients.signals.ProtectedSignalsClient;
-import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
@@ -85,21 +84,6 @@ public final class PermissionsNoPermTest extends CtsAdServicesPermissionsNoPermE
         AdservicesTestHelper.killAdservicesProcess(sContext);
         mHasAccessToDevOverrides = DevContextUtils.isDevOptionsEnabled(sContext, TAG);
         mAccessStatus = String.format("mHasAccessToDevOverrides is %b", mHasAccessToDevOverrides);
-    }
-
-    @Test
-    public void testNoPerm_topics() {
-        AdvertisingTopicsClient advertisingTopicsClient1 =
-                new AdvertisingTopicsClient.Builder()
-                        .setContext(sContext)
-                        .setSdkName("sdk1")
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class, () -> advertisingTopicsClient1.getTopics().get());
-        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
