@@ -757,8 +757,6 @@ public class MainActivity extends AppCompatActivity {
                                                 APP_OWNED_INTERFACE_REGISTERED)) {
                                             // Register AppOwnedSdkInterface when activity first
                                             // created
-                                            // TODO(b/284281064) : We should be checking sdk
-                                            // extension here
                                             mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
                                                     new AppOwnedSdkSandboxInterface(
                                                             APP_OWNED_SDK_NAME,
