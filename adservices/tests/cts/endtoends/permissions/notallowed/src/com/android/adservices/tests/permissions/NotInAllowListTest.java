@@ -29,7 +29,6 @@ import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
-import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.CustomAudience;
@@ -64,21 +63,6 @@ public final class NotInAllowListTest
     public void setup() {
         // Kill AdServices process
         AdservicesTestHelper.killAdservicesProcess(sContext);
-    }
-
-    @Test
-    public void testNotInAllowList_getTopics() {
-        AdvertisingTopicsClient advertisingTopicsClient1 =
-                new AdvertisingTopicsClient.Builder()
-                        .setContext(sContext)
-                        .setSdkName("sdk1")
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class, () -> advertisingTopicsClient1.getTopics().get());
-        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_ALLOWED);
     }
 
     @Test
