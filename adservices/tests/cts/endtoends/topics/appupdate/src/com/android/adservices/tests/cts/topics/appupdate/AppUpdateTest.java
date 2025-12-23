@@ -47,6 +47,7 @@ import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.adservices.shared.testing.annotations.SetLongFlag;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -166,6 +167,7 @@ public final class AppUpdateTest extends CtsAdServicesTopicsAppUpdateTestCase {
     }
 
     @Test
+    @Ignore("b/463382540 - Topics Service APIs are deprecated, relevant features no longer work.")
     @FlakyTest(bugId = 298870452)
     public void testAppUpdate() throws Exception {
         // Invoke Topics API once to compute top topics so that following installed test apps are
