@@ -43,6 +43,7 @@ import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -83,6 +84,7 @@ public final class TopicsConnectionTest extends CtsAdServicesTopicsConnectionTes
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
     }
 
+    @Ignore("b/463382540 - Topics Service APIs are deprecated, relevant features no longer work.")
     @FlakyTest(bugId = 422699447)
     @Test
     public void testEnableGlobalKillSwitch() throws Exception {
