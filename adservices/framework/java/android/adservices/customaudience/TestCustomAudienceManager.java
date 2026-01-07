@@ -18,7 +18,6 @@ package android.adservices.customaudience;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 
-import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.CallbackExecutor;
 import android.annotation.FlaggedApi;
@@ -32,6 +31,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.flags.Flags;
+import com.android.adservices.shared.common.exception.AdServicesDeprecationConstants;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -99,16 +99,12 @@ public class TestCustomAudienceManager {
                     new CustomAudienceOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () ->
-                                            receiver.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            failureParcel)));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (RemoteException e) {
@@ -145,16 +141,12 @@ public class TestCustomAudienceManager {
                     new CustomAudienceOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () ->
-                                            receiver.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            failureParcel)));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (RemoteException e) {
@@ -184,21 +176,22 @@ public class TestCustomAudienceManager {
                     new CustomAudienceOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () ->
-                                            receiver.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            failureParcel)));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (RemoteException e) {
             sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Internal Error!", e));
         }
+    }
+
+    private IllegalStateException genDeprecatedException() {
+        return new IllegalStateException(
+                AdServicesDeprecationConstants.CUSTOM_AUDIENCE_SERVICE_DEPRECATION_MESSAGE);
     }
 }

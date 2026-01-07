@@ -16,16 +16,8 @@
 
 package com.android.adservices.service.customaudience;
 
-import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
-import static android.adservices.common.AdServicesStatusUtils.StatusCode;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_DISABLED;
 
-import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
-import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
@@ -33,23 +25,14 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_BACKGROUND_CALLER;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_CALLER_NOT_ALLOWED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_INTERNAL_ERROR;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_INVALID_ARGUMENT;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_RATE_LIMIT_REACHED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_UNAUTHORIZED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_SUCCESS_TO_CALLER_FAILED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 
 import android.adservices.common.AdSelectionSignals;
-import android.adservices.common.AdServicesPermissions;
-import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudience;
@@ -63,7 +46,6 @@ import android.adservices.customaudience.ScheduleCustomAudienceUpdateInput;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.Build;
-import android.os.LimitExceededException;
 import android.os.RemoteException;
 
 import androidx.annotation.RequiresApi;
@@ -71,16 +53,11 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
-import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
-import com.android.adservices.data.customaudience.CustomAudienceDao;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
-import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
@@ -90,10 +67,7 @@ import com.android.adservices.service.common.FledgeApiThrottleFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.FledgeConsentFilter;
 import com.android.adservices.service.common.Throttler;
-import com.android.adservices.service.common.cache.CacheProviderFactory;
-import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.devapi.CustomAudienceOverrider;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -101,7 +75,6 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.time.Clock;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
@@ -232,110 +205,25 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull CustomAudience customAudience,
             @NonNull String ownerPackageName,
             @NonNull ICustomAudienceCallback callback) {
-        sLogger.v("Entering joinCustomAudience");
 
-        final int apiName = AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
+        // Logs API deprecated.
+        logStatsdForDeprecation(
+                ownerPackageName, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
 
+        // Send back deprecation message throw callback
         try {
-            Objects.requireNonNull(customAudience);
-            Objects.requireNonNull(ownerPackageName);
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, ownerPackageName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
             AdsRelevanceStatusUtils.logCelInsideBinderThread(
-                    exception,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE);
-            // Rethrow because we want to fail fast
-            throw exception;
-        }
-
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                ownerPackageName,
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
-
-        final int callerUid = getCallingUid(apiName, ownerPackageName);
-        final DevContext devContext = mDevContextFilter.createDevContext();
-        sLogger.v("Running service");
-        mExecutorService.execute(
-                () ->
-                        doJoinCustomAudience(
-                                customAudience, ownerPackageName, callback, callerUid, devContext));
-    }
-
-    /** Try to join the custom audience and signal back to the caller using the callback. */
-    private void doJoinCustomAudience(
-            @NonNull CustomAudience customAudience,
-            @NonNull String ownerPackageName,
-            @NonNull ICustomAudienceCallback callback,
-            final int callerUid,
-            @NonNull final DevContext devContext) {
-        Objects.requireNonNull(customAudience);
-        Objects.requireNonNull(ownerPackageName);
-        Objects.requireNonNull(callback);
-        Objects.requireNonNull(devContext);
-
-        sLogger.v("Entering doJoinCustomAudience");
-
-        final int apiName = AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
-        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
-        // The filters log internally, so don't accidentally log again
-        boolean shouldLog = false;
-        try {
-            try {
-                // Filter and validate request
-                mCustomAudienceServiceFilter.filterRequest(
-                        customAudience.getBuyer(),
-                        ownerPackageName,
-                        mFlags.getEnforceForegroundStatusForFledgeCustomAudience(),
-                        false,
-                        !mDebugFlags.getConsentNotificationDebugMode(),
-                        callerUid,
-                        apiName,
-                        FLEDGE_API_JOIN_CUSTOM_AUDIENCE,
-                        devContext);
-
-                shouldLog = true;
-
-                // Fail silently for revoked user consent
-                if (!mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        ownerPackageName)) {
-                    sLogger.v("Joining custom audience");
-                    mCustomAudienceImpl.joinCustomAudience(
-                            customAudience, ownerPackageName, devContext);
-                    BackgroundFetchJob.schedule(mFlags);
-                    resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
-                } else {
-                    sLogger.v("Consent revoked");
-                    resultCode = AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
-                }
-            } catch (Exception exception) {
-                sLogger.d(exception, "Error encountered in joinCustomAudience, notifying caller");
-                resultCode =
-                        notifyFailure(
-                                callback,
-                                exception,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE);
-                return;
-            }
-
-            callback.onSuccess();
-        } catch (Exception exception) {
-            sLogger.e(exception, "Unable to send result to the callback");
-            resultCode = STATUS_INTERNAL_ERROR;
-            ErrorLogUtil.e(
-                    exception,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_SUCCESS_TO_CALLER_FAILED,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE);
-        } finally {
-            if (shouldLog) {
-                mAdServicesLogger.logFledgeApiCallStats(
-                        apiName, ownerPackageName, resultCode, /* latencyMs= */ 0);
-            }
         }
     }
 
@@ -348,145 +236,54 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     public void fetchAndJoinCustomAudience(
             @NonNull FetchAndJoinCustomAudienceInput input,
             @NonNull FetchAndJoinCustomAudienceCallback callback) {
-        sLogger.v("Executing fetchAndJoinCustomAudience.");
-        final int apiName = AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 
-        // Failing fast if parameters are null.
-        try {
-            Objects.requireNonNull(input);
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
-            AdsRelevanceStatusUtils.logCelInsideBinderThread(
-                    exception,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
-            // Rethrow because we want to fail fast
-            throw exception;
-        }
-
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
+        // Logs API deprecated.
+        logStatsdForDeprecation(
                 input.getCallerPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+                AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
 
-        final int callerUid = getCallingUid(apiName, input.getCallerPackageName());
-        final DevContext devContext = mDevContextFilter.createDevContext();
-        mExecutorService.execute(
-                () -> {
-                    FetchCustomAudienceImpl impl =
-                            new FetchCustomAudienceImpl(
-                                    mFlags,
-                                    mDebugFlags,
-                                    // TODO(b/235841960): Align on internal Clock usage.
-                                    Clock.systemUTC(),
-                                    mAdServicesLogger,
-                                    mExecutorService,
-                                    mCustomAudienceImpl.getCustomAudienceDao(),
-                                    callerUid,
-                                    mCustomAudienceServiceFilter,
-                                    new AdServicesHttpsClient(
-                                            AdServicesExecutors.getBlockingExecutor(),
-                                            CacheProviderFactory.createNoOpCache()),
-                                    mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
-                                    AdRenderIdValidator.createInstance(mFlags),
-                                    AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                                            mFlags.getFledgeFrequencyCapFilteringEnabled(),
-                                            mFlags.getFledgeAppInstallFilteringEnabled(),
-                                            mFlags.getFledgeAuctionServerAdRenderIdEnabled()),
-                                    ComponentAdsStrategy.createInstance(
-                                            mFlags.getEnableCustomAudienceComponentAds(),
-                                            new ComponentAdsListValidator(
-                                                    mFlags.getComponentAdRenderIdMaxLengthBytes(),
-                                                    mFlags.getMaxComponentAdsPerCustomAudience())));
+        // Sent back deprecation message throw callback
+        try {
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
 
-                    impl.doFetchCustomAudience(input, callback, devContext);
-                });
-    }
-
-    private int notifyFailure(
-            ICustomAudienceCallback callback, Exception exception, int celPpapiNameId)
-            throws RemoteException {
-        int resultCode;
-        if (exception instanceof NullPointerException
-                || exception instanceof IllegalArgumentException) {
-            resultCode = STATUS_INVALID_ARGUMENT;
-        } else if (exception instanceof WrongCallingApplicationStateException) {
-            resultCode = AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
-        } else if (exception instanceof FledgeAuthorizationFilter.CallerMismatchException) {
-            resultCode = AdServicesStatusUtils.STATUS_UNAUTHORIZED;
-        } else if (exception instanceof FledgeAuthorizationFilter.AdTechNotAllowedException
-                || exception instanceof FledgeAllowListsFilter.AppNotAllowedException) {
-            resultCode = AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
-        } else if (exception instanceof LimitExceededException) {
-            resultCode = AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
-        } else if (exception instanceof IllegalStateException) {
-            resultCode = STATUS_INTERNAL_ERROR;
-        } else {
-            sLogger.e(exception, "Unexpected error during operation");
-            resultCode = STATUS_INTERNAL_ERROR;
+            // logs CEL in case failed to send back response
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
         }
-        logExceptionCel(exception, resultCode, celPpapiNameId);
-        callback.onFailure(
-                new FledgeErrorResponse.Builder()
-                        .setStatusCode(resultCode)
-                        .setErrorMessage(exception.getMessage())
-                        .build());
-        return resultCode;
     }
 
     @Override
     public void scheduleCustomAudienceUpdate(
             ScheduleCustomAudienceUpdateInput input,
             ScheduleCustomAudienceUpdateCallback callback) {
-        final int apiName = AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
-        try {
-            Objects.requireNonNull(input);
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    input.getCallerPackageName(),
-                    STATUS_INVALID_ARGUMENT,
-                    /* latencyMs= */ 0);
-            AdsRelevanceStatusUtils.logCelInsideBinderThread(
-                    exception,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE);
 
-            // Rethrow because we want to fail fast
-            throw exception;
-        }
-
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
+        // Logs API deprecated.
+        logStatsdForDeprecation(
                 input.getCallerPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+                AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE);
 
-        final int callerUid = getCallingUid(apiName, input.getCallerPackageName());
-        final DevContext devContext = mDevContextFilter.createDevContext();
+        // Sent back deprecation message throw callback
+        try {
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
 
-        mExecutorService.execute(
-                () -> {
-                    ScheduleCustomAudienceUpdateImpl impl =
-                            new ScheduleCustomAudienceUpdateImpl(
-                                    mContext,
-                                    mConsentManager,
-                                    callerUid,
-                                    mFlags,
-                                    mDebugFlags,
-                                    mAdServicesLogger,
-                                    AdServicesExecutors.getBackgroundExecutor(),
-                                    mCustomAudienceServiceFilter,
-                                    mCustomAudienceImpl.getCustomAudienceDao());
-
-                    impl.doScheduleCustomAudienceUpdate(input, callback, devContext);
-                });
+            // logs CEL in case failed to send back response
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE);
+        }
     }
 
     /**
@@ -500,114 +297,25 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull ICustomAudienceCallback callback) {
-        final int apiName = AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
 
+        // Logs API deprecated.
+        logStatsdForDeprecation(
+                ownerPackageName, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+
+        // Sent back deprecation message throw callback
         try {
-            Objects.requireNonNull(ownerPackageName);
-            Objects.requireNonNull(buyer);
-            Objects.requireNonNull(name);
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, ownerPackageName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
             AdsRelevanceStatusUtils.logCelInsideBinderThread(
-                    exception,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE);
-            // Rethrow because we want to fail fast
-            throw exception;
-        }
-
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                ownerPackageName,
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
-
-        final int callerUid = getCallingUid(apiName, ownerPackageName);
-        final DevContext devContext = mDevContextFilter.createDevContext();
-        mExecutorService.execute(
-                () ->
-                        doLeaveCustomAudience(
-                                ownerPackageName, buyer, name, callback, callerUid, devContext));
-    }
-
-    /** Try to leave the custom audience and signal back to the caller using the callback. */
-    private void doLeaveCustomAudience(
-            @NonNull String ownerPackageName,
-            @NonNull AdTechIdentifier buyer,
-            @NonNull String name,
-            @NonNull ICustomAudienceCallback callback,
-            final int callerUid,
-            @NonNull final DevContext devContext) {
-        Objects.requireNonNull(ownerPackageName);
-        Objects.requireNonNull(buyer);
-        Objects.requireNonNull(name);
-        Objects.requireNonNull(callback);
-        Objects.requireNonNull(devContext);
-
-        final int apiName = AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
-        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
-        // The filters log internally, so don't accidentally log again
-        boolean shouldLog = false;
-        try {
-            try {
-                // Filter and validate request
-                mCustomAudienceServiceFilter.filterRequest(
-                        buyer,
-                        ownerPackageName,
-                        mFlags.getEnforceForegroundStatusForLeaveCustomAudience(),
-                        false,
-                        !mDebugFlags.getConsentNotificationDebugMode(),
-                        callerUid,
-                        apiName,
-                        FLEDGE_API_LEAVE_CUSTOM_AUDIENCE,
-                        devContext);
-
-                shouldLog = true;
-
-                // Fail silently for revoked user consent
-                if (!mConsentManager.isFledgeConsentRevokedForApp(ownerPackageName)) {
-                    sLogger.v("Leaving custom audience");
-                    mCustomAudienceImpl.leaveCustomAudience(ownerPackageName, buyer, name);
-                    resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
-                } else {
-                    sLogger.v("Consent revoked");
-                    resultCode = AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
-                }
-            } catch (WrongCallingApplicationStateException
-                    | LimitExceededException
-                    | FledgeAuthorizationFilter.CallerMismatchException
-                    | FledgeAuthorizationFilter.AdTechNotAllowedException
-                    | FledgeAllowListsFilter.AppNotAllowedException exception) {
-                // Catch these specific exceptions, but report them back to the caller
-                sLogger.d(exception, "Error encountered in leaveCustomAudience, notifying caller");
-                resultCode =
-                        notifyFailure(
-                                callback,
-                                exception,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE);
-                return;
-            } catch (Exception exception) {
-                // For all other exceptions, report success
-                sLogger.e(exception, "Unexpected error leaving custom audience");
-                resultCode = STATUS_INTERNAL_ERROR;
-            }
-
-            callback.onSuccess();
-        } catch (Exception exception) {
-            sLogger.e(exception, "Unable to send result to the callback");
-            resultCode = STATUS_INTERNAL_ERROR;
-            ErrorLogUtil.e(
-                    exception,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_SUCCESS_TO_CALLER_FAILED,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE);
-        } finally {
-            if (shouldLog) {
-                mAdServicesLogger.logFledgeApiCallStats(
-                        apiName, ownerPackageName, resultCode, /* latencyMs= */ 0);
-            }
         }
     }
 
@@ -627,64 +335,28 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             long biddingLogicJsVersion,
             @NonNull AdSelectionSignals trustedBiddingSignals,
             @NonNull CustomAudienceOverrideCallback callback) {
-        final int apiName = AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
-
-        try {
-            Objects.requireNonNull(owner);
-            Objects.requireNonNull(buyer);
-            Objects.requireNonNull(name);
-            Objects.requireNonNull(biddingLogicJS);
-            Objects.requireNonNull(trustedBiddingSignals);
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
-            // Rethrow to fail fast
-            throw exception;
-        }
-
-        final int callerUid = getCallingUid(apiName);
-
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDeviceDevOptionsEnabled()) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    devContext.getCallingAppPackageName(),
-                    STATUS_INTERNAL_ERROR,
-                    /* latencyMs= */ 0);
-            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
-        }
-
-        // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
+        // Logs API deprecated.
+        logStatsdForDeprecation(
                 devContext.getCallingAppPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+                AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO);
 
-        CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();
+        // Sent back deprecation message throw callback
+        try {
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
 
-        CustomAudienceOverrider overrider =
-                new CustomAudienceOverrider(
-                        devContext,
-                        customAudienceDao,
-                        mExecutorService,
-                        mContext.getPackageManager(),
-                        mConsentManager,
-                        mAdServicesLogger,
-                        mAppImportanceFilter,
-                        mFlags);
-
-        overrider.addOverride(
-                owner,
-                buyer,
-                name,
-                biddingLogicJS,
-                biddingLogicJsVersion,
-                trustedBiddingSignals,
-                callback,
-                callerUid);
+            // logs CEL in case failed to send back response
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED);
+        }
     }
 
     /**
@@ -698,55 +370,28 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull CustomAudienceOverrideCallback callback) {
-        final int apiName =
-                AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
-
-        try {
-            Objects.requireNonNull(owner);
-            Objects.requireNonNull(buyer);
-            Objects.requireNonNull(name);
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
-            // Rethrow to fail fast
-            throw exception;
-        }
-
-        final int callerUid = getCallingUid(apiName);
-
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDeviceDevOptionsEnabled()) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    devContext.getCallingAppPackageName(),
-                    STATUS_INTERNAL_ERROR,
-                    /* latencyMs= */ 0);
-            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
-        }
-
-        // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
+        // Logs API deprecated.
+        logStatsdForDeprecation(
                 devContext.getCallingAppPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+                AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE);
 
-        CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();
+        // Sent back deprecation message throw callback
+        try {
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
 
-        CustomAudienceOverrider overrider =
-                new CustomAudienceOverrider(
-                        devContext,
-                        customAudienceDao,
-                        mExecutorService,
-                        mContext.getPackageManager(),
-                        mConsentManager,
-                        mAdServicesLogger,
-                        mAppImportanceFilter,
-                        mFlags);
-
-        overrider.removeOverride(owner, buyer, name, callback, callerUid);
+            // logs CEL in case failed to send back response
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED);
+        }
     }
 
     /**
@@ -756,101 +401,33 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
      */
     @Override
     public void resetAllCustomAudienceOverrides(@NonNull CustomAudienceOverrideCallback callback) {
-        final int apiName = AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
-
-        try {
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
-            // Rethrow to fail fast
-            throw exception;
-        }
-
-        final int callerUid = getCallingUid(apiName);
-
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDeviceDevOptionsEnabled()) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    devContext.getCallingAppPackageName(),
-                    STATUS_INTERNAL_ERROR,
-                    /* latencyMs= */ 0);
-            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
-        }
-
-        // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
+        // Logs API deprecated.
+        logStatsdForDeprecation(
                 devContext.getCallingAppPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+                AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES);
 
-        CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();
-
-        CustomAudienceOverrider overrider =
-                new CustomAudienceOverrider(
-                        devContext,
-                        customAudienceDao,
-                        mExecutorService,
-                        mContext.getPackageManager(),
-                        mConsentManager,
-                        mAdServicesLogger,
-                        mAppImportanceFilter,
-                        mFlags);
-
-        overrider.removeAllOverrides(callback, callerUid);
-    }
-
-    private int getCallingUid(int apiNameLoggingId) throws IllegalStateException {
-        return getCallingUid(apiNameLoggingId, null);
-    }
-
-    private int getCallingUid(int apiNameLoggingId, String callerAppPackageName)
-            throws IllegalStateException {
+        // Sent back deprecation message throw callback
         try {
-            return mCallingAppUidSupplier.getCallingAppUid();
-        } catch (IllegalStateException illegalStateException) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiNameLoggingId,
-                    callerAppPackageName,
-                    STATUS_INTERNAL_ERROR,
-                    /* latencyMs= */ 0);
-            AdsRelevanceStatusUtils.checkAndLogCelByApiNameLoggingId(
-                    illegalStateException,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE,
-                    apiNameLoggingId);
-            throw illegalStateException;
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED);
         }
     }
 
-    private void logExceptionCel(
-            Exception exception, @StatusCode int resultCode, int celPpapiNameId) {
-        int celEnum =
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_INTERNAL_ERROR;
-        switch (resultCode) {
-            case STATUS_INVALID_ARGUMENT:
-                celEnum =
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_INVALID_ARGUMENT;
-                break;
-            case STATUS_BACKGROUND_CALLER:
-                celEnum =
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_BACKGROUND_CALLER;
-                break;
-            case STATUS_CALLER_NOT_ALLOWED:
-                celEnum =
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_CALLER_NOT_ALLOWED;
-                break;
-            case STATUS_UNAUTHORIZED:
-                celEnum =
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_UNAUTHORIZED;
-                break;
-            case STATUS_RATE_LIMIT_REACHED:
-                celEnum =
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_RATE_LIMIT_REACHED;
-                break;
-        }
-        ErrorLogUtil.e(exception, celEnum, celPpapiNameId);
+    private void logStatsdForDeprecation(String packageName, int apiName) {
+        mAdServicesLogger.logFledgeApiCallStats(
+                apiName, packageName, STATUS_ADSERVICES_DISABLED, /* latencyMs */ 0);
+        sLogger.e("Got in-coming calls but CustomAudienceService APIs are deprecated.");
     }
 }
