@@ -123,52 +123,32 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    public void testRegisterSource_withNoServerSetupWithCallbackOsReceiver_noErrors()
+    public void testRegisterSource_withNoServerSetupWithCallbackOsReceiver_fails()
             throws Exception {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        OutcomeReceiver<Object, Exception> callback = createCallback(future);
         mMeasurementManager.registerSource(
-                SOURCE_REGISTRATION_URI,
-                /* inputEvent= */ null,
-                CALLBACK_EXECUTOR,
-                (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+                SOURCE_REGISTRATION_URI, /* inputEvent= */ null, CALLBACK_EXECUTOR, callback);
+        assertThat(future.get()).isNull();
     }
 
     @Test
-    public void testRegisterSource_withNoServerSetupWithCallbackCustomReceiver_noErrors()
+    public void testRegisterSource_withNoServerSetupWithCallbackCustomReceiver_fails()
             throws Exception {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        AdServicesOutcomeReceiver<Object, Exception> callback = createAdServicesCallback(future);
         mMeasurementManager.registerSource(
-                SOURCE_REGISTRATION_URI,
-                /* inputEvent= */ null,
-                CALLBACK_EXECUTOR,
-                (AdServicesOutcomeReceiver<Object, Exception>)
-                        result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+                SOURCE_REGISTRATION_URI, /* inputEvent= */ null, CALLBACK_EXECUTOR, callback);
+        assertThat(future.get()).isNull();
     }
 
     @Test
     public void testRegisterSource_withLocalhostUriNonDebuggableCallerWithOsReceiver_fails()
             throws Exception {
         CompletableFuture<Void> future = new CompletableFuture<>();
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        OutcomeReceiver<Object, Exception> osCallback =
-                new OutcomeReceiver<>() {
-                    @Override
-                    public void onResult(@NonNull Object ignoredResult) {
-                        fail();
-                    }
-
-                    @Override
-                    public void onError(Exception error) {
-                        countDownLatch.countDown();
-                        future.complete(null);
-                        assertThat(error).isInstanceOf(SecurityException.class);
-                    }
-                };
+        OutcomeReceiver<Object, Exception> osCallback = createCallback(future);
         mMeasurementManager.registerSource(
                 LOCALHOST, /* inputEvent= */ null, CALLBACK_EXECUTOR, osCallback);
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(future.get()).isNull();
     }
 
@@ -176,24 +156,9 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     public void testRegisterSource_withLocalhostUriNonDebuggableCallerWithCustomReceiver_fails()
             throws Exception {
         CompletableFuture<Void> future = new CompletableFuture<>();
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        AdServicesOutcomeReceiver<Object, Exception> osCallback =
-                new AdServicesOutcomeReceiver<>() {
-                    @Override
-                    public void onResult(@NonNull Object ignoredResult) {
-                        fail();
-                    }
-
-                    @Override
-                    public void onError(Exception error) {
-                        countDownLatch.countDown();
-                        future.complete(null);
-                        assertThat(error).isInstanceOf(SecurityException.class);
-                    }
-                };
+        AdServicesOutcomeReceiver<Object, Exception> osCallback = createAdServicesCallback(future);
         mMeasurementManager.registerSource(
                 LOCALHOST, /* inputEvent= */ null, CALLBACK_EXECUTOR, osCallback);
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(future.get()).isNull();
     }
 
@@ -259,25 +224,23 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    public void testRegisterSourceMultiple_withNoServerSetupWithCallbackOsReceiver_noErrors()
+    public void testRegisterSourceMultiple_withNoServerSetupWithCallbackOsReceiver_fails()
             throws Exception {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        OutcomeReceiver<Object, Exception> callback = result -> countDownLatch.countDown();
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        OutcomeReceiver<Object, Exception> callback = createCallback(future);
         mMeasurementManager.registerSource(
                 createSourceRegistrationRequest(), CALLBACK_EXECUTOR, callback);
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(future.get()).isNull();
     }
 
     @Test
-    public void testRegisterSourceMultiple_withNoServerSetupWithCallbackCustomReceiver_noErrors()
+    public void testRegisterSourceMultiple_withNoServerSetupWithCallbackCustomReceiver_fails()
             throws Exception {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        AdServicesOutcomeReceiver<Object, Exception> callback = createAdServicesCallback(future);
         mMeasurementManager.registerSource(
-                createSourceRegistrationRequest(),
-                CALLBACK_EXECUTOR,
-                (AdServicesOutcomeReceiver<Object, Exception>)
-                        result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+                createSourceRegistrationRequest(), CALLBACK_EXECUTOR, callback);
+        assertThat(future.get()).isNull();
     }
 
     @Test
@@ -344,26 +307,21 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    public void testRegisterTrigger_withNoServerSetupWithCallbackOsReceiver_noErrors()
+    public void testRegisterTrigger_withNoServerSetupWithCallbackOsReceiver_fails()
             throws Exception {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        mMeasurementManager.registerTrigger(
-                TRIGGER_REGISTRATION_URI,
-                CALLBACK_EXECUTOR,
-                (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        OutcomeReceiver<Object, Exception> callback = createCallback(future);
+        mMeasurementManager.registerTrigger(TRIGGER_REGISTRATION_URI, CALLBACK_EXECUTOR, callback);
+        assertThat(future.get()).isNull();
     }
 
     @Test
-    public void testRegisterTrigger_withNoServerSetupWithCallbackCustomReceiver_noErrors()
+    public void testRegisterTrigger_withNoServerSetupWithCallbackCustomReceiver_fails()
             throws Exception {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        mMeasurementManager.registerTrigger(
-                TRIGGER_REGISTRATION_URI,
-                CALLBACK_EXECUTOR,
-                (AdServicesOutcomeReceiver<Object, Exception>)
-                        result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        AdServicesOutcomeReceiver<Object, Exception> callback = createAdServicesCallback(future);
+        mMeasurementManager.registerTrigger(TRIGGER_REGISTRATION_URI, CALLBACK_EXECUTOR, callback);
+        assertThat(future.get()).isNull();
     }
 
     @Test
@@ -429,7 +387,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    public void testRegisterWebSource_withCallbackOsReceiver_noErrors() throws Exception {
+    public void testRegisterWebSource_withCallbackOsReceiver_fails() throws Exception {
         WebSourceParams webSourceParams =
                 new WebSourceParams.Builder(SOURCE_REGISTRATION_URI)
                         .setDebugKeyAllowed(false)
@@ -444,16 +402,15 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                         .setVerifiedDestination(null)
                         .build();
 
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        OutcomeReceiver<Object, Exception> callback = createCallback(future);
         mMeasurementManager.registerWebSource(
-                webSourceRegistrationRequest,
-                CALLBACK_EXECUTOR,
-                (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+                webSourceRegistrationRequest, CALLBACK_EXECUTOR, callback);
+        assertThat(future.get()).isNull();
     }
 
     @Test
-    public void testRegisterWebSource_withCallbackCustomReceiver_noErrors() throws Exception {
+    public void testRegisterWebSource_withCallbackCustomReceiver_fails() throws Exception {
         WebSourceParams webSourceParams =
                 new WebSourceParams.Builder(SOURCE_REGISTRATION_URI)
                         .setDebugKeyAllowed(false)
@@ -468,13 +425,11 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                         .setVerifiedDestination(null)
                         .build();
 
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        AdServicesOutcomeReceiver<Object, Exception> callback = createAdServicesCallback(future);
         mMeasurementManager.registerWebSource(
-                webSourceRegistrationRequest,
-                CALLBACK_EXECUTOR,
-                (AdServicesOutcomeReceiver<Object, Exception>)
-                        result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+                webSourceRegistrationRequest, CALLBACK_EXECUTOR, callback);
+        assertThat(future.get()).isNull();
     }
 
     @Test
@@ -540,7 +495,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    public void testRegisterWebTrigger_withCallbackOsReceiver_noErrors() throws Exception {
+    public void testRegisterWebTrigger_withCallbackOsReceiver_fails() throws Exception {
         WebTriggerParams webTriggerParams =
                 new WebTriggerParams.Builder(TRIGGER_REGISTRATION_URI).build();
         WebTriggerRegistrationRequest webTriggerRegistrationRequest =
@@ -548,16 +503,15 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                                 Collections.singletonList(webTriggerParams), DESTINATION)
                         .build();
 
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        OutcomeReceiver<Object, Exception> callback = createCallback(future);
         mMeasurementManager.registerWebTrigger(
-                webTriggerRegistrationRequest,
-                CALLBACK_EXECUTOR,
-                (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+                webTriggerRegistrationRequest, CALLBACK_EXECUTOR, callback);
+        assertThat(future.get()).isNull();
     }
 
     @Test
-    public void testRegisterWebTrigger_withCallbackCustomReceiver_noErrors() throws Exception {
+    public void testRegisterWebTrigger_withCallbackCustomReceiver_fails() throws Exception {
         WebTriggerParams webTriggerParams =
                 new WebTriggerParams.Builder(TRIGGER_REGISTRATION_URI).build();
         WebTriggerRegistrationRequest webTriggerRegistrationRequest =
@@ -565,13 +519,11 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                                 Collections.singletonList(webTriggerParams), DESTINATION)
                         .build();
 
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        AdServicesOutcomeReceiver<Object, Exception> callback = createAdServicesCallback(future);
         mMeasurementManager.registerWebTrigger(
-                webTriggerRegistrationRequest,
-                CALLBACK_EXECUTOR,
-                (AdServicesOutcomeReceiver<Object, Exception>)
-                        result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+                webTriggerRegistrationRequest, CALLBACK_EXECUTOR, callback);
+        assertThat(future.get()).isNull();
     }
 
     @Test
@@ -636,110 +588,91 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    public void testDeleteRegistrations_withNoOriginNoRangeWithCallbackOsReceiver_noErrors()
+    public void testDeleteRegistrations_withNoOriginNoRangeWithCallbackOsReceiver_fails()
             throws Exception {
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
 
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        mMeasurementManager.deleteRegistrations(
-                deletionRequest,
-                CALLBACK_EXECUTOR,
-                (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        OutcomeReceiver<Object, Exception> callback = createCallback(future);
+        mMeasurementManager.deleteRegistrations(deletionRequest, CALLBACK_EXECUTOR, callback);
+        assertThat(future.get()).isNull();
     }
 
     @Test
-    public void testDeleteRegistrations_withNoOriginNoRangeWithCallbackCustomReceiver_noErrors()
+    public void testDeleteRegistrations_withNoOriginNoRangeWithCallbackCustomReceiver_fails()
             throws Exception {
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
 
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        mMeasurementManager.deleteRegistrations(
-                deletionRequest,
-                CALLBACK_EXECUTOR,
-                (AdServicesOutcomeReceiver<Object, Exception>)
-                        result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        AdServicesOutcomeReceiver<Object, Exception> callback = createAdServicesCallback(future);
+        mMeasurementManager.deleteRegistrations(deletionRequest, CALLBACK_EXECUTOR, callback);
+        assertThat(future.get()).isNull();
     }
 
     @Test
-    public void testDeleteRegistrations_withMultipleNoOriginNoRangeWithCallbackOsReceiver_noErrors()
+    public void testDeleteRegistrations_withMultipleNoOriginNoRangeWithCallbackOsReceiver_fails()
             throws Exception {
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
-        CountDownLatch firstCountDownLatch = new CountDownLatch(1);
-        mMeasurementManager.deleteRegistrations(
-                deletionRequest,
-                CALLBACK_EXECUTOR,
-                (OutcomeReceiver<Object, Exception>) result -> firstCountDownLatch.countDown());
-        assertThat(firstCountDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        CompletableFuture<Void> firstFuture = new CompletableFuture<>();
+        OutcomeReceiver<Object, Exception> firstCallback = createCallback(firstFuture);
+        mMeasurementManager.deleteRegistrations(deletionRequest, CALLBACK_EXECUTOR, firstCallback);
+        assertThat(firstFuture.get()).isNull();
         // Call it once more to ensure that there is no error when recording deletions back-to-back
         TimeUnit.SECONDS.sleep(1); // Sleep to ensure rate-limiter doesn't get tripped.
-        CountDownLatch secondCountDownLatch = new CountDownLatch(1);
-        mMeasurementManager.deleteRegistrations(
-                deletionRequest,
-                CALLBACK_EXECUTOR,
-                (OutcomeReceiver<Object, Exception>) result -> secondCountDownLatch.countDown());
-        assertThat(secondCountDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        CompletableFuture<Void> secondFuture = new CompletableFuture<>();
+        OutcomeReceiver<Object, Exception> secondCallback = createCallback(secondFuture);
+        mMeasurementManager.deleteRegistrations(deletionRequest, CALLBACK_EXECUTOR, secondCallback);
+        assertThat(secondFuture.get()).isNull();
     }
 
     @Test
     public void
-            testDeleteRegistrations_withMultipleNoOriginNoRangeWithCallbackCustomReceiver_noErrors()
+            testDeleteRegistrations_withMultipleNoOriginNoRangeWithCallbackCustomReceiver_fails()
                     throws Exception {
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
-        CountDownLatch firstCountDownLatch = new CountDownLatch(1);
-        mMeasurementManager.deleteRegistrations(
-                deletionRequest,
-                CALLBACK_EXECUTOR,
-                (AdServicesOutcomeReceiver<Object, Exception>)
-                        result -> firstCountDownLatch.countDown());
-        assertThat(firstCountDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        CompletableFuture<Void> firstFuture = new CompletableFuture<>();
+        AdServicesOutcomeReceiver<Object, Exception> firstCallback =
+                createAdServicesCallback(firstFuture);
+        mMeasurementManager.deleteRegistrations(deletionRequest, CALLBACK_EXECUTOR, firstCallback);
+        assertThat(firstFuture.get()).isNull();
         // Call it once more to ensure that there is no error when recording deletions back-to-back
         TimeUnit.SECONDS.sleep(1); // Sleep to ensure rate-limiter doesn't get tripped.
-        CountDownLatch secondCountDownLatch = new CountDownLatch(1);
-        mMeasurementManager.deleteRegistrations(
-                deletionRequest,
-                CALLBACK_EXECUTOR,
-                (AdServicesOutcomeReceiver<Object, Exception>)
-                        result -> secondCountDownLatch.countDown());
-        assertThat(secondCountDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        CompletableFuture<Void> secondFuture = new CompletableFuture<>();
+        AdServicesOutcomeReceiver<Object, Exception> secondCallback =
+                createAdServicesCallback(secondFuture);
+        mMeasurementManager.deleteRegistrations(deletionRequest, CALLBACK_EXECUTOR, secondCallback);
+        assertThat(secondFuture.get()).isNull();
     }
 
     @Test
-    public void testDeleteRegistrations_WithNoRangeWithCallbackOsReceiver_noErrors()
+    public void testDeleteRegistrations_WithNoRangeWithCallbackOsReceiver_fails() throws Exception {
+        DeletionRequest deletionRequest =
+                new DeletionRequest.Builder()
+                        .setOriginUris(Collections.singletonList(ORIGIN_URI))
+                        .setDomainUris(Collections.singletonList(DOMAIN_URI))
+                        .build();
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        OutcomeReceiver<Object, Exception> callback = createCallback(future);
+        mMeasurementManager.deleteRegistrations(deletionRequest, CALLBACK_EXECUTOR, callback);
+        assertThat(future.get()).isNull();
+    }
+
+    @Test
+    public void testDeleteRegistrations_withNoRangeWithCallbackCustomReceiver_fails()
             throws Exception {
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
                         .setOriginUris(Collections.singletonList(ORIGIN_URI))
                         .setDomainUris(Collections.singletonList(DOMAIN_URI))
                         .build();
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        mMeasurementManager.deleteRegistrations(
-                deletionRequest,
-                CALLBACK_EXECUTOR,
-                (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        AdServicesOutcomeReceiver<Object, Exception> callback = createAdServicesCallback(future);
+        mMeasurementManager.deleteRegistrations(deletionRequest, CALLBACK_EXECUTOR, callback);
+        assertThat(future.get()).isNull();
     }
 
     @Test
-    public void testDeleteRegistrations_withNoRangeWithCallbackCustomReceiver_noErrors()
-            throws Exception {
-        DeletionRequest deletionRequest =
-                new DeletionRequest.Builder()
-                        .setOriginUris(Collections.singletonList(ORIGIN_URI))
-                        .setDomainUris(Collections.singletonList(DOMAIN_URI))
-                        .build();
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        mMeasurementManager.deleteRegistrations(
-                deletionRequest,
-                CALLBACK_EXECUTOR,
-                (AdServicesOutcomeReceiver<Object, Exception>)
-                        result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-    }
-
-    @Test
-    public void testDeleteRegistrations_withEmptyListsWithRangeWithCallbackOsReceiver_noErrors()
+    public void testDeleteRegistrations_withEmptyListsWithRangeWithCallbackOsReceiver_fails()
             throws Exception {
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
@@ -748,16 +681,14 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                         .setStart(Instant.ofEpochMilli(0))
                         .setEnd(Instant.now())
                         .build();
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        mMeasurementManager.deleteRegistrations(
-                deletionRequest,
-                CALLBACK_EXECUTOR,
-                (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        OutcomeReceiver<Object, Exception> callback = createCallback(future);
+        mMeasurementManager.deleteRegistrations(deletionRequest, CALLBACK_EXECUTOR, callback);
+        assertThat(future.get()).isNull();
     }
 
     @Test
-    public void testDeleteRegistrations_withEmptyListsWithRangeWithCallbackCustomReceiver_noErrors()
+    public void testDeleteRegistrations_withEmptyListsWithRangeWithCallbackCustomReceiver_fails()
             throws Exception {
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
@@ -766,17 +697,14 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                         .setStart(Instant.ofEpochMilli(0))
                         .setEnd(Instant.now())
                         .build();
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        mMeasurementManager.deleteRegistrations(
-                deletionRequest,
-                CALLBACK_EXECUTOR,
-                (AdServicesOutcomeReceiver<Object, Exception>)
-                        result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        AdServicesOutcomeReceiver<Object, Exception> callback = createAdServicesCallback(future);
+        mMeasurementManager.deleteRegistrations(deletionRequest, CALLBACK_EXECUTOR, callback);
+        assertThat(future.get()).isNull();
     }
 
     @Test
-    public void testDeleteRegistrations_withUrisWithRangeWithCallbackOsReceiver_noErrors()
+    public void testDeleteRegistrations_withUrisWithRangeWithCallbackOsReceiver_fails()
             throws Exception {
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
@@ -785,16 +713,14 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                         .setStart(Instant.ofEpochMilli(0))
                         .setEnd(Instant.now())
                         .build();
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        mMeasurementManager.deleteRegistrations(
-                deletionRequest,
-                CALLBACK_EXECUTOR,
-                (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        OutcomeReceiver<Object, Exception> callback = createCallback(future);
+        mMeasurementManager.deleteRegistrations(deletionRequest, CALLBACK_EXECUTOR, callback);
+        assertThat(future.get()).isNull();
     }
 
     @Test
-    public void testDeleteRegistrations_withUrisWithRangeWithCallbackCustomReceiver_noErrors()
+    public void testDeleteRegistrations_withUrisWithRangeWithCallbackCustomReceiver_fails()
             throws Exception {
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
@@ -803,13 +729,10 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                         .setStart(Instant.ofEpochMilli(0))
                         .setEnd(Instant.now())
                         .build();
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        mMeasurementManager.deleteRegistrations(
-                deletionRequest,
-                CALLBACK_EXECUTOR,
-                (AdServicesOutcomeReceiver<Object, Exception>)
-                        result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        AdServicesOutcomeReceiver<Object, Exception> callback = createAdServicesCallback(future);
+        mMeasurementManager.deleteRegistrations(deletionRequest, CALLBACK_EXECUTOR, callback);
+        assertThat(future.get()).isNull();
     }
 
     @Test
@@ -819,19 +742,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
         Objects.requireNonNull(manager);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
-        OutcomeReceiver<Object, Exception> callback =
-                new OutcomeReceiver<>() {
-                    @Override
-                    public void onResult(@NonNull Object ignoredResult) {
-                        fail();
-                    }
-
-                    @Override
-                    public void onError(Exception error) {
-                        future.complete(null);
-                        assertThat(error).isInstanceOf(IllegalArgumentException.class);
-                    }
-                };
+        OutcomeReceiver<Object, Exception> callback = createCallback(future);
         DeletionRequest request =
                 new DeletionRequest.Builder()
                         .setOriginUris(Collections.singletonList(ORIGIN_URI))
@@ -851,19 +762,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
         Objects.requireNonNull(manager);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
-        AdServicesOutcomeReceiver<Object, Exception> callback =
-                new AdServicesOutcomeReceiver<>() {
-                    @Override
-                    public void onResult(@NonNull Object ignoredResult) {
-                        fail();
-                    }
-
-                    @Override
-                    public void onError(Exception error) {
-                        future.complete(null);
-                        assertThat(error).isInstanceOf(IllegalArgumentException.class);
-                    }
-                };
+        AdServicesOutcomeReceiver<Object, Exception> callback = createAdServicesCallback(future);
         DeletionRequest request =
                 new DeletionRequest.Builder()
                         .setOriginUris(Collections.singletonList(ORIGIN_URI))
@@ -878,23 +777,23 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    public void testMeasurementApiStatus_killSwitchGlobalOffWithOsReceiver_returnEnabled()
+    public void testMeasurementApiStatus_killSwitchGlobalOffWithOsReceiver_returnDisabled()
             throws Exception {
         enableGlobalKillSwitch(/* enabled= */ false);
         enableMeasurementKillSwitch(/* enabled= */ false);
         allowAllPackageNamesAccessToMeasurementApis();
         boolean result = callMeasurementApiStatus(/* useCustomReceiver= */ false);
-        assertThat(result).isTrue();
+        assertThat(result).isFalse();
     }
 
     @Test
-    public void testMeasurementApiStatus_killSwitchGlobalOffWithCustomReceiver_returnEnabled()
+    public void testMeasurementApiStatus_killSwitchGlobalOffWithCustomReceiver_returnDisabled()
             throws Exception {
         enableGlobalKillSwitch(/* enabled= */ false);
         enableMeasurementKillSwitch(/* enabled= */ false);
         allowAllPackageNamesAccessToMeasurementApis();
         boolean result = callMeasurementApiStatus(/* useCustomReceiver= */ true);
-        assertThat(result).isTrue();
+        assertThat(result).isFalse();
     }
 
     @Test
@@ -1198,6 +1097,39 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                         Collections.singletonList(SOURCE_REGISTRATION_URI))
                 .setInputEvent(INPUT_EVENT)
                 .build();
+    }
+
+    private OutcomeReceiver<Object, Exception> createCallback(CompletableFuture<Void> future) {
+        return new OutcomeReceiver<>() {
+            @Override
+            public void onResult(@NonNull Object ignoredResult) {
+                fail();
+            }
+
+            @Override
+            public void onError(Exception error) {
+                future.complete(null);
+                assertThat(error).isInstanceOf(IllegalStateException.class);
+                assertThat(error.getMessage()).isEqualTo("AdServices API is disabled.");
+            }
+        };
+    }
+
+    private AdServicesOutcomeReceiver<Object, Exception> createAdServicesCallback(
+            CompletableFuture<Void> future) {
+        return new AdServicesOutcomeReceiver<>() {
+            @Override
+            public void onResult(@NonNull Object ignoredResult) {
+                fail();
+            }
+
+            @Override
+            public void onError(Exception error) {
+                future.complete(null);
+                assertThat(error).isInstanceOf(IllegalStateException.class);
+                assertThat(error.getMessage()).isEqualTo("AdServices API is disabled.");
+            }
+        };
     }
 
     private AdServicesOutcomeReceiver<Object, Exception> createCallbackWithCountdownOnLimitExceeded(

@@ -18,11 +18,7 @@ package com.android.adservices.devapi;
 
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
-import static com.android.adservices.measurement.MeasurementManagerUtil.buildDefaultWebSourceRegistrationRequest;
-import static com.android.adservices.measurement.MeasurementManagerUtil.buildDefaultWebTriggerRegistrationRequest;
 import static com.android.adservices.service.CommonDebugFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
-import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
-import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_DEVELOPER_SESSION_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
@@ -41,7 +37,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNAL
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.fail;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.adselection.AdSelectionConfigFixture;
@@ -57,13 +52,9 @@ import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest;
-import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementManager;
-import android.adservices.measurement.WebSourceRegistrationRequest;
-import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.signals.UpdateSignalsRequest;
 import android.net.Uri;
-import android.os.OutcomeReceiver;
 
 import androidx.annotation.NonNull;
 
@@ -75,11 +66,11 @@ import com.android.adservices.common.annotations.SetCompatModeFlags;
 import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
 import com.android.adservices.common.annotations.SetMsmtWebContextClientAppAllowList;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
-import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -89,7 +80,6 @@ import org.junit.Test;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -363,138 +353,6 @@ public final class DevSessionNonDebuggableTest extends AdServicesEndToEndTestCas
         assertCallSucceedsOrThrowsNonSecurityException(
                 mProtectedSignalsClient.updateSignals(
                         new UpdateSignalsRequest.Builder(Uri.EMPTY).build()));
-    }
-
-    @Test
-    public void testRegisterSource_devSessionRestricts_throwsSecurityException() throws Exception {
-        startDevSessionWithoutAllowlist();
-        MeasurementManager mm = getMeasurementManager();
-        Uri uri = Uri.parse("https://www.example.com/source");
-        OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
-
-        mm.registerSource(uri, /* inputEvent= */ null, sCallbackExecutor, callback);
-
-        callback.assertFailureReceived(SecurityException.class);
-    }
-
-    @Test
-    public void testRegisterSource_devSessionAllows_succeedsOrThrowsNonSecurityException()
-            throws Exception {
-        startDevSessionWithAllowlist();
-        MeasurementManager mm = getMeasurementManager();
-        Uri uri = Uri.parse("https://www.example.com/source");
-        OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
-
-        mm.registerSource(uri, /* inputEvent= */ null, sCallbackExecutor, callback);
-
-        assertOutcomeReceiverSucceedsOrThrowsNonSecurityException(callback, "registerSource");
-    }
-
-    @Test
-    public void testRegisterTrigger_devSessionRestricts_throwsSecurityException() throws Exception {
-        startDevSessionWithoutAllowlist();
-        MeasurementManager mm = getMeasurementManager();
-        Uri uri = Uri.parse("https://www.example.com/trigger");
-        OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
-
-        mm.registerTrigger(uri, sCallbackExecutor, callback);
-
-        callback.assertFailureReceived(SecurityException.class);
-    }
-
-    @Test
-    public void testRegisterTrigger_devSessionAllows_succeedsOrThrowsNonSecurityException()
-            throws Exception {
-        startDevSessionWithAllowlist();
-        MeasurementManager mm = getMeasurementManager();
-        Uri uri = Uri.parse("https://www.example.com/trigger");
-        OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
-
-        mm.registerTrigger(uri, sCallbackExecutor, callback);
-
-        assertOutcomeReceiverSucceedsOrThrowsNonSecurityException(callback, "registerTrigger");
-    }
-
-    @Test
-    public void testDeleteRegistrations_devSessionRestricts_throwsSecurityException()
-            throws Exception {
-        startDevSessionWithoutAllowlist();
-        MeasurementManager mm = getMeasurementManager();
-        DeletionRequest request = new DeletionRequest.Builder().build();
-        OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
-
-        mm.deleteRegistrations(request, sCallbackExecutor, callback);
-
-        callback.assertFailureReceived(SecurityException.class);
-    }
-
-    @Test
-    public void testDeleteRegistrations_devSessionAllows_succeedsOrThrowsNonSecurityException()
-            throws Exception {
-        startDevSessionWithAllowlist();
-        MeasurementManager mm = getMeasurementManager();
-        DeletionRequest request = new DeletionRequest.Builder().build();
-        OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
-
-        mm.deleteRegistrations(request, sCallbackExecutor, callback);
-
-        assertOutcomeReceiverSucceedsOrThrowsNonSecurityException(callback, "deleteRegistrations");
-    }
-
-    @Test
-    public void testRegisterWebSource_devSessionRestricts_throwsSecurityException()
-            throws Exception {
-        startDevSessionWithoutAllowlist();
-        MeasurementManager mm = getMeasurementManager();
-        WebSourceRegistrationRequest webSourceRegistrationRequest =
-                buildDefaultWebSourceRegistrationRequest();
-        OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
-
-        mm.registerWebSource(webSourceRegistrationRequest, sCallbackExecutor, callback);
-
-        callback.assertFailureReceived(SecurityException.class);
-    }
-
-    @Test
-    public void testRegisterWebSource_devSessionAllows_succeedsOrThrowsNonSecurityException()
-            throws Exception {
-        startDevSessionWithAllowlist();
-        MeasurementManager mm = getMeasurementManager();
-        WebSourceRegistrationRequest webSourceRegistrationRequest =
-                buildDefaultWebSourceRegistrationRequest();
-        OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
-
-        mm.registerWebSource(webSourceRegistrationRequest, sCallbackExecutor, callback);
-
-        assertOutcomeReceiverSucceedsOrThrowsNonSecurityException(callback, "registerWebSource");
-    }
-
-    @Test
-    public void testRegisterWebTrigger_devSessionRestricts_throwsSecurityException()
-            throws Exception {
-        startDevSessionWithoutAllowlist();
-        MeasurementManager mm = getMeasurementManager();
-        WebTriggerRegistrationRequest webTriggerRegistrationRequest =
-                buildDefaultWebTriggerRegistrationRequest();
-        OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
-
-        mm.registerWebTrigger(webTriggerRegistrationRequest, sCallbackExecutor, callback);
-
-        callback.assertFailureReceived(SecurityException.class);
-    }
-
-    @Test
-    public void testRegisterWebTrigger_devSessionAllows_succeedsOrThrowsNonSecurityException()
-            throws Exception {
-        startDevSessionWithAllowlist();
-        MeasurementManager mm = getMeasurementManager();
-        WebTriggerRegistrationRequest webTriggerRegistrationRequest =
-                buildDefaultWebTriggerRegistrationRequest();
-        OutcomeReceiverForTests<Object> callback = new OutcomeReceiverForTests<>();
-
-        mm.registerWebTrigger(webTriggerRegistrationRequest, sCallbackExecutor, callback);
-
-        assertOutcomeReceiverSucceedsOrThrowsNonSecurityException(callback, "registerWebTrigger");
     }
 
     private void startDevSessionWithoutAllowlist() throws Exception {

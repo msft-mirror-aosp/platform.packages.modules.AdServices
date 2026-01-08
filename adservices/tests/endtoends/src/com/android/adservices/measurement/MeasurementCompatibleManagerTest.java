@@ -1116,7 +1116,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
     public void testGetMeasurementApiStatus() throws Exception {
         MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
         int response = callMeasurementApiStatus(mm);
-        assertThat(response).isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
+        assertThat(response).isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_DISABLED);
     }
 
     @Test

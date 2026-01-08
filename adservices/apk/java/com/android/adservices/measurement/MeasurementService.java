@@ -24,15 +24,11 @@ import android.os.IBinder;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.measurement.CachedFlags;
 import com.android.adservices.service.measurement.MeasurementServiceImpl;
 import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
@@ -63,29 +59,13 @@ public class MeasurementService extends Service {
     public void onCreate() {
         super.onCreate();
         Flags flags = FlagsFactory.getFlags();
-        DebugFlags debugFlags = DebugFlags.getInstance();
         if (!flags.getMeasurementEnabled()) {
             LogUtil.e("Measurement API is disabled");
             return;
         }
 
         if (mMeasurementService == null) {
-            final AppImportanceFilter appImportanceFilter =
-                    AppImportanceFilter.create(
-                            this,
-                            () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation(),
-                            BinderFlagReader.readFlag(
-                                    () ->
-                                            FlagsFactory.getFlags()
-                                                    .getEnableGetBindingUidImportance()));
-            mMeasurementService =
-                    new MeasurementServiceImpl(
-                            this,
-                            Clock.getInstance(),
-                            ConsentManager.getInstance(),
-                            new CachedFlags(flags),
-                            debugFlags,
-                            appImportanceFilter);
+            mMeasurementService = new MeasurementServiceImpl(Clock.getInstance());
         }
 
         if (hasUserConsent()) {
