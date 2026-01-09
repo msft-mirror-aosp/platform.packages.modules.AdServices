@@ -27,6 +27,7 @@ java_test_host {
     static_libs: [
         "modules-utils-build-testing",
         "SdkSandboxHostTestUtils",
+        "sdk_sandbox_app_flags_lib",
     ],
     test_suites: [
         "cts",

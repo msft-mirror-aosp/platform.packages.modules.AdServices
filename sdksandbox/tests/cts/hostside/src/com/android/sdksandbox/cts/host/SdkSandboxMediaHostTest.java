@@ -16,12 +16,14 @@
 
 package com.android.sdksandbox.cts.host;
 
+import static android.app.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_NO_OP_IMPL;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.hosttestutils.SdkSandboxDeviceSupportedHostRule;
 import android.platform.test.annotations.LargeTest;
+import android.platform.test.annotations.RequiresFlagsDisabled;
 
 import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
@@ -34,6 +36,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(DeviceJUnit4ClassRunner.class)
+@RequiresFlagsDisabled(FLAG_SDK_SANDBOX_NO_OP_IMPL)
 public class SdkSandboxMediaHostTest extends BaseHostJUnit4Test {
 
     @Rule(order = 0)
