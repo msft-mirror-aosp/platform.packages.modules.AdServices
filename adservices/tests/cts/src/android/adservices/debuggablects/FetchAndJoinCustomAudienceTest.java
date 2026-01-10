@@ -27,18 +27,10 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AU
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import static org.junit.Assert.assertThrows;
 
-import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.adselection.AdSelectionOutcome;
-import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
-import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
-import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
-import android.util.Log;
 
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
@@ -53,54 +45,6 @@ import java.util.concurrent.ExecutionException;
 @SetFlagEnabled(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED)
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 public class FetchAndJoinCustomAudienceTest extends FledgeDebuggableScenarioTest {
-
-    /**
-     * Test that custom audience can be successfully fetched from a server and joined to participate
-     * in a successful ad selection (Remarketing CUJ 169).
-     */
-    @Test
-    public void testAdSelection_withFetchCustomAudience_fetchesAndReturnsSuccessfully()
-            throws Exception {
-        testAdSelection_withFetchCustomAudience_Helper(mCustomAudienceClient);
-    }
-
-    /**
-     * Test that custom audience can be successfully fetched from a server and joined to participate
-     * in a successful ad selection (Remarketing CUJ 169) using a client built using get method
-     */
-    @Test
-    public void
-            testAdSelection_withFetchCustomAudience_fetchesAndReturnsSuccessfully_usingGetMethod()
-                    throws Exception {
-        testAdSelection_withFetchCustomAudience_Helper(mCustomAudienceClientUsingGetMethod);
-    }
-
-    private void testAdSelection_withFetchCustomAudience_Helper(
-            AdvertisingCustomAudienceClient customAudienceClient) throws Exception {
-        ScenarioDispatcher dispatcher =
-                setupDispatcher(
-                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
-                                "scenarios/remarketing-cuj-fetchCA.json"));
-        AdSelectionConfig adSelectionConfig =
-                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
-
-        CustomAudience customAudience = makeCustomAudience(HATS_CA).build();
-        doFetchAndJoinCustomAudience(
-                customAudienceClient,
-                makeFetchAndJoinCustomAudienceRequest()
-                        .setActivationTime(customAudience.getActivationTime())
-                        .setExpirationTime(customAudience.getExpirationTime())
-                        .setName(customAudience.getName())
-                        .setUserBiddingSignals(customAudience.getUserBiddingSignals())
-                        .build());
-        Log.d(LOGCAT_TAG_FLEDGE, "Fetched and Joined Custom Audience: " + HATS_CA);
-        AdSelectionOutcome result = doSelectAds(adSelectionConfig);
-        assertThat(result.hasOutcome()).isTrue();
-        assertThat(result.getRenderUri()).isNotNull();
-
-        assertThat(dispatcher.getCalledPaths())
-                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
-    }
 
     @Test
     public void testFetchAndJoinCustomAudience_validFetchUri_validRequest() throws Exception {

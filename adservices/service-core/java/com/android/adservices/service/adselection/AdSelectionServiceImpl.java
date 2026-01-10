@@ -16,10 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_DISABLED;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
@@ -28,14 +25,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_AUCTION_SERVER_API_NOT_AVAILABLE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_GET_CALLING_UID_ILLEGAL_STATE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_IMPRESSION;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
@@ -62,9 +53,9 @@ import android.adservices.adselection.UpdateAdCounterHistogramInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesPermissions;
 import android.adservices.common.CallerMetadata;
+import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.content.Context;
-import android.os.Binder;
 import android.os.Build;
 import android.os.RemoteException;
 
@@ -93,8 +84,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
-import com.android.adservices.service.adselection.debug.DebugReporting;
-import com.android.adservices.service.adselection.debug.DebugReportingDisabled;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptorImpl;
 import com.android.adservices.service.adselection.encryption.ProtectedServersEncryptionConfigManager;
@@ -114,33 +103,16 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.customaudience.ComponentAdsListValidator;
-import com.android.adservices.service.customaudience.ComponentAdsStrategy;
-import com.android.adservices.service.devapi.AdSelectionOverrider;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
-import com.android.adservices.service.measurement.MeasurementImpl;
-import com.android.adservices.service.profiling.Tracing;
-import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
-import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
-import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
-import com.android.adservices.service.stats.ReportImpressionExecutionLoggerFactory;
-import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
-import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLoggerFactory;
-import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
-
-import com.google.common.util.concurrent.FluentFuture;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -196,9 +168,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @NonNull KAnonSignJoinFactory mKAnonSignJoinFactory;
     private final boolean mShouldUseUnifiedTables;
-    private static final String API_NOT_AUTHORIZED_MSG =
-            "This API is not enabled for the given app because either dev options are disabled or"
-                    + " the app is not debuggable.";
     @NonNull private final RetryStrategyFactory mRetryStrategyFactory;
 
     private final boolean mConsoleMessageInLogsEnabled;
@@ -448,75 +417,26 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             CallerMetadata callerMetadata,
             GetAdSelectionDataCallback callback)
             throws RemoteException {
-        int e2eTraceCookie = Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_DATA);
-        int onBinderThreadTraceCookie =
-                Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_ON_DATA_BINDER_THREAD);
+        // Logs API deprecated.
+        logStatsdForDeprecation(
+                inputParams.getCallerPackageName(),
+                AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
 
-        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
-
-        AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
-                new AdsRelevanceExecutionLoggerFactory(
-                        inputParams.getCallerPackageName(),
-                        callerMetadata,
-                        Clock.getInstance(),
-                        mAdServicesLogger,
-                        mFlags,
-                        apiName);
-        final AdsRelevanceExecutionLogger adsRelevanceExecutionLogger =
-                adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
-
-        if (BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerKillSwitch)) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    inputParams.getCallerPackageName(),
-                    STATUS_KILLSWITCH_ENABLED,
-                    /* latencyMs= */ 0);
-            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
-            AdsRelevanceStatusUtils.logCelInsideBinderThread(
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_AUCTION_SERVER_API_NOT_AVAILABLE,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
-            throw new IllegalStateException(AUCTION_SERVER_API_IS_NOT_AVAILABLE);
-        }
-
+        // Sent back deprecation message throw callback
         try {
-            Objects.requireNonNull(inputParams);
-            Objects.requireNonNull(inputParams.getSeller());
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException e) {
-            sLogger.v("The getAdSelectionData() arguments should not be null!");
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    inputParams.getCallerPackageName(),
-                    STATUS_INVALID_ARGUMENT,
-                    /* latencyMs= */ 0);
-            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
             AdsRelevanceStatusUtils.logCelInsideBinderThread(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
-            // Rethrow because we want to fail fast
-            throw e;
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
-
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
-                mContext, inputParams.getCallerPackageName(), apiName, PERMISSIONS_SET);
-
-        int callingUid = getCallingUid(apiName);
-        final DevContext devContext = mDevContextFilter.createDevContext();
-        Tracing.endAsyncSection(
-                Tracing.GET_AD_SELECTION_ON_DATA_BINDER_THREAD, onBinderThreadTraceCookie);
-
-        mLightweightExecutor.execute(
-                () -> {
-                    runGetAdSelectionData(
-                            inputParams,
-                            callback,
-                            callingUid,
-                            devContext,
-                            adsRelevanceExecutionLogger,
-                            e2eTraceCookie);
-                });
     }
 
     @Override
@@ -525,121 +445,26 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             CallerMetadata callerMetadata,
             PersistAdSelectionResultCallback callback)
             throws RemoteException {
-        int traceCookie = Tracing.beginAsyncSection(Tracing.PERSIST_AD_SELECTION_RESULT);
-        int apiName =
-                AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
+        // Logs API deprecated.
+        logStatsdForDeprecation(
+                inputParams.getCallerPackageName(),
+                AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT);
 
-        AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
-                new AdsRelevanceExecutionLoggerFactory(
-                        inputParams.getCallerPackageName(),
-                        callerMetadata,
-                        Clock.getInstance(),
-                        mAdServicesLogger,
-                        mFlags,
-                        apiName);
-        final AdsRelevanceExecutionLogger adsRelevanceExecutionLogger =
-                adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
-
-        if (BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerKillSwitch)) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    inputParams.getCallerPackageName(),
-                    STATUS_KILLSWITCH_ENABLED,
-                    /* latencyMs= */ 0);
-            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
-            AdsRelevanceStatusUtils.logCelInsideBinderThread(
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_AUCTION_SERVER_API_NOT_AVAILABLE,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
-            throw new IllegalStateException(AUCTION_SERVER_API_IS_NOT_AVAILABLE);
-        }
-
+        // Sent back deprecation message throw callback
         try {
-            Objects.requireNonNull(inputParams);
-            Objects.requireNonNull(inputParams.getSeller());
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException e) {
-            sLogger.v("The processAdSelectionResult() arguments should not be null!");
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    inputParams.getCallerPackageName(),
-                    STATUS_INVALID_ARGUMENT,
-                    /* latencyMs= */ 0);
-            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
             AdsRelevanceStatusUtils.logCelInsideBinderThread(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
-            // Rethrow because we want to fail fast
-            throw e;
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
-
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
-                mContext, inputParams.getCallerPackageName(), apiName, PERMISSIONS_SET);
-
-        int callingUid = getCallingUid(apiName);
-        final DevContext devContext = mDevContextFilter.createDevContext();
-        final long overallTimeout =
-                BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerOverallTimeoutMs);
-        final boolean forceSearchOnAbsentOwner =
-                BinderFlagReader.readFlag(
-                        mFlags::getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled);
-        final boolean auctionServerEnabledForUpdateHistogram =
-                BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerEnabledForUpdateHistogram);
-
-        PersistAdSelectionResultRunner.ReportingRegistrationLimits limits =
-                PersistAdSelectionResultRunner.ReportingRegistrationLimits.builder()
-                        .setMaxRegisteredAdBeaconsTotalCount(
-                                BinderFlagReader.readFlag(
-                                        mFlags
-                                                ::getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount))
-                        .setMaxInteractionKeySize(
-                                BinderFlagReader.readFlag(
-                                        mFlags
-                                                ::getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB))
-                        .setMaxInteractionReportingUriSize(
-                                BinderFlagReader.readFlag(
-                                        mFlags
-                                                ::getFledgeReportImpressionMaxInteractionReportingUriSizeB))
-                        .setMaxRegisteredAdBeaconsPerAdTechCount(
-                                BinderFlagReader.readFlag(
-                                        mFlags
-                                                ::getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount))
-                        .build();
-        AuctionResultValidator auctionResultValidator =
-                new AuctionResultValidator(
-                        mFledgeAuthorizationFilter,
-                        BinderFlagReader.readFlag(mFlags::getDisableFledgeEnrollmentCheck),
-                        BinderFlagReader.readFlag(
-                                mFlags::getEnableWinningSellerIdInAdSelectionOutcome));
-        mLightweightExecutor.execute(
-                () -> {
-                    PersistAdSelectionResultRunner runner =
-                            new PersistAdSelectionResultRunner(
-                                    mObliviousHttpEncryptor,
-                                    mAdSelectionEntryDao,
-                                    mCustomAudienceDao,
-                                    mAdSelectionServiceFilter,
-                                    mBackgroundExecutor,
-                                    mLightweightExecutor,
-                                    mScheduledExecutor,
-                                    callingUid,
-                                    devContext,
-                                    overallTimeout,
-                                    forceSearchOnAbsentOwner,
-                                    limits,
-                                    mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
-                                            mAdSelectionEntryDao,
-                                            auctionServerEnabledForUpdateHistogram),
-                                    auctionResultValidator,
-                                    mFlags,
-                                    mDebugFlags,
-                                    mAdServicesLogger,
-                                    adsRelevanceExecutionLogger,
-                                    mKAnonSignJoinFactory);
-                    runner.run(inputParams, callback);
-                    Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_RESULT, traceCookie);
-                });
     }
 
     // TODO(b/233116758): Validate all the fields inside the adSelectionConfig.
@@ -661,222 +486,26 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull CallerMetadata callerMetadata,
             @NonNull AdSelectionCallback partialCallback,
             @Nullable AdSelectionCallback fullCallback) {
-        final AdSelectionExecutionLogger adSelectionExecutionLogger =
-                new AdSelectionExecutionLogger(
-                        callerMetadata, Clock.getInstance(), mContext, mAdServicesLogger, mFlags);
-        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+        // Logs API deprecated.
+        logStatsdForDeprecation(
+                inputParams.getCallerPackageName(),
+                AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
 
+        // Sent back deprecation message throw callback
         try {
-            Objects.requireNonNull(inputParams);
-            Objects.requireNonNull(partialCallback);
-        } catch (NullPointerException exception) {
-            int overallLatencyMs = adSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
-            sLogger.v(
-                    "The selectAds(AdSelectionConfig) arguments should not be null, failed with"
-                            + " overall latency %d in ms.",
-                    overallLatencyMs);
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    inputParams.getCallerPackageName(),
-                    STATUS_INVALID_ARGUMENT,
-                    overallLatencyMs);
-            // Rethrow because we want to fail fast
-            throw exception;
+            partialCallback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
-
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
-                mContext, inputParams.getCallerPackageName(), apiName, PERMISSIONS_SET);
-
-        int callingUid = getCallingUid(apiName);
-
-        DevContext devContext = mDevContextFilter.createDevContext();
-        final boolean auctionServerEnabledForUpdateHistogram =
-                BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerEnabledForUpdateHistogram);
-        mLightweightExecutor.execute(
-                () ->
-                        runAdSelection(
-                                inputParams,
-                                partialCallback,
-                                fullCallback,
-                                adSelectionExecutionLogger,
-                                callingUid,
-                                devContext,
-                                auctionServerEnabledForUpdateHistogram));
-    }
-
-    private void runGetAdSelectionData(
-            GetAdSelectionDataInput inputParams,
-            GetAdSelectionDataCallback callback,
-            int callingUid,
-            DevContext devContext,
-            AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
-            int e2eTraceCookie) {
-        int offBinderThreadTraceCookie =
-                Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_DATA_OFF_BINDER_THREAD);
-
-        GetAdSelectionDataRunner runner =
-                new GetAdSelectionDataRunner(
-                        e2eTraceCookie,
-                        mObliviousHttpEncryptor,
-                        mAdSelectionEntryDao,
-                        mCustomAudienceDao,
-                        mEncodedPayloadDao,
-                        mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory.getFrequencyCapAdFilterer(),
-                        mBackgroundExecutor,
-                        mLightweightExecutor,
-                        AdServicesExecutors.getBlockingExecutor(),
-                        mScheduledExecutor,
-                        mFlags,
-                        mDebugFlags,
-                        callingUid,
-                        devContext,
-                        adsRelevanceExecutionLogger,
-                        mAdServicesLogger,
-                        getAuctionServerPayloadMetricsStrategy(mFlags),
-                        mAdFilteringFeatureFactory.getAppInstallAdFilterer(),
-                        mAuctionServerDebugConfigurationGenerator,
-                        mServerAuctionCoordinatorUriStrategyFactory
-                                .createStrategy(devContext)
-                                .getCoordinatorOriginUriValidator());
-        Tracing.endAsyncSection(
-                Tracing.GET_AD_SELECTION_DATA_OFF_BINDER_THREAD, offBinderThreadTraceCookie);
-        runner.run(inputParams, callback);
-    }
-
-    private AuctionServerPayloadMetricsStrategy getAuctionServerPayloadMetricsStrategy(
-            Flags flags) {
-        if (flags.getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled()) {
-            SellerConfigurationMetricsStrategy sellerConfigurationMetricsStrategy;
-            if (flags.getFledgeGetAdSelectionDataSellerConfigurationEnabled()) {
-                sellerConfigurationMetricsStrategy =
-                        new SellerConfigurationMetricsStrategyEnabled();
-            } else {
-                sellerConfigurationMetricsStrategy =
-                        new SellerConfigurationMetricsStrategyDisabled();
-            }
-            if (flags.getFledgeAuctionServerKeyFetchMetricsEnabled()) {
-                return new AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled(
-                        mAdServicesLogger,
-                        sellerConfigurationMetricsStrategy,
-                        ComponentAdsStrategy.createInstance(
-                                flags.getEnableCustomAudienceComponentAds(),
-                                new ComponentAdsListValidator(
-                                        flags.getComponentAdRenderIdMaxLengthBytes(),
-                                        flags.getMaxComponentAdsPerCustomAudience())));
-            }
-            return new AuctionServerPayloadMetricsStrategyEnabled(
-                    mAdServicesLogger,
-                    sellerConfigurationMetricsStrategy,
-                    ComponentAdsStrategy.createInstance(
-                            flags.getEnableCustomAudienceComponentAds(),
-                            new ComponentAdsListValidator(
-                                    flags.getComponentAdRenderIdMaxLengthBytes(),
-                                    flags.getMaxComponentAdsPerCustomAudience())));
-        }
-        return new AuctionServerPayloadMetricsStrategyDisabled();
-    }
-
-    private void runAdSelection(
-            AdSelectionInput inputParams,
-            AdSelectionCallback partialCallback,
-            @Nullable AdSelectionCallback fullCallback,
-            AdSelectionExecutionLogger adSelectionExecutionLogger,
-            int callingUid,
-            DevContext devContext,
-            boolean auctionServerEnabledForUpdateHistogram) {
-
-        ListenableFuture<DebugReporting> debugReportingFuture =
-                DebugReporting.createInstance(
-                        mContext,
-                        mFlags,
-                        mAdServicesHttpsClient,
-                        devContext,
-                        mAdSelectionDebugReportDao,
-                        mLightweightExecutor,
-                        mAdIdFetcher,
-                        inputParams.getCallerPackageName(),
-                        callingUid);
-
-        FluentFuture.from(debugReportingFuture)
-                .addCallback(
-                        new FutureCallback<>() {
-                            @Override
-                            public void onSuccess(DebugReporting debugReporting) {
-                                sLogger.v(
-                                        "Debug reporting enabled: %b", debugReporting.isEnabled());
-                                runAdSelectionWithDebugReporting(
-                                        inputParams,
-                                        partialCallback,
-                                        fullCallback,
-                                        adSelectionExecutionLogger,
-                                        callingUid,
-                                        devContext,
-                                        auctionServerEnabledForUpdateHistogram,
-                                        debugReporting);
-                            }
-
-                            @Override
-                            public void onFailure(Throwable t) {
-                                sLogger.e(
-                                        t,
-                                        "Failed to create Debug Reporting instance, debug reporting"
-                                                + " is disabled");
-                                runAdSelectionWithDebugReporting(
-                                        inputParams,
-                                        partialCallback,
-                                        fullCallback,
-                                        adSelectionExecutionLogger,
-                                        callingUid,
-                                        devContext,
-                                        auctionServerEnabledForUpdateHistogram,
-                                        new DebugReportingDisabled());
-                            }
-                        },
-                        mLightweightExecutor);
-    }
-
-    private void runAdSelectionWithDebugReporting(
-            AdSelectionInput inputParams,
-            AdSelectionCallback partialCallback,
-            @Nullable AdSelectionCallback fullCallback,
-            AdSelectionExecutionLogger adSelectionExecutionLogger,
-            int callingUid,
-            DevContext devContext,
-            boolean auctionServerEnabledForUpdateHistogram,
-            @NonNull DebugReporting debugReporting) {
-
-        OnDeviceAdSelectionRunner runner =
-                new OnDeviceAdSelectionRunner(
-                        mCustomAudienceDao,
-                        mAdSelectionEntryDao,
-                        mEncryptionKeyDao,
-                        mEnrollmentDao,
-                        mAdServicesHttpsClient,
-                        mLightweightExecutor,
-                        mBackgroundExecutor,
-                        mScheduledExecutor,
-                        mAdServicesLogger,
-                        devContext,
-                        mFlags,
-                        mDebugFlags,
-                        adSelectionExecutionLogger,
-                        mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory.getFrequencyCapAdFilterer(),
-                        mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
-                        mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
-                                mAdSelectionEntryDao, auctionServerEnabledForUpdateHistogram),
-                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
-                        debugReporting,
-                        callingUid,
-                        mShouldUseUnifiedTables,
-                        mRetryStrategyFactory.createRetryStrategy(
-                                mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()),
-                        mKAnonSignJoinFactory,
-                        mAdFilteringFeatureFactory.getAppInstallAdFilterer(),
-                        mConsoleMessageInLogsEnabled);
-        runner.runAdSelection(inputParams, partialCallback, devContext, fullCallback);
     }
 
     /**
@@ -892,143 +521,51 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull CallerMetadata callerMetadata,
             @NonNull AdSelectionCallback callback)
             throws RemoteException {
-        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES;
+        // Logs API deprecated.
+        logStatsdForDeprecation(
+                inputParams.getCallerPackageName(),
+                AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES);
 
-        SelectAdsFromOutcomesExecutionLogger selectAdsFromOutcomesExecutionLogger =
-                new SelectAdsFromOutcomesExecutionLoggerFactory(
-                                Clock.getInstance(), mAdServicesLogger, mFlags)
-                        .getSelectAdsFromOutcomesExecutionLogger();
-
+        // Sent back deprecation message throw callback
         try {
-            Objects.requireNonNull(inputParams);
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException e) {
-            sLogger.v(
-                    "The selectAds(AdSelectionFromOutcomesConfig) arguments should not be null,"
-                            + " failed");
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    inputParams.getCallerPackageName(),
-                    STATUS_INVALID_ARGUMENT,
-                    /* latencyMs= */ 0);
-            // Rethrow because we want to fail fast
-            throw e;
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
-
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
-                mContext, inputParams.getCallerPackageName(), apiName, PERMISSIONS_SET);
-
-        int callingUid = getCallingUid(apiName);
-
-        DevContext devContext = mDevContextFilter.createDevContext();
-        mLightweightExecutor.execute(
-                () -> {
-                    OutcomeSelectionRunner runner =
-                            new OutcomeSelectionRunner(
-                                    mAdSelectionEntryDao,
-                                    mBackgroundExecutor,
-                                    mLightweightExecutor,
-                                    mScheduledExecutor,
-                                    mAdServicesHttpsClient,
-                                    mAdServicesLogger,
-                                    devContext,
-                                    mContext,
-                                    mFlags,
-                                    mDebugFlags,
-                                    mAdSelectionServiceFilter,
-                                    mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
-                                    callingUid,
-                                    mShouldUseUnifiedTables,
-                                    mRetryStrategyFactory.createRetryStrategy(
-                                            mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()),
-                                    mConsoleMessageInLogsEnabled);
-                    runner.runOutcomeSelection(
-                            inputParams, callback, selectAdsFromOutcomesExecutionLogger);
-                });
     }
 
     @Override
     public void reportImpression(
             @NonNull ReportImpressionInput requestParams,
             @NonNull ReportImpressionCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
+        // Logs API deprecated.
+        logStatsdForDeprecation(
+                requestParams.getCallerPackageName(),
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
 
+        // Sent back deprecation message throw callback
         try {
-            Objects.requireNonNull(requestParams);
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
             AdsRelevanceStatusUtils.logCelInsideBinderThread(
-                    exception,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_IMPRESSION);
-            // Rethrow because we want to fail fast
-            throw exception;
-        }
-
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
-                mContext, requestParams.getCallerPackageName(), apiName, PERMISSIONS_SET);
-
-        DevContext devContext = mDevContextFilter.createDevContext();
-
-        int callingUid = getCallingUid(apiName);
-
-        ReportImpressionExecutionLogger reportImpressionExecutionLogger =
-                new ReportImpressionExecutionLoggerFactory(mAdServicesLogger, mFlags)
-                        .getReportImpressionExecutionLogger();
-
-        // ImpressionReporter enables Auction Server flow reporting and sets the stage for Phase 2
-        // in go/rb-rm-unified-flow-reporting whereas ImpressionReporterLegacy is the logic before
-        // Phase 1. FLEDGE_AUCTION_SERVER_REPORTING_ENABLED flag controls which logic is called.
-        if (BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerEnabledForReportImpression)) {
-            ImpressionReporter reporter =
-                    new ImpressionReporter(
-                            mLightweightExecutor,
-                            mBackgroundExecutor,
-                            mScheduledExecutor,
-                            mAdSelectionEntryDao,
-                            mCustomAudienceDao,
-                            mAdServicesHttpsClient,
-                            devContext,
-                            mAdServicesLogger,
-                            mFlags,
-                            mDebugFlags,
-                            mAdSelectionServiceFilter,
-                            mFledgeAuthorizationFilter,
-                            mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
-                            callingUid,
-                            mRetryStrategyFactory.createRetryStrategy(
-                                    BinderFlagReader.readFlag(
-                                            mFlags::getAdServicesJsScriptEngineMaxRetryAttempts)),
-                            mShouldUseUnifiedTables,
-                            reportImpressionExecutionLogger);
-            reporter.reportImpression(requestParams, callback);
-        } else {
-            ImpressionReporterLegacy reporter =
-                    new ImpressionReporterLegacy(
-                            mLightweightExecutor,
-                            mBackgroundExecutor,
-                            mScheduledExecutor,
-                            mAdSelectionEntryDao,
-                            mCustomAudienceDao,
-                            mAdServicesHttpsClient,
-                            devContext,
-                            mAdServicesLogger,
-                            mFlags,
-                            mDebugFlags,
-                            mAdSelectionServiceFilter,
-                            mFledgeAuthorizationFilter,
-                            mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
-                            callingUid,
-                            mShouldUseUnifiedTables,
-                            mRetryStrategyFactory.createRetryStrategy(
-                                    BinderFlagReader.readFlag(
-                                            mFlags::getAdServicesJsScriptEngineMaxRetryAttempts)),
-                            reportImpressionExecutionLogger);
-            reporter.reportImpression(requestParams, callback);
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
     }
 
@@ -1036,61 +573,26 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void reportInteraction(
             @NonNull ReportInteractionInput inputParams,
             @NonNull ReportInteractionCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
+        // Logs API deprecated.
+        logStatsdForDeprecation(
+                inputParams.getCallerPackageName(),
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION);
 
+        // Sent back deprecation message throw callback
         try {
-            Objects.requireNonNull(inputParams);
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
             AdsRelevanceStatusUtils.logCelInsideBinderThread(
-                    exception,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION);
-            // Rethrow because we want to fail fast
-            throw exception;
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
-
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
-                mContext, inputParams.getCallerPackageName(), apiName, PERMISSIONS_SET);
-
-        int callerUid = getCallingUid(apiName);
-        DevContext devContext = mDevContextFilter.createDevContext();
-
-        // Get an instance of measurement service
-        // Binder identity is cleared and eventually restored to allow reading values of device
-        // config flags.
-        MeasurementImpl measurementService;
-        final long token = Binder.clearCallingIdentity();
-        try {
-            measurementService = MeasurementImpl.getInstance();
-        } finally {
-            Binder.restoreCallingIdentity(token);
-        }
-
-        // Get an instance of the event reporter
-        EventReporter eventReporter =
-                new EventReporterFactory(
-                                mAdSelectionEntryDao,
-                                mAdServicesHttpsClient,
-                                mLightweightExecutor,
-                                mBackgroundExecutor,
-                                mAdServicesLogger,
-                                mFlags,
-                                mDebugFlags,
-                                mAdSelectionServiceFilter,
-                                callerUid,
-                                mFledgeAuthorizationFilter,
-                                devContext,
-                                measurementService,
-                                mConsentManager,
-                                mContext,
-                                mShouldUseUnifiedTables)
-                        .getEventReporter();
-
-        eventReporter.reportInteraction(inputParams, callback);
     }
 
     @Override
@@ -1098,97 +600,52 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull SetAppInstallAdvertisersInput request,
             @NonNull SetAppInstallAdvertisersCallback callback)
             throws RemoteException {
-        int apiName =
-                AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS;
+        // Logs API deprecated.
+        logStatsdForDeprecation(
+                request.getCallerPackageName(),
+                AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS);
 
+        // Sent back deprecation message throw callback
         try {
-            Objects.requireNonNull(request);
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
-            // Rethrow because we want to fail fast
-            throw exception;
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
-
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
-                mContext, request.getCallerPackageName(), apiName, PERMISSIONS_SET);
-
-        AppInstallAdvertisersSetter setter =
-                new AppInstallAdvertisersSetter(
-                        mAppInstallDao,
-                        mBackgroundExecutor,
-                        mAdServicesLogger,
-                        mFlags,
-                        mDebugFlags,
-                        mAdSelectionServiceFilter,
-                        mConsentManager,
-                        getCallingUid(apiName),
-                        mDevContextFilter.createDevContext());
-        setter.setAppInstallAdvertisers(request, callback);
     }
 
     @Override
     public void updateAdCounterHistogram(
             @NonNull UpdateAdCounterHistogramInput inputParams,
             @NonNull UpdateAdCounterHistogramCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM;
+        // Logs API deprecated.
+        logStatsdForDeprecation(
+                inputParams.getCallerPackageName(),
+                AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM);
 
+        // Sent back deprecation message throw callback
         try {
-            Objects.requireNonNull(inputParams);
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
-            // Rethrow because we want to fail fast
-            throw exception;
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
-
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
-                mContext, inputParams.getCallerPackageName(), apiName, PERMISSIONS_SET);
-
-        final int callingUid = getCallingUid(apiName);
-        final int adCounterHistogramAbsoluteMaxTotalEventCount =
-                BinderFlagReader.readFlag(
-                        mFlags::getFledgeAdCounterHistogramAbsoluteMaxTotalEventCount);
-        final int adCounterHistogramLowerMaxTotalEventCount =
-                BinderFlagReader.readFlag(
-                        mFlags::getFledgeAdCounterHistogramLowerMaxTotalEventCount);
-        final int adCounterHistogramAbsoluteMaxPerBuyerEventCount =
-                BinderFlagReader.readFlag(
-                        mFlags::getFledgeAdCounterHistogramAbsoluteMaxPerBuyerEventCount);
-        final int adCounterHistogramLowerMaxPerBuyerEventCount =
-                BinderFlagReader.readFlag(
-                        mFlags::getFledgeAdCounterHistogramLowerMaxPerBuyerEventCount);
-        final boolean auctionServerEnabledForUpdateHistogram =
-                BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerEnabledForUpdateHistogram);
-
-        final UpdateAdCounterHistogramWorker worker =
-                new UpdateAdCounterHistogramWorker(
-                        new AdCounterHistogramUpdaterImpl(
-                                mAdSelectionEntryDao,
-                                mFrequencyCapDao,
-                                adCounterHistogramAbsoluteMaxTotalEventCount,
-                                adCounterHistogramLowerMaxTotalEventCount,
-                                adCounterHistogramAbsoluteMaxPerBuyerEventCount,
-                                adCounterHistogramLowerMaxPerBuyerEventCount,
-                                auctionServerEnabledForUpdateHistogram,
-                                mShouldUseUnifiedTables),
-                        mBackgroundExecutor,
-                        // TODO(b/235841960): Use the same injected clock as AdSelectionRunner
-                        //  after aligning on Clock usage
-                        java.time.Clock.systemUTC(),
-                        mAdServicesLogger,
-                        mFlags,
-                        mDebugFlags,
-                        mAdSelectionServiceFilter,
-                        mConsentManager,
-                        callingUid,
-                        mDevContextFilter.createDevContext());
-
-        worker.updateAdCounterHistogram(inputParams, callback);
     }
 
     @Override
@@ -1198,90 +655,27 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionSignals trustedScoringSignals,
             @NonNull PerBuyerDecisionLogic perBuyerDecisionLogic,
             @NonNull AdSelectionOverrideCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
-
-        try {
-            Objects.requireNonNull(adSelectionConfig);
-            Objects.requireNonNull(decisionLogicJS);
-            Objects.requireNonNull(perBuyerDecisionLogic);
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
-            // Rethrow because we want to fail fast
-            throw exception;
-        }
-
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDeviceDevOptionsEnabled()) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    devContext.getCallingAppPackageName(),
-                    STATUS_INTERNAL_ERROR,
-                    /* latencyMs= */ 0);
-            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
-        }
+        // Logs API deprecated.
+        logStatsdForDeprecation(
+                devContext.getCallingAppPackageName(),
+                AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO);
 
-        // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
-                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
-
-        int callingUid = getCallingUid(apiName);
-
-        AdSelectionOverrider overrider =
-                new AdSelectionOverrider(
-                        devContext,
-                        mAdSelectionEntryDao,
-                        mLightweightExecutor,
-                        mBackgroundExecutor,
-                        mContext.getPackageManager(),
-                        ConsentManager.getInstance(),
-                        mAdServicesLogger,
-                        AppImportanceFilter.create(
-                                mContext,
-                                () ->
-                                        FlagsFactory.getFlags()
-                                                .getForegroundStatuslLevelForValidation(),
-                                BinderFlagReader.readFlag(
-                                        () ->
-                                                FlagsFactory.getFlags()
-                                                        .getEnableGetBindingUidImportance())),
-                        mFlags,
-                        callingUid);
-
-        overrider.addOverride(
-                adSelectionConfig,
-                decisionLogicJS,
-                trustedScoringSignals,
-                perBuyerDecisionLogic,
-                callback);
-    }
-
-    private int getCallingUid(int apiNameLoggingId) throws IllegalStateException {
-        return getCallingUid(apiNameLoggingId, null);
-    }
-
-    private int getCallingUid(int apiNameLoggingId, String callerAppPackageName) {
+        // Sent back deprecation message throw callback
         try {
-            return mCallingAppUidSupplier.getCallingAppUid();
-        } catch (IllegalStateException illegalStateException) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiNameLoggingId,
-                    callerAppPackageName,
-                    STATUS_INTERNAL_ERROR,
-                    /* latencyMs= */ 0);
-            logGetCallingUidCEL(apiNameLoggingId);
-            throw illegalStateException;
-        }
-    }
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
 
-    private void logGetCallingUidCEL(int apiNameLoggingId) {
-        int celApiNameId = AdsRelevanceStatusUtils.getCelPpApiNameId(apiNameLoggingId);
-        if (celApiNameId != AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED) {
+            // logs CEL in case failed to send back response
             AdsRelevanceStatusUtils.logCelInsideBinderThread(
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_GET_CALLING_UID_ILLEGAL_STATE,
-                    celApiNameId);
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
     }
 
@@ -1289,116 +683,55 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void removeAdSelectionConfigRemoteInfoOverride(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull AdSelectionOverrideCallback callback) {
-        // Auto-generated variable name is too long for lint check
-        int apiName =
-                AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
-
-        try {
-            Objects.requireNonNull(adSelectionConfig);
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
-            // Rethrow because we want to fail fast
-            throw exception;
-        }
-
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDeviceDevOptionsEnabled()) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    devContext.getCallingAppPackageName(),
-                    STATUS_INTERNAL_ERROR,
-                    /* latencyMs= */ 0);
-            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
+        // Logs API deprecated.
+        logStatsdForDeprecation(
+                devContext.getCallingAppPackageName(),
+                AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE);
+
+        // Sent back deprecation message throw callback
+        try {
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
-
-        // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
-                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
-
-        int callingUid = getCallingUid(apiName);
-
-        AdSelectionOverrider overrider =
-                new AdSelectionOverrider(
-                        devContext,
-                        mAdSelectionEntryDao,
-                        mLightweightExecutor,
-                        mBackgroundExecutor,
-                        mContext.getPackageManager(),
-                        ConsentManager.getInstance(),
-                        mAdServicesLogger,
-                        AppImportanceFilter.create(
-                                mContext,
-                                () ->
-                                        FlagsFactory.getFlags()
-                                                .getForegroundStatuslLevelForValidation(),
-                                BinderFlagReader.readFlag(
-                                        () ->
-                                                FlagsFactory.getFlags()
-                                                        .getEnableGetBindingUidImportance())),
-                        mFlags,
-                        callingUid);
-
-        overrider.removeOverride(adSelectionConfig, callback);
     }
 
     @Override
     public void resetAllAdSelectionConfigRemoteOverrides(
             @NonNull AdSelectionOverrideCallback callback) {
-        // Auto-generated variable name is too long for lint check
-        int apiName =
-                AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
-
-        try {
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
-            // Rethrow because we want to fail fast
-            throw exception;
-        }
-
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDeviceDevOptionsEnabled()) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    devContext.getCallingAppPackageName(),
-                    STATUS_INTERNAL_ERROR,
-                    /* latencyMs= */ 0);
-            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
+        // Logs API deprecated.
+        logStatsdForDeprecation(
+                devContext.getCallingAppPackageName(),
+                AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES);
+
+        // Sent back deprecation message throw callback
+        try {
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
-
-        // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
-                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
-
-        int callingUid = getCallingUid(apiName);
-
-        AdSelectionOverrider overrider =
-                new AdSelectionOverrider(
-                        devContext,
-                        mAdSelectionEntryDao,
-                        mLightweightExecutor,
-                        mBackgroundExecutor,
-                        mContext.getPackageManager(),
-                        ConsentManager.getInstance(),
-                        mAdServicesLogger,
-                        AppImportanceFilter.create(
-                                mContext,
-                                () ->
-                                        FlagsFactory.getFlags()
-                                                .getForegroundStatuslLevelForValidation(),
-                                BinderFlagReader.readFlag(
-                                        () ->
-                                                FlagsFactory.getFlags()
-                                                        .getEnableGetBindingUidImportance())),
-                        mFlags,
-                        callingUid);
-
-        overrider.removeAllOverridesForAdSelectionConfig(callback);
     }
 
     @Override
@@ -1407,215 +740,114 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull String selectionLogicJs,
             @NonNull AdSelectionSignals selectionSignals,
             @NonNull AdSelectionOverrideCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
-
-        try {
-            Objects.requireNonNull(config);
-            Objects.requireNonNull(selectionLogicJs);
-            Objects.requireNonNull(selectionSignals);
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
-            // Rethrow because we want to fail fast
-            throw exception;
-        }
-
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDeviceDevOptionsEnabled()) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    devContext.getCallingAppPackageName(),
-                    STATUS_INTERNAL_ERROR,
-                    /* latencyMs= */ 0);
-            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
+        // Logs API deprecated.
+        // Auto-generated variable name is too long for lint check
+        logStatsdForDeprecation(
+                devContext.getCallingAppPackageName(),
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
+
+        // Sent back deprecation message throw callback
+        try {
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
-
-        // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
-                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
-
-        int callingUid = getCallingUid(apiName);
-
-        AdSelectionOverrider overrider =
-                new AdSelectionOverrider(
-                        devContext,
-                        mAdSelectionEntryDao,
-                        mLightweightExecutor,
-                        mBackgroundExecutor,
-                        mContext.getPackageManager(),
-                        ConsentManager.getInstance(),
-                        mAdServicesLogger,
-                        AppImportanceFilter.create(
-                                mContext,
-                                () ->
-                                        FlagsFactory.getFlags()
-                                                .getForegroundStatuslLevelForValidation(),
-                                BinderFlagReader.readFlag(
-                                        () ->
-                                                FlagsFactory.getFlags()
-                                                        .getEnableGetBindingUidImportance())),
-                        mFlags,
-                        callingUid);
-
-        overrider.addOverride(config, selectionLogicJs, selectionSignals, callback);
     }
 
     @Override
     public void removeAdSelectionFromOutcomesConfigRemoteInfoOverride(
             @NonNull AdSelectionFromOutcomesConfig config,
             @NonNull AdSelectionOverrideCallback callback) {
-        // Auto-generated variable name is too long for lint check
-        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
-
-        try {
-            Objects.requireNonNull(config);
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
-            // Rethrow because we want to fail fast
-            throw exception;
-        }
-
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDeviceDevOptionsEnabled()) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    devContext.getCallingAppPackageName(),
-                    STATUS_INTERNAL_ERROR,
-                    /* latencyMs= */ 0);
-            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
+        // Logs API deprecated.
+        // Auto-generated variable name is too long for lint check
+        logStatsdForDeprecation(
+                devContext.getCallingAppPackageName(),
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
+
+        // Sent back deprecation message throw callback
+        try {
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
-
-        // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
-                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
-
-        int callingUid = getCallingUid(apiName);
-
-        AdSelectionOverrider overrider =
-                new AdSelectionOverrider(
-                        devContext,
-                        mAdSelectionEntryDao,
-                        mLightweightExecutor,
-                        mBackgroundExecutor,
-                        mContext.getPackageManager(),
-                        ConsentManager.getInstance(),
-                        mAdServicesLogger,
-                        AppImportanceFilter.create(
-                                mContext,
-                                () ->
-                                        FlagsFactory.getFlags()
-                                                .getForegroundStatuslLevelForValidation(),
-                                BinderFlagReader.readFlag(
-                                        () ->
-                                                FlagsFactory.getFlags()
-                                                        .getEnableGetBindingUidImportance())),
-                        mFlags,
-                        callingUid);
-
-        overrider.removeOverride(config, callback);
     }
 
     @Override
     public void resetAllAdSelectionFromOutcomesConfigRemoteOverrides(
             @NonNull AdSelectionOverrideCallback callback) {
-        // Auto-generated variable name is too long for lint check
-        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
-
-        try {
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
-            // Rethrow because we want to fail fast
-            throw exception;
-        }
-
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDeviceDevOptionsEnabled()) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    devContext.getCallingAppPackageName(),
-                    STATUS_INTERNAL_ERROR,
-                    /* latencyMs= */ 0);
-            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
+        // Logs API deprecated.
+        // Auto-generated variable name is too long for lint check
+        logStatsdForDeprecation(
+                devContext.getCallingAppPackageName(),
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
+
+        // Sent back deprecation message throw callback
+        try {
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
-
-        // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
-                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
-
-        int callingUid = getCallingUid(apiName);
-
-        AdSelectionOverrider overrider =
-                new AdSelectionOverrider(
-                        devContext,
-                        mAdSelectionEntryDao,
-                        mLightweightExecutor,
-                        mBackgroundExecutor,
-                        mContext.getPackageManager(),
-                        ConsentManager.getInstance(),
-                        mAdServicesLogger,
-                        AppImportanceFilter.create(
-                                mContext,
-                                () ->
-                                        FlagsFactory.getFlags()
-                                                .getForegroundStatuslLevelForValidation(),
-                                BinderFlagReader.readFlag(
-                                        () ->
-                                                FlagsFactory.getFlags()
-                                                        .getEnableGetBindingUidImportance())),
-                        mFlags,
-                        callingUid);
-
-        overrider.removeAllOverridesForAdSelectionFromOutcomes(callback);
     }
 
     @Override
     public void setAdCounterHistogramOverride(
             @NonNull SetAdCounterHistogramOverrideInput inputParams,
             @NonNull AdSelectionOverrideCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
-
-        try {
-            Objects.requireNonNull(inputParams);
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
-            // Rethrow because we want to fail fast
-            throw exception;
-        }
-
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDeviceDevOptionsEnabled()) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    devContext.getCallingAppPackageName(),
-                    STATUS_INTERNAL_ERROR,
-                    /* latencyMs= */ 0);
-            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
-        }
+        // Logs API deprecated.
+        // Auto-generated variable name is too long for lint check
+        logStatsdForDeprecation(
+                devContext.getCallingAppPackageName(),
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
 
-        // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
-                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
-
-        // TODO(b/265204820): Implement service
-        int status = STATUS_SUCCESS;
+        // Sent back deprecation message throw callback
         try {
-            callback.onSuccess();
-        } catch (RemoteException exception) {
-            status = STATUS_INTERNAL_ERROR;
-        } finally {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, devContext.getCallingAppPackageName(), status, /* latencyMs= */ 0);
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
     }
 
@@ -1623,82 +855,55 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void removeAdCounterHistogramOverride(
             @NonNull RemoveAdCounterHistogramOverrideInput inputParams,
             @NonNull AdSelectionOverrideCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
-
-        try {
-            Objects.requireNonNull(inputParams);
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
-            // Rethrow because we want to fail fast
-            throw exception;
-        }
-
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDeviceDevOptionsEnabled()) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    devContext.getCallingAppPackageName(),
-                    STATUS_INTERNAL_ERROR,
-                    /* latencyMs= */ 0);
-            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
-        }
+        // Logs API deprecated.
+        // Auto-generated variable name is too long for lint check
+        logStatsdForDeprecation(
+                devContext.getCallingAppPackageName(),
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
 
-        // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
-                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
-
-        // TODO(b/265204820): Implement service
-        int status = STATUS_SUCCESS;
+        // Sent back deprecation message throw callback
         try {
-            callback.onSuccess();
-        } catch (RemoteException exception) {
-            status = STATUS_INTERNAL_ERROR;
-        } finally {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, devContext.getCallingAppPackageName(), status, /* latencyMs= */ 0);
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
     }
 
     @Override
     public void resetAllAdCounterHistogramOverrides(@NonNull AdSelectionOverrideCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
-
-        try {
-            Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
-            // Rethrow because we want to fail fast
-            throw exception;
-        }
-
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDeviceDevOptionsEnabled()) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName,
-                    devContext.getCallingAppPackageName(),
-                    STATUS_INTERNAL_ERROR,
-                    /* latencyMs= */ 0);
-            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
-        }
+        // Logs API deprecated.
+        // Auto-generated variable name is too long for lint check
+        logStatsdForDeprecation(
+                devContext.getCallingAppPackageName(),
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
 
-        // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
-                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
-
-        // TODO(b/265204820): Implement service
-        int status = STATUS_SUCCESS;
+        // Sent back deprecation message throw callback
         try {
-            callback.onSuccess();
-        } catch (RemoteException exception) {
-            status = STATUS_INTERNAL_ERROR;
-        } finally {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, devContext.getCallingAppPackageName(), status, /* latencyMs= */ 0);
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
+
+            // logs CEL in case failed to send back response
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
     }
 
@@ -1712,5 +917,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         } catch (JSSandboxIsNotAvailableException exception) {
             sLogger.i("Java script sandbox is not available, not shutting down JSScriptEngine.");
         }
+    }
+
+    private void logStatsdForDeprecation(String packageName, int apiName) {
+        mAdServicesLogger.logFledgeApiCallStats(
+                apiName, packageName, STATUS_ADSERVICES_DISABLED, /* latencyMs */ 0);
+        sLogger.e("Got in-coming calls but AdSelectionService APIs are deprecated.");
     }
 }

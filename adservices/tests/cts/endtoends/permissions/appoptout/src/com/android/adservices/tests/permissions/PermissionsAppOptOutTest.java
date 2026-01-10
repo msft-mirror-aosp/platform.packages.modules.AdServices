@@ -25,11 +25,9 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.ReportImpressionRequest;
-import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.common.AdTechIdentifier;
-import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.utils.CtsWebViewSupportUtil;
@@ -168,68 +166,6 @@ public final class PermissionsAppOptOutTest
     }
 
     @Test
-    public void testNoEnrollment_selectAds_adSelectionConfig() {
-        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
-        AdSelectionConfig adSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfig(
-                        AdTechIdentifier.fromString("seller.example.com"));
-
-        AdSelectionClient mAdSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> mAdSelectionClient.selectAds(adSelectionConfig).get());
-        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
-    }
-
-    @Test
-    public void testWithEnrollment_selectAds_adSelectionConfig() {
-        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
-        // The "test.com" buyer is a pre-seeded enrolled ad tech
-        AdSelectionConfig adSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfig(
-                        AdTechIdentifier.fromString("test.com"));
-
-        AdSelectionClient mAdSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        // When the ad tech is properly enrolled, just verify that the error thrown is not due to
-        // enrollment
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> mAdSelectionClient.selectAds(adSelectionConfig).get());
-        assertThat(exception.getMessage()).isNotEqualTo(CALLER_NOT_AUTHORIZED);
-    }
-
-    @Test
-    public void testNoEnrollment_selectAds_adSelectionFromOutcomesConfig() {
-        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
-        AdSelectionFromOutcomesConfig config =
-                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
-                        AdTechIdentifier.fromString("unauthorized.seller.com"));
-
-        AdSelectionClient mAdSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class, () -> mAdSelectionClient.selectAds(config).get());
-        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
-    }
-
-    @Test
     public void testWithEnrollment_selectAds_adSelectionFromOutcomesConfig() {
         Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
         // The "test.com" buyer is a pre-seeded enrolled ad tech
@@ -249,31 +185,6 @@ public final class PermissionsAppOptOutTest
                 assertThrows(
                         ExecutionException.class, () -> mAdSelectionClient.selectAds(config).get());
         assertThat(exception.getMessage()).isNotEqualTo(CALLER_NOT_AUTHORIZED);
-    }
-
-    @Test
-    public void testNoEnrollment_reportImpression() {
-        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
-        AdSelectionConfig adSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfig(
-                        AdTechIdentifier.fromString("seller.example.com"));
-
-        long adSelectionId = 1;
-
-        AdSelectionClient mAdSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        ReportImpressionRequest request =
-                new ReportImpressionRequest(adSelectionId, adSelectionConfig);
-
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> mAdSelectionClient.reportImpression(request).get());
-        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -302,50 +213,5 @@ public final class PermissionsAppOptOutTest
                         ExecutionException.class,
                         () -> mAdSelectionClient.reportImpression(request).get());
         assertThat(exception.getMessage()).isNotEqualTo(CALLER_NOT_AUTHORIZED);
-    }
-
-    @Test
-    public void testNoEnrollment_updateAdCounterHistogram() {
-        long adSelectionId = 1;
-
-        AdSelectionClient mAdSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        UpdateAdCounterHistogramRequest request =
-                new UpdateAdCounterHistogramRequest.Builder(
-                                adSelectionId,
-                                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
-                                AdTechIdentifier.fromString("seller.example.com"))
-                        .build();
-
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> mAdSelectionClient.updateAdCounterHistogram(request).get());
-        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
-    }
-
-    @Test
-    public void testWithEnrollment_updateAdCounterHistogram()
-            throws ExecutionException, InterruptedException {
-        long adSelectionId = 1;
-
-        AdSelectionClient mAdSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        UpdateAdCounterHistogramRequest request =
-                new UpdateAdCounterHistogramRequest.Builder(
-                                adSelectionId,
-                                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
-                                AdTechIdentifier.fromString("test.com"))
-                        .build();
-
-        mAdSelectionClient.updateAdCounterHistogram(request).get();
     }
 }
