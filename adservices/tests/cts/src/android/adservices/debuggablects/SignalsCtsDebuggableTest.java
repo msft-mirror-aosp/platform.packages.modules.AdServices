@@ -30,16 +30,14 @@ import android.adservices.signals.UpdateSignalsRequest;
 import android.adservices.utils.CtsWebViewSupportUtil;
 import android.adservices.utils.DevContextUtils;
 import android.adservices.utils.MockWebServerRule;
-import android.adservices.utils.ScenarioDispatcher;
-import android.adservices.utils.ScenarioDispatcherFactory;
 import android.net.Uri;
 
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.annotations.SetPasAppAllowList;
+import com.android.adservices.shared.common.exception.AdServicesDeprecationConstants;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
-import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import org.junit.Before;
@@ -57,9 +55,7 @@ import java.util.concurrent.Executors;
 @SetPasAppAllowList
 @RequiresSdkLevelAtLeastT
 public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest {
-    private static final String POSTFIX = "/signals";
     private static final String FIRST_POSTFIX = "/signalsFirst";
-    private static final String SECOND_POSTFIX = "/signalsSecond";
 
     @Rule(order = 11)
     public final SupportedByConditionRule devOptionsEnabled =
@@ -90,55 +86,20 @@ public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest 
     }
 
     @Test
-    public void testUpdateSignals_success() throws Exception {
-        ScenarioDispatcher dispatcher =
-                setupDispatcher(
-                        ScenarioDispatcherFactory.createFromScenarioFile(
-                                "scenarios/signals-default.json"));
-        Uri firstUri = Uri.parse(mServerBaseAddress + FIRST_POSTFIX);
-        Uri secondUri = Uri.parse(mServerBaseAddress + SECOND_POSTFIX);
-        UpdateSignalsRequest firstRequest = new UpdateSignalsRequest.Builder(firstUri).build();
-        UpdateSignalsRequest secondRequest = new UpdateSignalsRequest.Builder(secondUri).build();
-        mProtectedSignalsClient.updateSignals(firstRequest).get();
-        mProtectedSignalsClient.updateSignals(secondRequest).get();
-
-        assertThat(dispatcher.getCalledPaths())
-                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
-    }
-
-    @Test
-    @SetFlagDisabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
-    public void testUpdateSignals_badUri_failure() throws Exception {
-        setupDispatcher(
-                ScenarioDispatcherFactory.createFromScenarioFile("scenarios/signals-default.json"));
-        Uri uri = Uri.EMPTY;
+    public void testUpdateSignals_succeeded_shouldThrowDeprecatedException() {
+        Uri uri = Uri.parse(mServerBaseAddress + FIRST_POSTFIX);
         UpdateSignalsRequest request = new UpdateSignalsRequest.Builder(uri).build();
-        ExecutionException e =
+
+        ExecutionException exception =
                 assertThrows(
                         ExecutionException.class,
                         () -> mProtectedSignalsClient.updateSignals(request).get());
-        assertThat(e.getCause()).isInstanceOf(SecurityException.class);
-    }
 
-    @Test
-    public void testUpdateSignals_badJson_failure() throws Exception {
-        setupDispatcher(
-                ScenarioDispatcherFactory.createFromScenarioFile(
-                        "scenarios/signals-bad-json.json"));
-        Uri uri = Uri.parse(mServerBaseAddress + POSTFIX);
-        UpdateSignalsRequest request = new UpdateSignalsRequest.Builder(uri).build();
-        ExecutionException e =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> mProtectedSignalsClient.updateSignals(request).get());
-        assertThat(e.getCause()).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    private ScenarioDispatcher setupDispatcher(ScenarioDispatcherFactory scenarioDispatcherFactory)
-            throws Exception {
-        ScenarioDispatcher scenarioDispatcher =
-                mMockWebServerRule.startMockWebServer(scenarioDispatcherFactory);
-        mServerBaseAddress = scenarioDispatcher.getBaseAddressWithPrefix().toString();
-        return scenarioDispatcher;
+        assertThat(exception.getCause()).isNotNull();
+        assertThat(exception.getCause().getClass()).isEqualTo(IllegalStateException.class);
+        assertThat(exception.getCause().getMessage())
+                .isEqualTo(
+                        AdServicesDeprecationConstants
+                                .PROTECTED_SIGNALS_SERVICE_DEPRECATION_MESSAGE);
     }
 }

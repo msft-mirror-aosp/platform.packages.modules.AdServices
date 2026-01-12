@@ -18,7 +18,6 @@ package android.adservices.signals;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS;
 
-import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
@@ -38,6 +37,7 @@ import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
 import com.android.adservices.flags.Flags;
+import com.android.adservices.shared.common.exception.AdServicesDeprecationConstants;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -214,16 +214,12 @@ public class ProtectedSignalsManager {
                     new UpdateSignalsCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () ->
-                                            receiver.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            failureParcel)));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (RemoteException e) {
@@ -238,5 +234,10 @@ public class ProtectedSignalsManager {
         return sandboxedSdkContext == null
                 ? mContext.getPackageName()
                 : sandboxedSdkContext.getClientPackageName();
+    }
+
+    private IllegalStateException genDeprecatedException() {
+        return new IllegalStateException(
+                AdServicesDeprecationConstants.PROTECTED_SIGNALS_SERVICE_DEPRECATION_MESSAGE);
     }
 }
