@@ -22,7 +22,6 @@ import com.android.adservices.shared.testing.concurrency.DeviceSideSyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 
-// TODO(b/344610522): add unit test
 /**
  * A synchronized callback used for logging {@link JobService} on testing purpose.
  *
