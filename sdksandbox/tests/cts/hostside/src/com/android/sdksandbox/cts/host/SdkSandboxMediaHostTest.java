@@ -24,6 +24,8 @@ import static org.junit.Assume.assumeTrue;
 import android.app.sdksandbox.hosttestutils.SdkSandboxDeviceSupportedHostRule;
 import android.platform.test.annotations.LargeTest;
 import android.platform.test.annotations.RequiresFlagsDisabled;
+import android.platform.test.flag.junit.CheckFlagsRule;
+import android.platform.test.flag.junit.host.HostFlagsValueProvider;
 
 import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
@@ -42,6 +44,10 @@ public class SdkSandboxMediaHostTest extends BaseHostJUnit4Test {
     @Rule(order = 0)
     public final SdkSandboxDeviceSupportedHostRule deviceSupportRule =
             new SdkSandboxDeviceSupportedHostRule(this);
+
+    @Rule
+    public final CheckFlagsRule mCheckFlagRule =
+            HostFlagsValueProvider.createCheckFlagsRule(this::getDevice);
 
     private static final String TEST_APP_PACKAGE_NAME = "com.android.sdksandbox.cts.app";
     private static final String TEST_APP_APK_NAME = "CtsSdkSandboxHostTestApp.apk";
