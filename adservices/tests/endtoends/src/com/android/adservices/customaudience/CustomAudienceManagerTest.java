@@ -36,21 +36,24 @@ import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERM
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.Manifest;
-import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.CustomAudienceManager;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
+import android.adservices.customaudience.JoinCustomAudienceRequestFixture;
 import android.adservices.customaudience.LeaveCustomAudienceRequest;
+import android.adservices.customaudience.LeaveCustomAudienceRequestFixture;
+import android.adservices.customaudience.PartialCustomAudience;
+import android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest;
 import android.net.Uri;
-import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.AdServicesEndToEndTestCase;
-import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
+import com.android.adservices.shared.common.exception.AdServicesDeprecationConstants;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
@@ -58,10 +61,13 @@ import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.modules.utils.build.SdkLevel;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.time.Duration;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
@@ -108,14 +114,8 @@ import java.util.concurrent.TimeoutException;
         value = Integer.MAX_VALUE)
 @SetPpapiAppAllowList
 public final class CustomAudienceManagerTest extends AdServicesEndToEndTestCase {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private static final String TAG = "CustomAudienceManagerTest";
-    private static final String SERVICE_APK_NAME = "com.android.adservices.api";
-    private static final int MAX_RETRY = 50;
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-
-    private static final int DELAY_TO_AVOID_THROTTLE_MS = 1001;
 
     @Before
     public void setUp() throws TimeoutException {
@@ -137,51 +137,96 @@ public final class CustomAudienceManagerTest extends AdServicesEndToEndTestCase 
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
-    private void measureJoinCustomAudience(String label) throws Exception {
-        Log.i(TAG, "Calling joinCustomAudience()");
-        Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);
-        long start = System.currentTimeMillis();
+    @Test
+    public void testJoinCustomAudience_shouldReceiveDeprecationError() throws Exception {
+        OutcomeReceiverForTests<Object> receiver = new OutcomeReceiverForTests<>();
 
-        AdvertisingCustomAudienceClient client =
-                new AdvertisingCustomAudienceClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
+        CustomAudienceManager manager = CustomAudienceManager.get(sContext);
+        assertWithMessage("manager").that(manager).isNotNull();
 
-        client.joinCustomAudience(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
-                                .build())
-                .get();
+        manager.joinCustomAudience(
+                JoinCustomAudienceRequestFixture.getJoinCustomAudienceRequest(
+                        JoinCustomAudienceRequestFixture.CUSTOM_AUDIENCE_1),
+                CALLBACK_EXECUTOR,
+                receiver);
 
-        long duration = System.currentTimeMillis() - start;
-        Log.i(TAG, "joinCustomAudience() took " + duration + " ms: " + label);
-    }
-
-    private void measureLeaveCustomAudience(String label) throws Exception {
-        Log.i(TAG, "Calling joinCustomAudience()");
-        long start = System.currentTimeMillis();
-
-        AdvertisingCustomAudienceClient client =
-                new AdvertisingCustomAudienceClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        client.leaveCustomAudience(
-                        CommonFixture.VALID_BUYER_1,
-                        CustomAudienceFixture.VALID_NAME)
-                .get();
-
-        long duration = System.currentTimeMillis() - start;
-        Log.i(TAG, "joinCustomAudience() took " + duration + " ms: " + label);
+        IllegalStateException exception = receiver.assertFailure(IllegalStateException.class);
+        assertWithMessage("Verifies API deprecation message.")
+                .that(exception.getMessage())
+                .isEqualTo(
+                        AdServicesDeprecationConstants.CUSTOM_AUDIENCE_SERVICE_DEPRECATION_MESSAGE);
     }
 
     @Test
-    public void testCustomAudienceManager() throws Exception {
-        measureJoinCustomAudience("no-kill, 1st call");
-        measureJoinCustomAudience("no-kill, 2nd call");
-        measureLeaveCustomAudience("no-kill, 1st call");
-        measureLeaveCustomAudience("no-kill, 2nd call");
+    public void testFetchAndJoinCustomAudience_shouldReceiveDeprecationError() throws Exception {
+        OutcomeReceiverForTests<Object> receiver = new OutcomeReceiverForTests<>();
+
+        CustomAudienceManager manager = CustomAudienceManager.get(sContext);
+        assertWithMessage("manager").that(manager).isNotNull();
+
+        manager.fetchAndJoinCustomAudience(
+                new FetchAndJoinCustomAudienceRequest.Builder(
+                                CustomAudienceFixture.getValidFetchUriByBuyer(
+                                        CommonFixture.VALID_BUYER_1, "1"))
+                        .setName(CustomAudienceFixture.VALID_NAME)
+                        .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                        .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                        .build(),
+                CALLBACK_EXECUTOR,
+                receiver);
+
+        IllegalStateException exception = receiver.assertFailure(IllegalStateException.class);
+        assertWithMessage("Verifies API deprecation message.")
+                .that(exception.getMessage())
+                .isEqualTo(
+                        AdServicesDeprecationConstants.CUSTOM_AUDIENCE_SERVICE_DEPRECATION_MESSAGE);
+    }
+
+    @Test
+    public void testLeaveCustomAudience_shouldReceiveDeprecationError() throws Exception {
+        OutcomeReceiverForTests<Object> receiver = new OutcomeReceiverForTests<>();
+
+        CustomAudienceManager manager = CustomAudienceManager.get(sContext);
+        assertWithMessage("manager").that(manager).isNotNull();
+
+        manager.leaveCustomAudience(
+                LeaveCustomAudienceRequestFixture.getLeaveCustomAudienceRequestWithBuyer(
+                        CommonFixture.VALID_BUYER_1),
+                CALLBACK_EXECUTOR,
+                receiver);
+
+        IllegalStateException exception = receiver.assertFailure(IllegalStateException.class);
+        assertWithMessage("Verifies API deprecation message.")
+                .that(exception.getMessage())
+                .isEqualTo(
+                        AdServicesDeprecationConstants.CUSTOM_AUDIENCE_SERVICE_DEPRECATION_MESSAGE);
+    }
+
+    @Test
+    public void testScheduleCustomAudienceUpdate_shouldReceiveDeprecationError() throws Exception {
+        AdServicesOutcomeReceiverForTests<Object> receiver =
+                new AdServicesOutcomeReceiverForTests<>();
+
+        CustomAudienceManager manager = CustomAudienceManager.get(sContext);
+        assertWithMessage("manager").that(manager).isNotNull();
+
+        manager.scheduleCustomAudienceUpdate(
+                new ScheduleCustomAudienceUpdateRequest.Builder(
+                                CustomAudienceFixture.getValidFetchUriByBuyer(
+                                        CommonFixture.VALID_BUYER_1, "1"),
+                                Duration.ofMinutes(100),
+                                ImmutableList.of(
+                                        new PartialCustomAudience.Builder("fake_ca").build()))
+                        .build(),
+                CALLBACK_EXECUTOR,
+                receiver);
+
+        IllegalStateException exception = receiver.assertFailure(IllegalStateException.class);
+        assertWithMessage("Verifies API deprecation message.")
+                .that(exception.getMessage())
+                .isEqualTo(
+                        AdServicesDeprecationConstants.CUSTOM_AUDIENCE_SERVICE_DEPRECATION_MESSAGE);
     }
 
     @Ignore("TODO(b/295231590): remove annotation when bug is fixed")
