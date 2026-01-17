@@ -19,7 +19,6 @@ package android.adservices.customaudience;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 
 import android.adservices.common.AdServicesOutcomeReceiver;
-import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.common.SandboxedSdkContextUtils;
@@ -40,6 +39,7 @@ import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
 import com.android.adservices.flags.Flags;
+import com.android.adservices.shared.common.exception.AdServicesDeprecationConstants;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -183,16 +183,12 @@ public class CustomAudienceManager {
                     new ICustomAudienceCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () ->
-                                            receiver.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            failureParcel)));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (RemoteException e) {
@@ -258,16 +254,12 @@ public class CustomAudienceManager {
                     new FetchAndJoinCustomAudienceCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () ->
-                                            receiver.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            failureParcel)));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (RemoteException e) {
@@ -317,16 +309,12 @@ public class CustomAudienceManager {
                     new ICustomAudienceCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () ->
-                                            receiver.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            failureParcel)));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
         } catch (RemoteException e) {
@@ -519,16 +507,12 @@ public class CustomAudienceManager {
                     new ScheduleCustomAudienceUpdateCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () ->
-                                            receiver.onError(
-                                                    AdServicesStatusUtils.asException(
-                                                            failureParcel)));
+                            executor.execute(() -> receiver.onError(genDeprecatedException()));
                         }
                     });
 
@@ -538,12 +522,16 @@ public class CustomAudienceManager {
         }
     }
 
-
     private String getCallerPackageName() {
         SandboxedSdkContext sandboxedSdkContext =
                 SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext);
         return sandboxedSdkContext == null
                 ? mContext.getPackageName()
                 : sandboxedSdkContext.getClientPackageName();
+    }
+
+    private IllegalStateException genDeprecatedException() {
+        return new IllegalStateException(
+                AdServicesDeprecationConstants.CUSTOM_AUDIENCE_SERVICE_DEPRECATION_MESSAGE);
     }
 }

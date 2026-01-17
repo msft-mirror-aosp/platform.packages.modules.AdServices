@@ -27,6 +27,8 @@ import android.app.sdksandbox.hosttestutils.SdkSandboxDeviceSupportedHostRule;
 import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
 import android.platform.test.annotations.LargeTest;
 import android.platform.test.annotations.RequiresFlagsDisabled;
+import android.platform.test.flag.junit.CheckFlagsRule;
+import android.platform.test.flag.junit.host.HostFlagsValueProvider;
 
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
@@ -45,6 +47,10 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
     @Rule(order = 0)
     public final SdkSandboxDeviceSupportedHostRule deviceSupportRule =
             new SdkSandboxDeviceSupportedHostRule(this);
+
+    @Rule
+    public final CheckFlagsRule mCheckFlagRule =
+            HostFlagsValueProvider.createCheckFlagsRule(this::getDevice);
 
     private static final String APP_PACKAGE = "com.android.sdksandbox.cts.app";
     private static final String APP_APK = "CtsSdkSandboxHostTestApp.apk";
