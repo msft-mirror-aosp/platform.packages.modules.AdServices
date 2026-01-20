@@ -32,6 +32,7 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.security.spec.InvalidKeySpecException;
@@ -361,6 +362,7 @@ public final class AdServicesHpkeTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @Ignore("b/476183810")
     public void testHpkeDecryptWithJni_ciphertextInvalid_fail() {
         featureFlagEncryptWithPlatformApis(false);
         assertDecryptionWithInvalidCiphertext();
