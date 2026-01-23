@@ -16,32 +16,12 @@
 
 package com.android.adservices.service.signals;
 
-import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FLEDGE_CONSENT_NOT_GIVEN;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FLEDGE_CONSENT_REVOKED_FOR_APP_AFTER_SETTING_FLEDGE_USE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_GET_CALLING_UID_ILLEGAL_STATE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_GET_ENROLLMENT_AD_TECH_ID_FAILURE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_INTERNAL_ERROR;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_USER_CONSENT_REVOKED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_INVALID_ARGUMENT;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_SERVICE_IMPL_NULL_ARGUMENT;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_UNABLE_SEND_RESULT_TO_CALLBACK;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_UNEXPECTED_ERROR_DURING_OPERATION;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_OTHER_ERROR;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_UNSET;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_DISABLED;
 
-import android.adservices.common.AdServicesPermissions;
-import android.adservices.common.AdServicesStatusUtils;
-import android.adservices.common.AdTechIdentifier;
-import android.adservices.common.CallerMetadata;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.signals.IProtectedSignalsService;
 import android.adservices.signals.UpdateSignalsCallback;
@@ -50,7 +30,6 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.os.Build;
 import android.os.RemoteException;
-import android.os.SystemClock;
 
 import androidx.annotation.RequiresApi;
 
@@ -58,7 +37,6 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -75,29 +53,19 @@ import com.android.adservices.service.common.ProtectedSignalsServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.adservices.service.enrollment.EnrollmentData;
-import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.signals.updateprocessors.evictionpriority.EvictionPriorityHandlerFactory;
 import com.android.adservices.service.signals.updateprocessors.updateencoder.UpdateEncoderEventHandler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
-import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
-import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
-import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
 /** Implementation of the Protected Signals service. */
@@ -269,334 +237,33 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
             throws RemoteException {
         sLogger.v("Entering updateSignals");
 
-        UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger =
-                mUpdateSignalsProcessReportedLoggerFactory.getLoggerInstance();
-        updateSignalsProcessReportedLogger.setUpdateSignalsStartTimestamp(
-                com.android.adservices.shared.util.Clock.getInstance().elapsedRealtime());
-
-        final int apiName = AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
-        String callerPackageName =
-                updateSignalsInput == null
+        // Logs API deprecated.
+        logStatsdForDeprecation(
+                updateSignalsInput.getCallerPackageName().isEmpty()
                         ? EMPTY_PACKAGE_NAME
-                        : updateSignalsInput.getCallerPackageName();
+                        : updateSignalsInput.getCallerPackageName(),
+                AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS);
 
+        // Send back deprecation message throw callback
         try {
-            Objects.requireNonNull(updateSignalsInput);
-            Objects.requireNonNull(updateSignalsCallback);
-        } catch (NullPointerException exception) {
-            mAdServicesLogger.logApiCallStats(
-                    new ApiCallStats.Builder()
-                            .setCode(AdServicesStatsLog.AD_SERVICES_API_CALLED)
-                            .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__FLEDGE)
-                            .setApiName(apiName)
-                            .setLatencyMillisecond(0)
-                            .setResultCode(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT)
-                            .setAppPackageName(callerPackageName)
-                            .setSdkPackageName(EMPTY_SDK_NAME)
+            updateSignalsCallback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
                             .build());
+        } catch (RemoteException e) {
+            sLogger.e("Failed sending back deprecation message to client.");
 
-            // Logs the stats right away when updateSignals receives the invalid arguments.
-            updateSignalsProcessReportedLogger.setAdservicesApiStatusCode(
-                    AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
-            updateSignalsProcessReportedLogger.logUpdateSignalsProcessReportedStats();
-
-            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            // logs CEL in case failed to send back response
             AdsRelevanceStatusUtils.logCelInsideBinderThread(
-                    exception,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_SERVICE_IMPL_NULL_ARGUMENT,
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
-            // Rethrow because we want to fail fast
-            throw exception;
-        }
-
-        AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
-                new AdsRelevanceExecutionLoggerFactory(
-                        callerPackageName,
-                        new CallerMetadata.Builder()
-                                .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
-                                .build(),
-                        com.android.adservices.shared.util.Clock.getInstance(),
-                        mAdServicesLogger,
-                        mFlags,
-                        apiName);
-        AdsRelevanceExecutionLogger adsRelevanceExecutionLogger =
-                adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
-
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                updateSignalsInput.getCallerPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS);
-
-        final int callerUid =
-                getCallingUid(adsRelevanceExecutionLogger, updateSignalsProcessReportedLogger);
-        final DevContext devContext = mDevContextFilter.createDevContext();
-        sLogger.v("Running updateSignals");
-        mExecutorService.execute(
-                () ->
-                        doUpdateSignals(
-                                updateSignalsInput,
-                                updateSignalsCallback,
-                                callerUid,
-                                devContext,
-                                adsRelevanceExecutionLogger,
-                                updateSignalsProcessReportedLogger));
-    }
-
-    private void doUpdateSignals(
-            UpdateSignalsInput input,
-            UpdateSignalsCallback callback,
-            int callerUid,
-            DevContext devContext,
-            AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
-            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
-        sLogger.v("Entering doUpdateSignals");
-
-        final int apiName = AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
-
-        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
-
-        // Stats to log
-        UpdateSignalsApiCalledStats.Builder jsonProcessingStatsBuilder = null;
-        if (mFlags.getPasExtendedMetricsEnabled()) {
-            // Stats to log
-            jsonProcessingStatsBuilder = UpdateSignalsApiCalledStats.builder();
-        }
-
-        // The filters log internally, so don't accidentally log again
-        boolean shouldLog = false;
-        try {
-            try {
-                AdTechIdentifier buyer;
-                boolean shouldDisableFledgeEnrollmentCheck =
-                        mFlags.getDisableFledgeEnrollmentCheck();
-                try {
-                    buyer =
-                            mProtectedSignalsServiceFilter.filterRequestAndExtractIdentifier(
-                                    input.getUpdateUri(),
-                                    input.getCallerPackageName(),
-                                    shouldDisableFledgeEnrollmentCheck,
-                                    mFlags.getEnforceForegroundStatusForSignals(),
-                                    // TODO (b/327187357): Move per-API/per-app consent into the
-                                    //  filter
-                                    /* enforceConsent= */ false,
-                                    !mDebugFlags.getConsentNotificationDebugMode(),
-                                    callerUid,
-                                    apiName,
-                                    PROTECTED_SIGNAL_API_UPDATE_SIGNALS,
-                                    devContext);
-                    shouldLog = true;
-                } catch (Throwable t) {
-                    throw new FilterException(t);
-                }
-
-                // If the enrollment check has been disabled, it's likely that the API is under
-                // test, in which case the buyer probably won't be enrolled, so skip ad tech ID
-                // logging to avoid checking the enrollment DB unnecessarily and generating false
-                // misses in enrollment telemetry
-                if (jsonProcessingStatsBuilder != null && !shouldDisableFledgeEnrollmentCheck) {
-                    /* You could save a DB call by building this into the filter, but it would
-                     * make the code pretty complicated and be difficult to flag.
-                     */
-
-                    try {
-                        EnrollmentData data =
-                                mEnrollmentDao.getEnrollmentDataForPASByAdTechIdentifier(buyer);
-                        if (data != null) {
-                            jsonProcessingStatsBuilder.setAdTechId(data.getEnrollmentId());
-                        }
-                    } catch (Exception e) {
-                        /* We blanket catch and ignore all exceptions here because
-                         * we'd rather skip the logging than get a crash
-                         */
-                        sLogger.e(e, "Failed to get enrollment data for %s", buyer);
-                        ErrorLogUtil.e(
-                                e,
-                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_GET_ENROLLMENT_AD_TECH_ID_FAILURE,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
-                    }
-                }
-
-                // Fail silently for revoked per-API or per-app user consent
-                // For UX notification or Privacy Sandbox opt-out failures, see the consent check in
-                // the service filter
-                // TODO (b/327187357): Move per-API/per-app consent into the filter
-                if (mConsentManager.isPasConsentGiven()) {
-                    if (!mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                            input.getCallerPackageName())) {
-                        sLogger.v("Orchestrating signal update");
-                        mUpdateSignalsOrchestrator
-                                .orchestrateUpdate(
-                                        input.getUpdateUri(),
-                                        buyer,
-                                        input.getCallerPackageName(),
-                                        devContext,
-                                        jsonProcessingStatsBuilder,
-                                        updateSignalsProcessReportedLogger)
-                                .get();
-                        PeriodicEncodingJobService.scheduleIfNeeded(mContext, mFlags, false);
-                        resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
-                    } else {
-                        sLogger.v("Consent revoked");
-                        resultCode = AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
-                        ErrorLogUtil.e(
-                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FLEDGE_CONSENT_REVOKED_FOR_APP_AFTER_SETTING_FLEDGE_USE,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
-                    }
-                } else {
-                    sLogger.v("Consent revoked");
-                    resultCode = AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
-                    ErrorLogUtil.e(
-                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FLEDGE_CONSENT_NOT_GIVEN,
-                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
-                }
-            } catch (ExecutionException exception) {
-                sLogger.d(
-                        exception,
-                        "Error encountered in updateSignals, unpacking from ExecutionException"
-                                + " and notifying caller");
-                resultCode = notifyFailure(callback, exception.getCause());
-                return;
-            } catch (Exception exception) {
-                sLogger.d(exception, "Error encountered in updateSignals, notifying caller");
-                resultCode = notifyFailure(callback, exception);
-                return;
-            }
-            callback.onSuccess();
-        } catch (Exception exception) {
-            sLogger.e(exception, "Unable to send result to the callback");
-            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-            ErrorLogUtil.e(
-                    exception,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_UNABLE_SEND_RESULT_TO_CALLBACK,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
-        } finally {
-            if (shouldLog) {
-                adsRelevanceExecutionLogger.endAdsRelevanceApi(resultCode);
-                updateSignalsProcessReportedLogger.setAdservicesApiStatusCode(resultCode);
-                updateSignalsProcessReportedLogger.logUpdateSignalsProcessReportedStats();
-            }
-            if (jsonProcessingStatsBuilder != null) {
-                if (jsonProcessingStatsBuilder.build().getJsonProcessingStatus()
-                        == JSON_PROCESSING_STATUS_UNSET) {
-                    if (resultCode == AdServicesStatusUtils.STATUS_SUCCESS) {
-                        jsonProcessingStatsBuilder.setJsonProcessingStatus(
-                                JSON_PROCESSING_STATUS_SUCCESS);
-                    } else {
-                        jsonProcessingStatsBuilder.setJsonProcessingStatus(
-                                JSON_PROCESSING_STATUS_OTHER_ERROR);
-                    }
-                }
-
-                /* Include adtech and package name only if the status is not success.
-                 * Adtech name is added early if it was extracted successfully.
-                 */
-                if (jsonProcessingStatsBuilder.build().getJsonProcessingStatus()
-                        == JSON_PROCESSING_STATUS_SUCCESS) {
-                    jsonProcessingStatsBuilder.setAdTechId("");
-                } else {
-                    jsonProcessingStatsBuilder.setPackageUid(callerUid);
-                }
-                mAdServicesLogger.logUpdateSignalsApiCalledStats(
-                        jsonProcessingStatsBuilder.build());
-            }
         }
     }
 
-    // TODO(b/297055198) Refactor this method into a utility class
-    private int getCallingUid(
-            AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
-            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger)
-            throws IllegalStateException {
-        try {
-            return mCallingAppUidSupplier.getCallingAppUid();
-        } catch (IllegalStateException illegalStateException) {
-            adsRelevanceExecutionLogger.endAdsRelevanceApi(
-                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
-
-            // Logs the stats right away when updateSignals receives the internal error.
-            updateSignalsProcessReportedLogger.setAdservicesApiStatusCode(
-                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
-            updateSignalsProcessReportedLogger.logUpdateSignalsProcessReportedStats();
-
-            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
-            AdsRelevanceStatusUtils.logCelInsideBinderThread(
-                    illegalStateException,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_GET_CALLING_UID_ILLEGAL_STATE,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
-            throw illegalStateException;
-        }
-    }
-
-    private int notifyFailure(UpdateSignalsCallback callback, Throwable t) throws RemoteException {
-        sLogger.d(t, "Notifying caller about exception");
-        int resultCode;
-
-        boolean isFilterException = t instanceof FilterException;
-
-        if (isFilterException) {
-            if (t.getCause() instanceof ConsentManager.RevokedConsentException) {
-                sLogger.v("Send success to caller for consent failure");
-                callback.onSuccess();
-                ErrorLogUtil.e(
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_USER_CONSENT_REVOKED,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
-                // This return code may not be the most accurate (could be due to notification
-                // failure or all APIs opted out), but filters have already logged the API response
-                // at this point
-                return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
-            }
-            resultCode = FilterException.getResultCode(t);
-            logPasFilterExceptionCel(resultCode);
-        } else if (t instanceof IllegalArgumentException) {
-            resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
-            ErrorLogUtil.e(
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_INVALID_ARGUMENT,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
-        } else {
-            sLogger.d(t, "Unexpected error during operation");
-            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-            ErrorLogUtil.e(
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_UNEXPECTED_ERROR_DURING_OPERATION,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
-        }
-
-        callback.onFailure(
-                new FledgeErrorResponse.Builder()
-                        .setStatusCode(resultCode)
-                        .setErrorMessage(t.getMessage())
-                        .build());
-        return resultCode;
-    }
-
-    private void logPasFilterExceptionCel(int resultCode) {
-        switch (resultCode) {
-            case AdServicesStatusUtils.STATUS_BACKGROUND_CALLER:
-                ErrorLogUtil.e(
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
-                break;
-            case AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED:
-                ErrorLogUtil.e(
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
-                break;
-            case AdServicesStatusUtils.STATUS_UNAUTHORIZED:
-                ErrorLogUtil.e(
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
-                break;
-            case AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED:
-                ErrorLogUtil.e(
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
-                break;
-            case AdServicesStatusUtils.STATUS_INTERNAL_ERROR:
-                ErrorLogUtil.e(
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_INTERNAL_ERROR,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
-                break;
-        }
+    private void logStatsdForDeprecation(String packageName, int apiName) {
+        mAdServicesLogger.logFledgeApiCallStats(
+                apiName, packageName, STATUS_ADSERVICES_DISABLED, /* latencyMs */ 0);
+        sLogger.e("Got in-coming calls but ProtectedSignalsService APIs are deprecated.");
     }
 }
