@@ -111,7 +111,6 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -149,7 +148,6 @@ import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.adservices.shared.testing.annotations.SetFloatFlag;
@@ -346,10 +344,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Mock
     private ServerAuctionCoordinatorUriStrategyFactory
             mServerAuctionCoordinatorUriStrategyFactoryMock;
-
-    @Rule(order = 11)
-    public final SupportedByConditionRule webViewSupportsJSSandbox =
-            WebViewSupportUtil.createJSSandboxAvailableRule(mContext);
 
     @Rule(order = 12)
     public final MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
