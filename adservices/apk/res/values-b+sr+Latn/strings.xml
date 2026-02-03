@@ -220,7 +220,7 @@
     <string name="settingsUI_topics_subtitle" msgid="6972706530860751586">"Uključeno (broj tema: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>)"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="7938363290536769313">"{count,plural, =1{Uključeno/# tema}one{Uključeno/# tema}few{Uključeno/# teme}other{Uključeno/# tema}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="5488403228775310943">"Uključeno (broj aplikacija: <xliff:g id="APPS_COUNT">%1$d</xliff:g>)"</string>
-    <string name="settingsUI_apps_subtitle_plural" msgid="7184167843623106783">"{count,plural, =1{Uključeno/# aplikacija}one{Uključeno/# aplikacija}few{Uključeno/# aplikacije}other{Uključeno/# aplikacija}}"</string>
+    <string name="settingsUI_apps_subtitle_plural" msgid="7184167843623106783">"{count,plural, =1{Uključeno / U # aplikaciji}one{Uključeno / U # aplikaciji}few{Uključeno /U # aplikacije}other{Uključeno  / U # aplikacija}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="4526152882066971753">"Uključeno"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="3699617207496648034">"Isključeno"</string>
     <string name="settingsUI_main_view_fragment_footer" msgid="4011871888988203657"><b>"Teme oglasa"</b>\n"Android beleži teme koje vas interesuju na osnovu aplikacija koje ste nedavno koristili i na osnovu toga koliko često ih koristite.\n\n"<b>"Oglasi koje predlažu aplikacije"</b>\n"Aplikacije koje koristite takođe mogu da utvrde šta vam se dopada na osnovu toga kako ih koristite.\n\n"<b>"Merenje oglasa"</b>\n"Aplikacije koje koristite mogu da zatraže od Android-a informacije radi merenja učinka oglasa. Android dozvoljava aplikacijama da prikupljaju ograničene tipove podataka."</string>
