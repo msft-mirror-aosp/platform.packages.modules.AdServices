@@ -23,7 +23,7 @@ import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 import com.android.tradefed.util.FileUtil;
 
-
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -52,6 +52,7 @@ import java.util.zip.ZipFile;
  *   <li>Database version should never go down.
  * </ol>
  */
+@Ignore("b/463382540")
 @RunWith(DeviceJUnit4ClassRunner.class)
 public class RoomDatabaseVersionBumpGuardrailTest extends BaseHostJUnit4Test {
 

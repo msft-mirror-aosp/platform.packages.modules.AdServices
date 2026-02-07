@@ -96,8 +96,9 @@ public class SdkSandboxUiTestRule implements TestRule {
                                         EMULATION_WIDTH,
                                         EMULATION_HEIGHT,
                                         EMULATION_DPI),
-                                false,
-                                false));
+                                /* fontScale= */ 1.0f,
+                                /* isDarkTheme= */ false,
+                                /* isLandscape= */ false));
         mDelegateRule =
                 RuleChain.outerRule(deviceEmulationRule)
                         .around(mScreenshotTestRule)
