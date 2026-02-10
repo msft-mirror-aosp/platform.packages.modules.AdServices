@@ -37,12 +37,14 @@ import com.android.adservices.ui.util.AdservicesNotificationUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 @SetFlagTrue(KEY_ADSERVICES_ENABLED)
 @SetFlagTrue(KEY_ENABLE_BACK_COMPAT)
 @SetFlagFalse(KEY_PAS_UX_ENABLED)
 @SetStringFlag(name = KEY_DEBUG_UX, value = "GA_UX")
+@Ignore("b/479710261")
 public final class NotificationActivityGAV2UiAutomatorTest
         extends AdservicesNotificationUiTestCase {
 

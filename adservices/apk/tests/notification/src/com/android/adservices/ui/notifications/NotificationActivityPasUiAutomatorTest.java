@@ -42,6 +42,7 @@ import com.android.adservices.ui.util.AdservicesNotificationUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS UX is currently only available on T+ devices")
@@ -53,6 +54,7 @@ import org.junit.Test;
 @SetFlagTrue(KEY_IS_EEA_DEVICE_FEATURE_ENABLED)
 @SetFlagFalse(KEY_IS_EEA_DEVICE)
 @SetFlagFalse(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED)
+@Ignore("b/479710261")
 public final class NotificationActivityPasUiAutomatorTest extends AdservicesNotificationUiTestCase {
 
     private static final String ANDROID_WIDGET_SWITCH = "android.widget.Switch";

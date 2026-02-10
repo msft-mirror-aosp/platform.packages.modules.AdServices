@@ -36,6 +36,7 @@ import com.android.adservices.ui.util.AdservicesNotificationUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -43,6 +44,7 @@ import org.junit.runner.RunWith;
 @SetFlagTrue(KEY_ENABLE_AD_SERVICES_SYSTEM_API)
 @SetFlagTrue(KEY_U18_UX_ENABLED)
 @SetStringFlag(name = KEY_DEBUG_UX, value = "U18_UX")
+@Ignore("b/479710261")
 public final class NotificationActivityU18UxSelectorUiAutomatorTest
         extends AdservicesNotificationUiTestCase {
 

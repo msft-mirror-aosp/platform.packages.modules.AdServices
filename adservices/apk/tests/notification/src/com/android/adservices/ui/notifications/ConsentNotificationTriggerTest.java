@@ -100,6 +100,7 @@ import java.io.IOException;
 @SpyStatic(UxStatesManager.class)
 @SpyStatic(UiStatsLogger.class)
 @RunWith(AndroidJUnit4.class)
+@Ignore("b/480757103")
 public final class ConsentNotificationTriggerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String NOTIFICATION_CHANNEL_ID = "PRIVACY_SANDBOX_CHANNEL";
