@@ -16,8 +16,6 @@
 
 package com.android.adservices.cobalt;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
@@ -29,15 +27,12 @@ import com.android.adservices.data.topics.Topic;
 import com.android.cobalt.CobaltLogger;
 import com.android.cobalt.domain.Project;
 
-import com.google.cobalt.MetricDefinition;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-
-import java.util.Map;
 
 public final class TopicsCobaltLoggerTest extends AdServicesMockitoTestCase {
     private static final int COUNT = 5;
@@ -67,32 +62,7 @@ public final class TopicsCobaltLoggerTest extends AdServicesMockitoTestCase {
         // //packages/modules/AdServices/adservices/service-core/resources/cobalt_registry.textpb
         // for the actual registy.
         Project cobaltRegistry = CobaltRegistryLoader.getRegistry(sContext, mMockFlags);
-        MetricDefinition topicsMetric =
-                cobaltRegistry.getMetrics().stream()
-                        .filter(m -> m.getMetricName().equals("returned_topics"))
-                        .findFirst()
-                        .orElseThrow();
-        assertThat(topicsMetric.getMetricDimensionsCount()).isAtLeast(1);
-        expect.that(topicsMetric.getMetricDimensions(0).getDimension()).isEqualTo("topic");
-        expect.that(topicsMetric.getId()).isEqualTo(METRIC_ID);
-        Map<Integer, String> eventCodes = topicsMetric.getMetricDimensions(0).getEventCodes();
-        int unknownTopicEventCode =
-                eventCodes.entrySet().stream()
-                        .filter(e -> e.getValue().equals("UNKNOWN"))
-                        .map(e -> e.getKey())
-                        .findFirst()
-                        .orElseThrow();
-        int firstEventCode =
-                eventCodes.entrySet().stream()
-                        .mapToInt(Map.Entry::getKey)
-                        .filter(i -> i != UNKNOWN_TOPIC_EVENT_CODE)
-                        .min()
-                        .orElseThrow();
-
-        expect.that(unknownTopicEventCode).isEqualTo(UNKNOWN_TOPIC_EVENT_CODE);
-        expect.that(firstEventCode).isEqualTo(FIRST_EVENT_CODE);
-        expect.that(topicsMetric.getMetricDimensions(0).getMaxEventCode())
-                .isEqualTo(SUPPORTED_TOPICS_COUNT);
+        expect.that(cobaltRegistry.getDeletedMetricIds()).containsExactly(METRIC_ID);
     }
 
     @Test

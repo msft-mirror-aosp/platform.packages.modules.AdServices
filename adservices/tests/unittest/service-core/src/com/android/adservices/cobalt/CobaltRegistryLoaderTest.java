@@ -46,12 +46,11 @@ public final class CobaltRegistryLoaderTest extends AdServicesExtendedMockitoTes
     private static final String REPORT_NAME_DOGFOOD_SUFFIX = "_dogfood";
     private static final String TEST_REGISTRY_ASSET_FILE = "cobalt/cobalt_registry_test.binarypb";
     private static final String MDD_TEST_REPORT_NAME = "fleetwide_counts_mdd_testonly";
-    private static final int TOPICS_METRICS_ID = 1;
-    private static final int TOPIC_EVENT_COUNT = 447;
+    private static final int TOPICS_METRIC_ID = 1;
     private static final int PACKAGE_API_ERRORS_ID = 2;
     private static final int TOPIC_DIMENSION_IDX = 0;
     private static final int API_DIMENSION_IDX = 0;
-    private static final int API_EVENT_COUNT = 34;
+    private static final int API_EVENT_COUNT = 42;
     private static final int ERROR_DIMENSION_IDX = 1;
     private static final int ERROR_EVENT_COUNT = 27;
 
@@ -86,11 +85,6 @@ public final class CobaltRegistryLoaderTest extends AdServicesExtendedMockitoTes
     public void testGetRegistry_metricDimensions() throws Exception {
         Project registry = CobaltRegistryLoader.getRegistry(mContext, mMockFlags);
         for (MetricDefinition metric : registry.getMetrics()) {
-            if (metric.getId() == TOPICS_METRICS_ID) {
-                expect.withMessage("topicsDimension.getEventCodesCount()")
-                        .that(metric.getMetricDimensions(TOPIC_DIMENSION_IDX).getEventCodesCount())
-                        .isEqualTo(TOPIC_EVENT_COUNT);
-            }
             if (metric.getId() == PACKAGE_API_ERRORS_ID) {
                 expect.withMessage("apiDimension.getEventCodesCount()")
                         .that(metric.getMetricDimensions(API_DIMENSION_IDX).getEventCodesCount())
@@ -100,6 +94,14 @@ public final class CobaltRegistryLoaderTest extends AdServicesExtendedMockitoTes
                         .isEqualTo(ERROR_EVENT_COUNT);
             }
         }
+    }
+
+    @Test
+    public void testGetRegistry_deletedMetricIds() throws Exception {
+        Project registry = CobaltRegistryLoader.getRegistry(mContext, mMockFlags);
+        expect.withMessage("deletedMetricsIds")
+                .that(registry.getDeletedMetricIds())
+                .containsExactly(TOPICS_METRIC_ID);
     }
 
     @Test
@@ -140,7 +142,7 @@ public final class CobaltRegistryLoaderTest extends AdServicesExtendedMockitoTes
     private static void assertBaseRegistry(Project registry) {
         assertThat(registry).isNotNull();
         for (MetricDefinition metric : registry.getMetrics()) {
-            if (metric.getId() == TOPICS_METRICS_ID) {
+            if (metric.getId() == TOPICS_METRIC_ID) {
                 assertThat(metric.getReportsCount()).isEqualTo(5);
             }
             if (metric.getId() == PACKAGE_API_ERRORS_ID) {
@@ -152,7 +154,7 @@ public final class CobaltRegistryLoaderTest extends AdServicesExtendedMockitoTes
     private void assertMergedRegistry(Project registry) {
         assertThat(registry).isNotNull();
         for (MetricDefinition metric : registry.getMetrics()) {
-            if (metric.getId() == TOPICS_METRICS_ID) {
+            if (metric.getId() == TOPICS_METRIC_ID) {
                 assertThat(metric.getReportsCount()).isEqualTo(6);
                 expect.withMessage("metric.getReportName()")
                         .that(metric.getReports(5).getReportName())

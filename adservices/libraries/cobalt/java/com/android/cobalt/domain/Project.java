@@ -52,13 +52,14 @@ public abstract class Project {
                     return Project.create(
                             customer.getCustomerId(),
                             project.getProjectId(),
-                            project.getMetricsList());
+                            project.getMetricsList(),
+                            project.getDeletedMetricIdsList());
                 }
             }
         }
 
         checkArgument(false, "AdServices project not found...");
-        return Project.create(-1, -1, ImmutableList.of());
+        return Project.create(-1, -1, ImmutableList.of(), ImmutableList.of());
     }
 
     /**
@@ -67,13 +68,20 @@ public abstract class Project {
      * @param customerId the customer's id
      * @param projectId the customer's project id
      * @param metrics the metrics the customer is collecting in this project id
+     * @param deletedMetricIds the metrics the customer has deleted for this project id
      * @return a {@link Project} for the customer's project
      */
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     public static Project create(
-            int customerId, int projectId, Iterable<MetricDefinition> metrics) {
+            int customerId,
+            int projectId,
+            Iterable<MetricDefinition> metrics,
+            Iterable<Integer> deletedMetricIds) {
         return new AutoValue_Project(
-                customerId, projectId, ImmutableList.copyOf(requireNonNull(metrics)));
+                customerId,
+                projectId,
+                ImmutableList.copyOf(requireNonNull(metrics)),
+                ImmutableList.copyOf(deletedMetricIds));
     }
 
     /**
@@ -90,4 +98,9 @@ public abstract class Project {
      * @return the metrics being collected by the customer for the project
      */
     public abstract ImmutableList<MetricDefinition> getMetrics();
+
+    /**
+     * @return the metrics that have been deleted by the project.
+     */
+    public abstract ImmutableList<Integer> getDeletedMetricIds();
 }

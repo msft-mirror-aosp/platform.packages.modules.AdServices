@@ -235,7 +235,8 @@ public class CobaltPeriodicJobImplTest {
             Project.create(
                     (int) REPORT_1.customerId(),
                     (int) REPORT_1.projectId(),
-                    List.of(METRIC_1, METRIC_2, METRIC_3));
+                    List.of(METRIC_1, METRIC_2, METRIC_3),
+                    /* deletedMetricIds= */ List.of());
 
     private CobaltDatabase mCobaltDatabase;
     private TestOnlyDao mTestOnlyDao;
@@ -787,7 +788,10 @@ public class CobaltPeriodicJobImplTest {
                         .build();
         mProject =
                 Project.create(
-                        (int) REPORT_1.customerId(), (int) REPORT_1.projectId(), List.of(metric));
+                        (int) REPORT_1.customerId(),
+                        (int) REPORT_1.projectId(),
+                        List.of(metric),
+                        /* deletedMetricIds= */ List.of());
 
         // Setup the classes.
         manualSetUp();
@@ -876,7 +880,10 @@ public class CobaltPeriodicJobImplTest {
                         .build();
         mProject =
                 Project.create(
-                        (int) REPORT_1.customerId(), (int) REPORT_1.projectId(), List.of(metric));
+                        (int) REPORT_1.customerId(),
+                        (int) REPORT_1.projectId(),
+                        List.of(metric),
+                        /* deletedMetricIds= */ List.of());
 
         // Setup the classes.
         manualSetUp();
@@ -1054,7 +1061,8 @@ public class CobaltPeriodicJobImplTest {
                         List.of(
                                 mProject.getMetrics().get(0),
                                 newMetric,
-                                mProject.getMetrics().get(2)));
+                                mProject.getMetrics().get(2)),
+                        /* deletedMetricIds= */ List.of());
 
         // Setup the classes.
         manualSetUp();
@@ -1101,7 +1109,8 @@ public class CobaltPeriodicJobImplTest {
                         List.of(
                                 mProject.getMetrics().get(0),
                                 metric.toBuilder().setReports(2, newReport).build(),
-                                mProject.getMetrics().get(2)));
+                                mProject.getMetrics().get(2)),
+                        /* deletedMetricIds= */ List.of());
 
         // Setup the classes.
         manualSetUp();
@@ -1165,7 +1174,12 @@ public class CobaltPeriodicJobImplTest {
                         .addReports(simpleReport)
                         .addReports(systemProfileReport)
                         .build();
-        mProject = Project.create(/* customerId= */ 100, /* projectId= */ 101, List.of(metric));
+        mProject =
+                Project.create(
+                        /* customerId= */ 100,
+                        /* projectId= */ 101,
+                        List.of(metric),
+                        /* deletedMetricIds= */ List.of());
 
         // Set up the main test objects.
         manualSetUp();
@@ -1427,7 +1441,8 @@ public class CobaltPeriodicJobImplTest {
                 Project.create(
                         /* customerId= */ 100,
                         /* projectId= */ 101,
-                        List.of(occurrenceMetric, stringMetric));
+                        List.of(occurrenceMetric, stringMetric),
+                        /* deletedMetricIds= */ List.of());
 
         // Set up the main test objects.
         manualSetUp();
