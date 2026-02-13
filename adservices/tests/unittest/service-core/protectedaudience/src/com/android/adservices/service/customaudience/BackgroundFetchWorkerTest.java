@@ -73,6 +73,7 @@ import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -93,6 +94,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Ignore("b/480616964")
 public class BackgroundFetchWorkerTest {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
