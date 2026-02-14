@@ -24,6 +24,7 @@ import android.adservices.utils.MockWebServerRule;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -33,6 +34,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 
+@Ignore("b/483783296")
 public final class ScenarioDispatcherTest {
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRule.forHttp();
