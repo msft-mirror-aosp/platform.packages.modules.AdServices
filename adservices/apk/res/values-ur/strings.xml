@@ -146,7 +146,7 @@
     <string name="settingsUI_apps_title" msgid="5995350116551596477">"دلچسپیوں کا تخمینہ لگانے والی ایپس"</string>
     <string name="settingsUI_main_view_info_text8" msgid="3283348237139281934">"اشتہار کی اثرپذیری کی پیمائش"</string>
     <string name="settingsUI_main_view_info_text9" msgid="8099947772206651223">"اپنے اشتہارات کی اثرپذیری کی پیمائش کرنے کیلئے، ایپس رازداری سینڈ باکس کا استعمال کر سکتی ہیں۔ ایسا کرنے کیلئے، مشتہرین Android کی مدد سے ان کے اشتہارات اور ایپس کے درمیان آپ کے تعاملات سے متعلق ڈیٹا کو عارضی طور پر محفوظ کر سکتے ہیں۔ آپ کتنا ڈیٹا محفوظ کر سکتے ہیں، یہ امر محدود کردہ ہے اور اسے باقاعدگی سے حذف کیا جائے گا۔\n\nآپ رازداری سینڈ باکس آف کر کے کسی بھی وقت اس ڈیٹا کو حذف کر سکتے ہیں۔"</string>
-    <string name="settingsUI_topics_view_subtitle" msgid="2555242128148608108">"آپ کی استعمال کی جانے والی ایپس کی بنیاد پر، Android وقتاً فوقتاً آپ کی سرفہرست دلچسپیوں کا تخمینہ لگاتا ہے۔ ایپس Android سے ان دلچسپیوں کا استعمال کرتے ہوئے آپ کو متعلقہ اشتہارات دکھانے کیلئے کہہ سکتی ہیں۔\n\nاگر آپ کسی دلچسپی کو مسدود کریں گے تو اسے اس وقت تک دوبارہ فہرست میں شامل نہیں کیا جائے گا جب تک آپ اسے غیر مسدود نہ کر دیں۔ آپ کو اب بھی کچھ متعلقہ اشتہارات دکھائی دے سکتے ہیں۔"</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="2555242128148608108">"آپ کی استعمال کی جانے والی ایپس کی بنیاد پر، Android وقتاً فوقتاً آپ کی سرفہرست دلچسپیوں کا تخمینہ لگاتا ہے۔ ایپس Android سے ان دلچسپیوں کا استعمال کرتے ہوئے آپ کو متعلقہ اشتہارات دکھانے کیلئے کہہ سکتی ہیں۔\n\nاگر آپ کسی دلچسپی کو بلاک کریں گے تو اسے اس وقت تک دوبارہ فہرست میں شامل نہیں کیا جائے گا جب تک آپ اسے اَن بلاک نہ کر دیں۔ آپ کو اب بھی کچھ متعلقہ اشتہارات دکھائی دے سکتے ہیں۔"</string>
     <string name="settingsUI_block_topic_title" msgid="542801436874037128">"مسدود کریں"</string>
     <string name="settingsUI_unblock_topic_title" msgid="9183891456548567284">"غیر مسدود کریں"</string>
     <string name="settingsUI_blocked_topics_title" msgid="84411550241312692">"آپ کی مسدود کردہ دلچسپیاں"</string>
@@ -160,7 +160,7 @@
     <string name="settingsUI_view_blocked_topics_title" msgid="6524865577585338530">"مسدود کردہ موضوعات دیکھیں"</string>
     <string name="settingsUI_topics_are_reset" msgid="7474478586324962685">"دلچسپیاں ری سیٹ ہیں"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="1862215340606433752">"موضوعات کو ری سیٹ کیا گیا"</string>
-    <string name="settingsUI_apps_view_subtitle" msgid="4320154274829130809">"ایپس آپ کی دلچسپیوں کا تخمینہ لگا سکتی ہیں اور Android کی مدد سے انہیں عارضی طور پر محفوظ کر سکتی ہیں۔ بعد میں، کوئی مختلف ایپ ان دلچسپیوں کی بنیاد پر آپ کو ایک اشتہار دکھا سکتی ہے۔\n\nاگر آپ کسی ایپ کو مسدود کریں گے تو وہ مزید کسی دلچسپی کا تخمینہ نہیں لگائے گی۔ اسے اس وقت تک دوبارہ فہرست میں شامل نہیں کیا جائے گا جب تک آپ اسے غیر مسدود نہ کر دیں۔ ایپ کے ذریعے پہلے ہی سے تخمینہ شدہ دلچسپیاں حذف کر دی جائیں گی، لیکن ہو سکتا ہے کہ آپ کو اس کے باوجود کچھ متعلقہ اشتہارات دکھائی دیں۔"</string>
+    <string name="settingsUI_apps_view_subtitle" msgid="4320154274829130809">"ایپس آپ کی دلچسپیوں کا تخمینہ لگا سکتی ہیں اور Android کی مدد سے انہیں عارضی طور پر محفوظ کر سکتی ہیں۔ بعد میں، کوئی مختلف ایپ ان دلچسپیوں کی بنیاد پر آپ کو ایک اشتہار دکھا سکتی ہے۔\n\nاگر آپ کسی ایپ کو بلاک کریں گے تو وہ مزید کسی دلچسپی کا تخمینہ نہیں لگائے گی۔ اسے اس وقت تک دوبارہ فہرست میں شامل نہیں کیا جائے گا جب تک آپ اسے اَن بلاک نہ کر دیں۔ ایپ کے ذریعے پہلے ہی سے تخمینہ شدہ دلچسپیاں حذف کر دی جائیں گی، لیکن ہو سکتا ہے کہ آپ کو اس کے باوجود کچھ متعلقہ اشتہارات دکھائی دیں۔"</string>
     <string name="settingsUI_blocked_apps_title" msgid="2912819231721312960">"آپ کی مسدود کردہ ایپس"</string>
     <string name="settingsUI_view_blocked_apps_title" msgid="7095922654201180593">"مسدود کردہ ایپس ملاحظہ کریں"</string>
     <string name="settingsUI_reset_apps_title" msgid="3102875782600625477">"ایپس کے ذریعے تخمینہ شدہ دلچسپیوں کو ری سیٹ کریں"</string>
@@ -181,7 +181,7 @@
     <string name="settingsUI_dialog_opt_out_title" msgid="7364417538227823889">"رازداری سینڈ باکس آف کریں؟"</string>
     <string name="settingsUI_dialog_opt_out_message" msgid="277021855863398163">"اگر آپ اپنا ارادہ تبدیل کرتے ہیں یا Android کے اشتہارات کی رازداری کے بی ٹا کے بارے میں جاننا چاہتے ہیں تو اپنی رازداری کی ترتیبات میں جائیں"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="8325131452422895574">"آف کریں"</string>
-    <string name="settingsUI_dialog_block_topic_title" msgid="2250176723499905800">"<xliff:g id="TOPIC">%1$s</xliff:g> کو مسدود کریں؟"</string>
+    <string name="settingsUI_dialog_block_topic_title" msgid="2250176723499905800">"<xliff:g id="TOPIC">%1$s</xliff:g> کو بلاک کریں؟"</string>
     <string name="settingsUI_dialog_block_topic_message" msgid="1400336281231183620">"یہ موضوع مسدود کر دیا جائے گا اور آپ کے واپس شامل کرنے تک اسے آپ کی فہرست میں دوبارہ شامل نہیں کیا جائے گا۔ آپ اب بھی کچھ متعلقہ اشتہارات دیکھ سکتے ہیں۔"</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2296205088661063414">"مسدود کریں"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="8073938057439853098">"<xliff:g id="TOPIC">%1$s</xliff:g> غیر مسدود ہے"</string>
@@ -190,7 +190,7 @@
     <string name="settingsUI_dialog_reset_topic_title" msgid="344077320598377031">"اشتہار کے سبھی موضوعات کو ری سیٹ کریں؟"</string>
     <string name="settingsUI_dialog_reset_topic_message" msgid="3533277451580994438">"آپ کی فہرست صاف کر دی جائے گی اور مستقبل میں نئے موضوعات شامل کیے جائیں گے۔ آپ اب بھی ان موضوعات سے متعلق کچھ اشتہارات دیکھ سکتے ہیں جنہیں آپ نے ری سیٹ کیا ہے۔"</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="7734301266846695010">"ری سیٹ کریں"</string>
-    <string name="settingsUI_dialog_block_app_title" msgid="4307840076271594235">"‫<xliff:g id="APP">%1$s</xliff:g> کو مسدود کریں؟"</string>
+    <string name="settingsUI_dialog_block_app_title" msgid="4307840076271594235">"‫<xliff:g id="APP">%1$s</xliff:g> کو بلاک کریں؟"</string>
     <string name="settingsUI_dialog_block_app_message" msgid="4276422781824461333">"یہ ایپ اشتہارات کی تجویز نہیں کرے گی اور اسے آپ کے غیر مقفل کرنے تک آپ کی فہرست میں دوبارہ شامل نہیں کیا جائے گا۔ آپ کو اب بھی کچھ متعلقہ اشتہارات دکھائی دے سکتے ہیں۔"</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="2550291012359801944">"<xliff:g id="APP">%1$s</xliff:g> غیر مسدود ہے"</string>
     <string name="settingsUI_dialog_unblock_app_message" msgid="6191841911127908772">"یہ ایپ آپ کے لیے دوبارہ اشتہارات تجویز کر سکتی ہے لیکن ممکن ہے یہ فوری طور پر آپ کی فہرست پر نظر نہ آئے۔ آپ کو متعلقہ اشتہارات نظر آنے میں کچھ وقت لگ سکتا ہے۔"</string>
