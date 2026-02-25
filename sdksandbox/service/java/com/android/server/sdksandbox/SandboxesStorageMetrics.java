@@ -48,7 +48,7 @@ public class SandboxesStorageMetrics {
             sandboxMetrics.add(new SandboxMetrics(sharedStorageKb, sdkStorageKb));
         }
 
-        /**
+        /*
          * If there are more metrics data points than we want, we remove the one that was added at
          * the beginning of the list.
          */

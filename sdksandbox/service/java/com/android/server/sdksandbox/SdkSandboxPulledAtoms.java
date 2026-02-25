@@ -65,7 +65,7 @@ public class SdkSandboxPulledAtoms {
                         SANDBOX_SDK_STORAGE,
                         /*metadata=*/ null,
                         BackgroundThread.getExecutor(),
-                        /**
+                        /*
                          * Class which implements the callback method which will be called by StatsD
                          */
                         (atomTag, data) -> {

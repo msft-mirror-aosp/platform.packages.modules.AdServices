@@ -200,7 +200,7 @@ public class SdkSandboxStorageManager {
             final SubDirectories ceSubDirs = new SubDirectories(packageDirInfo.getCeDataDir());
             final SubDirectories deSubDirs = new SubDirectories(packageDirInfo.getDeDataDir());
 
-            /**
+            /*
              * Getting the SDKs name with deSubDir only assuming that ceSubDirs and deSubDirs have
              * the same list of SDKs
              */

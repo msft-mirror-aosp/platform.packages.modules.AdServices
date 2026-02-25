@@ -2577,7 +2577,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
             int sdkSandboxUid = Binder.getCallingUid();
 
-            /**
+            /*
              * By clearing the calling identity, system server identity is set which allows us to
              * call {@DeviceConfig.getBoolean}
              */
@@ -2695,7 +2695,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
             int sdkSandboxUid = Binder.getCallingUid();
 
-            /**
+            /*
              * By clearing the calling identity, system server identity is set which allows us to
              * call {@DeviceConfig.getBoolean}
              */
