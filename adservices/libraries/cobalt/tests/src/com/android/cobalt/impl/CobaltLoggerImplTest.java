@@ -165,7 +165,8 @@ public class CobaltLoggerImplTest {
                             MULTIPLE_REPORT_METRIC,
                             STRING_METRIC,
                             MULTIPLE_STRING_REPORTS_METRIC,
-                            WRONG_TYPE_METRIC));
+                            WRONG_TYPE_METRIC),
+                    /* deletedMetricIds= */ List.of());
 
     private CobaltDatabase mCobaltDatabase;
     private TestOnlyDao mTestOnlyDao;
@@ -501,7 +502,8 @@ public class CobaltLoggerImplTest {
                 Project.create(
                         (int) ONE_REPORT.customerId(),
                         (int) ONE_REPORT.projectId(),
-                        List.of(metric));
+                        List.of(metric),
+                        /* deletedMetricIds= */ List.of());
         CobaltLogger logger =
                 new CobaltLoggerImpl(
                         project,
@@ -543,7 +545,8 @@ public class CobaltLoggerImplTest {
                 Project.create(
                         (int) ONE_REPORT.customerId(),
                         (int) ONE_REPORT.projectId(),
-                        List.of(metric));
+                        List.of(metric),
+                        /* deletedMetricIds= */ List.of());
         CobaltLogger logger =
                 new CobaltLoggerImpl(
                         project,
@@ -889,7 +892,8 @@ public class CobaltLoggerImplTest {
                 Project.create(
                         (int) ONE_REPORT.customerId(),
                         (int) ONE_REPORT.projectId(),
-                        List.of(metric));
+                        List.of(metric),
+                        /* deletedMetricIds= */ List.of());
         CobaltLogger logger =
                 new CobaltLoggerImpl(
                         project,
@@ -932,7 +936,8 @@ public class CobaltLoggerImplTest {
                 Project.create(
                         (int) ONE_REPORT.customerId(),
                         (int) ONE_REPORT.projectId(),
-                        List.of(metric));
+                        List.of(metric),
+                        /* deletedMetricIds= */ List.of());
         CobaltLogger logger =
                 new CobaltLoggerImpl(
                         project,

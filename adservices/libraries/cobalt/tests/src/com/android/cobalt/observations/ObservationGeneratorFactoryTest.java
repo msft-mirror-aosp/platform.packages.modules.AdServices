@@ -63,7 +63,12 @@ public final class ObservationGeneratorFactoryTest extends AdServicesMockitoTest
 
     @Before
     public void setup() {
-        Project project = Project.create(CUSTOMER_ID, PROJECT_ID, /* metrics= */ List.of());
+        Project project =
+                Project.create(
+                        CUSTOMER_ID,
+                        PROJECT_ID,
+                        /* metrics= */ List.of(),
+                        /* deletedMetricIds= */ List.of());
         SecureRandom secureRandom = new FakeSecureRandom();
         mOperationLogger = new FakeCobaltOperationLogger();
         mFactory =
