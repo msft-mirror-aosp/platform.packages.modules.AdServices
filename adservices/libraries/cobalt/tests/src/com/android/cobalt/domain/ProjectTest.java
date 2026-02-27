@@ -49,7 +49,9 @@ public final class ProjectTest {
 
         Project project = Project.create(protoRegistry);
         assertThat(project)
-                .isEqualTo(Project.create(Project.CUSTOMER_ID, Project.PROJECT_ID, List.of()));
+                .isEqualTo(
+                        Project.create(
+                                Project.CUSTOMER_ID, Project.PROJECT_ID, List.of(), List.of()));
     }
 
     @Test
@@ -71,7 +73,38 @@ public final class ProjectTest {
         Project project = Project.create(protoRegistry);
         assertThat(project)
                 .isEqualTo(
-                        Project.create(Project.CUSTOMER_ID, Project.PROJECT_ID, List.of(metric)));
+                        Project.create(
+                                Project.CUSTOMER_ID,
+                                Project.PROJECT_ID,
+                                List.of(metric),
+                                List.of()));
+    }
+
+    @Test
+    public void testCreate_populatesDeletedMetricIds() throws Exception {
+        MetricDefinition metric = MetricDefinition.newBuilder().setId(METRIC_ID).build();
+        ProjectConfig projectConfig =
+                ProjectConfig.newBuilder()
+                        .setProjectId(Project.PROJECT_ID)
+                        .addMetrics(metric)
+                        .addDeletedMetricIds(1)
+                        .build();
+        CustomerConfig customerConfig =
+                CustomerConfig.newBuilder()
+                        .setCustomerId(Project.CUSTOMER_ID)
+                        .addProjects(projectConfig)
+                        .build();
+        CobaltRegistry protoRegistry =
+                CobaltRegistry.newBuilder().addCustomers(customerConfig).build();
+
+        Project project = Project.create(protoRegistry);
+        assertThat(project)
+                .isEqualTo(
+                        Project.create(
+                                Project.CUSTOMER_ID,
+                                Project.PROJECT_ID,
+                                List.of(metric),
+                                List.of(1)));
     }
 
     @Test
@@ -97,7 +130,11 @@ public final class ProjectTest {
         Project project = Project.create(protoRegistry);
         assertThat(project)
                 .isEqualTo(
-                        Project.create(Project.CUSTOMER_ID, Project.PROJECT_ID, List.of(metric)));
+                        Project.create(
+                                Project.CUSTOMER_ID,
+                                Project.PROJECT_ID,
+                                List.of(metric),
+                                List.of()));
     }
 
     @Test
@@ -121,7 +158,11 @@ public final class ProjectTest {
         Project project = Project.create(protoRegistry);
         assertThat(project)
                 .isEqualTo(
-                        Project.create(Project.CUSTOMER_ID, Project.PROJECT_ID, List.of(metric)));
+                        Project.create(
+                                Project.CUSTOMER_ID,
+                                Project.PROJECT_ID,
+                                List.of(metric),
+                                List.of()));
     }
 
     @Test
@@ -138,7 +179,16 @@ public final class ProjectTest {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    Project.create(Project.CUSTOMER_ID, Project.PROJECT_ID, null);
+                    Project.create(Project.CUSTOMER_ID, Project.PROJECT_ID, null, List.of());
+                });
+    }
+
+    @Test
+    public void testCreate_nullDeletedMetricIds_throwsNullPointerException() throws Exception {
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    Project.create(Project.CUSTOMER_ID, Project.PROJECT_ID, List.of(), null);
                 });
     }
 
