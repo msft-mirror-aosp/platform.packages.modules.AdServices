@@ -55,7 +55,7 @@
     <string name="notificationUI_header_title_eu" msgid="9044572957854364091">"Конфиденциальность в рекламе для Android (бета)"</string>
     <string name="notificationUI_container1_title_eu" msgid="1373016756109206670">"Что нового"</string>
     <string name="notificationUI_container1_body_text_eu" msgid="6852401002023449018">"С новыми функциями защиты конфиденциальности, реализованными с помощью технологий Privacy Sandbox, приложения могут показывать релевантную рекламу и получать ограниченный доступ к сведениям о ваших действиях на сайтах и в продуктах других разработчиков."</string>
-    <string name="notificationUI_container1_control_text_eu" msgid="3328459492928352390">"Принцип работы"</string>
+    <string name="notificationUI_container1_control_text_eu" msgid="3328459492928352390">"Как это работает"</string>
     <string name="notificationUI_container2_title_eu" msgid="3473572343314878715">"Как принять участие"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5566431917133361267">"Если вы примете участие в бета-тестировании, приложения смогут опробовать новые варианты показа рекламы с более высоким уровнем конфиденциальности. Отказаться от участия можно в любой момент в настройках конфиденциальности."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="6497599738735989119">"Нет"</string>
