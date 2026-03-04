@@ -1003,12 +1003,12 @@ public final class AdServicesManagerService extends IAdServicesManager.Stub {
         }
     }
 
-    @VisibleForTesting
     /**
      * Stores the AdServices module version locally. Users other than the main user do not have the
      * permission to get the version through the PackageManager, so we have to get the version when
      * the AdServices system service starts.
      */
+    @VisibleForTesting
     void setAdServicesApexVersion() {
         synchronized (mSetPackageVersionLock) {
             if (!FlagsFactory.getFlags().getAdServicesSystemServiceEnabled()) {
@@ -1037,8 +1037,8 @@ public final class AdServicesManagerService extends IAdServicesManager.Stub {
         return mAdServicesModuleVersion;
     }
 
-    @VisibleForTesting
     /** Checks the RollbackManager to see the rollback status of the AdServices module. */
+    @VisibleForTesting
     void setRollbackStatus() {
         synchronized (mRollbackCheckLock) {
             if (!FlagsFactory.getFlags().getAdServicesSystemServiceEnabled()) {
