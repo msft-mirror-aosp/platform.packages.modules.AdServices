@@ -97,6 +97,14 @@ android_library {
     },
 }
 
+// See go/preinstall-allowlists:
+// From Android 17, all preinstalled apps must specify which user types they are
+// to be preinstalled on in a preinstall allowlist.
+filegroup {
+    name: "preinstalled-packages-com.android.adservices.api.xml",
+    srcs: ["preinstalled-packages-com.android.adservices.api.xml"],
+}
+
 android_app {
     name: "AdServicesApk",
     sdk_version: "module_current",
@@ -117,6 +125,7 @@ android_app {
     optimize: {
         shrink_resources: true,
     },
+    preinstall_allowlist: ":preinstalled-packages-com.android.adservices.api.xml",
     apex_available: ["com.android.adservices"],
     updatable: true,
 }

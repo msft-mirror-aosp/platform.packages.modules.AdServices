@@ -56,6 +56,14 @@ java_library {
     ], //do not add any other static libs to SdkSandbox, else proguard will shrink it.
 }
 
+// See go/preinstall-allowlists:
+// From Android 17, all preinstalled apps must specify which user types they are
+// to be preinstalled on in a preinstall allowlist.
+filegroup {
+    name: "preinstalled-packages-com.android.sdksandbox.xml",
+    srcs: ["preinstalled-packages-com.android.sdksandbox.xml"],
+}
+
 android_app {
     name: "SdkSandbox",
     libs: [
@@ -77,6 +85,7 @@ android_app {
     defaults: [
         "sdksandbox-java-defaults",
     ],
+    preinstall_allowlist: ":preinstalled-packages-com.android.sdksandbox.xml",
     jarjar_rules: "sdksandbox_app_jarjar_rules.txt",
     jacoco: {
         exclude_filter: [
