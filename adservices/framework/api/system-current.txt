@@ -1,6 +1,5 @@
 // Signature format: 6.0
 // - style=java
-// - flagged-api-inheritance=none
 // - overloaded-method-order=source
 // - strip-java-lang-prefix=legacy
 // - type-argument-spacing=legacy
@@ -184,7 +183,7 @@ package android.adservices.common {
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.UpdateAdServicesModuleStatesParams> CREATOR;
   }
 
-  public static final class UpdateAdServicesModuleStatesParams.Builder {
+  @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public static final class UpdateAdServicesModuleStatesParams.Builder {
     ctor public UpdateAdServicesModuleStatesParams.Builder();
     method @NonNull public android.adservices.common.UpdateAdServicesModuleStatesParams build();
     method @NonNull public android.adservices.common.UpdateAdServicesModuleStatesParams.Builder setModuleState(int, int);
@@ -198,7 +197,7 @@ package android.adservices.common {
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.UpdateAdServicesUserChoicesParams> CREATOR;
   }
 
-  public static final class UpdateAdServicesUserChoicesParams.Builder {
+  @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public static final class UpdateAdServicesUserChoicesParams.Builder {
     ctor public UpdateAdServicesUserChoicesParams.Builder();
     method @NonNull public android.adservices.common.UpdateAdServicesUserChoicesParams build();
     method @NonNull public android.adservices.common.UpdateAdServicesUserChoicesParams.Builder setUserChoice(int, int);
