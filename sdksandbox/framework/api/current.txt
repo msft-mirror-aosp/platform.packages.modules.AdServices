@@ -1,4 +1,8 @@
-// Signature format: 2.0
+// Signature format: 6.0
+// - style=java
+// - flagged-api-inheritance=none
+// - strip-java-lang-prefix=legacy
+// - type-argument-spacing=legacy
 package android.app.sdksandbox {
 
   @Deprecated @FlaggedApi("android.app.sdksandbox.flags.sdk_sandbox_api_deprecation") public final class AppOwnedSdkSandboxInterface implements android.os.Parcelable {
