@@ -1,6 +1,5 @@
 // Signature format: 6.0
 // - style=java
-// - strip-java-lang-prefix=legacy
 // - type-argument-spacing=legacy
 package android.app.sdksandbox {
 
@@ -14,7 +13,7 @@ package android.app.sdksandbox {
     field @Deprecated @NonNull public static final android.os.Parcelable.Creator<android.app.sdksandbox.AppOwnedSdkSandboxInterface> CREATOR;
   }
 
-  @Deprecated @FlaggedApi("android.app.sdksandbox.flags.sdk_sandbox_api_deprecation") public final class LoadSdkException extends java.lang.Exception implements android.os.Parcelable {
+  @Deprecated @FlaggedApi("android.app.sdksandbox.flags.sdk_sandbox_api_deprecation") public final class LoadSdkException extends Exception implements android.os.Parcelable {
     ctor @Deprecated public LoadSdkException(@NonNull Throwable, @NonNull android.os.Bundle);
     method @Deprecated public int describeContents();
     method @Deprecated @NonNull public android.os.Bundle getExtraInformation();
@@ -23,7 +22,7 @@ package android.app.sdksandbox {
     field @Deprecated @NonNull public static final android.os.Parcelable.Creator<android.app.sdksandbox.LoadSdkException> CREATOR;
   }
 
-  @Deprecated public final class RequestSurfacePackageException extends java.lang.Exception {
+  @Deprecated public final class RequestSurfacePackageException extends Exception {
     ctor @Deprecated public RequestSurfacePackageException(int, @Nullable String);
     ctor @Deprecated public RequestSurfacePackageException(int, @Nullable String, @Nullable Throwable);
     ctor @Deprecated public RequestSurfacePackageException(int, @Nullable String, @Nullable Throwable, @NonNull android.os.Bundle);
@@ -51,15 +50,15 @@ package android.app.sdksandbox {
 
   @Deprecated @FlaggedApi("android.app.sdksandbox.flags.sdk_sandbox_api_deprecation") public final class SdkSandboxManager {
     method @Deprecated public void addSdkSandboxProcessDeathCallback(@NonNull java.util.concurrent.Executor, @NonNull android.app.sdksandbox.SdkSandboxManager.SdkSandboxProcessDeathCallback);
-    method @Deprecated public void addSyncedSharedPreferencesKeys(@NonNull java.util.Set<java.lang.String>);
+    method @Deprecated public void addSyncedSharedPreferencesKeys(@NonNull java.util.Set<String>);
     method @Deprecated @NonNull public java.util.List<android.app.sdksandbox.AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces();
     method @Deprecated @NonNull public java.util.List<android.app.sdksandbox.SandboxedSdk> getSandboxedSdks();
     method @Deprecated public static int getSdkSandboxState();
-    method @Deprecated @NonNull public java.util.Set<java.lang.String> getSyncedSharedPreferencesKeys();
+    method @Deprecated @NonNull public java.util.Set<String> getSyncedSharedPreferencesKeys();
     method @Deprecated public void loadSdk(@NonNull String, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.app.sdksandbox.SandboxedSdk,android.app.sdksandbox.LoadSdkException>);
     method @Deprecated public void registerAppOwnedSdkSandboxInterface(@NonNull android.app.sdksandbox.AppOwnedSdkSandboxInterface);
     method @Deprecated public void removeSdkSandboxProcessDeathCallback(@NonNull android.app.sdksandbox.SdkSandboxManager.SdkSandboxProcessDeathCallback);
-    method @Deprecated public void removeSyncedSharedPreferencesKeys(@NonNull java.util.Set<java.lang.String>);
+    method @Deprecated public void removeSyncedSharedPreferencesKeys(@NonNull java.util.Set<String>);
     method @Deprecated public void requestSurfacePackage(@NonNull String, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.os.Bundle,android.app.sdksandbox.RequestSurfacePackageException>);
     method @Deprecated public void startSdkSandboxActivity(@NonNull android.app.Activity, @NonNull android.os.IBinder);
     method @Deprecated public void unloadSdk(@NonNull String);
