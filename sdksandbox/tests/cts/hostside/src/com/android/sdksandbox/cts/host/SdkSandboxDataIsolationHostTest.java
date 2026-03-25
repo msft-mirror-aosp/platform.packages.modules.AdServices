@@ -36,6 +36,7 @@ import com.android.tradefed.testtype.junit4.DeviceTestRunOptions;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -132,6 +133,7 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
      */
     @Test
     @LargeTest // Creates user
+    @Ignore("SDKRT is being deprecated so this test does not need to run")
     public void testSdkSandboxDataIsolation_CannotVerifyOtherUserAppExistence() throws Exception {
         assumeTrue(getDevice().isMultiUserSupported());
 
