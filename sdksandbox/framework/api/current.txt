@@ -1,6 +1,5 @@
 // Signature format: 6.0
 // - style=java
-// - flagged-api-inheritance=none
 // - strip-java-lang-prefix=legacy
 // - type-argument-spacing=legacy
 package android.app.sdksandbox {
@@ -83,7 +82,7 @@ package android.app.sdksandbox {
     field @Deprecated public static final int SDK_SANDBOX_STATE_ENABLED_PROCESS_ISOLATION = 2; // 0x2
   }
 
-  @Deprecated public static interface SdkSandboxManager.SdkSandboxProcessDeathCallback {
+  @Deprecated @FlaggedApi("android.app.sdksandbox.flags.sdk_sandbox_api_deprecation") public static interface SdkSandboxManager.SdkSandboxProcessDeathCallback {
     method @Deprecated public void onSdkSandboxDied();
   }
 
