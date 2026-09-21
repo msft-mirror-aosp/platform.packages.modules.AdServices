@@ -10,9 +10,6 @@
       ]
     },
     {
-      "name": "CtsSdkSandboxInprocessTests[com.google.android.adservices.apex]"
-    },
-    {
       "name": "SdkSandboxManagerServiceUnitTests[com.google.android.adservices.apex]"
     },
     {
@@ -76,9 +73,6 @@
           "exclude-annotation": "android.platform.test.annotations.LargeTest"
         }
       ]
-    },
-    {
-      "name": "CtsSdkSandboxInprocessTests"
     },
     {
       "name": "CtsSdkSandboxWebkitTestCases",
